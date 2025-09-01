@@ -1,0 +1,50 @@
+---
+import "@css/demo.css";
+import "@fonts/inter-font.css";
+import "@vendor/css/pages/cards-analytics.css";
+import "@vendor/css/pages/cards-statistics.css";
+import "@vendor/css/rtl/core.css";
+import "@vendor/css/rtl/theme-default.css";
+import "@vendor/fonts/flag-icons.css";
+import "@vendor/fonts/materialdesignicons.css";
+import "@vendor/libs/apex-charts/apex-charts.css";
+import "@vendor/libs/datatables-bs5/datatables.bootstrap5.css";
+import "@vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css";
+import "@vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css";
+import "@vendor/libs/node-waves/node-waves.css";
+import "@vendor/libs/perfect-scrollbar/perfect-scrollbar.css";
+import "@vendor/libs/swiper/swiper.css";
+import "@vendor/libs/typeahead-js/typeahead.css";
+const { title } = Astro.props;
+---
+
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+  />
+  <title>
+    {title} | MAU APP
+  </title>
+  <meta name="description" content="" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/img/favicon/favicon.ico" />
+
+  <!-- Fonts -->
+  <!-- <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+    rel="stylesheet"
+  /> -->
+  <!-- biar ikut ke bundle css nya -->
+
+  <!-- Page CSS -->
+
+  <!-- Helpers -->
+  <script src="@vendor/js/helpers.js"></script>
+  <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+  <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+  <script src="@js/config.js"></script>
+</head>
