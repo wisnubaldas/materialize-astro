@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  web:
+    # Nama image Docker yang akan dibuat
+    image: materialize-fastapi
+    # Nama container yang akan dibuat
+    container_name: fastapi-app
+    # Konteks (lokasi Dockerfile)
+    build: .
+    # Mapping port: port lokal:port container
+    ports:
+      - "8000:8000"
+    # Mapping volume (untuk development, agar perubahan kode otomatis terdeteksi)
+    # Gunakan ini hanya di lingkungan lokal, jangan di produksi!
+    volumes:
+      - ./app:/app/app
