@@ -10,6 +10,7 @@ import { SubmitButton } from "@form-validation/plugin-submit-button";
 import { DefaultSubmit } from "@form-validation/plugin-default-submit";
 import { AutoFocus } from "@form-validation/plugin-auto-focus";
 import $ from "./ajax-setup";
+import Swal from 'sweetalert2'
 const formAuthentication = document.querySelector("#formAuthentication");
 
 document.addEventListener("DOMContentLoaded", function (e) {
@@ -39,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
               },
             },
           },
-          "email-username": {
+          username: {
             validators: {
               notEmpty: {
                 message: "Please enter email / username",
@@ -94,8 +95,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
             rowSelector: ".mb-3",
           }),
           submitButton: new SubmitButton(),
-
-          defaultSubmit: new DefaultSubmit(),
+          // defaultSubmit: new DefaultSubmit(),
           autoFocus: new AutoFocus(),
         },
         init: (instance) => {
@@ -108,6 +108,51 @@ document.addEventListener("DOMContentLoaded", function (e) {
             }
           });
         },
+      });
+      // console.log(fv);
+      fv.on("core.form.valid", function (e) {
+        const email = formAuthentication.username.value;
+        const password = formAuthentication.password.value;
+        $.ajax({
+          url:
+            backend_path +
+            "/auth/login",
+          type: "POST",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify({
+            email: email,
+            password: password
+          }),
+          success: function (result) {
+            // simpan token ke cookie (expires 1 hari)
+            document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
+            localStorage.setItem("access_token", result.access_token);
+            // ambil redirect dari query param
+              const params = new URLSearchParams(window.location.search);
+              const redirectUrl = params.get("redirect") || "/";
+              // redirect user ke halaman terakhir / default dashboard
+              window.location.href = redirectUrl;
+          },
+          error: function (xhr, status, error) {
+            Swal.fire({
+              title: 'Error!',
+              text: xhr.responseText,
+              icon: 'error',
+              customClass: {
+                confirmButton: 'btn btn-primary waves-effect waves-light'
+              },
+              buttonsStyling: false
+            });
+            try {
+              const json = JSON.parse(xhr.responseText);        // parse ke JSON
+              console.error("Error JSON:", json);
+            } catch (e) {
+              console.log(xhr.responseText)
+              console.error("Bukan JSON:", xhr.responseText);
+            }
+          },
+        });
       });
     }
 
@@ -125,7 +170,3 @@ document.addEventListener("DOMContentLoaded", function (e) {
   })();
 });
 
-$("#login").on("click", function (a) {
-  const sss = $("#formAuthentication").serializeArray();
-  console.log(sss);
-});

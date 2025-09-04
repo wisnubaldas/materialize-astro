@@ -1,5 +1,6 @@
 import $ from "jquery";
 
+
 // Fungsi untuk ambil token dari cookie
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -19,9 +20,9 @@ $.ajaxSetup({
   error: function (xhr, status, error) {
     // Kalau unauthorized → redirect ke login
     if (xhr.status === 401) {
-      window.location.href = "/login/";
+      window.location.href = "/auth/login/";
     }
   },
 });
-
+ 
 export default $;

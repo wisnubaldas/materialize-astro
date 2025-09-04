@@ -31,6 +31,7 @@
     "@yaireo/tagify": "~4.18.2",
     "animate.css": "~4.1.1",
     "aos": "~2.3.4",
+    "apexcharts": "^5.3.4",
     "apexcharts-clevision": "^3.28.5",
     "astro": "^5.13.5",
     "autosize": "~6.0.1",

@@ -49,6 +49,7 @@ window.config = {
 window.assetsPath = document.documentElement.getAttribute('data-assets-path');
 window.templateName = document.documentElement.getAttribute('data-template');
 window.rtlSupport = true; // set true for rtl support (rtl + ltr), false for ltr only.
+window.backend_path = import.meta.env.PUBLIC_API_URL; // 'http://localhost:8000';
 
 /**
  * TemplateCustomizer

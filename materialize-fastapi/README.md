@@ -55,3 +55,56 @@ uvicorn app.main:app --reload
 ```
 
 Visit `http://127.0.0.1:8000/docs` to access the interactive API documentation.
+
+## Migrasi
+```bash
+alembic revision --autogenerate -m "Deskripsi migrasi Anda"
+## Manual (membuat "blank" revision)
+alembic revision -m "Deskripsi migrasi Anda"
+## Menerapkan Migrasi (Apply)
+alembic upgrade head
+## Jika Anda perlu kembali (rollback) ke revisi sebelumnya, Anda bisa menggunakan perintah
+alembic downgrade -1
+```
+
+## Faker & Seed
+```python
+## app/db/seeder.py
+from faker import Faker
+from sqlalchemy.orm import Session
+from app.db.mysql import SessionLocal
+from app.models.user_model import User
+from app.utils.helpers import hash_password
+import secrets
+
+fake = Faker()
+
+def seed_users(n: int = 10):
+    db: Session = SessionLocal()
+    try:
+        for _ in range(n):
+            username = fake.user_name()
+            password = hash_password("password123")  # semua sample pakai default password
+            token = secrets.token_hex(16)
+            refresh_token = secrets.token_hex(32)
+
+            user = User(
+                username=username,
+                password=password,
+                token=token,
+                refresh_token=refresh_token,
+            )
+            db.add(user)
+        db.commit()
+        print(f"✅ {n} users berhasil di-seed")
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    seed_users(20)  # generate 20 user sample
+
+```
+```bash
+## Cara Jalankan Seeder
+python -m app.db.seeder
+```

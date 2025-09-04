@@ -1,25 +1,28 @@
 import type { MiddlewareHandler } from "astro";
 
-const PUBLIC_ROUTES = ["/auth/login/", "/auth/register/", "/docs/"];
+const PUBLIC_ROUTES = ["/auth/login/", "/auth/register/", "/docs"];
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const url = new URL(context.request.url);
 
-  // Cek apakah halaman termasuk public
+  // cek route public
   if (PUBLIC_ROUTES.some((path) => url.pathname.startsWith(path))) {
     return next();
   }
 
-  // Cek token dari cookies (rekomendasi)
+  // cek token dari cookies
   const token = context.cookies.get("auth_token")?.value;
 
+  // kalau belum login → redirect ke login + simpan last path
   if (!token) {
-    // Belum login → redirect ke login
-    return Response.redirect(new URL("/auth/login/", context.url), 302);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    return Response.redirect(
+      new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
+      302
+    );
   }
 
-  // Kalau sudah ada token, bisa validasi ke backend FastAPI
-  // (misalnya dengan fetch ke /auth/verify)
+  // validasi token ke backend FastAPI
   try {
     const verify = await fetch(
       `${import.meta.env.PUBLIC_API_URL}/auth/verify`,
@@ -28,12 +31,22 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       }
     );
 
+    // console.log(verify);
+
     if (!verify.ok) {
-      return Response.redirect(new URL("/login/", context.url), 302);
+      const redirectTo = encodeURIComponent(url.pathname + url.search);
+      return Response.redirect(
+        new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
+        302
+      );
     }
   } catch (err) {
     console.error("Auth check failed:", err);
-    return Response.redirect(new URL("/login/", context.url), 302);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    return Response.redirect(
+      new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
+      302
+    );
   }
 
   return next();

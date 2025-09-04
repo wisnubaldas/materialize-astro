@@ -13,6 +13,11 @@ uvicorn = { extras = ["standard"], version = "^0.30.0" }
 sqlalchemy = "^2.0.32"
 alembic = "^1.13.2"
 pymysql = "^1.1.1"
+passlib = "^1.7.4"
+faker = "^37.6.0"
+bcrypt = "^4.3.0"
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+pydantic = {extras = ["email"], version = "^2.11.7"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
@@ -27,3 +32,6 @@ prod = "gunicorn --bind 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker app.m
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pylint]
+extension-pkg-allow-list = "alembic"

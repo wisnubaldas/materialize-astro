@@ -1,11 +1,11 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
-from app.db import Base
+from app.db.mysql import Base
 from app.models.user import User  # import semua model
 
 config = context.config
-fileConfig(config.config_file_name)
+fileConfig(config.config_file_name) # type: ignore
 target_metadata = Base.metadata
 
 def run_migrations_offline():
