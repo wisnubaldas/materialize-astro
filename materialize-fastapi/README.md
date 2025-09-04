@@ -21,17 +21,20 @@ fastapi-project
 ## Setup Instructions
 
 1. **Clone the repository:**
+
    ```
    git clone <repository-url>
    cd fastapi-project
    ```
 
 2. **Create a virtual environment:**
+
    ```
    python -m venv venv
    ```
 
 3. **Activate the virtual environment:**
+
    - On Windows:
      ```
      venv\Scripts\activate
@@ -51,12 +54,15 @@ fastapi-project
 To run the FastAPI application, execute the following command:
 
 ```
-uvicorn app.main:app --reload
+source .venv/Scripts/activate
+poetry run dev
+
 ```
 
 Visit `http://127.0.0.1:8000/docs` to access the interactive API documentation.
 
 ## Migrasi
+
 ```bash
 alembic revision --autogenerate -m "Deskripsi migrasi Anda"
 ## Manual (membuat "blank" revision)
@@ -68,6 +74,7 @@ alembic downgrade -1
 ```
 
 ## Faker & Seed
+
 ```python
 ## app/db/seeder.py
 from faker import Faker
@@ -104,6 +111,7 @@ if __name__ == "__main__":
     seed_users(20)  # generate 20 user sample
 
 ```
+
 ```bash
 ## Cara Jalankan Seeder
 python -m app.db.seeder
