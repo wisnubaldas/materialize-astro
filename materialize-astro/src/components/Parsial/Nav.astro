@@ -1,10 +1,14 @@
+---
+
+---
+
 <nav
   class="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme"
   id="layout-navbar"
 >
   <div class="container-xxl">
     <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-4">
-      <a href="index.html" class="app-brand-link gap-2">
+      <a href="#" class="app-brand-link gap-2">
         <span class="app-brand-logo demo">
           <span style="color: var(--bs-primary)">
             <svg
@@ -80,6 +84,7 @@
       </a>
     </div>
 
+    <!-- Menu online  -->
     <div
       class="navbar-nav-right d-flex align-items-center"
       id="navbar-collapse"
@@ -151,7 +156,7 @@
               <div class="dropdown-divider"></div>
             </li>
             <li>
-              <a class="dropdown-item" href="javascript:void(0);">
+              <a class="dropdown-item" href="#" id="logout-btn">
                 <i class="mdi mdi-power me-2"></i>
                 <span class="align-middle">Log Out</span>
               </a>
@@ -163,3 +168,20 @@
     </div>
   </div>
 </nav>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        // Hapus token dari localStorage
+        localStorage.removeItem("access_token");
+        // Hapus token dari cookie
+        document.cookie =
+          "auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        // Redirect ke halaman login
+        window.location.href = "auth/login/";
+      });
+    }
+  });
+</script>

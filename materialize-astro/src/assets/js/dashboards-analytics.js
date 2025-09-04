@@ -1,3 +1,5 @@
+import ApexCharts from 'apexcharts'
+
 'use strict';
 
 (function () {

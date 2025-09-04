@@ -1,11 +1,8 @@
 /**
  *  Logistics Dashboard
  */
-import $ from "./ajax-setup";
 import ApexCharts from 'apexcharts'
-import DataTable from  'datatables.net-bs5';
-
-DataTable(window, $); 
+import $ from "./ajax-setup"; // jquery sudah masuk disini
 
 'use strict';
 

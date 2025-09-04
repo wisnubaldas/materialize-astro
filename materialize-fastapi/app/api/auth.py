@@ -43,10 +43,10 @@ def verify(authorization: str = Header(...)):
         )
 
     return {"username": username, "valid": True}
-
-@router.get("/me")
-def me(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    username = verify_token(credentials.credentials)
-    if not username:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return {"username": username}
+@router.post("/logout")
+def logout():
+    """
+    Logout JWT-based auth (stateless).
+    Client harus hapus token dari cookie/localStorage.
+    """
+    return {"message": "Successfully logged out"}

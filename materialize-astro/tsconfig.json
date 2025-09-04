@@ -1,20 +1,31 @@
 {
   "extends": "astro/tsconfigs/strict",
-   "compilerOptions": {
+  "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-        "~/*": ["src/*"],
-        "@css/*": ["src/assets/css/*"],
-        "@js/*": ["src/assets/js/*"],
-        "@json/*": ["src/assets/json/*"],
-        "@img/*": ["src/assets/img/*"],
-        "@svg/*": ["src/assets/svg/*"],
-        "@vendor/*": ["src/assets/vendor/*"],
-        "@components/*": ["src/components/*"],
-        "@layouts/*": ["src/layouts/*"],
-        "@pages/*": ["src/pages/*"],
-      },
-    },
-  "include": [".astro/types.d.ts", "**/*"],
+      "~/*": ["src/*"],
+      "@modules/*": ["node_modules/*"],
+      "@css/*": ["src/assets/css/*"],
+      "@js/*": ["src/assets/js/*"],
+      "@json/*": ["src/assets/json/*"],
+      "@img/*": ["src/assets/img/*"],
+      "@svg/*": ["src/assets/svg/*"],
+      "@vendor/*": ["src/assets/vendor/*"],
+      "@components/*": ["src/components/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@pages/*": ["src/pages/*"]
+    }
+  },
+  "moduleResolution": "node",
+  "module": "ESNext",
+  "target": "ESNext",
+  "jsx": "preserve",
+  "strict": true,
+  "allowJs": true,
+  "esModuleInterop": true,
+  "resolveJsonModule": true,
+  "isolatedModules": true,
+  "skipLibCheck": true,
+  "include": ["src", "astro.config.*", "env.d.ts", ".astro/types.d.ts", "**/*", "package.json"],
   "exclude": ["dist"]
 }
