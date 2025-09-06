@@ -2,56 +2,47 @@ export default [
   {
     text: "Dashboards",
     href: "#",
-    icon: "mdi-home-outline",
+    icon: "mdi mdi-folder-home-outline",
     children: [
       {
         text: "Angkasapura",
         href: "/dashboard-angkasapura/",
-        icon: "mdi-cart-outline",
+        icon: "mdi mdi-space-station",
       },
       {
         text: "HUBNET",
         href: "/dashboard-hubnet/",
-        icon: "mdi-chart-timeline-variant",
+        icon: "mdi mdi-train-car",
       },
-      {
-        text: "FEDEX",
-        href: "/dashboard-FX/",
-        icon: "mdi-chart-timeline-variant",
-      },
-      {
-        text: "TPS Online",
-        href: "/dashboard-tpsonline/",
-        icon: "mdi-chart-timeline-variant",
-      },
+
     ],
   },
   {
     text: "Angkasapura II",
     href: "#",
-    icon: "mdi-home-outline",
+    icon: "mdi mdi-folder-home-outline",
     children: [
       {
-        text: "Kirim Invoice",
-        href: "/angkasapura/kirim-invoice",
-        icon: "mdi-cart-outline",
+        text: "Data Invoice",
+        href: "/angkasapura/data-invoice/",
+        icon: "mdi-invoice-text-clock",
       },
       {
-        text: "Status Invoice",
-        href: "/angkasapura/status-invoice",
-        icon: "mdi-chart-timeline-variant",
+        text: "Invoice Gagal Terkirim",
+        href: "/angkasapura/status-invoice/",
+        icon: "mdi mdi-invoice-remove-outline",
       },
       {
-        text: "SIGO",
+        text: "Invoice Tidak Lengkap",
         href: "/angkasapura/sigo/",
-        icon: "mdi-chart-timeline-variant",
+        icon: "mdi mdi-invoice-text-edit",
       },
     ],
   },
   {
     text: "HUBNET",
     href: "#",
-    icon: "mdi-home-outline",
+    icon: "mdi mdi-folder-home-outline",
     children: [
       {
         text: "Kirim Data",

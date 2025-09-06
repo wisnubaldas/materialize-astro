@@ -30,5 +30,8 @@ def seed_users(n: int = 10):
     finally:
         db.close()
 
+def seed_inv(n: int = 10):
+    pass
+
 if __name__ == "__main__":
     seed_users(20)  # generate 20 user sample

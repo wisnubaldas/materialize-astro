@@ -1,3 +1,22 @@
 {
-    "python.defaultInterpreterPath": "./venv/Scripts/python.exe"
+  "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
+  // Aktifkan Pylint
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+
+  "pylint.args": ["--rcfile=${workspaceFolder}/materialize-fastapi/.pylintrc"],
+  // Abaikan folder yang tidak perlu di linting
+  "pylint.ignorePatterns": [
+    "**/venv/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/migrations/**",
+    "**/alembic/**"
+  ],
+
+  // Formatter & linting tambahan opsional
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
 }

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
-from app.api import routes,auth
+
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import routes,auth
 
 app = FastAPI(title="FastAPI App with Poetry")
 origins = [
