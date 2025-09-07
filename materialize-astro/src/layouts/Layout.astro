@@ -56,16 +56,24 @@ const { page, title } = Astro.props;
 
     <!-- Drag Target Area To SlideIn Menu On Small Screens -->
     <div class="drag-target"></div>
-    <script src="@modules/datatables.net-responsive/js/dataTables.responsive.js"></script>
-    <script src="@modules/datatables.net-bs5/js/dataTables.bootstrap5.js"></script>
+
+    <!-- <script src="@js/dashboards-analytics.js"></script>
+    <script src="@js/app-logistics-dashboard.js"></script> -->
+
+    <!--/ susunan harus terbalik menu.js di load terlebih dahulu -->
+    <script src="@modules/datatables.net-responsive/js/dataTables.responsive.js"
+    ></script>
+    <script src="@modules/datatables.net-bs5/js/dataTables.bootstrap5.js"
+    ></script>
     <script src="@modules/datatables.net/js/dataTables.js"></script>
-    <script src="@modules/apexcharts/dist/apexcharts.min.js"></script>  
-    <!--/ susunan terbalik menu.js di load terlebih dahulu -->
-    <script src="@js/dashboards-analytics.js"></script>
-    <script src="@js/app-logistics-dashboard.js"></script>
-    <script src="@modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="@modules/apexcharts/dist/apexcharts.min.js"></script>
+
     <!-- jquery di import disini -->
+    <script src="@modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="@js/main.js"></script>
     <script src="@vendor/js/menu.js"></script>
+
+    <!-- Slot untuk script tambahan halaman -->
+    <slot name="scripts" />
   </body>
 </html>

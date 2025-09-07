@@ -58,7 +58,8 @@ class InvAp2Base(BaseModel):
     PPN_FEE: Optional[int] = None
 
     status: int = 1
-
+    class Config:
+        from_attributes = True # Ubah `orm_mode = True` (Pydantic V1) menjadi `from_attributes = True` (Pydantic V2)
 
 class InvoiceCreate(InvAp2Base):
     pass

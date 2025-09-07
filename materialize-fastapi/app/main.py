@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes,auth
+from app.api import routes
 
 app = FastAPI(title="FastAPI App with Poetry")
 origins = [
@@ -18,7 +18,6 @@ app.add_middleware(
 )
 
 app.include_router(routes.router)
-app.include_router(auth.router)
 @app.get("/")
 def root():
     return {"message": "Hello FastAPI with Poetry!"}

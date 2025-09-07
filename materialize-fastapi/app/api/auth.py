@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.utils.auth_util import create_token, verify_token, verify_password
+from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from app.db.mysql import get_db
+
+from app.utils.auth_util import create_token, verify_token, verify_password
 from app.models.user import User
 from app.schemas.user_schema import LoginSchema, TokenSchema
 

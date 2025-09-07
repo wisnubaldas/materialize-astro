@@ -34,7 +34,7 @@ export default [
       },
       {
         text: "Invoice Tidak Lengkap",
-        href: "/angkasapura/sigo/",
+        href: "/angkasapura/invoice-tidak-lengkap/",
         icon: "mdi mdi-invoice-text-edit",
       },
     ],

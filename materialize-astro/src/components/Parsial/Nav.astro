@@ -179,8 +179,12 @@
         // Hapus token dari cookie
         document.cookie =
           "auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
-        // Redirect ke halaman login
-        window.location.href = "auth/login/";
+        // Ambil path terakhir + query string
+        const lastPath = window.location.pathname + window.location.search;
+        const redirectTo = encodeURIComponent(lastPath);
+
+        // Redirect ke halaman login dengan redirect parameter
+        window.location.href = `/auth/login/?redirect=${redirectTo}`;
       });
     }
   });
