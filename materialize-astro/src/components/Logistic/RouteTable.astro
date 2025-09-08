@@ -1,16 +1,16 @@
 ---
 const {
   title = "Datatable Default",
-  name = "Datatable Default",
   id = "dtId",
+  column = ["sample", "sample", "sample"],
 } = Astro.props;
 ---
 
-<div class="col-12 order-5">
+<div class="col-12 order-1">
   <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between">
       <div class="card-title mb-0">
-        <h5 class="m-0 me-2">On route vehicles</h5>
+        <h5 class="m-0 me-2">{title}</h5>
       </div>
       <div class="dropdown">
         <button
@@ -27,23 +27,20 @@ const {
           class="dropdown-menu dropdown-menu-end"
           aria-labelledby="routeVehicles"
         >
-          <a class="dropdown-item" href="javascript:void(0);">Select All</a>
           <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
           <a class="dropdown-item" href="javascript:void(0);">Share</a>
         </div>
       </div>
     </div>
     <div class="card-datatable table-responsive">
-      <table class="dt-route-vehicles table">
-        <thead class="table-light">
+      <table class="table m-3 striped" id={id}>
+        <thead class="table-light fw-bold text-center">
           <tr>
-            <th></th>
-            <th></th>
-            <th>location</th>
-            <th>starting route</th>
-            <th>ending route</th>
-            <th>warnings</th>
-            <th class="w-20">progress</th>
+            {
+              column.map((item: string) => (
+                <th>{item.replace(/_/g, " ").toUpperCase()}</th>
+              ))
+            }
           </tr>
         </thead>
       </table>

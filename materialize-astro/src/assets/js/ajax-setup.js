@@ -24,5 +24,5 @@ $.ajaxSetup({
     }
   },
 });
- 
+
 export default $;

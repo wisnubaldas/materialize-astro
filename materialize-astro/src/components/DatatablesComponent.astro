@@ -1,0 +1,93 @@
+---
+interface Props {
+  column: string[];
+  dataPath: string;
+}
+const { column, dataPath } = Astro.props;
+const tableId = "dt_" + Math.floor(Math.random() * 10000);
+const columnsJson = JSON.stringify(column.map((col) => ({ data: col })));
+---
+
+<!-- Ajax Sourced Server-side -->
+<div class="card">
+  <div class="card-datatable text-nowrap pt-0 m-2 table-responsive">
+    <table
+      class="datatables-ajax table table-bordered table-striped table-sm table-hover"
+      id={tableId}
+      data-idnya={tableId}
+      data-columns={columnsJson}
+      data-path={dataPath}
+    >
+      <thead class="table-primary">
+        <tr>
+          {column.map((col) => <th>{col.replace(/_/g, " ")}</th>)}
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+<script>
+  import $ from "~/assets/js/ajax-setup";
+  import { getCookie, INV } from "~/assets/js/module/utils";
+  import "~/components/DatatablesComponent";
+  let el = document.querySelector(".datatables-ajax");
+  const path = (el as HTMLElement).dataset.path;
+  let idNya = (el as HTMLElement).dataset.idnya;
+  let dt_ajax_table = $("#" + idNya);
+  const kolomnya = JSON.parse((el as HTMLElement).dataset.columns as string);
+  const columns = kolomnya.map((c: any) => {
+    if (c.data === "status") {
+      return {
+        data: c.data,
+        render: (data: any, type: any, row: any) => {
+          if (type === "display") {
+            return data === 1
+              ? `<span class="badge bg-success"><i class="bi bi-check-circle"></i> Sukses</span>`
+              : `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Gagal</span>`;
+          }
+          return data;
+        },
+      };
+    }
+    return { data: c.data };
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    if (dt_ajax_table.length) {
+      let dt_ajax = dt_ajax_table.DataTable({
+        processing: true,
+        serverSide: true, // kalau backend handle paging/sorting/filtering
+        responsive: true,
+        columns: columns,
+        columnDefs: [
+          {
+            // Actions
+            targets: -1,
+            title: "Actions",
+            orderable: false,
+            render: function (data: any, type: any, full: any, meta: any) {
+              return data === 1
+                ? `<span class="badge bg-success"><i class="bi bi-check-circle"></i> Sukses</span>`
+                : `<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Gagal</span>`;
+            },
+          },
+        ],
+        ajax: {
+          url: INV.back_path + path,
+          type: "POST",
+          contentType: "application/json",
+          data: function (d: any) {
+            // d = object bawaan DataTables (draw, start, length, dll.)
+            return JSON.stringify(d);
+          },
+          beforeSend: function (xhr: any, settings: any) {
+            const token = getCookie("auth_token");
+            if (token) {
+              xhr.setRequestHeader("Authorization", "Bearer " + token);
+            }
+          },
+        },
+      });
+    }
+  });
+</script>
+<!--/ Ajax Sourced Server-side -->
