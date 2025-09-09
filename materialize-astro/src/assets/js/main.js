@@ -9,7 +9,7 @@ import $ from "jquery";
 $(document).ready(function () {
   console.log("Document is ready");
 });
-
+// console.log(window);
 window.isRtl = window.Helpers.isRtl();
 window.isDarkStyle = window.Helpers.isDarkStyle();
 let menu,
@@ -81,11 +81,11 @@ if (document.getElementById("layout-menu")) {
         "templateCustomizer-" + templateName + "--ShowDropdownOnHover"
       ) // If value(showDropdownOnHover) is set in local storage
         ? localStorage.getItem(
-            "templateCustomizer-" + templateName + "--ShowDropdownOnHover"
-          ) === "true" // Use the local storage value
+          "templateCustomizer-" + templateName + "--ShowDropdownOnHover"
+        ) === "true" // Use the local storage value
         : window.templateCustomizer !== undefined // If value is set in config.js
-        ? window.templateCustomizer.settings.defaultShowDropdownOnHover // Use the config.js value
-        : true, // Use this if you are not using the config.js and want to set value directly from here
+          ? window.templateCustomizer.settings.defaultShowDropdownOnHover // Use the config.js value
+          : true, // Use this if you are not using the config.js and want to set value directly from here
     });
     // Change parameter to true if you want scroll animation
     window.Helpers.scrollToActive((animate = false));
@@ -117,7 +117,7 @@ if (document.getElementById("layout-menu")) {
               .querySelector(`input[value="${layoutCollapsedVal}"]`)
               .click();
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     });
   });
@@ -512,7 +512,7 @@ if (document.getElementById("layout-menu")) {
             ) === "true",
             false
           );
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 })();

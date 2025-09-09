@@ -8,24 +8,72 @@ const { column, dataPath, addColumn = [] } = Astro.props;
 const tableId = "dt_" + Math.floor(Math.random() * 10000);
 ---
 
-<!-- Ajax Sourced Server-side -->
+<!-- Ajax Sourced Server-side --><!--Search Form -->
 <div class="card">
-  <div class="card-datatable text-nowrap pt-0 m-2 table-responsive">
-    <table
-      class="datatables-ajax table table-bordered table-striped table-sm table-hover"
-      id={tableId}
-      data-idnya={tableId}
-      data-path={dataPath}
-    >
-      <thead class="table-primary">
-        <tr>
-          {addColumn?.map((col) => <th>#</th>)}
-          {column.map((col) => <th>{col.replace(/_/g, " ")}</th>)}
-        </tr>
-      </thead>
-    </table>
+  <div class="card-body">
+    <form class="dt_adv_search" method="POST">
+      <div class="row">
+        <div class="col-12">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="form-floating form-floating-outline">
+                <input
+                  type="text"
+                  class="form-control dt-input dt-full-name"
+                  data-column="3"
+                  placeholder="NO_INVOICE"
+                  data-column-index="0"
+                  id="filter-invoice"
+                />
+                <label for="filter-invoice">NO_INVOICE</label>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="form-floating form-floating-outline">
+                <input
+                  type="text"
+                  class="form-control dt-date flatpickr-range dt-input"
+                  data-column="5"
+                  placeholder="StartDate to EndDate"
+                  data-column-index="4"
+                  id="filter-date"
+                  name="dt_date"
+                />
+                <label for="filter-date">Date</label>
+              </div>
+              <!-- Hidden inputs for Flatpickr -->
+              <input type="hidden" class="start_date" id="start-date" />
+              <input type="hidden" class="end_date" id="end-date" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="card-body">
+    <div class="card-datatable text-nowrap pt-0 m-2 table-responsive">
+      <table
+        class="datatables-ajax table table-bordered table-striped table-sm table-hover"
+        id={tableId}
+        data-idnya={tableId}
+        data-path={dataPath}
+      >
+        <thead class="table-primary">
+          <tr>
+            {addColumn?.map((col) => <th>#</th>)}
+            {column.map((col) => <th>{col.replace(/_/g, " ")}</th>)}
+          </tr>
+        </thead>
+      </table>
+    </div>
   </div>
 </div>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- masukin ke object window buat akalin ssr astro -->
 <script define:vars={{ column, addColumn }} defer>
   const add_column = addColumn.map((col) => {
@@ -70,6 +118,7 @@ const tableId = "dt_" + Math.floor(Math.random() * 10000);
   import $ from "~/assets/js/ajax-setup";
   import { getCookie, INV } from "~/assets/js/module/utils";
   import "~/components/DatatablesComponent";
+
   let el = document.querySelector(".datatables-ajax");
   const path = (el as HTMLElement).dataset.path;
   let idNya = (el as HTMLElement).dataset.idnya;
@@ -88,6 +137,16 @@ const tableId = "dt_" + Math.floor(Math.random() * 10000);
           contentType: "application/json",
           data: function (d: any) {
             // d = object bawaan DataTables (draw, start, length, dll.)
+            // return JSON.stringify(d);
+            var invoice = $("#filter-invoice").val();
+            var startDate = $("#start-date").val();
+            var endDate = $("#end-date").val();
+            d.filters = {
+              NO_INVOICE: invoice,
+              TANGGAL: startDate,
+              // TANGGAL = endDate,
+            };
+            // console.log("Data yang dikirim ke server:", d);
             return JSON.stringify(d);
           },
           beforeSend: function (xhr: any, settings: any) {
@@ -98,7 +157,43 @@ const tableId = "dt_" + Math.floor(Math.random() * 10000);
           },
         },
       });
+      // event
+      // Event listener untuk memicu refresh tabel saat input filter berubah
+      $("#filter-invoice").on("keyup", function () {
+        dt_ajax.draw();
+      });
+
+      // Event listener untuk memicu refresh tabel saat tanggal dipilih
+      $("#filter-date").on("change", function () {
+        dt_ajax.draw();
+      });
+
+      // Event listener untuk tombol refresh
+      $("#refresh-table").on("click", function () {
+        dt_ajax.draw();
+      });
     }
+
+    // jalanin flatfiker dulu
+    // Initialize Flatpickr for date range
+    $("#filter-date").flatpickr({
+      mode: "range",
+      dateFormat: "Y-m-d",
+      onClose: function (
+        selectedDates: string | any[],
+        dateStr: any,
+        instance: { formatDate: (arg0: any, arg1: string) => any }
+      ) {
+        // When date range is selected, update the hidden fields
+        if (selectedDates.length === 2) {
+          $("#start-date").val(instance.formatDate(selectedDates[0], "Y-m-d"));
+          $("#end-date").val(instance.formatDate(selectedDates[1], "Y-m-d"));
+        } else {
+          $("#start-date").val("");
+          $("#end-date").val("");
+        }
+      },
+    });
   });
 </script>
 <!--/ Ajax Sourced Server-side -->

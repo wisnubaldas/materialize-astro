@@ -9,8 +9,17 @@ from app.services.datatables_service import DataTablesService
 inv_ap2_datatable_service = DataTablesService(
     model=InvAp2,
     schema=InvoiceGet,
-    search_columns=["id", "NO_INVOICE", "TGL_INVOICE"]
+    search_columns=["id", "NO_INVOICE", "TANGGAL"],
+    custom_filters=["NO_INVOICE", "TANGGAL","JENIS_KARGO","JML_HARI"],
 )
+
+# # instance service untuk model DataVoidInvAp2
+# void_inv_ap2_datatable_service = DataTablesService(
+#     model=DataVoidInvAp2,
+#     schema=DataVoidInvAp2Schema,
+#     search_columns=["INV","TRANSACTION_DATE","TIPE_VOID"],
+#     custom_filters=["INV","TRANSACTION_DATE"],
+# )
 
 class INVAp2Service:
     @staticmethod

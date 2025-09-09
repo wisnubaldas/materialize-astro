@@ -1,6 +1,11 @@
+import flatpickr from "flatpickr";
 import $ from "jquery";
-
-
+// masukin ke jquery jadiin plugin
+$.fn.flatpickr = function (config) {
+  return this.each(function () {
+    flatpickr(this, config);
+  });
+};
 // Fungsi untuk ambil token dari cookie
 function getCookie(name) {
   const value = `; ${document.cookie}`;

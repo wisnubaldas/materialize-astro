@@ -11,7 +11,7 @@ import "datatables.net-bs5/css/dataTables.bootstrap5.css";
 // Responsive
 import "datatables.net-responsive-bs5";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.css";
-
+// import "flatpickr";
 // // AutoFill
 // import "datatables.net-autofill-bs5";
 // import "datatables.net-autofill-bs5/css/autoFill.bootstrap5.css";
