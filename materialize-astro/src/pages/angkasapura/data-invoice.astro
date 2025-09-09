@@ -52,8 +52,8 @@ const column = [
   "CARGO_INSPECTION_REPORT_FEE",
   "MATERAI_FEE",
   "PPN_FEE",
-  "status",
 ];
+const addColumn = ["Detail", "boolean:status"];
 ---
 
 <Layout title="Data Invoice" page="Data inv">
@@ -62,6 +62,10 @@ const column = [
   </Fragment>
 
   <div class="container-xxl flex-grow-1 container-p-y">
-    <DTBARU column={column} dataPath="/angkasapura/datatables" />
+    <DTBARU
+      addColumn={addColumn}
+      column={column}
+      dataPath="/angkasapura/datatables"
+    />
   </div>
 </Layout>

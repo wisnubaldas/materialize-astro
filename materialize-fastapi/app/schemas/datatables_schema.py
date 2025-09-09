@@ -17,7 +17,7 @@ class ColumnOrder(BaseModel):
 
 
 class Column(BaseModel):
-    data: str
+    data: Optional[str] = ""
     name: Optional[str] = ""
     searchable: Optional[bool] = True
     orderable: Optional[bool] = True
