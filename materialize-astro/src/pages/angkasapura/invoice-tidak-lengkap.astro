@@ -1,0 +1,24 @@
+---
+import Layout from "@layouts/Layout.astro";
+import DTBARU from "~/components/DatatablesComponent.astro";
+
+const column = ["", "id", "inv", "desc", "status"];
+// const addColumn = ["boolean:status"];
+// const filterColumn = ["inv", "response", "status"];
+---
+
+<Layout title="Status Response Invoice" page="Status Response INV">
+  <Fragment slot="scripts">
+    <script src="@js/module/data-invoice.js"></script>
+  </Fragment>
+
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="">
+      <span class="text-muted fw-light">List Data</span> Invoice yang tidak lengkap
+    </h4>
+    <DTBARU
+      column={column}
+      dataPath="/angkasapura/data-inv-yang-tidak-lengkap"
+    />
+  </div>
+</Layout>

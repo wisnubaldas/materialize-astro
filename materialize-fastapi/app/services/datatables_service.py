@@ -1,8 +1,9 @@
+from pyexpat import model
 from typing import Type, List, Optional, TypeVar
 from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse, CustomFilters
 
 # Tipe generik untuk model SQLAlchemy
 ModelType = TypeVar("ModelType")
@@ -20,6 +21,7 @@ class DataTablesService:
         self.custom_filters = custom_filters if custom_filters is not None else []
 
     def get_datatable(self, db: Session, params: DataTablesParams) -> DataTablesResponse[SchemaType]:
+        params = self.apply_custom_filters(params)
         """
         Menjalankan query datatables dengan filter, sorting, dan pagination.
         """
@@ -32,21 +34,45 @@ class DataTablesService:
         # --- Logika Filter Kustom yang Dinamis ---
         custom_filter_conditions = []
         if params.filters:
+            # ambil langsung filter dict
+            filters = params.filters
+            # 🎯 handle range tanggal dulu
+            tanggal_awal = getattr(filters, "TANGGAL_AWAL", None)
+            tanggal_akhir = getattr(filters, "TANGGAL_AKHIR", None)
+            if tanggal_awal and tanggal_akhir:
+                # range: >= TANGGAL_AWAL & <= TANGGAL_AKHIR
+                custom_filter_conditions.append(and_(self.model.TANGGAL >= tanggal_awal, self.model.TANGGAL <= tanggal_akhir))
+            elif tanggal_awal:
+                # hanya dari tanggal_awal ke atas
+                custom_filter_conditions.append(self.model.TANGGAL >= tanggal_awal)
+            elif tanggal_akhir:
+                 # hanya sampai tanggal_akhir
+                custom_filter_conditions.append(self.model.TANGGAL <= tanggal_akhir)
+            
+            # 🎯 filter lain
             for filter_name in self.custom_filters:
-                filter_value = getattr(params.filters, filter_name, None)
-                if filter_value:
-                    # Asumsi kolom di model memiliki nama yang sama dengan nama filter
-                    model_column = getattr(self.model, filter_name, None)
-                    if model_column:
-                        # Kasus khusus untuk filter tanggal
-                        if "TANGGAL" in filter_name.upper() or "DATE" in filter_name.upper():
-                            # Asumsi tanggal dikirim sebagai 'yyyy-mm-dd'
-                            # Ini bisa diubah untuk menangani rentang tanggal
-                            custom_filter_conditions.append(model_column == filter_value)
-                        # Filter teks biasa
-                        else:
-                            custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
+                if filter_name in ["TANGGAL_AWAL", "TANGGAL_AKHIR"]:
+                    continue
+                filter_value = getattr(filters, filter_name, None)
+                if not filter_value:
+                    continue
+                model_column = getattr(self.model, filter_name, None)
+                if model_column is None:
+                    continue
+                
+                if filter_name.upper() == "TANGGAL":
+                    # filter exact match tanggal
+                    # custom_filter_conditions.append(model_column == filter_value)
+                    # tanggal pake like juga kalo ada jamnya
+                    custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
+                    
+                else:
+                    # filter LIKE untuk string
+                    custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
+            
+            
         
+        # print(custom_filter_conditions)
         # Filtering/Searching (Global search)
         global_search_conditions = []
         if params.search.value and self.search_columns:
@@ -94,74 +120,17 @@ class DataTablesService:
             data=[self.schema.model_validate(r) for r in results]
         )
         return dt_response
+    
+    def apply_custom_filters(self, params: DataTablesParams) -> DataTablesParams:
+            """
+            Inject custom filter fields ke dalam params.filters jika belum ada.
+            """
+            if not params.filters:
+                params.filters = CustomFilters()
 
-# from typing import Type, List, Optional, TypeVar
-# from sqlalchemy import func, or_
-# from sqlalchemy.orm import Session
-# from sqlalchemy.orm.attributes import InstrumentedAttribute
-# from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
+            for field in self.custom_filters:
+                if not hasattr(params.filters, field):
+                    setattr(params.filters, field, None)
 
-# # Tipe generik untuk model SQLAlchemy
-# ModelType = TypeVar("ModelType")
-# # Tipe generik untuk Pydantic schema
-# SchemaType = TypeVar("SchemaType")
+            return params
 
-# class DataTablesService:
-#     """
-#     Class generik untuk menangani query DataTables.
-#     """
-#     def __init__(self, model: Type[ModelType], schema: Type[SchemaType], search_columns: Optional[List[str]] = None):
-#         self.model = model
-#         self.schema = schema
-#         self.search_columns = search_columns if search_columns is not None else []
-
-#     def get_datatable(self, db: Session, params: DataTablesParams) -> DataTablesResponse[SchemaType]:
-#         """
-#         Menjalankan query datatables dengan filter, sorting, dan pagination.
-#         """
-#         query = db.query(self.model)
-        
-#         # Total records (sebelum filtering)
-#         # ini berarti di tiap model harus ada id
-#         total_records = db.query(func.count(self.model.id)).scalar()
-
-#         # Filtering/Searching
-#         if params.search.value and self.search_columns:
-#             search_value = f"%{params.search.value}%"
-#             # Buat list of filter conditions menggunakan OR
-#             conditions = [
-#                 getattr(self.model, col_name).like(search_value)
-#                 for col_name in self.search_columns
-#                 if hasattr(self.model, col_name)
-#             ]
-#             if conditions:
-#                 query = query.filter(or_(*conditions))
-        
-#         # Filtered records
-#         filtered_records = query.count()
-
-#         # Ordering/Sorting
-#         for order in params.order:
-#             col_idx = order.column
-#             col_name = params.columns[col_idx].data
-#             direction = order.dir
-
-#             if hasattr(self.model, col_name):
-#                 # Dapatkan atribut kolom dari model
-#                 col: InstrumentedAttribute = getattr(self.model, col_name)
-#                 if direction == "desc":
-#                     query = query.order_by(col.desc())
-#                 else:
-#                     query = query.order_by(col.asc())
-
-#         # Pagination
-#         results = query.offset(params.start).limit(params.length).all()
-        
-#         # Buat response DataTables
-#         dt_response = DataTablesResponse(
-#             draw=params.draw,
-#             recordsTotal=total_records,
-#             recordsFiltered=filtered_records,
-#             data=[self.schema.model_validate(r) for r in results]
-#         )
-#         return dt_response

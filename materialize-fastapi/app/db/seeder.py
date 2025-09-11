@@ -1,6 +1,6 @@
 from faker import Faker
 from sqlalchemy.orm import Session
-from app.db.mysql import SessionLocal
+from app.db.mysql import SessionDB1W
 from app.models.user import User
 from app.utils.auth_util import hash_password
 import secrets
@@ -8,7 +8,7 @@ import secrets
 fake = Faker()
 
 def seed_users(n: int = 10):
-    db: Session = SessionLocal()
+    db: Session = SessionDB1W()
     try:
         for _ in range(n):
             email = fake.email()

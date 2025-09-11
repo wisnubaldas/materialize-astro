@@ -6,12 +6,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import DBAPIError, OperationalError
 
 from app.models.inv_ap2 import InvAp2  # pastikan path sesuai
-from app.db.mysql import SessionLocal  # koneksi DB-mu
+from app.db.mysql import SessionDB1W  # koneksi DB-mu
 
 fake = Faker()
 
 def seed_invoices(n: int = 10):
-    db: Session = SessionLocal()
+    db: Session = SessionDB1W()
     try:
         for _ in range(n):
             invoice = InvAp2(

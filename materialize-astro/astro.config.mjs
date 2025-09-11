@@ -15,7 +15,7 @@ export default defineConfig({
   vite: {
     build: {
       minify: true,
-       chunkSizeWarningLimit: 2000, // default 500kb → naik jadi 2mb
+      chunkSizeWarningLimit: 2000, // default 500kb → naik jadi 2mb
     },
 
     // Tambahkan bagian resolve dan alias di sini

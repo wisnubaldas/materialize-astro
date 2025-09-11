@@ -7,13 +7,12 @@ T = TypeVar("T")
 # Input: Permintaan dari DataTables
 # Model untuk filter kustom Anda
 class CustomFilters(BaseModel):
-    NO_INVOICE: Optional[str] = None
-    TANGGAL: Optional[str] = None
+    id: Optional[str] = None
+    
+    class Config:
+            extra = 'allow'
+
     # Tambahkan bidang filter lain sesuai kebutuhan
-    Email: Optional[str] = None
-    Post: Optional[str] = None
-    City: Optional[str] = None
-    Salary: Optional[str] = None
 
 
 class ColumnSearch(BaseModel):

@@ -1,10 +1,11 @@
 from sqlalchemy import Column, BigInteger, String, Integer, SmallInteger, TIMESTAMP, Text, func
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.declarative import declarative_base
 # from app.db.mysql import Base  # ini harus declarative_base()
-
+# Base = declarative_base()
 # pylint: disable=E1102
-Base = declarative_base()
-class InvAp2(Base):
+
+from app.db.mysql import BaseDB1
+class InvAp2(BaseDB1):
     __tablename__ = "inv_ap2"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     NO_INVOICE = Column(String(255), nullable=True)

@@ -1,0 +1,103 @@
+/* ===================== Pricing Css ====================== */
+.pr-table-one {
+    overflow: hidden;
+    background: #fee8da;
+    border-radius: 30px;
+    box-shadow: 0px 0px 40px 0px rgba(211, 211, 214, 0.35);
+    padding: 30px 20px 20px;
+    &:before {
+        content: '';
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        background: #f2d3c0;
+        transform: rotate(45deg) translateX(-50%);
+        left: 45%;
+        bottom: -118px;
+        @include transition(0.3s);
+    }
+    .price {
+        width: 96px;
+        height: 96px;
+        border: 1px solid #dedeb7;
+        background: #fff;
+        font-weight: 700;
+        font-size: 22px;
+        color: #30301e;
+    }
+    .plan-name {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 18px 0 10px;
+    }
+    .plan-duration {
+        font-size: 14px;
+        font-weight: 600;
+        color: $color-two;
+        line-height: 22px;
+        padding: 0 20px;
+        border-radius: 30px;
+        border: 1px solid $color-two;
+    }
+    ul {
+        padding-top: 30px;
+        margin-top: 24px;
+        margin-bottom: 37px;
+        &:before {
+            content: '';
+            position: absolute;
+            width: 174px;
+            height: 1px;
+            background: #192c27;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        li {
+            font-size: 16px;
+            line-height: 32px;
+            font-weight: 500;
+            color: rgba($color: #104b59, $alpha: 0.8);
+            @include transition(0.3s);
+        }
+    }
+    .btn-three {
+        line-height: 43px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-transform: uppercase;
+        width: 135px;
+        min-width: auto;
+        padding: 0;
+        &:before {
+            background: $color-two;
+        }
+    }
+    .shape_01 {
+        top:37px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .shape_02 {
+        right: 0;
+        bottom: 30px;
+        opacity: 0;
+    }
+    .shape_03 {
+        left: 0;
+        bottom: 30px;
+        opacity: 0;
+    }
+    &:hover {
+        background: #000b0e;
+        &:before {
+            background: #0a2c35;
+        }
+        .shape_02, .shape_03 {
+            opacity: 1;
+        }
+        .plan-name, ul li {
+            color: #fff;
+        }
+    }
+}

@@ -1,10 +1,8 @@
 # app/models/respons_inv_ap2_model.py
 from sqlalchemy import Column, BigInteger, String, TIMESTAMP, Text, func
-from sqlalchemy.ext.declarative import declarative_base
+from app.db.mysql import BaseDB1
 
-Base = declarative_base()
-
-class ResponsInvAp2(Base):
+class ResponsInvAp2(BaseDB1):
     __tablename__ = "respons_inv_ap2"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)

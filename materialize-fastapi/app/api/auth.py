@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
-from app.db.mysql import get_db
+from app.db.mysql import get_db1_r
 
 from app.utils.auth_util import create_token, verify_token, verify_password
 from app.models.user import User
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
 
 @router.post("/login",response_model=TokenSchema)
-def login(payload: LoginSchema,db: Session = Depends(get_db)):
+def login(payload: LoginSchema,db: Session = Depends(get_db1_r)):
     # Cari user berdasarkan username
     user = db.query(User).filter(User.email == payload.email).first()
     # Kalau user tidak ada atau password tidak cocok

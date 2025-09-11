@@ -116,3 +116,29 @@ if __name__ == "__main__":
 ## Cara Jalankan Seeder
 python -m app.db.seeder
 ```
+
+# CELERY
+
+### Jalankan Celery Worker
+
+`celery -A app.celery_app.celery_app worker -l info`
+
+### Jalankan Celery Beat (scheduler)
+
+`celery -A app.celery_app.celery_app beat -l info`
+
+### Jalankan Flower (monitoring dashboard)
+
+`celery -A app.celery_app.celery_app flower`
+
+### Debug daftar task terdaftar
+
+`celery -A app.celery_app.celery_app inspect registered`
+
+### Logging lebih detail
+
+`celery -A app.celery_app.celery_app worker -l debug`
+
+### coba cek modul task manual:
+
+`python -m app.tasks.task_angkasapura`

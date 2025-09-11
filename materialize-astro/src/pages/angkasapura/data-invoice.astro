@@ -8,8 +8,6 @@ const column = [
   "SMU",
   "KDAIRLINE",
   "FLIGHT_NUMBER",
-  "DOM_INT",
-  "INC_OUT",
   "ASAL",
   "TUJUAN",
   "JENIS_KARGO",
@@ -53,7 +51,8 @@ const column = [
   "MATERAI_FEE",
   "PPN_FEE",
 ];
-const addColumn = ["Detail", "boolean:status"];
+const addColumn = ["", "boolean:status"];
+const filterColumn = ["NO_INVOICE", "TANGGAL", "FLIGHT_NUMBER"];
 ---
 
 <Layout title="Data Invoice" page="Data inv">
@@ -62,7 +61,11 @@ const addColumn = ["Detail", "boolean:status"];
   </Fragment>
 
   <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="">
+      <span class="text-muted fw-light">List Data</span> Invoice Terkirim
+    </h4>
     <DTBARU
+      filterColumn={filterColumn}
       addColumn={addColumn}
       column={column}
       dataPath="/angkasapura/datatables"
