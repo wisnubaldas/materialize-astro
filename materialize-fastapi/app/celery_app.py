@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 celery_app = Celery(
     "worker",
@@ -9,13 +10,17 @@ celery_app = Celery(
 celery_app.conf.update(
     timezone="Asia/Jakarta",
     enable_utc=True,
+    # Pakai Redis untuk schedule beat
+    beat_scheduler="redbeat.RedBeatScheduler",
+    redbeat_redis_url="redis://localhost:6379/1",   # bisa pakai DB redis lain biar terpisah
+    redbeat_lock_key="redbeat::lock",               # kunci lock biar nggak dobel
 )
 # Auto-discover semua task di dalam app.tasks.*
 celery_app.autodiscover_tasks(["app.tasks"])
 
 celery_app.conf.beat_schedule = {
-    "sync-invoice-every-5min": {
+    "sync-invoice-every-1min": {
         "task": "sync-data-invoice",
-        "schedule": 300,  # 5 menit
+        "schedule": crontab(minute="*"),  # 1 menit
     },
 }

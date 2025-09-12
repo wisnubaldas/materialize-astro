@@ -142,3 +142,26 @@ python -m app.db.seeder
 ### coba cek modul task manual:
 
 `python -m app.tasks.task_angkasapura`
+
+### Cara mengamankan akses Flower
+
+`celery -A app.celery_app.celery_app flower --port=5555 --basic_auth=user1:secret123`
+
+### Reverse Proxy (Nginx/Traefik) + HTTPS
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name flower.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/flower.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/flower.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:5555;
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+    }
+}
+
+```

@@ -24,9 +24,18 @@ class ENV(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    AP2_URL:str
+    AP2_USER:str
+    AP2_PASSWORD:str
+    AP2_COOKIE:str
+    AP2_TIMEOUT:int
 
+    AP2_DEV_URL:str
+    AP2_DEV_USER:str
+    AP2_DEV_PASSWORD:str
     class Config:
         env_file = ".env"   # otomatis baca file .env
         env_file_encoding = "utf-8"
 
-ENV = ENV()
+ENV = ENV() # type: ignore
