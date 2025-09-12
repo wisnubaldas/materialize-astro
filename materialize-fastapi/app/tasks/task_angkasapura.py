@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 
 from app.celery_app import celery_app
@@ -15,6 +14,6 @@ def sync_invoice():
             return
     print("[sync-data-invoice] Mulai proses...")
     now = datetime.datetime.now()
-    asyncio.run(INVAp2Service.send_invoice(now.strftime("%Y-%m-%d")))
+    INVAp2Service.send_invoice_sync(now.strftime("%Y-%m-%d"))
     print("[sync-data-invoice] Selesai.")
     

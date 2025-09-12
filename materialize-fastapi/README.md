@@ -165,3 +165,21 @@ server {
 }
 
 ```
+
+### paksa stop semua proses python
+
+`taskkill /F /IM python.exe /T`
+
+## Jalan celery di windows
+
+### Worker
+
+`celery -A app.celery_app.celery_app worker -l debug --pool=solo`
+
+### Beat (pakai RedBeat)
+
+`celery -A app.celery_app.celery_app beat -l debug --scheduler redbeat.RedBeatScheduler`
+
+### Flower (monitoring)
+
+`celery -A app.celery_app.celery_app flower --port=5555`

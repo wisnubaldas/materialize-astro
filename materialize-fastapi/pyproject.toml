@@ -25,6 +25,7 @@ python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 requests = "^2.32.5"
 sqlalchemy = "^2.0.32"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
+celery-redbeat = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"

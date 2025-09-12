@@ -1,4 +1,4 @@
-from unittest import result
+import asyncio
 import httpx
 from sqlalchemy import  text
 from sqlalchemy.orm import Session
@@ -91,7 +91,7 @@ class INVAp2Service:
                         )
                      # inject USR & PSW hardcode
                     payload = schema.model_dump()
-                    # print(payload)
+                    print(payload)
                     
                     try:
                         resp = await client.post(ENV.AP2_DEV_URL, headers=HEADERS, data=payload)
@@ -105,9 +105,14 @@ class INVAp2Service:
             raise e
         finally:
             db1.close()
-
+        print(results)
         return results
-        
+    @staticmethod
+    def send_invoice_sync(date_prefix: str):
+        """Wrapper sync supaya bisa dipanggil Celery task biasa"""
+        return asyncio.run(INVAp2Service.send_invoice(date_prefix))
+    
+    
 # if __name__ == "__main__":
 #     result = await INVAp2Service.send_invoice("2024-02-16")
 #     print(result)
