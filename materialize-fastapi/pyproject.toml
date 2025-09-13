@@ -10,6 +10,7 @@ version = "0.1.0"
 alembic = "^1.13.2"
 bcrypt = "^4.3.0"
 celery = {extras = ["redis"], version = "^5.5.3"}
+celery-redbeat = "^2.3.3"
 faker = "^37.6.0"
 fastapi = "^0.112.0"
 flower = "^2.0.1"
@@ -19,13 +20,13 @@ pydantic = {extras = ["email"], version = "^2.11.7"}
 pydantic-settings = "^2.10.1"
 pylint = "^3.3.8"
 pymysql = "^1.1.1"
-python = ">=3.10,<3.13"
+python = ">=3.12,<3.13"
 python-dotenv = "^1.1.1"
 python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+python-logstash-async = "3.0.0"
 requests = "^2.32.5"
 sqlalchemy = "^2.0.32"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
-celery-redbeat = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"

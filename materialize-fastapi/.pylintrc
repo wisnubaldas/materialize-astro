@@ -2,4 +2,4 @@
 ignore=venv
 
 [MESSAGES CONTROL]
-disable=E1102,missing-docstring,too-few-public-methods
+disable=E1102,missing-docstring,too-few-public-methods,W1203,W1309,W0212

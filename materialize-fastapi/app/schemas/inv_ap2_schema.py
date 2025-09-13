@@ -15,7 +15,7 @@ class InvAp2Base(BaseModel):
     ASAL: str
     TUJUAN: str
     JENIS_KARGO: str
-    TARIF_KARGO: str
+    TARIF_KARGO: int|str
     KOLI: str
     BERAT: str
     VOLUME: str

@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes
+from app.utils.logging_config import setup_logging
+setup_logging()
 
 app = FastAPI(title="FastAPI App with Poetry")
 origins = [

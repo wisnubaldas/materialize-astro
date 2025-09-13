@@ -84,3 +84,30 @@ npm install datatables.net-staterestore-bs5
 ### seputar celery dan log
 
 `https://chatgpt.com/share/68c3a2e1-8248-8013-b35d-6005f9a0af1d`
+
+### ELK
+
+1. Akses Services
+
+```bash
+Elasticsearch → http://SERVER_IP:9200
+
+Kibana → http://SERVER_IP:5601
+
+Logstash listen di :5000 (TCP/JSON logs)
+```
+
+### pytest
+
+```bash
+# opsi -s untuk menampilkan data
+pytest -s
+# Jalankan 1 file test
+pytest tests/test_invoice.py
+# Jalankan 1 function test dalam file
+pytest tests/test_invoice.py::test_insert_invoice
+# Jalankan 1 class test dalam file
+pytest tests/test_invoice.py::TestInvoiceCRUD
+# Tambahkan opsi verbose Biar lebih jelas hasil testnya:
+pytest -v tests/test_invoice.py
+```

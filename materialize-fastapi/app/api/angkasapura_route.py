@@ -21,10 +21,10 @@ def get_data_response_inv(params: DataTablesParams, db: Session = Depends(get_db
 def data_inv_yang_tidak_lengkap(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return  INVAp2Service.get_fail_inv(db=db, params=params)
 
-@router.post("/send-invoices/{date_prefix}")
-async def send_invoices(date_prefix: str):
-    try:
-        result = await INVAp2Service.send_invoice(date_prefix)
-        return {"status": "ok", "data": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @router.post("/send-invoices/{date_prefix}")
+# async def send_invoices(date_prefix: str):
+#     try:
+#         result = await INVAp2Service.send_invoice(date_prefix)
+#         return {"status": "ok", "data": result}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))

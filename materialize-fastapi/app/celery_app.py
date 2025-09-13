@@ -1,5 +1,9 @@
-from celery import Celery
+# harus paling atas
+from app.utils.logging_config import setup_logging
+
 from celery.schedules import crontab
+from celery import Celery
+setup_logging()
 
 celery_app = Celery(
     "worker",
@@ -22,5 +26,9 @@ celery_app.conf.beat_schedule = {
     "sync-invoice-every-1min": {
         "task": "sync-data-invoice",
         "schedule": crontab(minute="*"),  # 1 menit
+    },
+    "sync-invoice-every-30min": {
+        "task": "inv-to-invap2",
+        "schedule": crontab(minute="30"),  # 30 menit
     },
 }
