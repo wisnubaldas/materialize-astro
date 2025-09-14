@@ -1,0 +1,468 @@
+/* ===================== Banner Css ====================== */
+// Hero Banner One
+.hero-banner-one {
+    background: url(../images/media/img_01.jpg) no-repeat top center;
+    background-size: cover;
+    overflow: hidden;
+    &::before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 56%;
+        top: 0;
+        left: 0;
+        background: linear-gradient(90deg, #104b59 5%, rgba(16, 75, 89, 0) 100%);
+    }
+    .slogan {
+        display: inline-block;
+        border: 1px solid #fff;
+        padding: 5px 6px;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        span {
+            margin: 0 15px;
+        }
+    }
+    .hero-heading {
+        font-size: 110px;
+        line-height: 1.0454em;
+        font-weight: 700;
+        color: #fff;
+        margin: 33px 0 27px;
+    }
+    p {
+        color: #fff;
+    }
+    .country-flags {
+        li {
+            margin-right: -25px;
+            &:last-child {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 75px;
+                height: 75px;
+                border-radius: 50%;
+                background: #fff;
+                color: #000;
+                margin: 0;
+                position: relative;
+                z-index: 1;
+                font-size: 30px;
+            }
+        }
+        
+        .flag {
+            width: 75px;
+            height: 75px;
+            position: relative;
+        }
+        p {
+            font-size: 24px;
+            color: #fff;
+            margin: 0;
+            padding-left: 20px;
+        }
+    }
+    .screen_01 {
+        right: 0;
+        bottom: -26px;
+        max-width: 47%;
+    }
+}
+// Hero Banner Two
+.hero-banner-two {
+    text-align: center;
+    background: #000;
+    &::before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 56%;
+        top: 0;
+        left: 0;
+        background: linear-gradient(90deg, #617b84 5%, rgba(97, 123, 132, 0) 100%);
+    }
+    .slider-bg {
+        background-size: cover;
+        background-position: center;
+    }
+    .slogan {
+        display: inline-block;
+        border: 1px solid #fff;
+        padding: 5px 16px;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        background: $color-one;
+        span {
+            padding: 0 22px;
+            position: relative;
+            &:before, &:after {
+                content: '';
+                position: absolute;
+                width: 15px;
+                height: 15px;
+                border: 1px solid #fff;
+                background: $color-two;
+                border-radius: 50%;
+                top:5px;
+                left: 0;
+            }
+            &:after {
+                left: auto;
+                right: 0;
+            }
+        }
+    }
+    .hero-heading {
+        font-size: 110px;
+        line-height: 1.0454em;
+        font-weight: 700;
+        color: #fff;
+        margin: 33px 0 27px;
+        span {
+            position: relative;
+            z-index: 1;
+        }
+        .shape {
+            position: absolute;
+            z-index: -1;
+            left: -74px;
+            top:50%;
+            transform: translateY(-50%);
+        }
+        .shape2 {
+            position: absolute;
+            z-index: -1;
+            right: -28%;
+            top:30%;
+            max-width: 24%;
+        }
+    }
+    .screen_01 {
+        z-index: 0;
+        left: 0;
+        bottom: 14%;
+        max-width: 26%;
+    }
+}
+// Hero Banner Three
+.hero-banner-three {
+    border-top: 15px solid $color-two;
+    border-left: 15px solid $color-two;
+    &:before, &:after {
+        content: url(../images/shape/shape_29.png);
+        position: absolute;
+        top:-15px;
+        left: 0;
+    }
+    &:after {
+        left: auto;
+        right: 0;
+    }
+    .container {
+        max-width: 1640px;
+        padding: 0 12px;
+    }
+    p {
+        font-size: 20px;
+        line-height: 1.6em;
+    }
+    .hero-heading {
+        font-size: 108px;
+        line-height: 1.0455em;
+        font-weight: 700;
+        color: #000;
+        margin: 55px 0 112px;
+    }
+    .media {
+        margin-right: 17%;
+        .main-img {
+            border-radius: 10px;
+        }
+        .car-img {
+            position: absolute;
+            right: -17%;
+            bottom: -17%;
+        }
+    }
+    .country-flags {
+        li {
+            margin-right: -25px;
+            &:last-child {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 75px;
+                height: 75px;
+                border-radius: 50%;
+                background: $color-one;
+                color: #fff;
+                margin: 0;
+                position: relative;
+                z-index: 1;
+                font-size: 30px;
+            }
+        }
+        
+        .flag {
+            width: 75px;
+            height: 75px;
+            position: relative;
+        }
+        p {
+            font-size: 24px;
+            margin: 0;
+            color: #000;
+            padding-left: 20px;
+        }
+    }
+    .card-wrapper {
+        border-radius: 10px;
+        position: relative;
+        z-index: 1;
+        background: #eee8e8;
+        padding: 40px 30px;
+        &:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px dashed $color-one;
+            border-radius: 10px;
+            left: 6px;
+            bottom: 6px;
+            z-index: -1;
+        }
+        li {
+            margin-bottom: -24px;
+            &:last-child {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 78px;
+                height: 78px;
+                border-radius: 50%;
+                background: #fff;
+                color: $color-two;
+                margin: 0;
+                position: relative;
+                z-index: 1;
+                font-size: 30px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .flag {
+                width: 82px;
+                height: 82px;
+                border: 2px solid #fff;
+                position: relative;
+            }
+        }
+        strong {
+            font-size: 30px;
+            font-weight: 700;
+            color: $color-one;
+            margin-top: -10px;
+            display: block;
+        }
+        p {
+            font-size: 19px;
+            color: #fff;
+            font-weight: 600;
+            background: $color-one;
+            margin: 0;
+            transform: rotate(90deg);
+            width: 258px;
+            text-align: center;
+            padding: 27px 0;
+            border-radius: 10px;
+            position: absolute;
+            top: 176px;
+            right: -50px;
+            &:before {
+                content: '';
+                width: 44px;
+                height: 38px;
+                border-radius: 20px;
+                background: #eee8e8;
+                position: absolute;
+                z-index: 1;
+                top:22px;
+                left: -26px;
+            }
+        }
+        .shape_01 {
+            left: -23%;
+            top:-10%;
+            max-width: 52%;
+            animation: jumpThree 5s infinite linear;
+        }
+    }
+    .experience-box {
+        border-radius: 50%;
+        position: relative;
+        .main-count {
+            width: 85px;
+            height: 85px;
+            background: $color-two;
+            border-radius: 50%;
+            position: absolute;
+            top:50%;
+            left: 50%;
+            transform: translate(-50% , -50%);
+            z-index: 1;
+            color: #fff;
+            font-size: 42px;
+            font-weight: 700;
+        }
+    }
+    .shape_02 {
+        left: 3%;
+        top:6%;
+        max-width: 26%;
+    }
+    .ribon-slider {
+        background: $color-two;
+        padding: 28px 15px;
+        transform: rotate(-6deg);
+        font-size: 36px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #000;
+        &:before,&:after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100%;
+            top:0;
+            left: -90px;
+            background: $color-two;
+        }
+        &:after {
+            left: auto;
+            right: -90px;
+        }
+        .slick-track {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+// Fancy Banner One
+.fancy-banner-one {
+    h2 {
+        font-size: 45px;
+        line-height: 1.244em;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+    &.style-one {
+        background: url(../images/assets/bg_04.jpg) no-repeat right top;
+        background-size: cover;
+        padding: 60px 0 70px;
+        overflow: hidden;
+        &:before {
+            content: '';
+            position: absolute;
+            width: 29%;
+            height: 100%;
+            top:0;
+            left: -6%;
+            background: url(../images/media/img_24.jpg) no-repeat right center;
+            background-size: cover;
+            transform: skew(30deg);
+            z-index: -1;
+        }
+    }
+    &.style-two {
+        .bg-wrapper {
+            background: url(../images/assets/bg_11.jpg) no-repeat right top;
+            background-size: cover;
+            padding: 60px 50px 70px 90px;
+            border-radius: 5px;
+            &.round-border {
+                border-radius: 100px;
+            }
+            &.left-bg {
+                background: url(../images/assets/bg_21.jpg) no-repeat right top;
+                background-size: cover;
+                padding-left: 0;
+                border-radius: 0;
+                &:before {
+                    content: '';
+                    position: absolute;
+                    width: 200%;
+                    height: 100%;
+                    right: 100%;
+                    top:0;
+                    background: $color-two;
+                }
+            }
+        }
+        
+    }
+}
+// Inner Banner
+.inner-banner-one {
+    background: url(../images/media/img_53.jpg) no-repeat right center;
+    background-size: cover;
+    overflow: hidden;
+    &:before, &:after {
+        content: url(../images/shape/shape_29.png);
+        position: absolute;
+        top:-18px;
+        left: 0;
+    }
+    &:after {
+        left: auto;
+        right: 0;
+    }
+    .line-wrapper {
+        padding: 295px 0 265px;
+        &:before {
+            content: '';
+            position: absolute;
+            width: 13px;
+            height: 134px;
+            background: $color-two;
+            border-radius: 0 0 30px 30px;
+            right: 0;
+            top:13px;
+            z-index: -1;
+        }
+        &:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 13px;
+            background: $color-two;
+            right: 0;
+            top:0;
+            z-index: -1;
+        }
+    }
+    .shape_01 {
+        left: 0;
+        bottom: 0;
+        max-width: 51%;
+    }
+    .breadcrumb-content {
+        li {
+            font-family: $font-Poppins;
+            color: #fff;
+            font-size: 20px;
+            margin-right: 6px;
+        }
+    }
+    h2 {
+        font-size: 75px;
+        font-weight: 700;
+        color: #fff;
+    }
+}

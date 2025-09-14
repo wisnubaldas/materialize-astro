@@ -4,13 +4,12 @@
 
 "use strict";
 import { formValidation } from "@form-validation/bundle/popular";
-import { Bootstrap5 } from "@form-validation/plugin-bootstrap5";
-import { Trigger } from "@form-validation/plugin-trigger";
-import { SubmitButton } from "@form-validation/plugin-submit-button";
-import { DefaultSubmit } from "@form-validation/plugin-default-submit";
 import { AutoFocus } from "@form-validation/plugin-auto-focus";
+import { Bootstrap5 } from "@form-validation/plugin-bootstrap5";
+import { SubmitButton } from "@form-validation/plugin-submit-button";
+import { Trigger } from "@form-validation/plugin-trigger";
+import Swal from 'sweetalert2';
 import $ from "./ajax-setup";
-import Swal from 'sweetalert2'
 const formAuthentication = document.querySelector("#formAuthentication");
 
 document.addEventListener("DOMContentLoaded", function (e) {
@@ -129,10 +128,10 @@ document.addEventListener("DOMContentLoaded", function (e) {
             document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
             localStorage.setItem("access_token", result.access_token);
             // ambil redirect dari query param
-              const params = new URLSearchParams(window.location.search);
-              const redirectUrl = params.get("redirect") || "/";
-              // redirect user ke halaman terakhir / default dashboard
-              window.location.href = redirectUrl;
+            const params = new URLSearchParams(window.location.search);
+            const redirectUrl = params.get("redirect") || "/dashboard-angkasapura/";
+            // redirect user ke halaman terakhir / default dashboard
+            window.location.href = redirectUrl;
           },
           error: function (xhr, status, error) {
             Swal.fire({

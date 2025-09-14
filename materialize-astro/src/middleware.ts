@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "astro";
 
-const PUBLIC_ROUTES = ["/auth/login/", "/auth/register/", "/docs"];
+const PUBLIC_ROUTES = ["/", "/auth/login/", "/auth/register/", "/docs", "/blog/*"];
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const url = new URL(context.request.url);

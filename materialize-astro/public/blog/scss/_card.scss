@@ -1,0 +1,302 @@
+/* ===================== Card Css ====================== */
+.card-style-one {
+    background: #faf7f6;
+    padding: 60px 35px 40px;
+    overflow: hidden;
+    .icon {
+        width: 130px;
+        height: 130px;
+        background: #fff;
+        @include transition(0.3s);
+        box-shadow: 0 -3px 0 $color-two;
+    }
+    h4 {
+        font-weight: 700;
+        font-size: 24px;
+        margin: 36px 0 9px;
+    }
+    &:before, &:after {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 50%;
+        z-index: -1;
+        top:0;
+        left: 0;
+        background: $color-two;
+        transform: translateX(-100%) rotate(15deg);
+        @include transition(0.3s);
+        opacity: 0;
+        visibility: hidden;
+    }
+    &:after {
+        left: auto;
+        right: 0;
+        transform: translateX(100%) rotate(-15deg);
+    }
+    &:hover {
+        background: #fff;
+        h4,p {
+            color: #fff;
+        }
+        &:before, &:after {
+            transform: none;
+            opacity: 1;
+            visibility: visible;
+        }
+    }
+    &.round-border {
+        border-radius: 50px;
+    }
+    &.version-two {
+        &:before {
+            width: 100%;
+            transform: none;
+        }
+        &:after {
+            width: 100%;
+            transform: none;
+            background: url(../images/shape/shape_30.png) no-repeat center;
+            background-size: cover;
+        }
+        &:hover {
+            .icon {
+                box-shadow: none;
+            }
+        }
+    }
+}
+
+.card-style-two {
+    .media-bg {
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        border-radius: 50px;
+        height: 560px;
+        overflow: hidden;
+        position: relative;
+        &:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 20%;
+            opacity: 0;
+            top:0;
+            left: 0;
+            background: rgba($color: $color-one, $alpha: 0.5);
+            @include transition (0.3s);
+        }
+    }
+    .info-meta {
+        width: 336px;
+        height: 336px;
+        background: #fff;
+        border-radius: 50%;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        margin: -215px auto 0;
+        padding: 47px 30px 30px;
+        &:before {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            top:9px;
+            left: 9px;
+            right: 9px;
+            bottom: 9px;
+            border: 2px dashed $color-two;
+            z-index: -1;
+        }
+        .icon {
+            height: 75px;
+            img {
+                max-height: 100%;
+            }
+        }
+        h4 {
+            font-size: 24px;
+            font-weight: 700;
+            padding: 15px 0 0;
+        }
+        p {
+            line-height: 30px;
+            margin-bottom: 25px;
+        }
+    }
+    &:hover {
+        .media-bg:before {
+            height: 100%;
+            opacity: 1;
+        }
+    }
+    &.version-two {
+        .media-bg {
+            height: 438px;
+        }
+        .info-meta {
+            margin: 0 auto -240px;
+            border-radius: 30px;
+        }
+    }
+    &.shadow-style {
+        .info-meta {
+            box-shadow: 0px 0px 35px 0px rgba(201, 199, 205, 0.35);
+        }
+    }
+}
+
+.card-style-three {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 60px;
+    &::before {
+        content: '';
+        position: absolute;
+        width: 277px;
+        height: 277px;
+        border: 1px solid #e3d6c5;
+        border-radius: 50%;
+        z-index: -1;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .numb {
+        width: 60px;
+        height: 60px;
+        background: $color-two;
+        font-size: 20px;
+        color: #fff;
+        font-weight: 600;
+        text-align: center;
+        line-height: 60px;
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+    }
+    .text-meta {
+        background: url(../images/assets/bg_03.jpg) no-repeat center bottom;
+        background-size: cover;
+        min-height: 258px;
+        padding: 35px 30px 95px;
+        border: 1px solid #e7e7e7;
+        border-radius: 50px 0 50px 50px;
+        position: relative;
+        @include transition(0.3s);
+        h4 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 17px;
+        }
+        p {
+            font-size: 15px;
+            line-height: 28px;
+        }
+        .place {
+            position: absolute;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #fff;
+            background: #151a1b;
+            border-radius: 3px;
+            line-height: 21px;
+            padding: 0 6px;
+            left: 19px;
+            bottom: -11px;
+            z-index: 1;
+        }
+    }
+    .img-meta {
+        width: 175px;
+        height: 175px;
+        border: 8px solid #fff;
+        position: relative;
+        z-index: 1;
+        margin: -90px auto 0;
+    }
+    &:hover {
+        .text-meta {
+            border-radius: 0 50px 50px 50px;
+        }
+    }
+}
+
+.card-style-four { 
+    background: #fff5ef;
+    border-radius: 50px;
+    padding: 38px 40px;
+    position: relative;
+    z-index: 1;
+    &:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top:0;
+        bottom: 0;
+        z-index: -1;
+        border-radius: 50px;
+        @include transition(0.3s);
+    }
+    .info-meta {
+        width: calc(100% - 175px);
+        padding-right: 30px;
+        padding-left: 10px;
+        .icon {
+            height: 72px;
+            img {
+                max-height: 100%;
+            }
+        }
+        h4 {
+            font-size: 24px;
+            font-weight: 700;
+            padding: 25px 0 0;
+        }
+        p {
+            line-height: 30px;
+            margin-bottom: 25px;
+        }
+    }
+    .media-bg {
+        width: 175px;
+        height: 100%;
+        min-height: 240px;
+        border-radius: 77px;
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+    &:hover {
+        box-shadow: 2px 0 0 $color-two;
+        &:before {
+            box-shadow: -2px 0 0 $color-two;
+        }
+    }
+}
+.card-style-five {
+    padding: 37px 30px 40px;
+    border-radius: 5px;
+    border: 1px solid #ede7e4;
+    box-shadow: 0px 8px 18px 0px rgba(214, 214, 214, 0.45);
+    background: #fff;
+    .icon {
+        height: 60px;
+        img {
+            max-height: 100%;
+        }
+    }
+    h5 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 30px 0 15px;
+    }
+    p {
+        font-size: 16px;
+        line-height: 30px;
+    }
+}

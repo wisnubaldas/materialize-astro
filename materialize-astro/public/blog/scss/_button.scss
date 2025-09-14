@@ -1,0 +1,109 @@
+/* ===================== Button Css ====================== */
+// Button Style
+.btn-one {
+    font-size: 18px;
+    color: #fff;
+    text-transform: capitalize;
+    font-weight: 500;
+    line-height: 55px;
+    padding: 0 40px;
+    min-width: 170px;
+    text-align: center;
+    background: $color-two;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    @include transition(0.3s);
+    &:before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 150%;
+        top:0;
+        right: calc(150% - 15px);
+        background: #000;
+        transform: skew(-15deg);
+        z-index: -1;
+        @include transition(0.4s);
+    }
+    &:hover {
+        &:before {
+            right: -20px;
+        }
+        box-shadow: 0 10px 15px rgba($color: #000000, $alpha: 0.2);
+    }
+    &.xl {
+        min-width: 230px;
+        line-height: 65px;
+    }
+}
+
+.btn-two {
+    font-weight: 600;
+    color: $color-one;
+    position: relative;
+    padding-left: 25px;
+    @include transition (0.3s);
+    .arrow-icon {
+        position: absolute;
+        left: 0;
+        top:-2px;
+        font-size: 20px;
+        color: $color-two;
+        @include transition (0.3s);
+    }
+    &:hover {
+        padding-left: 0;
+        padding-right: 25px;
+        color: $color-two;
+        .arrow-icon {
+            left: calc(100% - 20px);
+        }
+    }
+}
+
+.btn-three {
+    font-size: 18px;
+    color: #fff;
+    text-transform: capitalize;
+    font-weight: 500;
+    line-height: 55px;
+    padding: 0 40px;
+    min-width: 170px;
+    text-align: center;
+    background: $color-one;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    @include transition(0.3s);
+    &:before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 150%;
+        top:0;
+        right: calc(150% - 15px);
+        background: #000;
+        transform: skew(-15deg);
+        z-index: -1;
+        @include transition(0.4s);
+    }
+    &:hover {
+        &:before {
+            right: -20px;
+        }
+        box-shadow: 0 10px 15px rgba($color: #000000, $alpha: 0.2);
+    }
+    &.xl {
+        min-width: 200px;
+        line-height: 70px;
+    }
+    &.lg {
+        min-width: 200px;
+        line-height: 60px;
+    }
+    &.text-uppercase {
+        font-size: 14px;
+        font-weight: 600;
+    }
+}

@@ -1,0 +1,50 @@
+---
+import HEROBANNER from "@components/Blog/HeroBanner.astro";
+import Head from "@layouts/blog/head.astro";
+import MainMenu from "@layouts/blog/main-menu.astro";
+import Search from "@layouts/blog/search.astro";
+import Transision from "@layouts/blog/transisiot.astro";
+import SlideNav from "~/layouts/blog/slide-nav.astro";
+---
+
+<!doctype html>
+<html lang="en">
+  <Head>
+    <title>Theme bangke</title>
+  </Head>
+  <body>
+    <div class="main-page-wrapper">
+      <Transision app_name="Mitra Adira Utama" page="index-blog" />
+      <SlideNav />
+      <Search />
+      <MainMenu />
+      <HEROBANNER />
+
+      <button class="scroll-top">
+        <i class="bi bi-arrow-up-short"></i>
+      </button>
+      <!-- Optional JavaScript _____________________________  -->
+
+      <!-- jQuery first, then Bootstrap JS -->
+      <!-- jQuery -->
+      <script is:raw src="vendor/jquery.min.js"></script>
+      <!-- Bootstrap JS -->
+      <script is:raw src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <!-- WOW js -->
+      <script is:raw src="vendor/sal/sal.js"></script>
+      <!-- Slick Slider -->
+      <script is:raw src="vendor/slick/slick.min.js"></script>
+      <!-- Fancybox -->
+      <script is:raw src="vendor/fancybox/fancybox.umd.js"></script>
+      <!-- js Counter -->
+      <script is:raw src="vendor/jquery.counterup.min.js"></script>
+      <script is:raw src="vendor/jquery.waypoints.min.js"></script>
+      <!-- validator js -->
+      <script is:raw src="vendor/validator.js"></script>
+
+      <!-- Theme js -->
+      <script is:raw src="js/theme.js"></script>
+    </div>
+    <!-- /.main-page-wrapper -->
+  </body>
+</html>

@@ -1,0 +1,160 @@
+/* ===================== Base Css ====================== */
+// Font import
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('../fonts/bootstrap-icons-1.11.1/font/bootstrap-icons.css');
+@import url('../fonts/font-awesome-6.4.2/css/all.css');
+
+// Global Style
+
+.main-page-wrapper {overflow-x: hidden;}
+body {
+  font-family: $font-Instrument;
+  font-weight: normal;
+  font-size: 18px;
+  position: relative;
+  color: $text-color;
+}
+h1,h2,h3,h4,h5,h6 {
+  font-weight: 500;
+  color: $color-one;
+}
+p {line-height: 1.777em;}
+
+
+.fw-600 {font-weight: 600;}
+.fw-500 {font-weight: 500;}
+.fs-16 {font-size: 16px; line-height: 2em;}
+.fs-22 {font-size: 22px; line-height: 1.45454em;}
+.fs-24 {font-size: 24px;}
+.fs-32 {font-size: 32px;}
+.shapes {position: absolute; z-index: -1;}
+.font-poppins {font-family: $font-Poppins !important;}
+.box-layout-one {
+  max-width: 1794px; 
+  padding-left: 12px; 
+  padding-right: 12px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.box-layout-two {
+  max-width: 1594px; 
+  padding-left: 12px; 
+  padding-right: 12px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.header-space-fix {margin-top: 150px;}
+//  Preloader
+.ctn-preloader {
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  z-index: 999999;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  .icon {
+    display: inline-block; 
+    position: relative;
+    img {
+      width: 55px;
+    }
+  }
+  .txt-loading {
+    user-select: none;
+    margin-top: 45px;
+    .letters-loading {
+      font-weight: 700;
+      letter-spacing: 10px;
+      display: inline-block;
+      color: rgba($color: $color-one, $alpha: 0.08);
+      position: relative;
+      font-size: 65px;
+      line-height: 30px;
+      &::before {
+        animation: letters-loading 4s infinite;
+        color: $color-one;
+        content: attr(data-text-preloader);
+        left: 0;
+        opacity: 0;
+        top:0;
+        line-height: 30px;
+        position: absolute;
+      }
+      &:nth-child(2):before {animation-delay: 0.2s;}
+      &:nth-child(3):before {animation-delay: 0.4s;}
+      &:nth-child(4):before {animation-delay: 0.6s;}
+      &:nth-child(5):before {animation-delay: 0.8s;}
+      &:nth-child(6):before { animation-delay: 1s;}
+      &:nth-child(7):before { animation-delay: 1.2s;}
+      &:nth-child(8):before { animation-delay: 1.4s;}
+    }
+  }
+}
+@keyframes spinner {
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+@keyframes letters-loading {
+  0%,
+  75%,
+  100% {
+    opacity: 0;
+    transform: rotateY(-90deg);
+  }
+
+  25%,
+  50% {
+    opacity: 1;
+    transform: rotateY(0deg);
+  }
+}
+// Scroll Top
+.scroll-top {
+  width:40px;
+  height:40px;
+  line-height: 40px;
+  position: fixed;
+  bottom: 20px;
+  right: 5px;
+  z-index: 99;
+  text-align: center;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  border-radius: 50%;
+  background: $color-two;
+  transition: all 0.3s ease-in-out;
+    &:after {
+    position: absolute;
+    z-index: -1;
+    content: '';
+    top: 100%;
+    left: 5%;
+    height: 10px;
+    width: 90%;
+    opacity: 1;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 80%);
+  }
+}
+// Prefix Classes
+.tran3s {
+  transition: all 0.3s ease-in-out;
+}
+
+.tran4s {
+  transition: all 0.4s ease-in-out;
+}
+
+.tran5s {
+  transition: all 0.5s ease-in-out;
+}
+
+.tran6s {
+  transition: all 0.6s ease-in-out;
+}

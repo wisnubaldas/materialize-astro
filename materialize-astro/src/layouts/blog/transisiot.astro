@@ -1,0 +1,35 @@
+---
+const { app_name, page } = Astro.props;
+const appName = Array.from(app_name);
+const Page = Array.from(page);
+---
+
+<!-- ===================================================
+	Loading Transition
+==================================================== -->
+<div id="preloader">
+  <div id="ctn-preloader" class="ctn-preloader">
+    <div class="icon">
+      <img src="images/loader.svg" alt="" class="m-auto d-block" />
+      <span></span>
+    </div>
+    <div class="txt-loading">
+      {
+        appName.map((c) => (
+          <span data-text-preloader={c} class="letters-loading">
+            {c}
+          </span>
+        ))
+      }
+    </div>
+    <div class="txt-loading">
+      {
+        Page.map((c) => (
+          <span data-text-preloader={c} class="letters-loading">
+            {c}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+// Title One
+.title-one {
+    .upper-title {
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: $color-two;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    h2 {
+        font-size: 70px;
+        font-weight: 700;
+        line-height: 1.0714em;
+    }
+    h3 {
+        font-size: 55px;
+        font-weight: 700;
+        line-height: 1.090em;
+    }
+    h4 {
+        font-size: 50px;
+        font-weight: 700;
+        line-height: 1.12em;
+    }
+}
