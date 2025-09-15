@@ -2,21 +2,18 @@
 from passlib.context import CryptContext 
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-
-ALGORITHM = "HS256"
-SECRET_KEY = "supersecret"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from app.utils.env import ENV
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_token(username: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ENV.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": username, "exp": expire}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, ENV.SECRET_KEY, algorithm=ENV.ALGORITHM)
 
 def verify_token(token: str) -> str | None:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, ENV.SECRET_KEY, algorithms=[ENV.ALGORITHM])
         username: str = payload.get("sub") # type: ignore
         if username is None:
             return None

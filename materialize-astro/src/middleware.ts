@@ -28,6 +28,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       `${import.meta.env.PUBLIC_API_URL}/auth/verify`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        method: "HEADER"
       }
     );
 
