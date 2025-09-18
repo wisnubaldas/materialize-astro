@@ -2,6 +2,50 @@
 
 This is a FastAPI project structured to provide a clean and organized way to build APIs.
 
+## INV
+
+```bash
+# Database
+DB1_HOST_R=localhost
+DB1_HOST_W=localhost
+DB1_PORT=3306
+DB1_USER=root
+DB1_PASSWORD=
+DB1_NAME=mau_app
+
+DB2_HOST_R=localhost
+DB2_HOST_W=localhost
+DB2_PORT=3306
+DB2_USER=root
+DB2_PASSWORD=
+DB2_NAME=rdwarehouse_jkt
+
+DB3_HOST_R=localhost
+DB3_HOST_W=localhost
+DB3_PORT=3306
+DB3_USER=root
+DB3_PASSWORD=
+DB3_NAME=dbtpsonline_mau
+
+# JWT
+SECRET_KEY=supersecretkey
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Angkasapura API
+AP2_URL=https://apisigo.angkasapura2.co.id
+AP2_USER=user.api.bgd
+AP2_PASSWORD=@user.4pi.bgd
+AP2_COOKIE='dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ'
+AP2_TIMEOUT=5
+
+AP2_DEV_URL=https://lane.angkasapura2.co.id/dev
+AP2_DEV_USER=api.dev.bgd
+AP2_DEV_PASSWORD=api.dev.bgd
+
+
+```
+
 ## Project Structure
 
 ```

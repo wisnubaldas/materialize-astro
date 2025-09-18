@@ -1,3 +1,8 @@
+```bash
+PUBLIC_ROUTES=http://localhost:4321
+PUBLIC_API_URL=http://localhost:8000
+```
+
 # Astro Starter Kit: Basics
 
 ```sh
@@ -48,6 +53,7 @@ Feel free to check [our documentation](https://docs.astro.build) or jump into ou
 ```bash
 npm install datatables.net@^2.1.8 datatables.net-bs5@^2.1.8 datatables.net-buttons@^3.0.2 datatables.net-buttons-bs5@^3.0.2 datatables.net-fixedcolumns@^4.3.0 datatables.net-fixedcolumns-bs5@^4.3.0 datatables.net-fixedheader@^4.0.1 datatables.net-fixedheader-bs5@^4.0.3 datatables.net-responsive@^3.0.2 datatables.net-responsive-bs5@^3.0.2 datatables.net-select@^2.0.4 datatables.net-select-bs5@^2.0.4 datatables.net-rowgroup@^1.5.2 datatables.net-rowgroup-bs5@^1.5.2
 ```
+
 ## Setup baru belom ada di js manapun
 
 ```
