@@ -37,6 +37,11 @@ export default [
         href: "/angkasapura/invoice-tidak-lengkap/",
         icon: "mdi mdi-invoice-text-edit",
       },
+      {
+        text: "Void Data Invoice",
+        href: "/angkasapura/void-invoice/",
+        icon: "mdi mdi-application-edit",
+      },
     ],
   },
   {

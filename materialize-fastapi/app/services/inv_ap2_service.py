@@ -1,4 +1,7 @@
 import asyncio
+import json
+from app.models.void_inv_ap2 import VoidInvAp2
+from app.schemas.void_invoice_schema import  VoidInvoiceSchemaBase, VoidInvoiceSchemaCreate, VoidInvoiceSchemaRequest, VoidInvoiceSchemaResponse
 import httpx
 import logging
 from decimal import Decimal, ROUND_HALF_UP
@@ -104,6 +107,31 @@ class INVAp2Service:
         return fail_inv_ap2.get_datatable(db=db, params=params)
     
     @staticmethod
+    async def void_invoice_ap2(request:VoidInvoiceSchemaBase,db:Session)->VoidInvoiceSchemaResponse:
+        async with httpx.AsyncClient() as client:
+            ext_request = VoidInvoiceSchemaRequest(**request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD)
+            
+            resp = await client.post(f"{ENV.AP2_DEV_URL}/api/void_invo_dtl", headers=HEADERS, data=ext_request.model_dump())
+            resp.raise_for_status()
+            
+            merged = request.model_dump()
+            merged['RESPONSE'] = resp.json()
+            result = VoidInvoiceSchemaResponse(**merged)
+            
+            obj_data = VoidInvAp2(
+                TANGGAL = result.TANGGAL,
+                NO_INVOICE= result.NO_INVOICE,
+                HAWB = result.HAWB,
+                SMU = result.SMU,
+                RESPONSE = json.dumps(resp.json())
+            )
+            db.add(obj_data)
+            db.commit()
+            db.refresh(obj_data)
+            
+            return result
+        
+    @staticmethod
     async def send_invoice(date_prefix: str):
         db1 = SessionDB1W()
         results = []
@@ -112,7 +140,6 @@ class INVAp2Service:
             rows = db1.execute(sql, {"tgl": f"{date_prefix}%"}).fetchall()
             if rows is None:
                 raise Exception("Invoice not found")
-
             async with httpx.AsyncClient() as client:
                 for row in rows:
                     # row._mapping untuk akses dict-like
@@ -126,7 +153,7 @@ class INVAp2Service:
                     payload = schema.model_dump()
                     logger.info(f"[AP2] Payload dikirim: {payload}")
                     try:
-                        resp = await client.post(ENV.AP2_DEV_URL, headers=HEADERS, data=payload)
+                        resp = await client.post(f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2", headers=HEADERS, data=payload)
                         resp.raise_for_status()
                         results.append({"invoice": payload.get("NO_INVOICE"), "status": "success", "response": resp.text})
                         logger.info(f"[AP2] Results: {results}")
@@ -141,6 +168,7 @@ class INVAp2Service:
             db1.close()
         logger.info(f"[AP2] Final Results: {results}")
         return results
+    
     @staticmethod
     def send_invoice_sync(date_prefix: str):
         """Wrapper sync supaya bisa dipanggil Celery task biasa"""

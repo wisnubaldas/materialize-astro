@@ -1,6 +1,7 @@
+from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase
 from fastapi import APIRouter,Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.mysql import get_db1_r
+from app.db.mysql import get_db1_r, get_db1_w
 from app.schemas.inv_ap2_schema import InvoiceGet
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -20,6 +21,9 @@ def get_data_response_inv(params: DataTablesParams, db: Session = Depends(get_db
 @router.post("/data-inv-yang-tidak-lengkap",response_model=DataTablesResponse[FailInvGet])
 def data_inv_yang_tidak_lengkap(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return  INVAp2Service.get_fail_inv(db=db, params=params)
+@router.post("/void-invoice")
+async def void_invoice(params:VoidInvoiceSchemaBase, db: Session = Depends(get_db1_w)):
+    return await INVAp2Service.void_invoice_ap2(params,db) 
 
 # @router.post("/send-invoices/{date_prefix}")
 # async def send_invoices(date_prefix: str):
