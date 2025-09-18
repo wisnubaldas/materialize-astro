@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  mariadb:
+    image: mariadb:11.3
+    container_name: mariadb-server
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: baldas # ganti aman
+      MYSQL_DATABASE: db_default
+      MYSQL_USER: wisnu
+      MYSQL_PASSWORD: baldas
+    volumes:
+      - /home/wisnu/mariadb/data:/var/lib/mysql
+      - /home/wisnu/mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shared_network
+networks:
+  shared_network:
+    external: true

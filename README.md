@@ -1,4 +1,9 @@
-# Tree View
+## Deploy di Portainer
+
+- Push backend/Dockerfile, frontend/Dockerfile, dan docker-compose.yml ke repo GitLab.
+- Di Portainer → Stacks → Add stack → pilih dari Git → masukkan repo GitLab kamu.
+- Pastikan path docker-compose.yml benar (/docker-compose.yml).
+- Deploy.
 
 ## Root path:
 
