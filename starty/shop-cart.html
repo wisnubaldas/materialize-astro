@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8" />
+        <title>Shared on THEMELOCK.COM - Starty - Multipurpose HTML5 Tamplate</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Premium Bootstrap 5 Landing Page Template" />
+        <meta name="keywords" content="Startup, Business, Multi-uses, HTML, Clean, Modern, Creative" />
+        <meta name="author" content="Shreethemes" />
+        <meta name="email" content="shreethemes@gmail.com" />
+        <meta name="website" content="https://shreethemes.in" />
+        <meta name="Version" content="v1.2.0" />
+        <!-- favicon -->
+        <link href="images/favicon.ico" rel="shortcut icon">
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <!-- Icons -->
+        <link href="css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://unicons.iconscout.com/release/v3.0.6/css/line.css" rel="stylesheet" />
+        <!-- Main Css -->
+        <link href="css/style.min.css" rel="stylesheet" type="text/css" id="theme-opt" />
+
+    </head>
+
+    <body>
+        <!-- Navbar STart -->
+        <header id="topnav" class="defaultscroll sticky">
+            <div class="container">
+                <!-- Logo container-->
+                <a class="logo" href="index.html">
+                    <span class="logo-light-mode">
+                        <img src="images/logo-dark.png" class="l-dark" alt="">
+                        <img src="images/logo-light.png" class="l-light" alt="">
+                    </span>
+                    <img src="images/logo-light.png" class="logo-dark-mode" alt="">
+                </a>
+                <!-- End Logo container-->
+                <div class="menu-extras">
+                    <div class="menu-item">
+                        <!-- Mobile menu toggle-->
+                        <a class="navbar-toggle" id="isToggle" onclick="toggleMenu()">
+                            <div class="lines">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </a>
+                        <!-- End mobile menu toggle-->
+                    </div>
+                </div>
+
+                <ul class="buy-button list-inline mb-0">
+                    <li class="list-inline-item search-icon mb-0">
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-link text-decoration-none dropdown-toggle mb-0 p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="uil uil-search h5 text-dark nav-light-icon-dark mb-0"></i>
+                                <i class="uil uil-search h5 text-white nav-light-icon-white mb-0"></i>
+                            </button>
+                            <div class="dropdown-menu dd-menu dropdown-menu-end bg-white shadow rounded border-0 mt-4 py-0" style="width: 300px;">
+                                <form class="p-4">
+                                    <input type="text" id="text" name="name" class="form-control border bg-white" placeholder="Search...">
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+                <div id="navigation">
+                    <!-- Navigation Menu-->
+                    <ul class="navigation-menu nav-right nav-light">
+                        <li class="has-submenu parent-parent-menu-item">
+                            <a href="javascript:void(0)">Home</a><span class="menu-arrow"></span>
+                            <ul class="submenu megamenu">
+                                <li>
+                                    <ul>
+                                        <li>
+                                            <a href="index-startup.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/startup.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-briefcase-alt menu-list-icon align-middle me-1"></i> Startups</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-business.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/business.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-presentation-line menu-list-icon align-middle me-1"></i> Business</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-corporate.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/corporate.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-chart-pie menu-list-icon align-middle me-1"></i> Corporate</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-finance.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/finance.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-analytics menu-list-icon align-middle me-1"></i> Finance</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li>
+                                            <a href="index-application.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/application.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-mobile-android menu-list-icon align-middle me-1"></i> Application</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-saas.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/saas.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-airplay menu-list-icon align-middle me-1"></i> Saas</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-seo.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/seo.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-clapper-board menu-list-icon align-middle me-1"></i> SEO Agency</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-marketing.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/marketing.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-process menu-list-icon align-middle me-1"></i> Marketing</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li>
+                                            <a href="index-event.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/event.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-post-stamp menu-list-icon align-middle me-1"></i> Event</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-crypto.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/crypto.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-bitcoin-circle menu-list-icon align-middle me-1"></i> Cryptocurrency</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-restaurant.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/restaurant.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-restaurant menu-list-icon align-middle me-1"></i> Restaurant</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-cafe.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/cafe.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-coffee menu-list-icon align-middle me-1"></i> Cafe</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li>
+                                            <a href="index-personal.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/personal.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-user menu-list-icon align-middle me-1"></i> Personal</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-portfolio.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/portfolio.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-image-v menu-list-icon align-middle me-1"></i> Portfolio</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-freelancer.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/freelancer.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-brackets-curly menu-list-icon align-middle me-1"></i> Freelancer</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                
+                                <li>
+                                    <ul>
+                                        <li>
+                                            <a href="index-charity.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/charity.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-thumbs-up menu-list-icon align-middle me-1"></i> Charity</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-personal-blog.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/blog.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-document-layout-left menu-list-icon align-middle me-1"></i> Personal Blog</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-fashion.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/fashion.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-shopping-bag menu-list-icon align-middle me-1"></i> fashion</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="index-onepage.html" class="sub-menu-item">
+                                                <div class="text-lg-center">
+                                                    <span class="d-none d-lg-block"><img src="images/demos/application.png" class="img-fluid rounded shadow-md" alt=""></span>
+                                                    <span class="mt-lg-2 d-block"><i class="uil uil-book menu-list-icon align-middle me-1"></i> App (Onepage)</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>   
+                            </ul>
+                        </li>
+        
+                        <li class="has-submenu parent-parent-menu-item">
+                            <a href="javascript:void(0)">Pages</a><span class="menu-arrow"></span>
+                            <ul class="submenu">
+                                <li><a href="page-aboutus.html" class="sub-menu-item">About Us</a></li>
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Services</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="page-services.html" class="sub-menu-item">Services</a></li>
+                                        <li><a href="page-services-two.html" class="sub-menu-item">Services Two</a></li>
+                                        <li><a href="page-single-service.html" class="sub-menu-item">Single Service </a></li>
+                                    </ul> 
+                                </li>
+                                <li><a href="page-faqs.html" class="sub-menu-item">FAQs</a></li>
+                                <li><a href="page-pricing.html" class="sub-menu-item">Pricing</a></li>
+                                <li><a href="page-team.html" class="sub-menu-item">Team</a></li>                                
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Shop</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="shop-grids.html" class="sub-menu-item">Product Grids</a></li>
+                                        <li><a href="shop-product-detail.html" class="sub-menu-item">Product Details</a></li>
+                                        <li><a href="shop-cart.html" class="sub-menu-item">Shop Cart</a></li>
+                                        <li><a href="shop-checkout.html" class="sub-menu-item">Checkouts</a></li>
+                                    </ul>
+                                </li>
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Special</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="page-comingsoon.html" class="sub-menu-item">Coming Soon</a></li>
+                                        <li><a href="page-maintenance.html" class="sub-menu-item">Maintenance</a></li>
+                                        <li><a href="page-error.html" class="sub-menu-item">Error</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="components.html" class="sub-menu-item">Components</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="has-submenu parent-parent-menu-item">
+                            <a href="javascript:void(0)">Portfolio</a><span class="menu-arrow"></span>
+                            <ul class="submenu megamenu">
+                                <li>
+                                    <ul>
+                                        <li class="megamenu-head">Classic Portfolio</li>
+                                        <li><a href="portfolio-classic-two.html" class="sub-menu-item">Two Column</a></li>
+                                        <li><a href="portfolio-classic-three.html" class="sub-menu-item">Three Column</a></li>
+                                        <li><a href="portfolio-classic-four.html" class="sub-menu-item">Four Column</a></li>
+                                        <li><a href="portfolio-classic-five.html" class="sub-menu-item">Five Column</a></li>
+                                        <li><a href="portfolio-classic-six.html" class="sub-menu-item">Six Column</a></li>
+                                        <li><a href="portfolio-classic-sidebar.html" class="sub-menu-item">Portfolio Sidebar</a></li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li class="megamenu-head">Creative Portfolio</li>
+                                        <li><a href="portfolio-creative-two.html" class="sub-menu-item">Two Column</a></li>
+                                        <li><a href="portfolio-creative-three.html" class="sub-menu-item">Three Column</a></li>
+                                        <li><a href="portfolio-creative-four.html" class="sub-menu-item">Four Column</a></li>
+                                        <li><a href="portfolio-creative-five.html" class="sub-menu-item">Five Column</a></li>
+                                        <li><a href="portfolio-creative-six.html" class="sub-menu-item">Six Column</a></li>
+                                        <li><a href="portfolio-creative-sidebar.html" class="sub-menu-item">Portfolio Sidebar</a></li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li class="megamenu-head">Modern Portfolio</li>
+                                        <li><a href="portfolio-modern-two.html" class="sub-menu-item">Two Column</a></li>
+                                        <li><a href="portfolio-modern-three.html" class="sub-menu-item">Three Column</a></li>
+                                        <li><a href="portfolio-modern-four.html" class="sub-menu-item">Four Column</a></li>
+                                        <li><a href="portfolio-modern-five.html" class="sub-menu-item">Five Column</a></li>
+                                        <li><a href="portfolio-modern-six.html" class="sub-menu-item">Six Column</a></li>
+                                        <li><a href="portfolio-modern-sidebar.html" class="sub-menu-item">Portfolio Sidebar</a></li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li class="megamenu-head">Masonry Portfolio</li>
+                                        <li><a href="portfolio-masonry-two.html" class="sub-menu-item">Two Column</a></li>
+                                        <li><a href="portfolio-masonry-three.html" class="sub-menu-item">Three Column</a></li>
+                                        <li><a href="portfolio-masonry-four.html" class="sub-menu-item">Four Column</a></li>
+                                        <li><a href="portfolio-masonry-five.html" class="sub-menu-item">Five Column</a></li>
+                                        <li><a href="portfolio-masonry-six.html" class="sub-menu-item">Six Column</a></li>
+                                        <li><a href="portfolio-masonry-sidebar.html" class="sub-menu-item">Portfolio Sidebar</a></li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    <ul>
+                                        <li class="megamenu-head">Portfolio Detail</li>
+                                        <li><a href="portfolio-detail-one.html" class="sub-menu-item">Portfolio One</a></li>
+                                        <li><a href="portfolio-detail-two.html" class="sub-menu-item">Portfolio Two</a></li>
+                                        <li><a href="portfolio-detail-three.html" class="sub-menu-item">Portfolio Three</a></li>
+                                        <li><a href="portfolio-detail-four.html" class="sub-menu-item">Portfolio Four</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="has-submenu parent-parent-menu-item">
+                            <a href="javascript:void(0)">Blogs</a><span class="menu-arrow"></span>
+                            <ul class="submenu">
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Blog</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="blog-grid.html" class="sub-menu-item">Blog Grids</a></li>
+                                        <li><a href="blog-masonry.html" class="sub-menu-item">Blog Masonry</a></li>
+                                        <li><a href="blog-list.html" class="sub-menu-item">Blog List</a></li>
+                                        <li><a href="blog-grid-sidebar.html" class="sub-menu-item">Blog-Sidebar</a></li>
+                                        <li><a href="blog-masonry-sidebar.html" class="sub-menu-item">Blog Masonry-sidebar</a></li>
+                                        <li><a href="blog-list-sidebar.html" class="sub-menu-item">Blog List-Sidebar</a></li>
+                                    </ul>
+                                </li>
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Image Blog</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="blog-image-grid.html" class="sub-menu-item">Blog Grids</a></li>
+                                        <li><a href="blog-image-masonry.html" class="sub-menu-item">Blog Masonry</a></li>
+                                        <li><a href="blog-image-grid-sidebar.html" class="sub-menu-item">Blog-Sidebar</a></li>
+                                        <li><a href="blog-image-masonry-sidebar.html" class="sub-menu-item">Blog Masonry-sidebar</a></li>
+                                    </ul> 
+                                </li>
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Blog Detail </a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="blog-detail-one.html" class="sub-menu-item">Blog Detail One</a></li>
+                                        <li><a href="blog-detail-two.html" class="sub-menu-item">Blog Detail Two</a></li>
+                                        <li><a href="blog-detail-three.html" class="sub-menu-item">Blog Detail Three</a></li>
+                                        <li><a href="blog-detail-four.html" class="sub-menu-item">Blog Detail Four</a></li>
+                                        <li><a href="blog-detail-five.html" class="sub-menu-item">Blog Detail Five</a></li>
+                                    </ul>  
+                                </li>
+                                <li class="has-submenu parent-menu-item"><a href="javascript:void(0)">Single Blog Post</a><span class="submenu-arrow"></span>
+                                    <ul class="submenu">
+                                        <li><a href="blog-standard-post.html" class="sub-menu-item">Standard Post</a></li>
+                                        <li><a href="blog-slider-post.html" class="sub-menu-item">Slider Post</a></li>
+                                        <li><a href="blog-youtube-post.html" class="sub-menu-item">Youtube Post</a></li>
+                                        <li><a href="blog-vimeo-post.html" class="sub-menu-item">Vimeo Post</a></li>
+                                        <li><a href="blog-html-video-post.html" class="sub-menu-item">HTML Video Post</a></li>
+                                        <li><a href="blog-audio-post.html" class="sub-menu-item">Audio Post</a></li>
+                                        <li><a href="blog-html-audio-post.html" class="sub-menu-item">HTML Audio Post</a></li>
+                                        <li><a href="blog-blockquote-post.html" class="sub-menu-item">Blockquote</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="blog-author.html" class="sub-menu-item">Author</a></li>
+                            </ul>
+                        </li>
+
+                        <li><a href="page-contact.html" class="sub-menu-item">Contact us</a></li>
+                    </ul><!--end navigation menu-->
+                </div><!--end navigation-->
+            </div><!--end container-->
+        </header><!--end header-->
+        <!-- Navbar End -->
+
+        <!-- Hero Start -->
+        <section class="bg-half-80 d-table bg-primary bg-gradient w-100">
+            <div class="bg-overlay bg-gradient-overlay"></div>
+            <div class="container">
+                <div class="row mt-5 justify-content-center">
+                    <div class="col-12">
+                        <div class="title-heading text-center">
+                            <small class="text-white-50 mb-1 fw-medium text-uppercase mx-auto">Your Buying Products </small>
+                            <h5 class="heading fw-semibold mb-0 page-heading text-white title-dark">Shop Carts</h5>
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+
+                <div class="position-middle-bottom">
+                    <nav aria-label="breadcrumb" class="d-block">
+                        <ul class="breadcrumb breadcrumb-muted mb-0 p-0">
+                            <li class="breadcrumb-item"><a href="index.html">Starty</a></li>
+                            <li class="breadcrumb-item"><a href="index-fashion.html">Shop</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Carts</li>
+                        </ul>
+                    </nav>
+                </div>
+            </div><!--end container-->
+        </section><!--end section-->
+        <!-- Hero End -->
+
+        <!-- Start -->
+        <section class="section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="table-responsive bg-white shadow rounded">
+                            <table class="table mb-0 table-center">
+                                <thead>
+                                    <tr>
+                                        <th class="border-bottom fw-medium py-3" style="min-width:20px "></th>
+                                        <th class="border-bottom fw-medium text-start py-3" style="min-width: 300px;">Product</th>
+                                        <th class="border-bottom fw-medium text-center py-3" style="min-width: 160px;">Price</th>
+                                        <th class="border-bottom fw-medium text-center py-3" style="min-width: 160px;">Qty</th>
+                                        <th class="border-bottom fw-medium text-end py-3 pe-4" style="min-width: 160px;">Total</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr class="shop-list">
+                                        <td class="h6 text-center"><a href="javascript:void(0)" class="text-danger"><i class="uil uil-times"></i></a></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="images/shop/items/f1.png" class="img-fluid avatar avatar-small rounded shadow" style="height:auto;" alt="">
+                                                <h6 class="mb-0 ms-3">T-Shirt</h6>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">$ 255.00</td>
+                                        <td class="text-center qty-icons">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" class="btn btn-pills btn-icon btn-primary minus">-</button>
+                                            <input min="0" name="quantity" value="7" type="number" class="btn btn-pills btn-icon btn-primary qty-btn quantity">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()" class="btn btn-pills btn-icon btn-primary plus">+</button>
+                                        </td>
+                                        <td class="text-end fw-medium pe-4">$510.00</td>
+                                    </tr>
+
+                                    <tr class="shop-list">
+                                        <td class="h6 text-center"><a href="javascript:void(0)" class="text-danger"><i class="uil uil-times"></i></a></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="images/shop/items/f3.png" class="img-fluid avatar avatar-small rounded shadow" style="height:auto;" alt="">
+                                                <h6 class="mb-0 ms-3">Cap</h6>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">$ 520.00</td>
+                                        <td class="text-center qty-icons">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" class="btn btn-pills btn-icon btn-primary minus">-</button>
+                                            <input min="0" name="quantity" value="1" type="number" class="btn btn-pills btn-icon btn-primary qty-btn quantity">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()" class="btn btn-pills btn-icon btn-primary plus">+</button>
+                                        </td>
+                                        <td class="text-end fw-medium pe-4">$520.00</td>
+                                    </tr>
+
+                                    <tr class="shop-list">
+                                        <td class="h6 text-center"><a href="javascript:void(0)" class="text-danger"><i class="uil uil-times"></i></a></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="images/shop/items/f6.png" class="img-fluid avatar avatar-small rounded shadow" style="height:auto;" alt="">
+                                                <h6 class="mb-0 ms-3">T-Shirt</h6>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">$ 160.00</td>
+                                        <td class="text-center qty-icons">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown()" class="btn btn-pills btn-icon btn-primary minus">-</button>
+                                            <input min="0" name="quantity" value="2" type="number" class="btn btn-pills btn-icon btn-primary qty-btn quantity">
+                                            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp()" class="btn btn-pills btn-icon btn-primary plus">+</button>
+                                        </td>
+                                        <td class="text-end fw-medium pe-4">$640.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+                <div class="row">
+                    <div class="col-lg-8 col-md-6 mt-4 pt-2">
+                        <a href="javascript:void(0)" class="btn btn-primary">Shop More</a>
+                        <a href="javascript:void(0)" class="btn btn-soft-primary ms-2">Update Cart</a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 ms-auto mt-4 pt-2">
+                        <div class="table-responsive bg-white rounded shadow">
+                            <table class="table table-center table-padding mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="h6 ps-4 py-3">Subtotal</td>
+                                        <td class="text-end fw-medium pe-4">$ 2190</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="h6 ps-4 py-3">Taxes</td>
+                                        <td class="text-end fw-medium pe-4">$ 219</td>
+                                    </tr>
+                                    <tr class="bg-light">
+                                        <td class="h6 fw-semibold ps-4 py-3">Total</td>
+                                        <td class="text-end fw-semibold pe-4">$ 2409</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 pt-2 text-end">
+                            <a href="shop-checkout.html" class="btn btn-primary">Proceed to checkout</a>
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+            </div><!--end container-->
+        </section><!--end section-->
+        <!-- End -->
+
+        <!-- Footer Start -->
+        <footer class="footer bg-footer">    
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="footer-py-60">
+                            <div class="row">
+                                <div class="col-lg-3 col-12 mb-0 mb-md-4 pb-0 pb-md-2">
+                                    <a href="#" class="logo-footer">
+                                        <img src="images/logo-light.png" height="26" alt="">
+                                    </a>
+                                    <p class="mt-4">Start working with Starty that can provide everything you.</p>
+                                    <ul class="list-unstyled social-icon foot-social-icon mb-0 mt-4">
+                                        <li class="list-inline-item"><a href="https://1.envato.market/starty" target="_blank" class="rounded"><i class="uil uil-shopping-cart align-middle" title="Buy Now"></i></a></li>
+                                <li class="list-inline-item"><a href="https://dribbble.com/shreethemes" target="_blank" class="rounded"><i class="uil uil-dribbble align-middle" title="dribbble"></i></a></li>
+                                <li class="list-inline-item"><a href="https://www.behance.net/shreethemes" target="_blank" class="rounded"><i class="uil uil-behance" title="Behance"></i></a></li>
+                                <li class="list-inline-item"><a href="http://linkedin.com/company/shreethemes" target="_blank" class="rounded"><i class="uil uil-linkedin" title="Linkedin"></i></a></li>
+                                <li class="list-inline-item"><a href="https://www.facebook.com/shreethemes" target="_blank" class="rounded"><i class="uil uil-facebook-f align-middle" title="facebook"></i></a></li>
+                                <li class="list-inline-item"><a href="https://www.instagram.com/shreethemes/" target="_blank" class="rounded"><i class="uil uil-instagram align-middle" title="instagram"></i></a></li>
+                                <li class="list-inline-item"><a href="https://twitter.com/shreethemes" target="_blank" class="rounded"><i class="uil uil-twitter align-middle" title="twitter"></i></a></li>
+                                <li class="list-inline-item"><a href="mailto:support@shreethemes.in" class="rounded"><i class="uil uil-envelope align-middle" title="email"></i></a></li>
+                                
+                                <li class="list-inline-item"><a href="https://forms.gle/QkTueCikDGqJnbky9" target="_blank" class="rounded"><i class="uil uil-file align-middle" title="customization"></i></a></li>
+                                    </ul><!--end icon-->
+                                </div><!--end col-->
+                                
+                                <div class="col-lg-6">
+                                    <div class="row">
+                                        <div class="col-12 mb-4 pb-2">
+                                            <h5 class="footer-head mb-0">Shopping & Clothes</h5>
+                                        </div><!--end col-->
+
+                                        <div class="col-lg-4 col-md-4 col-12">
+                                            <ul class="list-unstyled footer-list">
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Men</a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Jackets & Coats </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Jeans </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i>  Loungewear </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Polo shirts </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Shirts</a></li>
+                                            </ul>
+                                        </div><!--end col-->
+                                        
+                                        <div class="col-lg-4 col-md-4 col-12 mt-2 mt-sm-0">
+                                            <ul class="list-unstyled footer-list">
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Shorts </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Suits Swimwear </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> T-shirts </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Tracksuits </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Trousers</a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Shirts</a></li>
+                                            </ul>
+                                        </div><!--end col-->
+                                        
+                                        <div class="col-lg-4 col-md-4 col-12 mt-2 mt-sm-0">
+                                            <ul class="list-unstyled footer-list">
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> My account </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Order History </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Wish List </a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Newsletter</a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Affiliate</a></li>
+                                                <li><a href="index-fashion.html" class="text-foot"><i class="uil uil-angle-right-b me-1"></i> Returns</a></li>
+                                            </ul>
+                                        </div><!--end col-->
+                                    </div><!--end row-->
+                                </div><!--end col-->
+            
+                                <div class="col-lg-3 col-md-6 col-12 mt-4 mt-lg-0 pt-2 pt-lg-0">
+                                    <h5 class="footer-head">Newsletter</h5>
+                                    <p class="mt-4">Sign up and receive the latest tips via email.</p>
+                                    <form>
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="foot-subscribe mb-3">
+                                                    <label class="form-label">Write your email <span class="text-danger">*</span></label>
+                                                    <input type="email" name="email" id="emailsubscribe" class="form-control rounded" placeholder="Your email : " required>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div class="d-grid">
+                                                    <input type="submit" id="submitsubscribe" name="send" class="btn btn-soft-primary" value="Subscribe">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div><!--end col-->
+                            </div><!--end row-->
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+            </div><!--end container-->
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="footer-py-30 footer-border">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="uil uil-truck align-middle h5 mb-0 me-2"></i>
+                                        <h6 class="mb-0">Free delivery</h6>
+                                    </div>
+                                </div><!--end col-->
+
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="uil uil-archive align-middle h5 mb-0 me-2"></i>
+                                        <h6 class="mb-0">Non-contact shipping</h6>
+                                    </div>
+                                </div><!--end col-->
+
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="uil uil-transaction align-middle h5 mb-0 me-2"></i>
+                                        <h6 class="mb-0">Money-back quarantee</h6>
+                                    </div>
+                                </div><!--end col-->
+
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="uil uil-shield-check align-middle h5 mb-0 me-2"></i>
+                                        <h6 class="mb-0">Secure payments</h6>
+                                    </div>
+                                </div><!--end col-->
+                            </div><!--end row-->
+                        </div>
+                    </div><!--end col-->
+                </div><!--end row-->
+            </div><!--end container-->
+
+            <div class="footer-border">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="footer-py-30">
+                                <div class="container text-center">
+                                    <div class="row justify-content-center">
+                                        <div class="col">
+                                            <div class="text-center">
+                                                <p class="mb-0">© <script>document.write(new Date().getFullYear())</script> Starty. Design with <i class="mdi mdi-heart text-danger"></i> by <a href="https://shreethemes.in/" target="_blank" class="text-reset">Shreethemes</a>.</p>
+                                            </div>
+                                        </div><!--end col-->
+                                    </div><!--end row-->
+                                </div><!--end container-->
+                            </div>
+                        </div><!--end col-->
+                    </div><!--end row-->
+                </div><!--end container-->
+            </div>
+        </footer><!--end footer-->
+        <!-- Footer End -->
+
+        <!-- Back to top -->
+        <ul class="text-center list-unstyled switcher-button mb-0 position-fixed" style="top: 20%; left: 10px; z-index: 2;">
+            <li class="d-grid"><a href="javascript:void(0)" class="btn btn-icon rounded-circle btn-dark dark-version t-dark" onclick="setTheme('style-dark')"> <i class="uil uil-moon fs-5"></i> </a></li>
+            <li class="d-grid"><a href="javascript:void(0)" class="btn btn-icon rounded-circle btn-dark light-version t-light" onclick="setTheme('style')"> <i class="uil uil-sun fs-5"></i> </a></li>
+            <li class="d-grid"><a href="https://1.envato.market/starty" target="_blank" class="btn btn-icon rounded-circle btn-primary mt-2"> <i class="uil uil-shopping-cart fs-5"></i> </a></li>
+        </ul>
+<a href="javascript:void(0)" onclick="topFunction()" id="back-to-top" class="back-to-top rounded-pill"><i class="mdi mdi-arrow-up"></i></a>
+        <!-- Back to top -->
+    
+
+        <!-- javascript -->
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <!-- Icons -->
+        <script src="js/feather.min.js"></script>
+        <!-- Main Js -->
+        <script src="js/plugins.init.js"></script><!--Note: All init js like tiny slider, counter, countdown, maintenance, lightbox, gallery, swiper slider, aos animation etc.-->
+        <script src="js/app.js"></script><!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
+    </body>
+</html>
