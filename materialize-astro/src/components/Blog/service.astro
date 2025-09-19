@@ -1,201 +1,55 @@
+---
+const { dataContent } = Astro.props;
+---
+
 <!-- Start services -->
 <section class="section">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-12">
         <div class="section-title text-center mb-4 pb-2">
-          <h4 class="title fw-semibold mb-3">Explore Solutions</h4>
-          <p class="text-muted para-desc mx-auto mb-0">
-            Our design projects are fresh and simple and will benefit your
-            business greatly. Learn more about our work!
-          </p>
+          <slot name="header">
+            <h4 class="title fw-semibold mb-3">Explore</h4>
+            <p class="text-muted para-desc mx-auto mb-0">Keterngan di sini</p>
+          </slot>
         </div>
       </div><!--end col-->
     </div><!--end row-->
 
     <div class="row">
-      <div class="col-lg-4 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-airplay"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Responsive Design</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
-
-      <div class="col-lg-4 col-md-6 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-eye"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Retina Ready Graphics</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
-
-      <div class="col-lg-4 col-md-6 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-tachometer-fast-alt"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Powerful Performance</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
-
-      <div class="col-lg-4 col-md-6 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-palette"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Unlimited Color Options</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
-
-      <div class="col-lg-4 col-md-6 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-font"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Customizable Fonts</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
-
-      <div class="col-lg-4 col-md-6 mt-4 pt-2">
-        <div
-          class="features feature-primary feature-bg border-0 p-4 rounded shadow"
-        >
-          <div class="fea-icon rounded text-white title-dark">
-            <i class="uil uil-file-upload-alt"></i>
-          </div>
-
-          <div class="content mt-3">
-            <a href="page-single-service.html" class="title h5 text-dark"
-              >Free Updates</a
-            >
-            <p class="text-muted para mt-2 mb-0">
-              This prevents repetitive patterns from impairing the overall
-              facilitates the comparison.
-            </p>
-          </div>
-        </div>
-      </div><!--end col-->
+      <slot name="service-content" />
+      <!--end col-->
     </div><!--end row-->
   </div><!--end container-->
 
   <div class="container mt-100 mt-60">
     <div class="row align-items-center">
       <div class="col-lg-5 col-md-6">
-        <img src="images/about02.jpg" class="img-fluid rounded shadow" alt="" />
+        <img src="images/about02.png" class="img-fluid rounded shadow" alt="" />
       </div><!--end col-->
 
       <div class="col-lg-7 col-md-6 mt-4 mt-sm-0 pt-2 pt-sm-0">
         <div class="section-title ms-lg-5">
-          <h4 class="title fw-semibold mb-3">Crafted For Digital Agency.</h4>
+          <h4 class="title fw-semibold mb-3">{dataContent.content2.title}</h4>
           <p class="text-muted para-desc mb-0">
-            The advantage of its Latin origin and the relative meaninglessness
-            of Lorum Ipsum is that the text does not attract attention to itself
-            or distract the viewer's attention from the layout.
+            {dataContent.content2.desc}
           </p>
 
           <div class="row mt-4">
-            <div class="col-lg-6 col-12">
-              <ul class="mb-0 list-unstyled">
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Fully Responsive
-                </li>
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Finance & Restructuring
-                </li>
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Audit & Assurance
-                </li>
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Trades & Stock Market
-                </li>
-              </ul>
-            </div><!--end col-->
-
-            <div class="col-lg-6 col-12">
-              <ul class="mb-0 list-unstyled">
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Strategy & Planning
-                </li>
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Software & Research
-                </li>
-                <li class="mb-0">
-                  <span class="text-primary h4 me-2"
-                    ><i class="uil uil-check-circle align-middle"></i></span
-                  > Support & Maintenance
-                </li>
-              </ul>
-            </div><!--end col-->
+            {
+              dataContent.content2.item.map((item: any) => (
+                <div class="col-lg-6 col-12">
+                  <ul class="mb-0 list-unstyled">
+                    <li class="mb-0">
+                      <span class="text-primary h4 me-2">
+                        <i class="uil uil-check-circle align-middle" />
+                      </span>
+                      {item}
+                    </li>
+                  </ul>
+                </div>
+              ))
+            }
           </div><!--end row-->
 
           <div class="mt-4">

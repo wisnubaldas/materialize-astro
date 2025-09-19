@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
     { text: "Facilities", initial: "beer-twotone-loop" },
     { text: "Tracking Cargo", initial: "compass-twotone" },
     { text: "Contact", initial: "phone-incoming-twotone" },
-    { text: "Login", initial: "emoji-smile-wink-twotone" },
   ];
 
   function updateMenuText() {
@@ -112,7 +111,7 @@ function getClosest(elem, selector) {
       function (s) {
         var matches = (this.document || this.ownerDocument).querySelectorAll(s),
           i = matches.length;
-        while (--i >= 0 && matches.item(i) !== this) {}
+        while (--i >= 0 && matches.item(i) !== this) { }
         return i > -1;
       };
   }
@@ -260,4 +259,4 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 //small menu
 try {
   var spy = new Gumshoe("#navmenu-nav a");
-} catch (err) {}
+} catch (err) { }
