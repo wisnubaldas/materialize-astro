@@ -1,10 +1,14 @@
+---
+const token = Astro.cookies.get("auth_token")?.value;
+---
+
 <!-- Navbar STart -->
 <header id="topnav" class="defaultscroll sticky tagline-height">
   <div class="container">
     <!-- Logo container-->
     <a class="logo" href="#">
-      <img src="images/logo2.png" class="logo-light-mode" alt="" />
-      <img src="images/logo2.png" class="logo-dark-mode" alt="" />
+      <img src="/blog/images/logo2.png" class="logo-light-mode" alt="" />
+      <img src="/blog/images/logo2.png" class="logo-dark-mode" alt="" />
     </a>
     <!-- End Logo container-->
     <div class="menu-extras">
@@ -64,7 +68,7 @@
           <a href="/blog/our-expertise/" class="sub-menu-item"> </a>
         </li>
         <li>
-          <a href="#" class="sub-menu-item"> </a>
+          <a href="/blog/our-network/" class="sub-menu-item"> </a>
         </li>
         <li>
           <a href="#" class="sub-menu-item"> </a>
@@ -75,9 +79,21 @@
         <li>
           <a href="#" class="sub-menu-item"> </a>
         </li>
-        <li>
-          <a href="#" class="sub-menu-item">Login </a>
-        </li>
+        {
+          token ? (
+            <li>
+              <a href="/blog/dashboard/" class="sub-menu-item">
+                Dashboard
+              </a>
+            </li>
+          ) : (
+            <li>
+              <a href="/auth/login/" class="sub-menu-item">
+                Login
+              </a>
+            </li>
+          )
+        }
       </ul><!--end navigation menu-->
     </div><!--end navigation-->
   </div><!--end container-->
