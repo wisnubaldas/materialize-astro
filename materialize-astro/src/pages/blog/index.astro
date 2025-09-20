@@ -1,7 +1,6 @@
 ---
 import { service } from "@js/module/blog.js";
 import Cta from "~/components/Blog/cta.astro";
-import Footer from "~/components/Blog/footer.astro";
 import Hero from "~/components/Blog/hero.astro";
 import SectionTree from "~/components/Blog/sectionTree.astro";
 import Service from "~/components/Blog/service.astro";
@@ -43,7 +42,6 @@ import Blog from "~/layouts/Blog.astro";
       }
     </Fragment>
   </Service>
+  <SectionTree />
+  <Cta />
 </Blog>
-<SectionTree />
-<Cta />
-<Footer />

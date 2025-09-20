@@ -2,6 +2,7 @@
 const { title } = Astro.props;
 import Tagline from "~/components/Blog/tagline.astro";
 import Navbar from "~/components/Blog/navbar.astro";
+import Footer from "~/components/Blog/footer.astro";
 ---
 
 <!doctype html>
@@ -53,7 +54,7 @@ import Navbar from "~/components/Blog/navbar.astro";
       <h1>Default nya di offeride sama slot</h1>
     </slot>
     <!-- Back to top -->
-
+    <Footer />
     <a
       href="javascript:void(0)"
       onclick="topFunction()"

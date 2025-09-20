@@ -1,7 +1,6 @@
 ---
 import Blog from "~/layouts/Blog.astro";
 import About from "~/pages/blog/aboutUs.js";
-console.log(About);
 ---
 
 <Blog title="Halaman Blog">
@@ -36,7 +35,7 @@ console.log(About);
       <div class="row align-items-center">
         <div class="col-lg-5 col-md-6">
           <img
-            src="/blog/images/about.jpg"
+            src="/blog/images/IMG_1955UP.jpg"
             class="img-fluid rounded shadow"
             alt=""
           />
@@ -44,15 +43,37 @@ console.log(About);
         <div class="col-lg-7 col-md-6 mt-4 pt-2 mt-sm-0 pt-sm-0">
           <div class="section-title ms-lg-5">
             <h4 class="title mb-3">{About.contentTitle}</h4>
-            <p class="text-muted">{About.content}</p>
-            <p class="text-muted">
-              PT. Mitra Adira Utama was established in 2005, driven by the rapid growth of Indonesia’s cargo export business. Since then, we have expanded steadily across the nation to meet the growing demand for reliable and efficient aviation and logistics services.
-              </p>
+            {
+              About.content.map((i)=>(
+                  <p class="text-muted">{i}</p>
+              ))
+            }
+              
           </div>
         </div><!--end col-->
       </div><!--end row-->
     </div><!--end container-->
-
+      <div class="container mt-100 mt-10">
+          <div class="row">
+             <div class="col-lg-12 col-md-12 text-center">
+              <h2 class="title mb-4">Vision & Mission</h2>
+              </div><!--end col-->
+             </div>
+              <div class="col-lg-12 col-md-12">
+                  <div class="section-title me-md-4">
+                      <h4 class="title mb-4">Vision:</h4>
+                      <p class="text-muted">To be a world-class warehousing and ground handling operator, guided by global standards of efficiency and effectiveness.</p>
+                  </div>
+              </div><!--end col-->
+              <div class="col-lg-12 col-md-12">
+                  <div class="section-title me-md-4">
+                      <h4 class="title mb-4">Mission:</h4>
+                      <p class="text-muted">
+                        To provide reliable and efficient services at all airports across Indonesia. To uphold 3S (Safety, Service, and Security) as our top priority.
+                      </p>
+                  </div>
+              </div><!--end col-->
+          </div><!--end row-->
     <div class="container mt-100 mt-60">
       <div class="row justify-content-center">
         {
@@ -62,7 +83,7 @@ console.log(About);
                         <i class="mb-0">
                           <iconify-icon class="h1 mb-0" icon={item.icon} width="40" height="40"  style="color: #16642e"></iconify-icon>
                         </i>
-                        <div class="content border-bottom">
+                        <div class="content">
                           <a href="#" class="title h5 text-dark">{item.title}</a>
 
                           <p class="text-muted mt-3">
@@ -73,11 +94,6 @@ console.log(About);
                             }
                           </p>
                         </div>
-
-                        <a href="#" class="d-flex align-items-center justify-content-between" >
-                          <span class="fw-medium text-dark">Read More</span>
-                          <i class="mdi mdi-arrow-right"></i>
-                        </a>
                       </div>
                     </div><!--end col-->
           ))
@@ -85,255 +101,27 @@ console.log(About);
  
       </div><!--end row-->
     </div><!--end container-->
-    <div class="container-fluid px-0 mt-100 mt-60">
-      <div class="bg-half-260" style="background: url('/blog/images/cta.jpg') top;">
-        <div class="bg-overlay"></div>
-        <div class="play-icon">
-          <iframe width="1000" height="520.75" src="https://www.youtube.com/embed/wI1_IIAxaoE?si=hAMYpMbMHEoXBCf-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        </div>
-      </div>
-    </div><!--end container-->
 
-    <div class="container mt-100 mt-60">
-      <div class="row justify-content-center">
-        <div class="col-lg-9">
-          <div class="tiny-single-item">
-
-            <div class="tiny-slide px-md-5">
-              <div class="card client-testi text-center">
-                <img
-                  src="/blog/images/client/01.jpg"
-                  class="avatar avatar-small rounded-pill mx-auto"
-                  alt=""
-                />
-
-                <div class="card-body pb-0 content">
-                  <p class="h5 fw-normal text-muted fst-italic">
-                    " The advantage of its Latin origin and the relative
-                    meaninglessness of Lorum Ipsum is that the text does not
-                    attract attention to itself or distract the viewer's
-                    attention from the layout. "
-                  </p>
-
-                  <div class="name mt-4">
-                    <small class="text-uppercase fw-semibold d-block"
-                      >Johnny Rosario</small
-                    >
-                    <small class="text-muted">C.E.O</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div><!--end col-->
-      </div><!--end row-->
-    </div><!--end container-->
 
     <!-- Partners start -->
     <div class="container mt-5">
       <div class="row justify-content-center">
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-1.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
-
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-2.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
-
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-3.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
-
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-4.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
-
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-5.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
-
-        <div class="col-lg-2 col-md-2 col-6 text-center">
-          <img src="/blog/images/client/logo-6.svg" class="img-fluid" alt="" />
-        </div><!--end col-->
+        {
+          About.clientImg.map((img) =>(
+            <div class="col-lg-2 col-md-2 col-6 text-center pb-4">
+              <img src={`/blog/images/client/${img}`} class="img-fluid" alt="" />
+            </div><!--end col-->
+          ))
+        }
       </div><!--end row-->
     </div><!--end container-->
-    <!-- Partners End -->
+      <!-- Partners End -->
 
-    <div class="container-fluid mt-100 mt-60">
-      <div class="row">
-        <div class="col-12 px-0">
-          <div class="tiny-six-item">
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/09.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <a
-                    href="javascript:void(0)"
-                    class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                    >Dennis Rosario</a
-                  >
-                  <small class="text-white title-dark">C.E.O</small>
-                </div>
-              </div>
-            </div>
-
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/10.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <div class="name">
-                    <a
-                      href="javascript:void(0)"
-                      class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                      >Billy Gregory</a
-                    >
-                    <small class="text-white title-dark">Manager</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/11.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <div class="name">
-                    <a
-                      href="javascript:void(0)"
-                      class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                      >Connie Dunton</a
-                    >
-                    <small class="text-white title-dark">Manager</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/12.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <div class="name">
-                    <a
-                      href="javascript:void(0)"
-                      class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                      >Alberta Petty</a
-                    >
-                    <small class="text-white title-dark">Manager</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/13.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <div class="name">
-                    <a
-                      href="javascript:void(0)"
-                      class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                      >Shirley Garcia</a
-                    >
-                    <small class="text-white title-dark">Manager</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="tiny-slide">
-              <div class="card team team-primary">
-                <div class="card-img">
-                  <img src="/blog/images/client/14.jpg" class="img-fluid" alt="" />
-                  <div class="card-overlay"></div>
-                </div>
-                <div class="team-content">
-                  <div class="name">
-                    <a
-                      href="javascript:void(0)"
-                      class="h6 name text-uppercase d-block mb-0 text-white title-dark"
-                      >Michael Wheeler</a
-                    >
-                    <small class="text-white title-dark">Manager</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div><!--end col-->
-      </div><!--end row-->
-    </div><!--end container-->
-
-    <div class="container mt-100 mt-60">
-      <div class="row">
-        <div class="col-md-3 col-6">
-          <div class="counter-box position-relative text-center">
-            <h2 class="mb-0 display-1 fw-bold title-dark mt-2 opacity-05">
-              <span class="counter-value" data-target="5458">3</span>
-            </h2>
-            <span
-              class="counter-head fw-semibold title-dark position-absolute top-50 start-50 translate-middle"
-              >Investment Projects</span
-            >
-          </div><!--end counter box-->
-        </div><!--end col-->
-
-        <div class="col-md-3 col-6">
-          <div class="counter-box position-relative text-center">
-            <h2 class="mb-0 display-1 fw-bold title-dark mt-2 opacity-05">
-              <span class="counter-value" data-target="15">1</span>
-            </h2>
-            <span
-              class="counter-head fw-semibold title-dark position-absolute top-50 start-50 translate-middle"
-              >Years of Experience</span
-            >
-          </div><!--end counter box-->
-        </div><!--end col-->
-
-        <div class="col-md-3 col-6">
-          <div class="counter-box position-relative text-center">
-            <h2 class="mb-0 display-1 fw-bold title-dark mt-2 opacity-05">
-              <span class="counter-value" data-target="54">0</span>
-            </h2>
-            <span
-              class="counter-head fw-semibold title-dark position-absolute top-50 start-50 translate-middle"
-              >Offices in the World</span
-            >
-          </div><!--end counter box-->
-        </div><!--end col-->
-
-        <div class="col-md-3 col-6">
-          <div class="counter-box position-relative text-center">
-            <h2 class="mb-0 display-1 fw-bold title-dark mt-2 opacity-05">
-              <span class="counter-value" data-target="214">3</span>
-            </h2>
-            <span
-              class="counter-head fw-semibold title-dark position-absolute top-50 start-50 translate-middle"
-              >Successful Cases</span
-            >
-          </div><!--end counter box-->
-        </div><!--end col-->
-      </div><!--end row-->
-    </div><!--end container-->
+      </div><!--end container-->
   </section><!--end section-->
   <!-- End -->
 </Blog>
+
 <script is:inline>
   // document.addEventListener("DOMContentLoaded", function () {
   //   const menuList = document.querySelector("#main-menu");
