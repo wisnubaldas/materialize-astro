@@ -1,4 +1,6 @@
 from pydantic_settings import BaseSettings
+
+
 class ENV(BaseSettings):
     DB1_HOST_R:str
     DB1_HOST_W:str

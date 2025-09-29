@@ -1,9 +1,10 @@
-from pyexpat import model
-from typing import Type, List, Optional, TypeVar
-from sqlalchemy import func, or_, and_
+from typing import TypeVar
+
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse, CustomFilters
+
+from app.schemas.datatables_schema import CustomFilters, DataTablesParams, DataTablesResponse
 
 # Tipe generik untuk model SQLAlchemy
 ModelType = TypeVar("ModelType")
@@ -14,7 +15,7 @@ class DataTablesService:
     """
     Class generik untuk menangani query DataTables.
     """
-    def __init__(self, model: Type[ModelType], schema: Type[SchemaType], search_columns: Optional[List[str]] = None, custom_filters: Optional[List[str]] = None):
+    def __init__(self, model: type[ModelType], schema: type[SchemaType], search_columns: list[str] | None = None, custom_filters: list[str] | None = None):
         self.model = model
         self.schema = schema
         self.search_columns = search_columns if search_columns is not None else []
@@ -46,7 +47,7 @@ class DataTablesService:
                 # hanya dari tanggal_awal ke atas
                 custom_filter_conditions.append(self.model.TANGGAL >= tanggal_awal)
             elif tanggal_akhir:
-                 # hanya sampai tanggal_akhir
+                # hanya sampai tanggal_akhir
                 custom_filter_conditions.append(self.model.TANGGAL <= tanggal_akhir)
             
             # 🎯 filter lain

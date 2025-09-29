@@ -1,9 +1,13 @@
 # scripts/debug.py
-import sys, os
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # tambahkan project root
 
 from ptpython.repl import embed
+
 from app.services.inv_ap2_service import INVAp2Service
+
 
 def main():
     banner = """

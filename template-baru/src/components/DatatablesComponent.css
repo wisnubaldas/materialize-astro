@@ -1,0 +1,59 @@
+/* stylelint-disable @stylistic/no-missing-end-of-source-newline */
+/* stylelint-disable comment-empty-line-before */
+/* stylelint-disable @stylistic/indentation */
+
+.table_component {
+    overflow: auto;
+    inline-size: 100%;
+}
+
+.table_component table {
+    border: 1px solid #dededf;
+    block-size: 100%;
+    border-collapse: collapse;
+    border-spacing: 1px;
+    inline-size: 100%;
+    table-layout: fixed;
+    text-align: start;
+}
+
+.table_component caption {
+    caption-side: top;
+    text-align: start;
+}
+
+.table_component th {
+    padding: 5px;
+    border: 1px solid #68686dab;
+    background-color: #0643f949;
+    color: #000;
+}
+
+.table_component td {
+    padding: 5px;
+    border: 1px solid #68686dab;
+}
+
+.table_component tr:nth-child(even) td {
+    background-color: #fff;
+    color: #000;
+}
+
+.table_component tr:nth-child(odd) td {
+    background-color: #fff;
+    color: #000;
+}
+
+.dt-search {
+    display: none;
+}
+
+
+.table:not(.table-dark, .table-light) thead:not(.table-dark, .table-light) tr th {
+    background-color: #0643f949;
+}
+
+.table.table-sm thead tr th {
+    padding-block: .5rem !important;
+    padding-inline: .5rem !important;
+}

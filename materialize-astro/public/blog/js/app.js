@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { text: "Our Expertise", initial: "brake-alert-twotone" },
     { text: "Our Network", initial: "telegram" },
     { text: "Facilities", initial: "beer-twotone-loop" },
-    { text: "Tracking Cargo", initial: "compass-twotone" },
+    { text: "Tracking", initial: "compass-twotone" },
     { text: "Contact", initial: "phone-incoming-twotone" },
   ];
 

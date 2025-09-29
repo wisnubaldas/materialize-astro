@@ -1,0 +1,32 @@
+---
+import DatatablesComponent from "@components/DatatablesComponent.astro";
+import Layout from "@layouts/Layout.astro";
+const column = ["inv", "status", "response.message"];
+const filterColumn = ["inv", "status"];
+---
+
+<Layout title='Status Response'>
+  <div class='row'>
+    <div class='col-md pt-5'>
+      <div class='card'>
+        <h4 class='card-header'><span class='text-muted fw-light'>List Data</span> Response Invoice Terkirim</h4>
+        <div class='card-body'>
+          <DatatablesComponent filterColumn={filterColumn} uri='/angkasapura/get-data-response-inv' columns={column}>
+            <thead class='table-border-bottom-0'>
+              <tr>
+                {
+                  column.map(item => {
+                    return <th>{item}</th>;
+                  })
+                }
+              </tr>
+            </thead>
+          </DatatablesComponent>
+        </div>
+      </div>
+    </div>
+  </div>
+  <Fragment slot='scripts'>
+    <script src='@components/DatatablesComponent.js'></script>
+  </Fragment>
+</Layout>

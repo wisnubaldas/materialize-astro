@@ -1,24 +1,25 @@
 {
-  "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
-  // Aktifkan Pylint
+  "python.defaultInterpreterPath": "C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Scripts\\python.exe",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.pyo": true,
+    "**/.pytest_cache":true,
+    "**/.ruff_cache":true
+  },
   "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
-
-  "pylint.args": ["--rcfile=${workspaceFolder}/materialize-fastapi/.pylintrc"],
-  // Abaikan folder yang tidak perlu di linting
-  "pylint.ignorePatterns": [
-    "**/venv/**",
-    "**/.venv/**",
-    "**/__pycache__/**",
-    "**/migrations/**",
-    "**/alembic/**"
-  ],
-
+  "python.linting.ruffEnabled": true,
+  "python.linting.ruffPath": ["ruff"],
+  
   // Formatter & linting tambahan opsional
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
     "source.organizeImports": "explicit"
   },
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyPath": "mypy",
+  
   "python.analysis.autoImportCompletions": true,
   "python.analysis.typeCheckingMode": "basic",
   "editor.quickSuggestions": {
@@ -27,7 +28,8 @@
     "strings": true
   },
   "python.analysis.extraPaths": [
-    "./materialize-astro" // pointing ke backend FastAPI
+    "./materialize-fastapi", // pointing ke backend FastAPI
+    "./.venv/Lib/site-packages"
   ],
   "terminal.integrated.env.windows": {
     "PYTHONPATH": "${workspaceFolder}/materialize-astro"

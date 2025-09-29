@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
-from app.db.mysql import get_db1_r
 
-from app.utils.auth_util import create_token, verify_token, verify_password
+from app.db.mysql import get_db1_r
 from app.models.user import User
 from app.schemas.user_schema import LoginSchema, TokenSchema
+from app.utils.auth_util import create_token, verify_password, verify_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()

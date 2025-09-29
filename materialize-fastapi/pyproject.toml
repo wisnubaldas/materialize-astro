@@ -15,6 +15,7 @@ faker = "^37.6.0"
 fastapi = "^0.112.0"
 flower = "^2.0.1"
 gunicorn = "^23.0.0"
+mypy = "^1.18.2"
 passlib = "^1.7.4"
 pydantic = {extras = ["email"], version = "^2.11.7"}
 pydantic-settings = "^2.10.1"
@@ -43,8 +44,8 @@ prod = "scripts.run_prod:main"
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
-[tool.pylint]
-extension-pkg-allow-list = "alembic"
-
-[tool.pylint.'MESSAGES CONTROL']
-disable = ["E1102", "C0115", "W0661", "E1101"]
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+python_version = 3.12
+strict_optional = true

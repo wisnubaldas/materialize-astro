@@ -1,7 +1,10 @@
 import logging
 import traceback
+
 from sqlalchemy import text
+
 from app.db.mysql import SessionDB1W  # sesuaikan dengan session DB kamu
+
 
 class DBLogHandler(logging.Handler):
     def emit(self, record: logging.LogRecord):

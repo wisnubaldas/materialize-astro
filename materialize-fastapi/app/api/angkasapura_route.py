@@ -1,11 +1,12 @@
-from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase
-from fastapi import APIRouter,Depends, HTTPException
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
+
 from app.db.mysql import get_db1_r, get_db1_w
+from app.schemas.ap2_fail_inv_schema import FailInvGet
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.inv_ap2_schema import InvoiceGet
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
-from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.ap2_fail_inv_schema import FailInvGet
+from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase, VoidInvoiceSchemaResponse
 from app.services.inv_ap2_service import INVAp2Service
 
 router = APIRouter(prefix="/angkasapura", tags=["Angkasapura"])
@@ -24,6 +25,10 @@ def data_inv_yang_tidak_lengkap(params: DataTablesParams, db: Session = Depends(
 @router.post("/void-invoice")
 async def void_invoice(params:VoidInvoiceSchemaBase, db: Session = Depends(get_db1_w)):
     return await INVAp2Service.void_invoice_ap2(params,db) 
+
+@router.post("/get-void-invoice",response_model=DataTablesResponse[VoidInvoiceSchemaResponse])
+def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    return  INVAp2Service.table_void_invoice(db=db, params=params)
 
 # @router.post("/send-invoices/{date_prefix}")
 # async def send_invoices(date_prefix: str):

@@ -1,11 +1,11 @@
 # app/schemas/invoice_schema.py
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class InvAp2Base(BaseModel):
-    NO_INVOICE: Optional[str] = None
+    NO_INVOICE: str | None = None
     TANGGAL: str
     SMU: str
     KDAIRLINE: str
@@ -25,37 +25,37 @@ class InvAp2Base(BaseModel):
     TOTAL_PENDAPATAN_TANPA_PPN: str
     TOTAL_PENDAPATAN_DENGAN_PPN: str
 
-    PJT_HANDLING_FEE: Optional[int] = None
-    RUSH_HANDLING_FEE: Optional[int] = None
-    RUSH_SERVICE_FEE: Optional[int] = None
-    TRANSHIPMENT_FEE: Optional[int] = None
-    ADMINISTRATION_FEE: Optional[int] = None
-    DOCUMENTS_FEE: Optional[int] = None
-    PECAH_PU_FEE: Optional[int] = None
-    COOL_COLD_STORAGE_FEE: Optional[int] = None
-    STRONG_ROOM_FEE: Optional[int] = None
-    AC_ROOM_FEE: Optional[int] = None
-    DG_ROOM_FEE: Optional[int] = None
-    AVI_ROOM_FEE: Optional[int] = None
-    DANGEROUS_GOOD_CHECK_FEE: Optional[int] = None
-    DISCOUNT_FEE: Optional[int] = None
-    RKSP_FEE: Optional[int] = None
+    PJT_HANDLING_FEE: int | None = None
+    RUSH_HANDLING_FEE: int | None = None
+    RUSH_SERVICE_FEE: int | None = None
+    TRANSHIPMENT_FEE: int | None = None
+    ADMINISTRATION_FEE: int | None = None
+    DOCUMENTS_FEE: int | None = None
+    PECAH_PU_FEE: int | None = None
+    COOL_COLD_STORAGE_FEE: int | None = None
+    STRONG_ROOM_FEE: int | None = None
+    AC_ROOM_FEE: int | None = None
+    DG_ROOM_FEE: int | None = None
+    AVI_ROOM_FEE: int | None = None
+    DANGEROUS_GOOD_CHECK_FEE: int | None = None
+    DISCOUNT_FEE: int | None = None
+    RKSP_FEE: int | None = None
 
     HAWB: str
-    HAWB_FEE: Optional[int] = None
-    HAWB_MAWB_FEE: Optional[int] = None
-    CSC_FEE: Optional[int] = None
-    ENVIROTAINER_ELEC_FEE: Optional[int] = None
-    ADDITIONAL_COSTS: Optional[int] = None
-    NAWB_FEE: Optional[int] = None
-    BARCODE_FEE: Optional[int] = None
-    CARGO_DEVELOPMENT_FEE: Optional[int] = None
-    DUTIABLE_SHIPMENT_FEE: Optional[int] = None
-    FHL_FEE: Optional[int] = None
-    FWB_FEE: Optional[int] = None
-    CARGO_INSPECTION_REPORT_FEE: Optional[int] = None
-    MATERAI_FEE: Optional[int] = None
-    PPN_FEE: Optional[int] = None
+    HAWB_FEE: int | None = None
+    HAWB_MAWB_FEE: int | None = None
+    CSC_FEE: int | None = None
+    ENVIROTAINER_ELEC_FEE: int | None = None
+    ADDITIONAL_COSTS: int | None = None
+    NAWB_FEE: int | None = None
+    BARCODE_FEE: int | None = None
+    CARGO_DEVELOPMENT_FEE: int | None = None
+    DUTIABLE_SHIPMENT_FEE: int | None = None
+    FHL_FEE: int | None = None
+    FWB_FEE: int | None = None
+    CARGO_INSPECTION_REPORT_FEE: int | None = None
+    MATERAI_FEE: int | None = None
+    PPN_FEE: int | None = None
 
     status: int = 1
     class Config:

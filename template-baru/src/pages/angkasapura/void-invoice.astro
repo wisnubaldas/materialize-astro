@@ -1,0 +1,28 @@
+---
+import Layout from '@layouts/Layout.astro';
+---
+
+<Layout title='Angkasapura-Void Invoice'>
+  <div class='row'>
+    <h1>Void Invoice</h1>
+    <!-- Float label (Outline) -->
+    <div class='col-md'>
+      <div class='card'>
+        <h5 class='card-header'>Float label (Outline)</h5>
+        <div class='card-body'>
+          <div class='form-floating form-floating-outline'>
+            <input
+              type='text'
+              class='form-control'
+              id='floatingInput'
+              placeholder='John Doe'
+              aria-describedby='floatingInputHelp'
+            />
+            <label for='floatingInput'>Name</label>
+            <div id='floatingInputHelp' class='form-text'>We'll never share your details with anyone else.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

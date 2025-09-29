@@ -1,12 +1,12 @@
-from datetime import datetime
 import random
+from datetime import datetime
 
 from faker import Faker
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import DBAPIError, OperationalError
+from sqlalchemy.orm import Session
 
-from app.models.inv_ap2 import InvAp2  # pastikan path sesuai
 from app.db.mysql import SessionDB1W  # koneksi DB-mu
+from app.models.inv_ap2 import InvAp2  # pastikan path sesuai
 
 fake = Faker()
 

@@ -1,7 +1,11 @@
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
 from app.utils.env import ENV
-from typing import Generator
+
+
 def make_url(user, pwd, host, port, db):
     return f"mysql+pymysql://{user}:{pwd}@{host}:{port}/{db}"
 

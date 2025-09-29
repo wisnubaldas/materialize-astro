@@ -1,11 +1,11 @@
-from typing import Optional
+
 from pydantic import BaseModel, field_validator
 
 
 class FailInvBase(BaseModel):
-    inv: Optional[str] = None
-    desc: Optional[str] = None
-    status: Optional[str] = None
+    inv: str | None = None
+    desc: str | None = None
+    status: str | None = None
     class Config:
         from_attributes = True 
     

@@ -1,5 +1,7 @@
-from sqlalchemy import Column, BigInteger, String, Integer, SmallInteger, TIMESTAMP, Text, func
+from sqlalchemy import BigInteger, Column, Integer, String, Text
+
 from app.db.mysql import BaseDB1
+
 
 class AP2FAILINV(BaseDB1):
     __tablename__ = "ap2_fail_inv"

@@ -1,5 +1,10 @@
 export default [
   {
+    text: "Blog",
+    href: "/blog/",
+    icon: "mdi mdi-alpha-b-box",
+  },
+  {
     text: "Dashboards",
     href: "#",
     icon: "mdi mdi-folder-home-outline",

@@ -1,29 +1,32 @@
 import asyncio
 import json
-from app.models.void_inv_ap2 import VoidInvAp2
-from app.schemas.void_invoice_schema import  VoidInvoiceSchemaBase, VoidInvoiceSchemaCreate, VoidInvoiceSchemaRequest, VoidInvoiceSchemaResponse
-import httpx
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-from sqlalchemy import  text
-from sqlalchemy.orm import Session
-from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.inv_ap2_schema import InvoiceGet,InvoiceCreate
-from app.models.inv_ap2 import InvAp2
-from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
-from app.models.respons_inv_ap2 import ResponsInvAp2
-from app.schemas.ap2_fail_inv_schema import FailInvGet
-from app.models.ap2_fail_inv import AP2FAILINV
-from app.schemas.ap2_send_inv_schema import AP2SendInv
-from app.services.query.mapping_column import INVTOAP2INV_BASE, INVTOAP2INV
+from datetime import datetime, timedelta
+from decimal import Decimal
 
-from app.services.datatables_service import DataTablesService
+import httpx
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.db.mysql import SessionDB1W, SessionDB2R
-
+from app.models.ap2_fail_inv import AP2FAILINV
+from app.models.inv_ap2 import InvAp2
+from app.models.respons_inv_ap2 import ResponsInvAp2
+from app.models.void_inv_ap2 import VoidInvAp2
+from app.schemas.ap2_fail_inv_schema import FailInvGet
+from app.schemas.ap2_send_inv_schema import AP2SendInv
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
+from app.schemas.inv_ap2_schema import InvoiceCreate, InvoiceGet
+from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
+from app.schemas.void_invoice_schema import (
+    VoidInvoiceSchemaBase,
+    VoidInvoiceSchemaRequest,
+    VoidInvoiceSchemaResponse,
+)
+from app.services.datatables_service import DataTablesService
+from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.utils.env import ENV
 from app.utils.helper import HELPER
-from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 # instance service untuk model InvAp2
@@ -46,12 +49,19 @@ fail_inv_ap2 = DataTablesService(
     search_columns=["inv", "desc","status",],
     custom_filters=["inv", "desc","status"],
 )
+
+void_invoice = DataTablesService(
+    model=VoidInvAp2,
+    schema=VoidInvoiceSchemaResponse,
+    search_columns=["NO_INVOICE", "TANGGAL","HAWB","SMU"],
+    custom_filters=["NO_INVOICE", "TANGGAL","HAWB","SMU"],
+)
 HEADERS = {
     "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
 }
  ## method protected
 def get_dynamic_params(interval_minutes: int = 30):
-    now = datetime.now()
+    now = datetime.datetime.now()
     hari = now.strftime("%Y-%m-%d")
     start_from = now.strftime("%H:%M:%S")
     end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
@@ -105,38 +115,13 @@ class INVAp2Service:
     @staticmethod
     def get_fail_inv(db: Session, params: DataTablesParams)-> DataTablesResponse[FailInvGet]:
         return fail_inv_ap2.get_datatable(db=db, params=params)
-    
-    @staticmethod
-    async def void_invoice_ap2(request:VoidInvoiceSchemaBase,db:Session)->VoidInvoiceSchemaResponse:
-        async with httpx.AsyncClient() as client:
-            ext_request = VoidInvoiceSchemaRequest(**request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD)
-            
-            resp = await client.post(f"{ENV.AP2_DEV_URL}/api/void_invo_dtl", headers=HEADERS, data=ext_request.model_dump())
-            resp.raise_for_status()
-            
-            merged = request.model_dump()
-            merged['RESPONSE'] = resp.json()
-            result = VoidInvoiceSchemaResponse(**merged)
-            
-            obj_data = VoidInvAp2(
-                TANGGAL = result.TANGGAL,
-                NO_INVOICE= result.NO_INVOICE,
-                HAWB = result.HAWB,
-                SMU = result.SMU,
-                RESPONSE = json.dumps(resp.json())
-            )
-            db.add(obj_data)
-            db.commit()
-            db.refresh(obj_data)
-            
-            return result
-        
+
     @staticmethod
     async def send_invoice(date_prefix: str):
         db1 = SessionDB1W()
         results = []
         try:
-            sql = text(f"SELECT * FROM inv_ap2 WHERE TANGGAL LIKE :tgl")
+            sql = text("SELECT * FROM inv_ap2 WHERE TANGGAL LIKE :tgl")
             rows = db1.execute(sql, {"tgl": f"{date_prefix}%"}).fetchall()
             if rows is None:
                 raise Exception("Invoice not found")
@@ -173,3 +158,31 @@ class INVAp2Service:
     def send_invoice_sync(date_prefix: str):
         """Wrapper sync supaya bisa dipanggil Celery task biasa"""
         return asyncio.run(INVAp2Service.send_invoice(date_prefix))
+    
+    @staticmethod
+    async def void_invoice_ap2(request:VoidInvoiceSchemaBase,db:Session)->VoidInvoiceSchemaResponse:
+        async with httpx.AsyncClient() as client:
+            ext_request = VoidInvoiceSchemaRequest(**request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD)
+        
+            resp = await client.post(f"{ENV.AP2_DEV_URL}/api/void_invo_dtl", headers=HEADERS, data=ext_request.model_dump())
+            resp.raise_for_status()
+        
+            merged = request.model_dump()
+            merged['RESPONSE'] = resp.json()
+            result = VoidInvoiceSchemaResponse(**merged)
+        
+            obj_data = VoidInvAp2(
+                TANGGAL = result.TANGGAL,
+                NO_INVOICE= result.NO_INVOICE,
+                HAWB = result.HAWB,
+                SMU = result.SMU,
+                RESPONSE = json.dumps(resp.json())
+            )
+            db.add(obj_data)
+            db.commit()
+            db.refresh(obj_data)
+        
+            return result
+    @staticmethod
+    def table_void_invoice(db: Session, params: DataTablesParams) -> DataTablesResponse[VoidInvoiceSchemaResponse]:
+        return void_invoice.get_datatable(db=db, params=params)

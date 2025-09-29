@@ -1,21 +1,31 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import DTBARU from "~/components/DatatablesComponent.astro";
-
-const column = ["", "inv", "status", "response.message"];
+import FormVoid from "~/components/FormComponent.astro";
+const column = ["", "TANGGAL", "NO_INVOICE", "HAWB", "SMU", "RESPONSE"];
 // const addColumn = ["boolean:status"];
-// const filterColumn = ["inv", "response", "status"];
+const filterColumn = ["TANGGAL", "NO_INVOICE", "HAWB"];
 ---
 
 <Layout title="Status Response Invoice" page="Status Response INV">
   <Fragment slot="scripts">
     <script src="@js/module/data-invoice.js"></script>
   </Fragment>
-
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="">
+      <span class="text-muted">Form</span> Void Invoice
+    </h4>
+    <FormVoid />
+  </div>
+  <!-- datatables -->
   <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="">
       <span class="text-muted fw-light">Data Void</span> Invoice ke Angkasapura
     </h4>
-    <DTBARU column={column} dataPath="/angkasapura/get-data-response-inv" />
+    <DTBARU
+      column={column}
+      filterColumn={filterColumn}
+      dataPath="/angkasapura/get-void-invoice"
+    />
   </div>
 </Layout>

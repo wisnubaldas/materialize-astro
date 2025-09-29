@@ -1,0 +1,57 @@
+---
+import type { SubMenu } from './SubMenu.astro';
+import SubMenuComponent from './SubMenu.astro';
+
+export interface Props {
+  item: {
+    name: string;
+    url: string;
+    icon?: string;
+    subItems?: SubMenu[];
+  };
+  currentPath?: any;
+}
+
+const { item } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+const isActiveLink = item.url === currentPath;
+const hasActiveSubItem =
+  item.subItems &&
+  item.subItems.some(subItem => {
+    // Check direct sub-items
+    if (subItem.url === currentPath) {
+      return true;
+    }
+    // Recursively check for nested sub-items (up to one level deep)
+    if (subItem.subItems && subItem.subItems.some(nestedItem => nestedItem.url === currentPath)) {
+      return true;
+    }
+    return false;
+  });
+const isParentActive = hasActiveSubItem;
+const isMenuItemActive = isActiveLink || hasActiveSubItem;
+// const isActive =
+//   currentPath === item.url || (item.subItems && item.subItems.some(subItem => subItem.url === currentPath));
+// const isParentActive = item.subItems && item.subItems.some(subItem => subItem.url === currentPath);
+---
+
+<li class={`menu-item ${isParentActive ? 'open active' : ''} ${isMenuItemActive && !item.subItems ? 'active' : ''}`}>
+  <a href={item.url} class={`menu-link ${item.subItems ? 'menu-toggle' : ''} ${isActiveLink ? 'active' : ''}`}>
+    {
+      item.icon && (
+        <iconify-icon
+          icon={item.icon}
+          width='24'
+          height='24'
+          line-animation='none'
+          line-animation-trigger='hover'
+          line-animation-reset='true'
+          class='iconify'
+        />
+      )
+    }
+    <div data-i18n={item.name}>&thinsp;{item.name}</div>
+  </a>
+  {item.subItems && <SubMenuComponent items={item.subItems} currentPath={currentPath} />}
+</li>

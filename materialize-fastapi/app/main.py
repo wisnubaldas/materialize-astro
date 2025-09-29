@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.openapi.utils import get_openapi
+from fastapi.security import HTTPBearer
+
 from app.api import routes
-from app.utils.logging_config import setup_logging
 from app.api.middleware.auth_middleware import JWTMiddleware
+from app.utils.logging_config import setup_logging
+
 setup_logging()
 
 app = FastAPI(title="FastAPI App with Poetry")

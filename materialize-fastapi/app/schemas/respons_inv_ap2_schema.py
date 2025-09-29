@@ -1,14 +1,14 @@
 # app/schemas/respons_inv_ap2_schema.py
-from pydantic import BaseModel, field_validator
-from typing import Optional
-from datetime import datetime
 import json
+from datetime import datetime
+
+from pydantic import BaseModel, field_validator
 
 
 class ResponsInvAp2Base(BaseModel):
-    inv: Optional[str] = None
-    response: Optional[dict] = None
-    status: Optional[str] = None
+    inv: str | None = None
+    response: dict | None = None
+    status: str | None = None
     class Config:
         from_attributes = True 
     

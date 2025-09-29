@@ -1,6 +1,8 @@
 import logging
-from logstash_async.handler import AsynchronousLogstashHandler
+
 from logstash_async.formatter import LogstashFormatter  # ini formatter yg ada di v3
+from logstash_async.handler import AsynchronousLogstashHandler
+
 
 def setup_logger():
     logger = logging.getLogger("elk-test")

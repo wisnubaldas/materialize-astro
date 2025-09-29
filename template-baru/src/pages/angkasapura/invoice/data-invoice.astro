@@ -1,0 +1,88 @@
+---
+import DataTables from "@components/DatatablesComponent.astro";
+import Layout from "@layouts/Layout.astro";
+const column = [
+  "NO_INVOICE",
+  "TANGGAL",
+  "SMU",
+  "KDAIRLINE",
+  "FLIGHT_NUMBER",
+  "ASAL",
+  "TUJUAN",
+  "JENIS_KARGO",
+  "TARIF_KARGO",
+  "KOLI",
+  "BERAT",
+  "VOLUME",
+  "JML_HARI",
+  "CARGO_CHG",
+  "KADE",
+  "TOTAL_PENDAPATAN_TANPA_PPN",
+  "TOTAL_PENDAPATAN_DENGAN_PPN",
+  "PJT_HANDLING_FEE",
+  "RUSH_HANDLING_FEE",
+  "RUSH_SERVICE_FEE",
+  "TRANSHIPMENT_FEE",
+  "ADMINISTRATION_FEE",
+  "DOCUMENTS_FEE",
+  "PECAH_PU_FEE",
+  "COOL_COLD_STORAGE_FEE",
+  "STRONG_ROOM_FEE",
+  "AC_ROOM_FEE",
+  "DG_ROOM_FEE",
+  "AVI_ROOM_FEE",
+  "DANGEROUS_GOOD_CHECK_FEE",
+  "DISCOUNT_FEE",
+  "RKSP_FEE",
+  "HAWB",
+  "HAWB_FEE",
+  "HAWB_MAWB_FEE",
+  "CSC_FEE",
+  "ENVIROTAINER_ELEC_FEE",
+  "ADDITIONAL_COSTS",
+  "NAWB_FEE",
+  "BARCODE_FEE",
+  "CARGO_DEVELOPMENT_FEE",
+  "DUTIABLE_SHIPMENT_FEE",
+  "FHL_FEE",
+  "FWB_FEE",
+  "CARGO_INSPECTION_REPORT_FEE",
+  "MATERAI_FEE",
+  "PPN_FEE"
+];
+const addColumn = ["", "boolean:status"];
+const filterColumn = ["NO_INVOICE", "TANGGAL", "FLIGHT_NUMBER"];
+---
+
+<Layout title='Status Response'>
+  <div class='row'>
+    <!-- Float label (Outline) -->
+    <div class='col-md pt-5'>
+      <div class='card'>
+        <h4 class='card-header'><span class='text-muted fw-light'>List Data</span> Invoice Terkirim</h4>
+        <div class='card-body'>
+          <DataTables
+            filterColumn={filterColumn}
+            addColumn={addColumn}
+            title='Data Invoice'
+            uri='/angkasapura/datatables'
+            columns={column}
+            responsive='true'>
+            <thead class='table-border-bottom-0'>
+              <tr>
+                {
+                  column.map(item => {
+                    return <th>{item}</th>;
+                  })
+                }
+              </tr>
+            </thead>
+          </DataTables>
+        </div>
+      </div>
+    </div>
+  </div>
+  <Fragment slot='scripts'>
+    <script src='@components/DatatablesComponent.js'></script>
+  </Fragment>
+</Layout>

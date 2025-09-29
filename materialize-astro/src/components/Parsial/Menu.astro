@@ -21,29 +21,33 @@ const hasActiveChild = (children: any) => {
     <ul class="menu-inner">
       {
         menuItems.map((menu) => (
-          <li
-            class="menu-item"
-            class:list={{ active: hasActiveChild(menu.children) }}
-          >
-            <a href={menu.href} class="menu-link menu-toggle">
+          <li class="menu-item" class:list={{ active: menu.children ? hasActiveChild(menu.children) : null, }}>
+            {menu.children ? (
+              <a href={menu.href} class="menu-link menu-toggle">
               <i class={`menu-icon tf-icons mdi ${menu.icon}`} />
               <div data-i18n={menu.text.replace(" ", "_")}>{menu.text}</div>
-            </a>
-            <ul class="menu-sub">
-              {menu.children.map((child) => (
-                <li
-                  class="menu-item"
-                  class:list={{ active: isActive(child.href) }}
-                >
-                  <a href={child.href} class="menu-link">
-                    <i class={`menu-icon tf-icons mdi ${child.icon}`} />
-                    <div data-i18n={child.text.replace(" ", "_")}>
-                      {child.text}
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
+              </a>
+              <ul class="menu-sub">
+                {menu.children.map((child) => (
+                  <li
+                    class="menu-item"
+                    class:list={{ active: isActive(child.href) }}
+                  >
+                    <a href={child.href} class="menu-link">
+                      <i class={`menu-icon tf-icons mdi ${child.icon}`} />
+                      <div data-i18n={child.text.replace(" ", "_")}>
+                        {child.text}
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <a href={menu.href} class="menu-link">
+                <i class={`menu-icon tf-icons mdi ${menu.icon}`} />
+                <div data-i18n={menu.text.replace(" ", "_")}>{menu.text}</div>
+              </a>
+            )}
           </li>
         ))
       }

@@ -1,13 +1,13 @@
-from typing import List, Optional, Generic, TypeVar
+from typing import Generic, TypeVar
+
 from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
 
 T = TypeVar("T")
 
 # Input: Permintaan dari DataTables
 # Model untuk filter kustom Anda
 class CustomFilters(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     
     class Config:
             extra = 'allow'
@@ -16,27 +16,27 @@ class CustomFilters(BaseModel):
 
 
 class ColumnSearch(BaseModel):
-    value: Optional[str] = ""
-    regex: Optional[bool] = False
+    value: str | None = ""
+    regex: bool | None = False
 
 
 class ColumnOrder(BaseModel):
     column: int
     dir: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class Column(BaseModel):
-    data: Optional[str] = ""
-    name: Optional[str] = ""
-    searchable: Optional[bool] = True
-    orderable: Optional[bool] = True
+    data: str | None = ""
+    name: str | None = ""
+    searchable: bool | None = True
+    orderable: bool | None = True
     search: ColumnSearch
 
 
 class GlobalSearch(BaseModel):
-    value: Optional[str] = ""
-    regex: Optional[bool] = False
+    value: str | None = ""
+    regex: bool | None = False
 
 
 class DataTablesParams(BaseModel):
@@ -44,18 +44,18 @@ class DataTablesParams(BaseModel):
     start: int
     length: int
     search: GlobalSearch
-    order: List[ColumnOrder]
-    columns: List[Column]
+    order: list[ColumnOrder]
+    columns: list[Column]
     # Bidang baru untuk filter kustom
-    filters: Optional[CustomFilters] = Field(default_factory=CustomFilters)
+    filters: CustomFilters | None = Field(default_factory=CustomFilters)
 
 
 # Output: Response DataTables
-class DataTablesResponse(GenericModel, Generic[T]):
+class DataTablesResponse(BaseModel, Generic[T]):
     draw: int
     recordsTotal: int
     recordsFiltered: int
-    data: List[T]
+    data: list[T]
 
 
 # from typing import List, Optional, Generic, TypeVar

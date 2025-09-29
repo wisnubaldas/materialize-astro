@@ -1,8 +1,10 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 
+// @ts-ignore
 import mdx from "@astrojs/mdx";
 import node from "@astrojs/node";
+
 
 // https://astro.build/config
 export default defineConfig({
@@ -17,7 +19,9 @@ export default defineConfig({
       minify: true,
       chunkSizeWarningLimit: 2000, // default 500kb → naik jadi 2mb
     },
-
+    // optimizeDeps: {
+    //   exclude: ['jquery']
+    // },
     // Tambahkan bagian resolve dan alias di sini
     resolve: {
       alias: {

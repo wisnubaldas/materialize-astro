@@ -1,6 +1,8 @@
 # app/models/respons_inv_ap2_model.py
-from sqlalchemy import Column, BigInteger, String, TIMESTAMP, Text, func
+from sqlalchemy import TIMESTAMP, BigInteger, Column, String, Text, func
+
 from app.db.mysql import BaseDB1
+
 
 class ResponsInvAp2(BaseDB1):
     __tablename__ = "respons_inv_ap2"

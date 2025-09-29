@@ -1,10 +1,12 @@
-from sqlalchemy import Column, BigInteger, String, Integer, SmallInteger, TIMESTAMP, Text, func
+from sqlalchemy import TIMESTAMP, BigInteger, Column, Integer, SmallInteger, String, func
+
 # from sqlalchemy.ext.declarative import declarative_base
 # from app.db.mysql import Base  # ini harus declarative_base()
 # Base = declarative_base()
 # pylint: disable=E1102
-
 from app.db.mysql import BaseDB1
+
+
 class InvAp2(BaseDB1):
     __tablename__ = "inv_ap2"
     id = Column(BigInteger, primary_key=True, autoincrement=True)

@@ -1,8 +1,9 @@
 # harus paling atas
+from celery import Celery
+from celery.schedules import crontab
+
 from app.utils.logging_config import setup_logging
 
-from celery.schedules import crontab
-from celery import Celery
 setup_logging()
 
 celery_app = Celery(

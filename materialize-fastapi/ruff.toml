@@ -1,0 +1,49 @@
+# ruff.toml
+# Konfigurasi Ruff untuk FastAPI + SQLAlchemy + Pydantic v2
+
+line-length = 100 
+target-version = "py310" # ganti sesuai versi Python projectmu
+
+[lint]
+select = [
+  "E", # pycodestyle errors
+  "F", # pyflakes
+  "I", # isort
+  "N", # pep8-naming
+  "UP", # pyupgrade
+  "PTH", # pathlib
+  "DTZ", # timezone aware datetime
+  "PD", # pandas rules
+  "PL", # pylint-like rules
+  "RUF", # ruff specific rules
+  "B", # bugbear
+  "C4", # comprehensions
+]
+
+ignore = [
+  "E501", # line too long (biar black yang urus)
+  "B008", # function call in default argument (buat Depends())
+  "PLR2004", # magic value comparison (misal status code 200/400)
+  "PTH120", # pathlib open
+  "UP038", # pathlib open
+]
+
+exclude = [
+  ".git",
+  ".venv",
+  "venv",
+  "__pycache__",
+  "migrations",
+  "alembic",
+  "node_modules",
+  ".pytest_cache",
+]
+
+[isort]
+combine-as-imports = true
+force-single-line = false
+known-first-party = ["app"]
+[format]
+indent-style = "space"
+line-ending = "lf"
+quote-style = "double"

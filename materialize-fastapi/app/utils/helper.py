@@ -1,8 +1,11 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
+from pathlib import Path
+
+
 class HELPER :
     @staticmethod
     def load_sql_query(filepath: str) -> str:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with Path.open(filepath, encoding="utf-8") as f:
             return f.read()
     @staticmethod
     def to_string_rounded(value, digits=0):

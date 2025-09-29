@@ -1,8 +1,9 @@
+from fastapi.exceptions import HTTPException
+from fastapi.responses import JSONResponse
+from jose import JWTError, jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import HTTPException
-from jose import JWTError, jwt
+
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya

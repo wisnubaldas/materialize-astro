@@ -1,0 +1,138 @@
+---
+import Layout from '@layouts/Layout.astro';
+---
+
+<Layout title='Admin Dashboard Aplikasi'>
+  <div class='row'>
+    <h4>Admin Dashboard</h4>
+    <!-- Float label (Outline) -->
+    <div class='col-md'>
+      <div class='card'>
+        <h5 class='card-header'>Welcome</h5>
+        <div class='card-body'>
+          <!-- Card Border Shadow -->
+          <div class='row g-6'>
+            <div class='col-sm-6 col-lg-3'>
+              <div class='card card-border-shadow-primary h-100'>
+                <div class='card-body'>
+                  <div class='d-flex align-items-center mb-2'>
+                    <div class='avatar me-4'>
+                      <span class='avatar-initial rounded-3 bg-label-primary'
+                        ><iconify-icon icon='streamline-ultimate-color:delivery-truck-cargo' width='48' height='48'
+                        ></iconify-icon></span
+                      >
+                    </div>
+                    <h4 class='mb-0'>42</h4>
+                  </div>
+                  <h6 class='mb-0 fw-normal'>On route vehicles</h6>
+                  <p class='mb-0'>
+                    <span class='me-1 fw-medium'>+18.2%</span>
+                    <small class='text-body-secondary'>than last week</small>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class='col-sm-6 col-lg-3'>
+              <div class='card card-border-shadow-warning h-100'>
+                <div class='card-body'>
+                  <div class='d-flex align-items-center mb-2'>
+                    <div class='avatar me-4'>
+                      <span class='avatar-initial rounded-3 bg-label-warning'
+                        ><iconify-icon icon='streamline-emojis:delivery-truck' width='48' height='48'
+                        ></iconify-icon></span
+                      >
+                    </div>
+                    <h4 class='mb-0'>8</h4>
+                  </div>
+                  <h6 class='mb-0 fw-normal'>Vehicles with errors</h6>
+                  <p class='mb-0'>
+                    <span class='me-1 fw-medium'>-8.7%</span>
+                    <small class='text-body-secondary'>than last week</small>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class='col-sm-6 col-lg-3'>
+              <div class='card card-border-shadow-danger h-100'>
+                <div class='card-body'>
+                  <div class='d-flex align-items-center mb-2'>
+                    <div class='avatar me-4'>
+                      <span class='avatar-initial rounded-3 bg-label-danger'
+                        ><iconify-icon icon='streamline-emojis:bar-chart' width='48' height='48'></iconify-icon></span
+                      >
+                    </div>
+                    <h4 class='mb-0'>27</h4>
+                  </div>
+                  <h6 class='mb-0 fw-normal'>Deviated from route</h6>
+                  <p class='mb-0'>
+                    <span class='me-1 fw-medium'>+4.3%</span>
+                    <small class='text-body-secondary'>than last week</small>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class='col-sm-6 col-lg-3'>
+              <div class='card card-border-shadow-info h-100'>
+                <div class='card-body'>
+                  <div class='d-flex align-items-center mb-2'>
+                    <div class='avatar me-4'>
+                      <span class='avatar-initial rounded-3 bg-label-info'
+                        ><iconify-icon icon='streamline-emojis:package' width='48' height='48'></iconify-icon></span
+                      >
+                    </div>
+                    <h4 class='mb-0'>13</h4>
+                  </div>
+                  <h6 class='mb-0 fw-normal'>Late vehicles</h6>
+                  <p class='mb-0'>
+                    <span class='me-1 fw-medium'>-2.5%</span>
+                    <small class='text-body-secondary'>than last week</small>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!--/ Card Border Shadow -->
+          </div>
+          <!-- Shipment statistics-->
+          <div class='col-lg-12 col-xxl-12 order-3 order-xxl-1 pt-5'>
+            <div class='card h-100'>
+              <div class='card-header d-flex align-items-center justify-content-between'>
+                <div class='card-title mb-0'>
+                  <h5 class='m-0 me-2 mb-1'>Shipment statistics</h5>
+                  <p class='card-subtitle mb-0'>Total number of deliveries 23.8k</p>
+                </div>
+                <div class='btn-group'>
+                  <button type='button' class='btn btn-outline-primary'>January</button>
+                  <button
+                    type='button'
+                    class='btn btn-outline-primary dropdown-toggle dropdown-toggle-split'
+                    data-bs-toggle='dropdown'
+                    aria-expanded='false'>
+                    <span class='visually-hidden'>Toggle Dropdown</span>
+                  </button>
+                  <ul class='dropdown-menu'>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>January</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>February</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>March</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>April</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>May</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>June</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>July</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>August</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>September</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>October</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>November</a></li>
+                    <li><a class='dropdown-item' href='javascript:void(0);'>December</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class='card-body'>
+                <div id='shipmentStatisticsChart'></div>
+              </div>
+            </div>
+          </div>
+          <!--/ Shipment statistics -->
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --port 3000",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -27,7 +27,9 @@
     "@fullcalendar/timeline": "~6.1.10",
     "@mdi/font": "^7.4.47",
     "@popperjs/core": "^2.11.8",
+    "@sentry/astro": "^10.12.0",
     "@simonwep/pickr": "~1.9.0",
+    "@spotlightjs/astro": "^3.2.6",
     "@yaireo/tagify": "~4.18.2",
     "animate.css": "~4.1.1",
     "aos": "~2.3.4",

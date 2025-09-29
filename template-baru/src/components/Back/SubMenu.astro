@@ -1,0 +1,22 @@
+---
+import type { Props as MenuItemProps } from './MenuItem.astro';
+import MenuItemComponent from './MenuItem.astro';
+
+export interface SubMenu {
+  name: string;
+  url: string;
+  subItems?: SubMenu[];
+  currentPath?: any;
+}
+
+export interface Props {
+  items: SubMenu[];
+  currentPath?: any;
+}
+
+const { items, currentPath } = Astro.props;
+---
+
+<ul class='menu-sub'>
+  {items.map(item => <MenuItemComponent item={item} currentPath={currentPath} />)}
+</ul>

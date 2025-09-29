@@ -1,0 +1,81 @@
+{
+  Astro.props.filterColumn ? (
+    <form class='dt_adv_search' method='POST'>
+      <div class='row'>
+        <div class='col-12'>
+          <div class='row g-3 form-control-sm'>
+            <div class='col-12 col-sm-6 col-lg-4'>
+              <div class='d-grid gap-2'>
+                <button type='button' class='btn btn-outline-warning' id='reset-form'>
+                  Reset Form
+                </button>
+              </div>
+            </div>
+            {Astro.props.filterColumn.map(item => {
+              const index = Astro.props.columns.indexOf(item);
+              if (item == "TANGGAL")
+                return (
+                  <div class='col-12 col-sm-6 col-lg-4'>
+                    <div class='form-floating form-floating-outline'>
+                      <input
+                        type='text'
+                        class='form-control dt-date flatpickr-range dt-input'
+                        data-column={item}
+                        placeholder='StartDate to EndDate'
+                        data-column-index={index}
+                        id={item}
+                        name='dt_date'
+                      />
+                      <label for='filter-date'>{item}</label>
+                    </div>
+                    <input type='hidden' class='start_date' id={"start-" + item} />
+                    <input type='hidden' class='end_date' id={"end-" + item} />
+                  </div>
+                );
+              return (
+                <div class='col-12 col-sm-6 col-lg-4'>
+                  <div class='form-floating form-floating-outline'>
+                    <input
+                      type='text'
+                      class='form-control dt-input dt-full-name'
+                      data-column={item}
+                      placeholder={item}
+                      data-column-index={index}
+                      id={item}
+                    />
+                    <label for={item}>{item}</label>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </form>
+  ) : (
+    false
+  )
+}
+
+<div
+  class='table-responsive text-nowrap'
+  id='props'
+  data-uri={Astro.props.uri}
+  data-columns={JSON.stringify(Astro.props.columns)}
+  data-responsive={Astro.props.responsive}>
+  <table id='my-table' class='table table-bordered table-sm table-hover'>
+    <slot />
+  </table>
+</div>
+
+<div class='modal fade' id='customModal' tabindex='-1'>
+  <div class='modal-dialog modal-xl'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h5 class='modal-title'>Detail Data</h5>
+        <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+      </div>
+      <div class='modal-body'></div>
+    </div>
+  </div>
+</div>

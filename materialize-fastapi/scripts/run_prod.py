@@ -1,5 +1,6 @@
 import subprocess
 
+
 def main():
     cmd = [
         "gunicorn",
@@ -8,4 +9,4 @@ def main():
         "-k", "uvicorn.workers.UvicornWorker",
         "app.main:app"
     ]
-    subprocess.run(cmd)
+    subprocess.run(cmd, check=False)
