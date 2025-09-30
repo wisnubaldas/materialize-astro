@@ -1,0 +1,40 @@
+---
+const { tabular } = Astro.props;
+---
+
+<div class='col-xl-12'>
+  <div class='card mb-4'>
+    <div class='card-header p-0'>
+      <div class='nav-align-top'>
+        <ul class='nav nav-tabs nav-fill' role='tablist'>
+          {
+            tabular.map((tab, index) => {
+              const tag = tab.toLowerCase().replaceAll(" ", "-");
+              return (
+                <li class='nav-item' role='presentation'>
+                  <button
+                    type='button'
+                    class={"nav-link waves-effect" + (index === 0 ? " active" : "")}
+                    role='tab'
+                    data-bs-toggle='tab'
+                    data-bs-target={"#navs-justified-" + tag}
+                    aria-controls={"navs-justified-" + tag}
+                    aria-selected='true'>
+                    <iconify-icon icon='fluent-color:layer-diagonal-person-16' width='34' height='34' />
+                    &nbsp; {tab.toUpperCase()}
+                  </button>
+                </li>
+              );
+            })
+          }
+          <span class='tab-slider' style='left: 0px; width: 190.617px; bottom: 0px;'></span>
+        </ul>
+      </div>
+    </div>
+    <div class='card-body'>
+      <div class='tab-content p-4'>
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>

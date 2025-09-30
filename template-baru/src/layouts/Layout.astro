@@ -1,6 +1,6 @@
 ---
 // console.log(Astro.generator);
-// import '@assets/libs/node-waves/node-waves.scss';
+// import "@assets/libs/node-waves/node-waves.scss";
 // import '@assets/scss/core.scss';
 // import '@assets/scss/demo.css';
 // import '@assets/libs/perfect-scrollbar/perfect-scrollbar.scss';
@@ -131,17 +131,17 @@ const { title, description } = Astro.props;
 
     <!-- build:js assets/vendor/js/theme.js  -->
     <!-- Vendors JS -->
+    <script src='@assets/js/utility.js'></script>
     <script src='@assets/js/main.js'></script>
     <!-- Main JS -->
     <script src='@assets/js/app.js'></script>
 
     <script src='@assets/js/menu.js'></script>
-    <script src='https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js'></script>
 
-    <script src='@assets/libs/node-waves/node-waves.js'></script>
     <script src='@assets/libs/@algolia/autocomplete-js.js'></script>
     <script src='@assets/libs/perfect-scrollbar/perfect-scrollbar.js'></script>
     <script src='@assets/libs/hammer/hammer.js'></script>
+    <script src='@assets/libs/node-waves/node-waves.js'></script>
 
     <slot name='scripts' />
     <!-- ini ngin saya passing dari komponent -->
@@ -152,6 +152,8 @@ const { title, description } = Astro.props;
     <script src='@assets/libs/popper/popper.js'></script>
     <script src='@assets/libs/jquery/jquery.js'></script>
     <!-- endbuild -->
+
+    <script src='https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js'></script>
 
     <!-- Page JS -->
   </body>

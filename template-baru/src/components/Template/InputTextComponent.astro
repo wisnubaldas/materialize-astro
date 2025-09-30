@@ -1,0 +1,18 @@
+---
+export interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+---
+
+<div class='form-floating form-floating-outline'>
+  <input
+    name={name}
+    type='text'
+    class='form-control'
+    id={name.toLowerCase().replaceAll(" ", "-")}
+    placeholder={name.toUpperCase()}
+    autocomplete='off'
+  />
+  <label for={name.toLowerCase().replaceAll(" ", "-")}>{name.toUpperCase()}</label>
+</div>

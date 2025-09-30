@@ -8,7 +8,7 @@
     "dist"
   ],
   "compilerOptions": {
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {
@@ -25,5 +25,6 @@
         "public/*"
       ]
     },
+    "jsxImportSource": "react"
   }
 }

@@ -1,0 +1,35 @@
+---
+import DatatablesComponent from "@components/DatatablesComponent.astro";
+import Layout from "@layouts/Layout.astro";
+const column = ["inv", "status", "desc"];
+const filterColumn = ["inv", "status"];
+---
+
+<Layout title='Failed Invoice'>
+  <div class='row'>
+    <div class='card shadow-none bg-transparent border border-secondary mb-3'>
+      <div class='card-body'>
+        <h4 class='card-title'>Failed Invoice</h4>
+        <div class='card-text'>
+          <DatatablesComponent
+            uri='/angkasapura/data-inv-yang-tidak-lengkap'
+            columns={column}
+            filterColumn={filterColumn}>
+            <thead class='table-border-bottom-0'>
+              <tr>
+                {
+                  column.map(item => {
+                    return <th>{item}</th>;
+                  })
+                }
+              </tr>
+            </thead>
+          </DatatablesComponent>
+        </div>
+      </div>
+    </div>
+  </div>
+  <Fragment slot='scripts'>
+    <script src='@components/DatatablesComponent.js'></script>
+  </Fragment>
+</Layout>

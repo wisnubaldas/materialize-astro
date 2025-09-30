@@ -19,14 +19,16 @@
                     <div class='form-floating form-floating-outline'>
                       <input
                         type='text'
-                        class='form-control dt-date flatpickr-range dt-input'
+                        class='form-control dt-date flatpickr-range dt-input text-uppercase'
                         data-column={item}
                         placeholder='StartDate to EndDate'
                         data-column-index={index}
                         id={item}
                         name='dt_date'
                       />
-                      <label for='filter-date'>{item}</label>
+                      <label for='filter-date' class='text-uppercase'>
+                        {item}
+                      </label>
                     </div>
                     <input type='hidden' class='start_date' id={"start-" + item} />
                     <input type='hidden' class='end_date' id={"end-" + item} />
@@ -37,13 +39,16 @@
                   <div class='form-floating form-floating-outline'>
                     <input
                       type='text'
-                      class='form-control dt-input dt-full-name'
+                      class='form-control dt-input dt-full-name text-uppercase'
                       data-column={item}
                       placeholder={item}
                       data-column-index={index}
                       id={item}
                     />
-                    <label for={item}>{item}</label>
+                    <label for={item} class='text-uppercase'>
+                      {" "}
+                      {item}{" "}
+                    </label>
                   </div>
                 </div>
               );

@@ -1,0 +1,51 @@
+---
+import InputDateComponent from "./InputDateComponent.astro";
+import InputTextComponent from "./InputTextComponent.astro";
+const { title, formData, uri } = Astro.props;
+const formId = crypto.randomUUID();
+const btnSubmitId = crypto.randomUUID();
+---
+
+<div class='divider text-start divider-dark'>
+  <div class='divider-text'><h5>{title}</h5></div>
+</div>
+<form class='form' id={formId} action={uri}>
+  <div class='row'>
+    {
+      formData.map((item, index) => {
+        if (item.type == "text")
+          return (
+            <div class='col-12 col-sm-6 col-lg-4 mb-3'>
+              <InputTextComponent name={item.name} />
+            </div>
+          );
+        if (item.type == "date") {
+          return (
+            <div class='col-12 col-sm-6 col-lg-4 mb-3'>
+              <InputDateComponent name={item.name} />
+            </div>
+          );
+        }
+        return null;
+      })
+    }
+    <div class='col-12 col-sm-6 col-lg-4 mb-3 d-grid gap-2 mx-auto'>
+      <button class='btn btn-label-primary waves-effect' type='button' id={btnSubmitId}>
+        <iconify-icon icon='material-symbols:save-rounded' width='32' height='32' style='padding: 0px; margin: 0px'>
+        </iconify-icon>
+        &nbsp; Simpan
+      </button>
+    </div>
+  </div>
+</form>
+<script define:vars={{ formId, btnSubmitId }}>
+  // DOMContentLoaded ini penting supaya script jalan di frontend
+  document.addEventListener("DOMContentLoaded", () => {
+    $(document).ready(function () {
+      $("#" + btnSubmitId).on("click", function (e) {
+        e.preventDefault();
+        const formData = $("#" + formId).serializeArray();
+      });
+    });
+  });
+</script>

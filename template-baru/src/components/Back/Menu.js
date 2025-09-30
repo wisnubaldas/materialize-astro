@@ -34,6 +34,10 @@ export const menuData = [
       {
         name: 'Status Response',
         url: prefix.angkasapura('status-response')
+      },
+      {
+        name: 'Invoice Tidak Lengkap',
+        url: prefix.angkasapura('failed-invoice')
       }
     ]
   },

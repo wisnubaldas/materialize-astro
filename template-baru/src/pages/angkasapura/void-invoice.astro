@@ -1,28 +1,75 @@
 ---
-import Layout from '@layouts/Layout.astro';
+import DatatablesComponent from "@components/DatatablesComponent.astro";
+import FormComponent from "@components/Template/FormComponent.astro";
+import TabComponent from "@components/Template/TabComponent.astro";
+import Layout from "@layouts/Layout.astro";
+
+const column = ["HAWB", "NO_INVOICE", "TANGGAL", "SMU", "RESPONSE"];
+const tabular = ["Form Void Invoice", "Data Void Invoice"];
+const formDataVoid = [
+  {
+    type: "date",
+    name: "TANGGAL",
+    label: "TANGGAL",
+    required: true
+  },
+  {
+    type: "date",
+    name: "FL_DATE",
+    label: "FL_DATE",
+    required: true
+  },
+  {
+    type: "text",
+    name: "NO_INVOICE",
+    label: "NO_INVOICE",
+    required: true
+  },
+  {
+    type: "text",
+    name: "SMU",
+    label: "SMU",
+    required: true
+  },
+  {
+    type: "text",
+    name: "RESPONSE",
+    label: "RESPONSE",
+    required: true
+  }
+];
 ---
 
 <Layout title='Angkasapura-Void Invoice'>
-  <div class='row'>
-    <h1>Void Invoice</h1>
-    <!-- Float label (Outline) -->
-    <div class='col-md'>
-      <div class='card'>
-        <h5 class='card-header'>Float label (Outline)</h5>
-        <div class='card-body'>
-          <div class='form-floating form-floating-outline'>
-            <input
-              type='text'
-              class='form-control'
-              id='floatingInput'
-              placeholder='John Doe'
-              aria-describedby='floatingInputHelp'
-            />
-            <label for='floatingInput'>Name</label>
-            <div id='floatingInputHelp' class='form-text'>We'll never share your details with anyone else.</div>
-          </div>
-        </div>
+  <TabComponent tabular={tabular}>
+    <!-- tab 1 -->
+    <div
+      class='tab-pane fade active show'
+      id={"navs-justified-" + tabular[0].toLowerCase().replaceAll(" ", "-")}
+      role='tabpanel'>
+      <a class='waves-effect waves-light btn-large' href='#'>Wave</a>
+
+      <FormComponent title='Form Void Invoice' formData={formDataVoid} />
+    </div>
+    <!-- tab 2 -->
+    <div class='tab-pane fade' id={"navs-justified-" + tabular[1].toLowerCase().replaceAll(" ", "-")} role='tabpanel'>
+      <div class='col-md-12'>
+        <DatatablesComponent uri='/angkasapura/get-void-invoice' columns={column} responsive={true}>
+          <thead class='table-border-bottom-0'>
+            <tr>
+              {
+                column.map(item => {
+                  return <th>{item}</th>;
+                })
+              }
+            </tr>
+          </thead>
+        </DatatablesComponent>
       </div>
     </div>
-  </div>
+  </TabComponent>
+
+  <Fragment slot='scripts'>
+    <script src='@components/DatatablesComponent.js'></script>
+  </Fragment>
 </Layout>
