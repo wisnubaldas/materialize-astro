@@ -9,7 +9,7 @@ const btnSubmitId = crypto.randomUUID();
 <div class='divider text-start divider-dark'>
   <div class='divider-text'><h5>{title}</h5></div>
 </div>
-<form class='form' id={formId} action={uri}>
+<form class='form' id={formId}>
   <div class='row'>
     {
       formData.map((item, index) => {
@@ -38,13 +38,41 @@ const btnSubmitId = crypto.randomUUID();
     </div>
   </div>
 </form>
-<script define:vars={{ formId, btnSubmitId }}>
+<script define:vars={{ formId, btnSubmitId, uri }}>
+  const formConvert = formData => {
+    const jsonObject = {};
+    $.each(formData, function () {
+      // Jika nama properti sudah ada, tangani sebagai array
+      if (jsonObject[this.name]) {
+        if (!jsonObject[this.name].push) {
+          jsonObject[this.name] = [jsonObject[this.name]];
+        }
+        jsonObject[this.name].push(this.value || "");
+      } else {
+        jsonObject[this.name] = this.value || "";
+      }
+    });
+    return jsonObject;
+  };
   // DOMContentLoaded ini penting supaya script jalan di frontend
   document.addEventListener("DOMContentLoaded", () => {
     $(document).ready(function () {
       $("#" + btnSubmitId).on("click", function (e) {
         e.preventDefault();
         const formData = $("#" + formId).serializeArray();
+        $.ajax({
+          type: "POST",
+          url: apiPath + uri,
+          contentType: "application/json",
+          data: JSON.stringify(formConvert(formData)),
+          success: function (response) {
+            console.log(response);
+          },
+          error: function (xhr, ajaxOptions, thrownError) {
+            console.log(xhr.status);
+            console.log(thrownError);
+          }
+        });
       });
     });
   });

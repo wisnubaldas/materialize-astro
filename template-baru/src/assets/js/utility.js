@@ -1,5 +1,8 @@
 // console.log(window);
 import { getCookie } from './cookies';
+const apiPath = import.meta.env.PUBLIC_BACKEND_PATH;
+window.apiPath = apiPath;
+
 document.addEventListener("DOMContentLoaded", () => {
   nodeWaves.init();
 
