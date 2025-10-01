@@ -1,5 +1,8 @@
 import { Helpers } from './helpers';
 
+try {
+  window.Helpers = Helpers;
+} catch (e) { }
 // import { TemplateCustomizer } from '@components/TemplateCustomer';
 
 /**

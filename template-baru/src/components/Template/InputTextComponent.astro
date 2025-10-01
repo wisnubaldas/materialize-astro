@@ -13,6 +13,7 @@ const { name } = Astro.props;
     id={name.toLowerCase().replaceAll(" ", "-")}
     placeholder={name.toUpperCase()}
     autocomplete='off'
+    required
   />
   <label for={name.toLowerCase().replaceAll(" ", "-")}>{name.toUpperCase()}</label>
 </div>

@@ -41,8 +41,6 @@ const formDataVoid = [
       class='tab-pane fade active show'
       id={"navs-justified-" + tabular[0].toLowerCase().replaceAll(" ", "-")}
       role='tabpanel'>
-      <a class='waves-effect waves-light btn-large' href='#'>Wave</a>
-
       <FormComponent title='Form Void Invoice' formData={formDataVoid} uri='/angkasapura/void-invoice' />
     </div>
     <!-- tab 2 -->
@@ -67,3 +65,21 @@ const formDataVoid = [
     <script src='@components/DatatablesComponent.js'></script>
   </Fragment>
 </Layout>
+<script>
+  // @ts-nocheck
+
+  import { Swal } from "@assets/libs/sweetalert2/sweetalert2.js";
+  import "@assets/libs/sweetalert2/sweetalert2.scss";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // @ts-expect-error
+    $.globalEmitter.on("ajax:success", payload => {
+      Swal.fire("Success", "Data berhasil disimpan", "success");
+      console.log("Event diterima:", payload);
+    });
+    $.globalEmitter.on("ajax:error", payload => {
+      Swal.fire("Error", "Data gagal disimpan", "error");
+      console.log("Event diterima:", payload);
+    });
+  });
+</script>

@@ -1,43 +1,61 @@
 ---
 import InputDateComponent from "./InputDateComponent.astro";
 import InputTextComponent from "./InputTextComponent.astro";
-const { title, formData, uri } = Astro.props;
-const formId = crypto.randomUUID();
-const btnSubmitId = crypto.randomUUID();
+const { title, formData, uri, formId = crypto.randomUUID().replaceAll("-", "") } = Astro.props;
+const btnSubmitId = crypto.randomUUID().replaceAll("-", "");
 ---
 
-<div class='divider text-start divider-dark'>
-  <div class='divider-text'><h5>{title}</h5></div>
-</div>
-<form class='form' id={formId}>
-  <div class='row'>
-    {
-      formData.map((item, index) => {
-        if (item.type == "text")
-          return (
-            <div class='col-12 col-sm-6 col-lg-4 mb-3'>
-              <InputTextComponent name={item.name} />
-            </div>
-          );
-        if (item.type == "date") {
-          return (
-            <div class='col-12 col-sm-6 col-lg-4 mb-3'>
-              <InputDateComponent name={item.name} />
-            </div>
-          );
-        }
-        return null;
-      })
-    }
-    <div class='col-12 col-sm-6 col-lg-4 mb-3 d-grid gap-2 mx-auto'>
-      <button class='btn btn-label-primary waves-effect' type='button' id={btnSubmitId}>
-        <iconify-icon icon='material-symbols:save-rounded' width='32' height='32' style='padding: 0px; margin: 0px'>
-        </iconify-icon>
-        &nbsp; Simpan
-      </button>
-    </div>
+<div id='option-block'>
+  <div class='divider text-start divider-dark'>
+    <div class='divider-text'><h5>{title}</h5></div>
   </div>
-</form>
+  <form class='form needs-validation' id={formId} novalidate>
+    <div class='row'>
+      {
+        formData.map((item, index) => {
+          if (item.type == "text")
+            return (
+              <div class='col-12 col-sm-6 col-lg-4 mb-3'>
+                <InputTextComponent name={item.name} />
+                <div class='valid-feedback'>Looks good! {item.name}</div>
+                <div class='invalid-feedback'>Please enter {item.name}</div>
+              </div>
+            );
+          if (item.type == "date") {
+            return (
+              <div class='col-12 col-sm-6 col-lg-4 mb-3'>
+                <InputDateComponent name={item.name} />
+                <div class='valid-feedback'>Looks good! {item.name}</div>
+                <div class='invalid-feedback'>Please enter {item.name}</div>
+              </div>
+            );
+          }
+          return null;
+        })
+      }
+      <div class='col-12 col-sm-6 col-lg-4 mb-3 d-grid gap-2 mx-auto'>
+        <button class='btn btn-label-primary waves-effect' type='submit' id={btnSubmitId}>
+          <iconify-icon icon='material-symbols:save-rounded' width='32' height='32' style='padding: 0px; margin: 0px'>
+          </iconify-icon>
+          &nbsp; Simpan
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  // @ts-nocheck
+
+  import { Block } from "@assets/libs/notiflix/notiflix.js";
+  import "@assets/libs/notiflix/notiflix.scss";
+  import "@assets/libs/spinkit/spinkit.scss";
+  try {
+    window.Block = Block;
+    $.fn.Block = Block;
+  } catch (e) {}
+</script>
+
 <script define:vars={{ formId, btnSubmitId, uri }}>
   const formConvert = formData => {
     const jsonObject = {};
@@ -54,25 +72,51 @@ const btnSubmitId = crypto.randomUUID();
     });
     return jsonObject;
   };
+
   // DOMContentLoaded ini penting supaya script jalan di frontend
   document.addEventListener("DOMContentLoaded", () => {
+    // console.log(window.globalEmitter);
     $(document).ready(function () {
-      $("#" + btnSubmitId).on("click", function (e) {
-        e.preventDefault();
-        const formData = $("#" + formId).serializeArray();
-        $.ajax({
-          type: "POST",
-          url: apiPath + uri,
-          contentType: "application/json",
-          data: JSON.stringify(formConvert(formData)),
-          success: function (response) {
-            console.log(response);
+      window.Helpers.initCustomOptionCheck();
+      const validate = $(".needs-validation");
+      // Loop over them and prevent submission
+      Array.prototype.slice.call(validate).forEach(function (form) {
+        // console.log("prototype", form);
+        form.addEventListener(
+          "submit",
+          function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault();
+              event.stopPropagation();
+            } else {
+              // Submit your form
+              event.preventDefault();
+              const formData = $("#" + formId).serializeArray();
+              $.ajax({
+                type: "POST",
+                url: apiPath + uri,
+                contentType: "application/json",
+                data: JSON.stringify(formConvert(formData)),
+                success: function (response) {
+                  $.globalEmitter.emit("ajax:success", { data: response });
+                  Block.remove("#option-block");
+                },
+                beforeSend: function (d) {
+                  Block.hourglass("#option-block", {
+                    backgroundColor: "rgba(" + window.Helpers.getCssVar("black-rgb") + ", 0.5)",
+                    svgSize: "40px",
+                    svgColor: config.colors.white
+                  });
+                }
+              }).fail(function (xhr, status, error) {
+                $.globalEmitter.emit("ajax:error", { data: xhr.responseText });
+                Block.remove("#option-block");
+              });
+            }
+            form.classList.add("was-validated");
           },
-          error: function (xhr, ajaxOptions, thrownError) {
-            console.log(xhr.status);
-            console.log(thrownError);
-          }
-        });
+          false
+        );
       });
     });
   });

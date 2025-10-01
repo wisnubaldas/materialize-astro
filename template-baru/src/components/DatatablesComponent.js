@@ -53,7 +53,7 @@ $(document).ready(function () {
         })
         d.filters = filters;
         // inject custom object filters
-        console.log("Data yang dikirim ke server:", d);
+        // console.log("Data yang dikirim ke server:", d);
         return JSON.stringify(d);  // kirim body JSON
       },
 
@@ -63,6 +63,13 @@ $(document).ready(function () {
         if (token) {
           xhr.setRequestHeader("Authorization", "Bearer " + token);
         }
+      },
+      error: function (xhr, ajaxOptions, thrownError) {
+        if (xhr.status === 401) {
+          window.location.href = '/auth/login/';
+        }
+        console.log(xhr.status);
+        console.log(thrownError);
       }
     },
     columns: myFunc.makeColumn(columns),
