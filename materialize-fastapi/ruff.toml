@@ -1,49 +1,79 @@
 # ruff.toml
 # Konfigurasi Ruff untuk FastAPI + SQLAlchemy + Pydantic v2
+# Sesuai dengan standar VS Code (menggunakan Ruff & Black)
 
+# ====================
+# PENGATURAN TINGKAT ATAS
+# ====================
+
+# Pengaturan ini berlaku untuk linter dan formatter
 line-length = 100 
-target-version = "py310" # ganti sesuai versi Python projectmu
+target-version = "py310" # Ubah sesuai versi Python proyek Anda
+# Note: target-version akan mempengaruhi aturan 'pyupgrade' (UP)
 
+# ====================
+# PENGATURAN LINTER
+# ====================
 [lint]
+# Aturan yang diaktifkan
 select = [
   "E", # pycodestyle errors
   "F", # pyflakes
-  "I", # isort
+  "I", # isort (Impor yang tidak terurut)
   "N", # pep8-naming
-  "UP", # pyupgrade
-  "PTH", # pathlib
+  "UP", # pyupgrade (Modernisasi sintaks Python)
+  "PTH", # pathlib (Mendorong penggunaan pathlib)
   "DTZ", # timezone aware datetime
-  "PD", # pandas rules
-  "PL", # pylint-like rules
+  "PD", # pandas rules (Jika Anda menggunakan Pandas)
+  "PL", # pylint-like rules (Berbagai aturan yang bermanfaat)
   "RUF", # ruff specific rules
-  "B", # bugbear
-  "C4", # comprehensions
+  "B", # bugbear (Temuan potensi bug)
+  "C4", # comprehensions (Membuat list/dict/set/generator lebih baik)
+  "SIM", # simplify (Simplifikasi kode)
 ]
 
+# Aturan yang diabaikan/di-nonaktifkan
 ignore = [
-  "E501", # line too long (biar black yang urus)
-  "B008", # function call in default argument (buat Depends())
-  "PLR2004", # magic value comparison (misal status code 200/400)
-  "PTH120", # pathlib open
-  "UP038", # pathlib open
+  # LINTER vs FORMATTER
+  "E501", # line too long (Biarkan formatter Black/Ruff yang mengurus ini)
+  # FASTAPI & INJEKSI DEPENDENSI
+  "B008", # function call in default argument (Diperlukan untuk Depends(), Query(), dll.)
+  # PYLINT
+  "PLR2004", # magic value comparison (Oke untuk status code HTTP: 200, 400, dll.)
+  # PATHLIB/OPEN
+  "PTH120", # open() harus diganti dengan Path.open() (Seringkali terlalu ketat)
+  "UP038", # f-string untuk Path.joinpath (Seringkali terlalu ketat)
+  "N806",
 ]
 
+# Direktori/file yang dikecualikan dari proses linting dan formatting
 exclude = [
   ".git",
   ".venv",
   "venv",
   "__pycache__",
-  "migrations",
-  "alembic",
+  "migrations", # Biasanya hasil dari Alembic
+  "alembic", # File konfigurasi Alembic
   "node_modules",
   ".pytest_cache",
 ]
 
-[isort]
+# ====================
+# PENGATURAN LINT.ISORT (PENGURUTAN IMPOR)
+# Ini adalah perbaikan utama untuk menghilangkan peringatan deprecated.
+# ====================
+[lint.isort]
 combine-as-imports = true
 force-single-line = false
-known-first-party = ["app"]
+known-first-party = ["app"] # Gantilah "app" dengan nama root package project Anda.
+
+# ====================
+# PENGATURAN FORMATTER (Menggantikan Black)
+# Note: Jika Anda menggunakan ekstensi Black di VS Code, pastikan Anda menonaktifkannya
+# dan hanya menggunakan ekstensi Ruff, karena Ruff kini bisa menjadi formatter utama.
+# ====================
 [format]
-indent-style = "space"
-line-ending = "lf"
-quote-style = "double"
+# Ruff akan menggunakan indent 4 spasi secara default, sesuai PEP 8.
+indent-style = "space" # Sudah default
+line-ending = "lf" # Sudah default
+quote-style = "double" # Sudah default

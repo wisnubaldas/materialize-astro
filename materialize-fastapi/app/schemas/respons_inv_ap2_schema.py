@@ -9,10 +9,11 @@ class ResponsInvAp2Base(BaseModel):
     inv: str | None = None
     response: dict | None = None
     status: str | None = None
+
     class Config:
-        from_attributes = True 
-    
-    @field_validator("response",mode="before")
+        from_attributes = True
+
+    @field_validator("response", mode="before")
     @classmethod
     def parse_response(cls, v):
         if isinstance(v, str):
@@ -21,7 +22,8 @@ class ResponsInvAp2Base(BaseModel):
             except Exception:
                 return {}
         return v
-    
+
+
 class ResponsInvAp2Create(ResponsInvAp2Base):
     pass
 

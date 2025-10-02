@@ -4,13 +4,14 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
 # Input: Permintaan dari DataTables
 # Model untuk filter kustom Anda
 class CustomFilters(BaseModel):
     id: str | None = None
-    
+
     class Config:
-            extra = 'allow'
+        extra = "allow"
 
     # Tambahkan bidang filter lain sesuai kebutuhan
 

@@ -11,24 +11,31 @@ from app.services.inv_ap2_service import INVAp2Service
 
 router = APIRouter(prefix="/angkasapura", tags=["Angkasapura"])
 
-@router.post("/datatables",response_model=DataTablesResponse[InvoiceGet])
+
+@router.post("/datatables", response_model=DataTablesResponse[InvoiceGet])
 def angkasapura(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return INVAp2Service.datatable(db=db, params=params)
 
-@router.post("/get-data-response-inv",response_model=DataTablesResponse[ResponsInvAp2Get])
+
+@router.post("/get-data-response-inv", response_model=DataTablesResponse[ResponsInvAp2Get])
 def get_data_response_inv(params: DataTablesParams, db: Session = Depends(get_db1_r)):
-    return  INVAp2Service.get_response_inv(db=db, params=params)
+    return INVAp2Service.get_response_inv(db=db, params=params)
 
-@router.post("/data-inv-yang-tidak-lengkap",response_model=DataTablesResponse[FailInvGet])
+
+@router.post("/data-inv-yang-tidak-lengkap", response_model=DataTablesResponse[FailInvGet])
 def data_inv_yang_tidak_lengkap(params: DataTablesParams, db: Session = Depends(get_db1_r)):
-    return  INVAp2Service.get_fail_inv(db=db, params=params)
-@router.post("/void-invoice")
-async def void_invoice(params:VoidInvoiceSchemaBase, db: Session = Depends(get_db1_w)):
-    return await INVAp2Service.void_invoice_ap2(params,db) 
+    return INVAp2Service.get_fail_inv(db=db, params=params)
 
-@router.post("/get-void-invoice",response_model=DataTablesResponse[VoidInvoiceSchemaResponse])
+
+@router.post("/void-invoice")
+async def void_invoice(params: VoidInvoiceSchemaBase, db: Session = Depends(get_db1_w)):
+    return await INVAp2Service.void_invoice_ap2(params, db)
+
+
+@router.post("/get-void-invoice", response_model=DataTablesResponse[VoidInvoiceSchemaResponse])
 def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
-    return  INVAp2Service.table_void_invoice(db=db, params=params)
+    return INVAp2Service.table_void_invoice(db=db, params=params)
+
 
 # @router.post("/send-invoices/{date_prefix}")
 # async def send_invoices(date_prefix: str):

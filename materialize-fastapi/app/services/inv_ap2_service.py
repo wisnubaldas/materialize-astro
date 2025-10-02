@@ -33,58 +33,73 @@ logger = logging.getLogger(__name__)
 inv_ap2_datatable_service = DataTablesService(
     model=InvAp2,
     schema=InvoiceGet,
-    search_columns=["NO_INVOICE", "TANGGAL","JENIS_KARGO","FLIGHT_NUMBER"],
-    custom_filters=["NO_INVOICE", "TANGGAL","JENIS_KARGO","FLIGHT_NUMBER","TANGGAL_AWAL","TANGGAL_AKHIR"],
+    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER"],
+    custom_filters=[
+        "NO_INVOICE",
+        "TANGGAL",
+        "JENIS_KARGO",
+        "FLIGHT_NUMBER",
+        "TANGGAL_AWAL",
+        "TANGGAL_AKHIR",
+    ],
 )
 inv_ap2_response_inv = DataTablesService(
     model=ResponsInvAp2,
     schema=ResponsInvAp2Get,
-    search_columns=["inv", "response","status",],
-    custom_filters=["inv", "response","status"],
+    search_columns=[
+        "inv",
+        "response",
+        "status",
+    ],
+    custom_filters=["inv", "response", "status"],
 )
 
 fail_inv_ap2 = DataTablesService(
     model=AP2FAILINV,
     schema=FailInvGet,
-    search_columns=["inv", "desc","status",],
-    custom_filters=["inv", "desc","status"],
+    search_columns=[
+        "inv",
+        "desc",
+        "status",
+    ],
+    custom_filters=["inv", "desc", "status"],
 )
 
 void_invoice = DataTablesService(
     model=VoidInvAp2,
     schema=VoidInvoiceSchemaResponse,
-    search_columns=["NO_INVOICE", "TANGGAL","HAWB","SMU"],
-    custom_filters=["NO_INVOICE", "TANGGAL","HAWB","SMU"],
+    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU"],
+    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU"],
 )
 HEADERS = {
     "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
 }
- ## method protected
+
+
+## method protected
 def get_dynamic_params(interval_minutes: int = 30):
     now = datetime.datetime.now()
     hari = now.strftime("%Y-%m-%d")
     start_from = now.strftime("%H:%M:%S")
     end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
-    return {
-        "hari": hari,
-        "start_from": start_from,
-        "end_from": end_from
-    }
+    return {"hari": hari, "start_from": start_from, "end_from": end_from}
+
+
 class INVAp2Service:
     @staticmethod
-    def datatable(db: Session, params: DataTablesParams)-> DataTablesResponse[InvoiceGet]:
+    def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
         return inv_ap2_datatable_service.get_datatable(db=db, params=params)
-    
+
     @staticmethod
     def get_data_inv():
         db1 = SessionDB1W()
         db2 = SessionDB2R()
         try:
             params = get_dynamic_params(30)
-            
+
             query = HELPER.load_sql_query("app/services/query/generate_inv_ekspor.sql")
             sql = text(query)
-            invoices = db2.execute(sql,params).mappings().all()
+            invoices = db2.execute(sql, params).mappings().all()
             data_inv = []
             for row in invoices:
                 mapped_row = {}
@@ -94,10 +109,10 @@ class INVAp2Service:
                         if isinstance(v, (Decimal, float, int)):
                             mapped_row[field_name] = HELPER.to_string_rounded(v, digits=0)
                         else:
-                            mapped_row[field_name] = v# default bulatkan tanpa desimal
+                            mapped_row[field_name] = v  # default bulatkan tanpa desimal
                 # Hardcode values (overwrite jika ada di query)
-                mapped_row.update(INVTOAP2INV_BASE) # type: ignore
-                invoice_schema = InvoiceCreate(**mapped_row) # type: ignore
+                mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
+                invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore
                 invoice_model = InvAp2(**invoice_schema.model_dump())
                 db1.add(invoice_model)
                 data_inv.append(invoice_model)
@@ -109,11 +124,13 @@ class INVAp2Service:
             db2.close()
 
     @staticmethod
-    def get_response_inv(db: Session, params: DataTablesParams)-> DataTablesResponse[ResponsInvAp2Get]:
+    def get_response_inv(
+        db: Session, params: DataTablesParams
+    ) -> DataTablesResponse[ResponsInvAp2Get]:
         return inv_ap2_response_inv.get_datatable(db=db, params=params)
-    
+
     @staticmethod
-    def get_fail_inv(db: Session, params: DataTablesParams)-> DataTablesResponse[FailInvGet]:
+    def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
         return fail_inv_ap2.get_datatable(db=db, params=params)
 
     @staticmethod
@@ -129,21 +146,31 @@ class INVAp2Service:
                 for row in rows:
                     # row._mapping untuk akses dict-like
                     row_dict = dict(row._mapping)
-                    schema = AP2SendInv(
-                        USR= ENV.AP2_DEV_USER,
-                        PSW= ENV.AP2_DEV_PASSWORD,
-                        **row_dict
-                        )
-                     # inject USR & PSW hardcode
+                    schema = AP2SendInv(USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD, **row_dict)
+                    # inject USR & PSW hardcode
                     payload = schema.model_dump()
                     logger.info(f"[AP2] Payload dikirim: {payload}")
                     try:
-                        resp = await client.post(f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2", headers=HEADERS, data=payload)
+                        resp = await client.post(
+                            f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2", headers=HEADERS, data=payload
+                        )
                         resp.raise_for_status()
-                        results.append({"invoice": payload.get("NO_INVOICE"), "status": "success", "response": resp.text})
+                        results.append(
+                            {
+                                "invoice": payload.get("NO_INVOICE"),
+                                "status": "success",
+                                "response": resp.text,
+                            }
+                        )
                         logger.info(f"[AP2] Results: {results}")
                     except Exception as e:
-                        results.append({"invoice": payload.get("NO_INVOICE"), "status": "error", "error": str(e)})
+                        results.append(
+                            {
+                                "invoice": payload.get("NO_INVOICE"),
+                                "status": "error",
+                                "error": str(e),
+                            }
+                        )
                         logger.error(f"[AP2] Error: {e}", exc_info=True)
             db1.commit()
         except Exception as e:
@@ -153,36 +180,47 @@ class INVAp2Service:
             db1.close()
         logger.info(f"[AP2] Final Results: {results}")
         return results
-    
+
     @staticmethod
     def send_invoice_sync(date_prefix: str):
         """Wrapper sync supaya bisa dipanggil Celery task biasa"""
         return asyncio.run(INVAp2Service.send_invoice(date_prefix))
-    
+
     @staticmethod
-    async def void_invoice_ap2(request:VoidInvoiceSchemaBase,db:Session)->VoidInvoiceSchemaResponse:
+    async def void_invoice_ap2(
+        request: VoidInvoiceSchemaBase, db: Session
+    ) -> VoidInvoiceSchemaResponse:
         async with httpx.AsyncClient() as client:
-            ext_request = VoidInvoiceSchemaRequest(**request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD)
-        
-            resp = await client.post(f"{ENV.AP2_DEV_URL}/api/void_invo_dtl", headers=HEADERS, data=ext_request.model_dump())
+            ext_request = VoidInvoiceSchemaRequest(
+                **request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD
+            )
+
+            resp = await client.post(
+                f"{ENV.AP2_DEV_URL}/api/void_invo_dtl",
+                headers=HEADERS,
+                data=ext_request.model_dump(),
+            )
             resp.raise_for_status()
-        
+
             merged = request.model_dump()
-            merged['RESPONSE'] = resp.json()
+            merged["RESPONSE"] = resp.json()
             result = VoidInvoiceSchemaResponse(**merged)
-        
+
             obj_data = VoidInvAp2(
-                TANGGAL = result.TANGGAL,
-                NO_INVOICE= result.NO_INVOICE,
-                HAWB = result.HAWB,
-                SMU = result.SMU,
-                RESPONSE = json.dumps(resp.json())
+                TANGGAL=result.TANGGAL,
+                NO_INVOICE=result.NO_INVOICE,
+                HAWB=result.HAWB,
+                SMU=result.SMU,
+                RESPONSE=json.dumps(resp.json()),
             )
             db.add(obj_data)
             db.commit()
             db.refresh(obj_data)
-        
+
             return result
+
     @staticmethod
-    def table_void_invoice(db: Session, params: DataTablesParams) -> DataTablesResponse[VoidInvoiceSchemaResponse]:
+    def table_void_invoice(
+        db: Session, params: DataTablesParams
+    ) -> DataTablesResponse[VoidInvoiceSchemaResponse]:
         return void_invoice.get_datatable(db=db, params=params)

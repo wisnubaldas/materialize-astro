@@ -19,12 +19,15 @@ class DBLogHandler(logging.Handler):
                 INSERT INTO system_logs (level, logger, message, traceback)
                 VALUES (:level, :logger, :message, :traceback)
             """)
-            session.execute(sql, {
-                "level": record.levelname,
-                "logger": record.name,
-                "message": msg,
-                "traceback": tb,
-            })
+            session.execute(
+                sql,
+                {
+                    "level": record.levelname,
+                    "logger": record.name,
+                    "message": msg,
+                    "traceback": tb,
+                },
+            )
             session.commit()
         except Exception as e:
             session.rollback()

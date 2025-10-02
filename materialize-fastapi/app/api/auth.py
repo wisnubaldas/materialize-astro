@@ -10,18 +10,17 @@ from app.utils.auth_util import create_token, verify_password, verify_token
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
 
-@router.post("/login",response_model=TokenSchema)
-def login(payload: LoginSchema,db: Session = Depends(get_db1_r)):
+
+@router.post("/login", response_model=TokenSchema)
+def login(payload: LoginSchema, db: Session = Depends(get_db1_r)):
     # Cari user berdasarkan username
     user = db.query(User).filter(User.email == payload.email).first()
     # Kalau user tidak ada atau password tidak cocok
-    if not user or not verify_password(payload.password, user.password): # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-    token = create_token(user.email) # type: ignore
+    if not user or not verify_password(payload.password, user.password):  # type: ignore
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    token = create_token(user.email)  # type: ignore
     return {"access_token": token, "token_type": "bearer"}
+
 
 @router.get("/verify")
 def verify(authorization: str = Header(...)):
@@ -44,6 +43,8 @@ def verify(authorization: str = Header(...)):
         )
 
     return {"username": username, "valid": True}
+
+
 @router.post("/logout")
 def logout():
     """

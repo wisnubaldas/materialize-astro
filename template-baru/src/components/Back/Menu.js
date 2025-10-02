@@ -5,7 +5,7 @@ const prefix = {
 export const menuData = [
   {
     name: 'Home',
-    url: '/',
+    url: '/admin',
     icon: 'line-md:home-twotone'
   },
   {
@@ -47,8 +47,8 @@ export const menuData = [
     icon: 'line-md:alert-twotone-loop',
     subItems: [
       {
-        name: 'Status Response',
-        url: prefix.hubnet('status-response')
+        name: 'Data Terkirim',
+        url: prefix.hubnet('data-terkirim')
       },
       {
         name: 'Upload Excel Export',

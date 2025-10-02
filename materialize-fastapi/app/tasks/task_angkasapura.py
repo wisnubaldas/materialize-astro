@@ -7,6 +7,7 @@ from app.services.inv_ap2_service import INVAp2Service
 
 logger = logging.getLogger(__name__)
 
+
 @celery_app.task(name="sync-data-invoice")
 def sync_invoice():
     """
@@ -21,6 +22,7 @@ def sync_invoice():
     INVAp2Service.send_invoice_sync(now.strftime("%Y-%m-%d"))
     logger.info("[sync-data-invoice] Selesai.")
 
+
 @celery_app.task(name="inv-to-invap2")
 def inv_to_invap2():
     """
@@ -32,4 +34,4 @@ def inv_to_invap2():
             return
     logger.info("[inv-to-invap2] Mulai proses...")
     INVAp2Service.get_data_inv()
-    logger.info("[inv-to-invap2] Selesai.") 
+    logger.info("[inv-to-invap2] Selesai.")

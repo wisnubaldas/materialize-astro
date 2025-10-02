@@ -8,14 +8,18 @@ from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
 EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json"]
+
+
 def decode_token(token: str):
     try:
         payload = jwt.decode(token, ENV.SECRET_KEY, algorithms=[ENV.ALGORITHM])
         return payload
     except JWTError as e:
-        raise HTTPException(status_code=401, detail=e.msg)
+        raise HTTPException(status_code=401, detail=str(e))
     except JWTError as e:
-        raise HTTPException(status_code=401, detail=e.msg)
+        raise HTTPException(status_code=401, detail=(e))
+
+
 class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Lewatkan semua OPTIONS request (preflight CORS)

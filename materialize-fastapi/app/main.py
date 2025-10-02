@@ -5,13 +5,22 @@ from fastapi.security import HTTPBearer
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
-from app.utils.logging_config import setup_logging
+from app.api.middleware.exception_handler import register_exception_handlers
 
-setup_logging()
+# from app.utils.logging_config import setup_logging
 
+# setup_logging()
+
+# app
 app = FastAPI(title="FastAPI App with Poetry")
+register_exception_handlers(app)
+
+# error handler
+
 # Setup Skema OpenAPI dengan JWT Auth
 bearer_scheme = HTTPBearer()
+
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -36,6 +45,8 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
+
+# middleware
 origins = [
     "http://localhost:4321",  # Ganti dengan origin frontend Anda
     "http://127.0.0.1:4321",
@@ -47,10 +58,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(
-    JWTMiddleware
-)
+app.add_middleware(JWTMiddleware)
+
+# routes
 app.include_router(routes.router)
+
+
 @app.get("/")
 def root():
     return {"message": "Hello FastAPI with Poetry!"}

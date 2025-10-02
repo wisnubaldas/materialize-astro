@@ -15,7 +15,7 @@ class InvAp2Base(BaseModel):
     ASAL: str
     TUJUAN: str
     JENIS_KARGO: str
-    TARIF_KARGO: int|str
+    TARIF_KARGO: int | str
     KOLI: str
     BERAT: str
     VOLUME: str
@@ -58,8 +58,10 @@ class InvAp2Base(BaseModel):
     PPN_FEE: int | None = None
 
     status: int = 1
+
     class Config:
-        from_attributes = True # Ubah `orm_mode = True` (Pydantic V1) menjadi `from_attributes = True` (Pydantic V2)
+        from_attributes = True  # Ubah `orm_mode = True` (Pydantic V1) menjadi `from_attributes = True` (Pydantic V2)
+
 
 class InvoiceCreate(InvAp2Base):
     pass

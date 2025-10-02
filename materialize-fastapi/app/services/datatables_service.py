@@ -11,23 +11,33 @@ ModelType = TypeVar("ModelType")
 # Tipe generik untuk Pydantic schema
 SchemaType = TypeVar("SchemaType")
 
+
 class DataTablesService:
     """
     Class generik untuk menangani query DataTables.
     """
-    def __init__(self, model: type[ModelType], schema: type[SchemaType], search_columns: list[str] | None = None, custom_filters: list[str] | None = None):
+
+    def __init__(
+        self,
+        model: type[ModelType],
+        schema: type[SchemaType],
+        search_columns: list[str] | None = None,
+        custom_filters: list[str] | None = None,
+    ):
         self.model = model
         self.schema = schema
         self.search_columns = search_columns if search_columns is not None else []
         self.custom_filters = custom_filters if custom_filters is not None else []
 
-    def get_datatable(self, db: Session, params: DataTablesParams) -> DataTablesResponse[SchemaType]:
+    def get_datatable(
+        self, db: Session, params: DataTablesParams
+    ) -> DataTablesResponse[SchemaType]:
         params = self.apply_custom_filters(params)
         """
         Menjalankan query datatables dengan filter, sorting, dan pagination.
         """
         query = db.query(self.model)
-        
+
         # Total records (sebelum filtering)
         # ini berarti di tiap model harus ada id
         total_records = db.query(func.count(self.model.id)).scalar()
@@ -42,14 +52,16 @@ class DataTablesService:
             tanggal_akhir = getattr(filters, "TANGGAL_AKHIR", None)
             if tanggal_awal and tanggal_akhir:
                 # range: >= TANGGAL_AWAL & <= TANGGAL_AKHIR
-                custom_filter_conditions.append(and_(self.model.TANGGAL >= tanggal_awal, self.model.TANGGAL <= tanggal_akhir))
+                custom_filter_conditions.append(
+                    and_(self.model.TANGGAL >= tanggal_awal, self.model.TANGGAL <= tanggal_akhir)
+                )
             elif tanggal_awal:
                 # hanya dari tanggal_awal ke atas
                 custom_filter_conditions.append(self.model.TANGGAL >= tanggal_awal)
             elif tanggal_akhir:
                 # hanya sampai tanggal_akhir
                 custom_filter_conditions.append(self.model.TANGGAL <= tanggal_akhir)
-            
+
             # 🎯 filter lain
             for filter_name in self.custom_filters:
                 if filter_name in ["TANGGAL_AWAL", "TANGGAL_AKHIR"]:
@@ -60,19 +72,17 @@ class DataTablesService:
                 model_column = getattr(self.model, filter_name, None)
                 if model_column is None:
                     continue
-                
+
                 if filter_name.upper() == "TANGGAL":
                     # filter exact match tanggal
                     # custom_filter_conditions.append(model_column == filter_value)
                     # tanggal pake like juga kalo ada jamnya
                     custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
-                    
+
                 else:
                     # filter LIKE untuk string
                     custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
-            
-            
-        
+
         # print(custom_filter_conditions)
         # Filtering/Searching (Global search)
         global_search_conditions = []
@@ -83,7 +93,7 @@ class DataTablesService:
                 for col_name in self.search_columns
                 if hasattr(self.model, col_name)
             ]
-        
+
         # Gabungkan semua filter (kustom dan global)
         combined_filters = []
         if custom_filter_conditions:
@@ -112,26 +122,25 @@ class DataTablesService:
 
         # Pagination
         results = query.offset(params.start).limit(params.length).all()
-        
+
         # Buat response DataTables
         dt_response = DataTablesResponse(
             draw=params.draw,
             recordsTotal=total_records,
             recordsFiltered=filtered_records,
-            data=[self.schema.model_validate(r) for r in results]
+            data=[self.schema.model_validate(r) for r in results],
         )
         return dt_response
-    
+
     def apply_custom_filters(self, params: DataTablesParams) -> DataTablesParams:
-            """
-            Inject custom filter fields ke dalam params.filters jika belum ada.
-            """
-            if not params.filters:
-                params.filters = CustomFilters()
+        """
+        Inject custom filter fields ke dalam params.filters jika belum ada.
+        """
+        if not params.filters:
+            params.filters = CustomFilters()
 
-            for field in self.custom_filters:
-                if not hasattr(params.filters, field):
-                    setattr(params.filters, field, None)
+        for field in self.custom_filters:
+            if not hasattr(params.filters, field):
+                setattr(params.filters, field, None)
 
-            return params
-
+        return params

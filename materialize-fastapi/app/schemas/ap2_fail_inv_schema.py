@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, field_validator
 
 
@@ -6,10 +5,11 @@ class FailInvBase(BaseModel):
     inv: str | None = None
     desc: str | None = None
     status: str | None = None
+
     class Config:
-        from_attributes = True 
-    
-    @field_validator("status",mode="before")
+        from_attributes = True
+
+    @field_validator("status", mode="before")
     @classmethod
     def parse_status(cls, v):
         if v is None:
@@ -25,8 +25,11 @@ class FailInvBase(BaseModel):
             3: "Tidak lagi di cek invoice melebihi batas waktu pengiriman",
         }
         return mapping.get(code, f"Unknown Status ({code})")
-    
+
+
 class FailInvCreate(FailInvBase):
     pass
+
+
 class FailInvGet(FailInvBase):
     id: int

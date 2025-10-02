@@ -10,6 +10,7 @@ from app.models.inv_ap2 import InvAp2  # pastikan path sesuai
 
 fake = Faker()
 
+
 def seed_invoices(n: int = 10):
     db: Session = SessionDB1W()
     try:
@@ -24,7 +25,9 @@ def seed_invoices(n: int = 10):
                 INC_OUT=random.choice(["INC", "OUT"]),
                 ASAL=fake.city(),
                 TUJUAN=fake.city(),
-                JENIS_KARGO=random.choice(["GENERAL", "PERISHABLE", "DANGEROUS GOODS", "LIVE ANIMALS", "VALUABLE"]),
+                JENIS_KARGO=random.choice(
+                    ["GENERAL", "PERISHABLE", "DANGEROUS GOODS", "LIVE ANIMALS", "VALUABLE"]
+                ),
                 TARIF_KARGO=str(random.randint(1000, 10000)),
                 KOLI=str(random.randint(1, 50)),
                 BERAT=str(round(random.uniform(10, 1000), 2)),

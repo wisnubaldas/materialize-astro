@@ -17,8 +17,8 @@ celery_app.conf.update(
     enable_utc=True,
     # Pakai Redis untuk schedule beat
     beat_scheduler="redbeat.RedBeatScheduler",
-    redbeat_redis_url="redis://localhost:6379/1",   # bisa pakai DB redis lain biar terpisah
-    redbeat_lock_key="redbeat::lock",               # kunci lock biar nggak dobel
+    redbeat_redis_url="redis://localhost:6379/1",  # bisa pakai DB redis lain biar terpisah
+    redbeat_lock_key="redbeat::lock",  # kunci lock biar nggak dobel
 )
 # Auto-discover semua task di dalam app.tasks.*
 celery_app.autodiscover_tasks(["app.tasks"])
