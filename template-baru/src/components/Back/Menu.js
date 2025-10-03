@@ -47,8 +47,8 @@ export const menuData = [
     icon: 'line-md:alert-twotone-loop',
     subItems: [
       {
-        name: 'Data Terkirim',
-        url: prefix.hubnet('data-terkirim')
+        name: 'Dashboard',
+        url: prefix.hubnet('dashboard')
       },
       {
         name: 'Upload Excel Export',

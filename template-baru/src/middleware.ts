@@ -23,7 +23,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
     // ✅ Cek apakah route termasuk public
     if (PUBLIC_ROUTES.some((pattern) => pattern.test(url.pathname))) {
-        console.log("Matched public route:", url.pathname);
+        // console.log("Matched public route:", url.pathname);
         return next();
     }
 
