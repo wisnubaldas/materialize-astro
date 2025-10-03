@@ -1,18 +1,18 @@
 ---
-const { data } = Astro.props;
-console.log(data);
+const { data, total } = Astro.props;
 ---
 
 <!-- Congratulations card -->
-<div class='col-xl-4'>
+<div class='col-xl-8'>
   <div class='card h-100'>
     <div class='card-body text-nowrap'>
       <h4 class='card-title mb-1 d-flex gap-2 flex-wrap'>Last Send 🎉</h4>
-      <p class='pb-0'>{new Date(data.created_at).toLocaleString()}</p>
-      <h4 class='text-primary mb-1'>{data.AWB_NO}</h4>
+      <p class='pb-0'>{new Date(data.created_at).toLocaleString()} 🕞</p>
+      <h3 class='text-primary mb-1'>HAWB {data.AWB_NO} 🚚</h3>
       <p class='mb-2 pb-1'>
         {data.IS_INTERNATIONAL == "1" ? "Internasional" : "Domestik "}
-        {data.IS_EKSPOR == "1" ? "Ekspor" : "Impor"} 🚀
+        {data.IS_EKSPOR == "1" ? "Ekspor " : "Impor "}
+        {data.CNE_NAME} 🚀
       </p>
       <a data-card={JSON.stringify(data)} href='javascript:;' class='btn btn-sm btn-primary' id='viewDetails-card'
         >View Details</a
@@ -20,8 +20,8 @@ console.log(data);
     </div>
     <img
       src='/img/illustrations/rocket.png'
-      class='position-absolute bottom-0 end-0 me-3'
-      height='140'
+      class='position-absolute bottom-0 end-0 me-7'
+      height='260'
       alt='view sales'
     />
   </div>
@@ -29,6 +29,8 @@ console.log(data);
 <!--/ Congratulations card -->
 
 <script>
+  import "@components/DatatablesComponent.css";
+
   import { Swal } from "@assets/libs/sweetalert2/sweetalert2.js";
   import "@assets/libs/sweetalert2/sweetalert2.scss";
 
@@ -50,7 +52,7 @@ console.log(data);
 
     el.on("click", function () {
       Swal.fire({
-        title: "AWB Number",
+        title: dataCard.AWB_NO,
         html: tpl(dataCard),
         confirmButtonText: "Ok"
       });

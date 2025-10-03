@@ -24,7 +24,7 @@ def upload_manifests(file: UploadFile = File(...)):
 
 @router.get("/dashboard-card", summary="Ini untuk card di dashboard")
 def dashboard_card():
-    return HbnetRequestService.dashboard()
+    return HbnetRequestService.dashboard_card()
 
 
 @router.get("/last-sending", summary="Data terakhir terkirim ke HUBNET")

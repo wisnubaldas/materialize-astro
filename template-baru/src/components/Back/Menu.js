@@ -4,6 +4,11 @@ const prefix = {
 };
 export const menuData = [
   {
+    name: 'Landing Page',
+    url: '/',
+    icon: 'line-md:coffee-twotone-loop'
+  },
+  {
     name: 'Home',
     url: '/admin',
     icon: 'line-md:home-twotone'
