@@ -1,23 +1,29 @@
 ---
 const { data, total } = Astro.props;
+console.log("total nya", data);
 ---
 
 <!-- Congratulations card -->
 <div class='col-xl-8'>
   <div class='card h-100'>
-    <div class='card-body text-nowrap'>
-      <h4 class='card-title mb-1 d-flex gap-2 flex-wrap'>Last Send 🎉</h4>
-      <p class='pb-0'>{new Date(data.created_at).toLocaleString()} 🕞</p>
-      <h3 class='text-primary mb-1'>HAWB {data.AWB_NO} 🚚</h3>
-      <p class='mb-2 pb-1'>
-        {data.IS_INTERNATIONAL == "1" ? "Internasional" : "Domestik "}
-        {data.IS_EKSPOR == "1" ? "Ekspor " : "Impor "}
-        {data.CNE_NAME} 🚀
-      </p>
-      <a data-card={JSON.stringify(data)} href='javascript:;' class='btn btn-sm btn-primary' id='viewDetails-card'
-        >View Details</a
-      >
-    </div>
+    {
+      data ? (
+        <div class='card-body text-nowrap'>
+          <h4 class='card-title mb-1 d-flex gap-2 flex-wrap'>Last Send 🎉</h4>
+          <p class='pb-0'>{new Date(data.created_at).toLocaleString()} 🕞</p>
+          <h3 class='text-primary mb-1'>HAWB {data.AWB_NO} 🚚</h3>
+          <p class='mb-2 pb-1'>
+            {data.IS_INTERNATIONAL == "1" ? "Internasional" : "Domestik "}
+            {data.IS_EKSPOR == "1" ? "Ekspor " : "Impor "}
+            {data.CNE_NAME} 🚀
+          </p>
+          <a data-card={JSON.stringify(data)} href='javascript:;' class='btn btn-sm btn-primary' id='viewDetails-card'>
+            View Details
+          </a>
+        </div>
+      ) : null
+    }
+
     <img
       src='/img/illustrations/rocket.png'
       class='position-absolute bottom-0 end-0 me-7'

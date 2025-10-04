@@ -1,28 +1,143 @@
 ---
-import Layout from '@layouts/Layout.astro';
+import Layout from "@layouts/Layout.astro";
 ---
 
 <Layout title='Status Response'>
   <div class='row'>
-    <h1>Status Response</h1>
     <!-- Float label (Outline) -->
     <div class='col-md'>
-      <div class='card'>
-        <h5 class='card-header'>Float label (Outline)</h5>
+      <br />
+      <br />
+      <br />
+      <div class='card shadow-none bg-transparent border border-secondary mb-3'>
+        <h5 class='card-header'>Upload Excel data manifest</h5>
         <div class='card-body'>
-          <div class='form-floating form-floating-outline'>
-            <input
-              type='text'
-              class='form-control'
-              id='floatingInput'
-              placeholder='John Doe'
-              aria-describedby='floatingInputHelp'
-            />
-            <label for='floatingInput'>Name</label>
-            <div id='floatingInputHelp' class='form-text'>We'll never share your details with anyone else.</div>
+          <div class='row'>
+            <div class='col-md-4 col-xl-4 col-sm-12'>
+              <form
+                action=''
+                method='post'
+                enctype='multipart/form-data'
+                class='dropzone needsclick dz-clickable'
+                id='dropzone-basic'>
+                <div class='dz-message needsclick'>Letakkan file di sini atau klik untuk mengunggah</div>
+              </form>
+            </div>
+            <div class='col-md-8 col-xl-8 col-sm-12'>
+              <div class='card h-100'>
+                <div class='d-flex align-items-end row'>
+                  <div class='col-md-6 order-2 order-md-1'>
+                    <div class='card-body card-response rounded-full'>
+                      <h4 class='card-title col-10'>Sesuaikan kolom-kolom di excel 🎉</h4>
+                    </div>
+                  </div>
+                  <div class='col-md-6 text-center text-md-end order-1 order-md-2'>
+                    <div class='card-body pb-0 px-0 px-md-4 ps-0'>
+                      <img
+                        class='position-absolute bottom-0 end-0 me-0'
+                        src='/img/illustrations/still-ef0dd4adfa82c6230e709ebccdc098bc-removebg-preview.png'
+                        height='400'
+                        alt='View Profile'
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </Layout>
+<script>
+  // @ts-nocheck
+  import { Dropzone } from "@assets/libs/dropzone/dropzone";
+  import "@assets/libs/dropzone/dropzone.scss";
+  document.addEventListener("DOMContentLoaded", function (event) {
+    const previewTemplate = `<div class="dz-preview dz-file-preview">
+                        <div class="dz-details">
+                          <div class="dz-thumbnail">
+                            <img data-dz-thumbnail>
+                            <span class="dz-nopreview">No preview</span>
+                            <div class="dz-success-mark"></div>
+                            <div class="dz-error-mark"></div>
+                            <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                            <div class="progress">
+                              <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuemin="0" aria-valuemax="100" data-dz-uploadprogress></div>
+                            </div>
+                          </div>
+                          <div class="dz-filename" data-dz-name></div>
+                          <div class="dz-size" data-dz-size></div>
+                        </div>
+                        </div>`;
+    // Dropzone.autoDiscover = false;
+    const dropzoneBasic = document.querySelector("#dropzone-basic");
+    if (dropzoneBasic) {
+      const myDropzone = new Dropzone(dropzoneBasic, {
+        url: "/file/post",
+        previewTemplate: previewTemplate,
+        parallelUploads: 1,
+        maxFilesize: 5,
+        addRemoveLinks: true,
+        maxFiles: 1,
+        autoQueue: false,
+        autoProcessQueue: true
+      });
+
+      myDropzone.on("addedfile", function (file) {
+        // otomatis upload via jQuery AJAX
+        var formData = new FormData();
+        formData.append("file", file);
+
+        $.ajax({
+          url: window.apiPath + "/hubnet/upload-manifests",
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (res) {
+            console.log(res.message);
+            myDropzone.emit("success", file, res); // trigger sukses Dropzone
+            myDropzone.emit("complete", file);
+            $(".card-response")
+              .html(
+                `<h4 class="card-title">${res.message}</h4> 
+                <iconify-icon icon="line-md:sun-rising-twotone-loop" width="100" height="100"></iconify-icon>`
+              )
+              .addClass("text-success");
+          },
+          error: function (xhr) {
+            console.log(xhr);
+            if (xhr.status === 401) {
+              window.location.href = "/auth/login";
+            }
+            // console.error(xhr.responseJSON);
+            myDropzone.emit("error", file, xhr.responseText);
+            myDropzone.emit("complete", file);
+            function fieldExcel(xxx) {
+              const upload = xxx.header_file_upload.join(",");
+              const valid = xxx.header_file_valid.join(",");
+              const field = ` <p class='mb-0'><strong>Header File Upload :</strong> ${upload}</p>
+                              <p class='mb-0'><strong>Header File Valid :</strong> ${valid}</p>
+                              <p>File excel tidak sesuai...!!!!</p>
+                              `;
+              return field;
+            }
+
+            $(".card-response")
+              .html(
+                `
+                    <h4 class="card-title">${xhr.responseJSON.detail.message}</h4>
+                    ${fieldExcel(xhr.responseJSON.detail.error)}
+            `
+              )
+              .addClass("text-danger");
+          }
+        }).always(function () {
+          // $(".card-response").empty();
+        });
+      });
+    }
+  });
+</script>

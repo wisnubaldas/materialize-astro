@@ -7,6 +7,7 @@ try {
   $.globalEmitter = emitter;
 } catch (e) { }
 
+
 const apiPath = import.meta.env.PUBLIC_BACKEND_PATH;
 window.apiPath = apiPath;
 
