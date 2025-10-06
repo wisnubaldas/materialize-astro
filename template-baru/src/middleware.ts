@@ -9,6 +9,11 @@ const PUBLIC_ROUTES: RegExp[] = [
 ];
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
+    // 🚫 Hindari infinite loop ketika middleware melakukan fetch ke backend sendiri.
+    //    Request internal akan menyertakan header khusus agar middleware dilewati.
+    if (context.request.headers.get("x-internal-auth-check") === "1") {
+        return next();
+    }
     const url = new URL(context.request.url);
 
     // 1️⃣ Redirect dari "/" → "/landing"
@@ -37,7 +42,10 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
         const verifyUrl = `${import.meta.env.PUBLIC_BACKEND_PATH}/auth/verify`;
         const verifyResponse = await fetch(verifyUrl, {
             method: "GET",
-            headers: { Authorization: `Bearer ${token}` }, // ✅ gunakan Authorization header
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "x-internal-auth-check": "1",
+            }, // ✅ gunakan Authorization header & tandai request internal
             credentials: "include", // kirim cookie backend juga kalau ada
         });
         // kalau backend tidak valid → redirect ke login
