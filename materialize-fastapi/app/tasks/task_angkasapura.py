@@ -1,5 +1,5 @@
 import logging
-from datetime.datetime import datetime
+from datetime import datetime
 
 from app.celery_app import celery_app
 from app.db.redis_lock import redis_lock
@@ -18,7 +18,7 @@ def sync_invoice():
             logger.info("[sync-data-invoice] Task sebelumnya masih jalan, skip...")
             return
     logger.info("[sync-data-invoice] Mulai proses...")
-    now = datetime.now()
+    now = datetime.now()  # noqa: DTZ005
     INVAp2Service.send_invoice_sync(now.strftime("%Y-%m-%d"))
     logger.info("[sync-data-invoice] Selesai.")
 

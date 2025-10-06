@@ -23,7 +23,7 @@ def init_scheduler(*, engine):
     rds = get_redis()
 
     # ambil filter tanggal dari ENV (atau set default untuk demo)
-    date_of_flight = os.getenv("DATE_OF_FLIGHT", "2023-01-03")
+    date_of_flight = os.getenv("DATE_OF_FLIGHT", "2023-01-02")
 
     sched.add_job(
         run_monitor_job,
