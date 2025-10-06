@@ -33,8 +33,24 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
     // 4️⃣ Verifikasi token ke backend FastAPI
     try {
-        // @ts-ignore
-        const verifyUrl = `${import.meta.env.PUBLIC_BACKEND_PATH}/auth/verify`;
+        // Pastikan URL backend berbentuk absolut saat dijalankan di middleware (Node.js)
+        const rawBackendPath = (import.meta.env.PUBLIC_BACKEND_PATH ?? "").trim();
+        const trimmedBackendPath = rawBackendPath.replace(/\/+$/, "");
+
+        const isAbsoluteBackend = /^https?:\/\//i.test(trimmedBackendPath);
+        const normalizedBackendPath = trimmedBackendPath
+            ? trimmedBackendPath.startsWith("/")
+                ? trimmedBackendPath
+                : `/${trimmedBackendPath}`
+            : "";
+        const relativeVerifyPath = normalizedBackendPath
+            ? `${normalizedBackendPath}/auth/verify`
+            : "/auth/verify";
+
+        const verifyUrl = isAbsoluteBackend
+            ? `${trimmedBackendPath}/auth/verify`
+            : new URL(relativeVerifyPath, context.url).toString();
+
         const verifyResponse = await fetch(verifyUrl, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` }, // ✅ gunakan Authorization header
