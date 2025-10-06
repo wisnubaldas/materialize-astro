@@ -129,6 +129,8 @@ origin  git@gitlab.com:wisnubaldas/materialize-astro.git (fetch)
 origin  git@gitlab.com:wisnubaldas/materialize-astro.git (push)
 PS C:\Users\wisnu\Documents\Belajar\materialize-project> git remote add office git@gitlab.att.id:mau/mau-app.git
 PS C:\Users\wisnu\Documents\Belajar\materialize-project> git remote -v
+github  git@github.com:wisnubaldas/materialize-astro.git (fetch)
+github  git@github.com:wisnubaldas/materialize-astro.git (push)
 office  git@gitlab.att.id:mau/mau-app.git (fetch)
 office  git@gitlab.att.id:mau/mau-app.git (push)
 origin  git@gitlab.com:wisnubaldas/materialize-astro.git (fetch)
