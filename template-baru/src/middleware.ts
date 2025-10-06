@@ -40,6 +40,10 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     try {
         // @ts-ignore
         const verifyUrl = `${import.meta.env.PUBLIC_BACKEND_PATH}/auth/verify`;
+
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 10_000); // ⏱️ batasi waktu tunggu fetch
+
         const verifyResponse = await fetch(verifyUrl, {
             method: "GET",
             headers: {
@@ -47,7 +51,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
                 "x-internal-auth-check": "1",
             }, // ✅ gunakan Authorization header & tandai request internal
             credentials: "include", // kirim cookie backend juga kalau ada
-        });
+            signal: abortController.signal,
+        }).finally(() => clearTimeout(timeoutId));
         // kalau backend tidak valid → redirect ke login
         if (!verifyResponse.ok) {
             console.error("Request gagal:", verifyResponse.status);
@@ -69,7 +74,11 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
         // context.locals.user = verifyData.username;
 
     } catch (err) {
-        console.error("Auth verify failed:", err);
+        if ((err as Error).name === "AbortError") {
+            console.error("Auth verify aborted karena timeout saat menghubungi backend.");
+        } else {
+            console.error("Auth verify failed:", err);
+        }
         const redirectTo = encodeURIComponent(url.pathname + url.search);
         return Response.redirect(
             new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
