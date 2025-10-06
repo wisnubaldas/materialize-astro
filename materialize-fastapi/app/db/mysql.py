@@ -1,13 +1,32 @@
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.utils.env import ENV
 
 
 def make_url(user, pwd, host, port, db):
-    return f"mysql+pymysql://{user}:{pwd}@{host}:{port}/{db}"
+    """Build a SQLAlchemy connection URL.
+
+    When the database password is optional the previous implementation would
+    literally embed ``None`` into the string (``mysql+pymysql://user:None@...``)
+    which breaks connections for database users without a password. Interpo-
+    lating values also failed to quote special characters in credentials.
+
+    ``URL.create`` handles both cases by omitting the password portion when it
+    is ``None`` and by escaping credentials when necessary.
+    """
+
+    return URL.create(
+        drivername="mysql+pymysql",
+        username=user,
+        password=pwd or None,
+        host=host,
+        port=port,
+        database=db,
+    )
 
 
 # DB1
