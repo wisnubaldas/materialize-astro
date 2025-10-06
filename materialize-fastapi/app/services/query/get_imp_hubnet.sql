@@ -1,0 +1,25 @@
+SELECT
+a.MasterAWB,
+a.Netto,
+a.Volume,
+a.KindOfGood,
+a.DateOfBreakdown,
+a.TimeOfBreakdown,
+b.Quantity,
+b.Weight,
+b.airlinescode,
+b.FlightNo,
+b.DateOfFlight,
+b.Origin,
+b.DescriptionGoods,
+b.AgenCode,
+b.ShipperCode,
+b.shippername,
+b.shipperaddress,
+b.shippercity,
+b.shippercountry,
+b.Consigneename,
+b.Consigneeaddress,
+b.Consigneecity
+FROM imp_breakdowndetail AS a
+JOIN imp_hostawb AS b ON a.MasterAWB = b.MasterAWB  WHERE b.DateOfFlight = '2023-01-03'

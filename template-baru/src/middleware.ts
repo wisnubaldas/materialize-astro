@@ -1,35 +1,28 @@
 import type { MiddlewareHandler } from "astro";
 
 const PUBLIC_ROUTES: RegExp[] = [
-    /^\/auth\/login\/?$/,     // /auth/login atau /auth/login/
-    /^\/auth\/register\/?$/,  // /auth/register atau /auth/register/
-    /^\/docs/,                // semua path yang diawali /docs
-    /^\/landing/,                // semua path yang diawali /docs
-    /^\/blog/                 // semua path yang diawali /blog
+    /^\/auth\/login\/?$/,
+    /^\/auth\/register\/?$/,
+    /^\/docs/,
+    /^\/landing/,
+    /^\/blog/
 ];
-export const onRequest: MiddlewareHandler = async (context, next) => {
 
+export const onRequest: MiddlewareHandler = async (context, next) => {
     const url = new URL(context.request.url);
-    // 🚀 Redirect otomatis dari root "/" ke "/blog/"
+
+    // 1️⃣ Redirect dari "/" → "/landing"
     if (url.pathname === "/") {
         return Response.redirect(new URL("/landing", context.url), 302);
     }
 
-    //   const matched = PUBLIC_ROUTES.find((p) => url.pathname.startsWith(p));
-    // if (matched) {
-    //   console.log("Matched public route:", matched);
-    //   return next();
-    // }
-
-    // ✅ Cek apakah route termasuk public
+    // 2️⃣ Lewatkan route publik
     if (PUBLIC_ROUTES.some((pattern) => pattern.test(url.pathname))) {
-        // console.log("Matched public route:", url.pathname);
         return next();
     }
 
-    // cek token dari cookies
-    const token = context.cookies.get("auth_token")?.value;
-    // kalau belum login → redirect ke login + simpan last path
+    // 3️⃣ Ambil token dari cookie frontend (bukan dari backend)
+    const token = context.cookies.get("access_token")?.value;
     if (!token) {
         const redirectTo = encodeURIComponent(url.pathname + url.search);
         return Response.redirect(
@@ -38,27 +31,31 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
         );
     }
 
-    // validasi token ke backend FastAPI
+    // 4️⃣ Verifikasi token ke backend FastAPI
     try {
-        const verify = await fetch(
-            `${import.meta.env.PUBLIC_BACKEND_PATH}/auth/verify`,
-            {
-                headers: { Authorization: `Bearer ${token}` },
-                method: "GET"
-            }
-        );
+        // @ts-ignore
+        const verifyUrl = `${import.meta.env.PUBLIC_BACKEND_PATH}/auth/verify`;
+        const verifyResponse = await fetch(verifyUrl, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` }, // ✅ gunakan Authorization header
+            credentials: "include", // kirim cookie backend juga kalau ada
+        });
 
-        // console.log(verify);
-
-        if (!verify.ok) {
+        // kalau backend tidak valid → redirect ke login
+        if (!verifyResponse.ok) {
             const redirectTo = encodeURIComponent(url.pathname + url.search);
             return Response.redirect(
                 new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
                 302
             );
         }
+
+        // (opsional) simpan data user ke context.locals
+        // const verifyData = await verifyResponse.json();
+        // context.locals.user = verifyData.username;
+
     } catch (err) {
-        console.error("Auth check failed:", err);
+        console.error("Auth verify failed:", err);
         const redirectTo = encodeURIComponent(url.pathname + url.search);
         return Response.redirect(
             new URL(`/auth/login/?redirect=${redirectTo}`, context.url),
@@ -66,5 +63,6 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
         );
     }
 
+    // 5️⃣ Lolos → lanjut render halaman
     return next();
 };

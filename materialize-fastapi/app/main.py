@@ -5,7 +5,6 @@ from fastapi.security import HTTPBearer
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
-from app.api.middleware.exception_handler import register_exception_handlers
 
 # from app.utils.logging_config import setup_logging
 
@@ -13,7 +12,7 @@ from app.api.middleware.exception_handler import register_exception_handlers
 
 # app
 app = FastAPI(title="FastAPI App with Poetry")
-register_exception_handlers(app)
+# register_exception_handlers(app)
 
 # error handler
 
@@ -50,6 +49,8 @@ app.openapi = custom_openapi
 origins = [
     "http://localhost:4321",  # Ganti dengan origin frontend Anda
     "http://127.0.0.1:4321",
+    "https://ap2.mitraadira.com",
+    "https://mitraadira.com",
 ]
 app.add_middleware(
     CORSMiddleware,

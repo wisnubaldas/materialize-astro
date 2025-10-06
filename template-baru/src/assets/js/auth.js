@@ -1,12 +1,12 @@
 /**
  *  Pages Authentication
  */
-
+// #ts-nocheck
 'use strict';
 let fv;
 let formAuthentication;
 const backend_path = import.meta.env.PUBLIC_BACKEND_PATH;
-console.log('pathnya--->', backend_path);
+// console.log('pathnya--->', backend_path);
 document.addEventListener('DOMContentLoaded', function () {
   (() => {
     formAuthentication = document.querySelector('#formAuthentication');
@@ -106,13 +106,16 @@ document.addEventListener('DOMContentLoaded', function () {
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
+          xhrFields: {
+            withCredentials: true // <--- WAJIB agar browser simpan cookie dari server
+          },
           data: JSON.stringify({
             email: email,
             password: password
           }),
           success: function (result) {
             // simpan token ke cookie (expires 1 hari)
-            document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
+            // document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
             localStorage.setItem('access_token', result.access_token);
             // ambil redirect dari query param
             const params = new URLSearchParams(window.location.search);

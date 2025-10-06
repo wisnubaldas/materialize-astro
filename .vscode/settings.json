@@ -37,5 +37,6 @@
   "terminal.integrated.env.linux": {
     "PYTHONPATH": "${workspaceFolder}/materialize-astro"
   },
-  "CodeGPT.apiKey": "OpenAI"
+  "CodeGPT.apiKey": "OpenAI",
+  "chatgpt.openOnStartup": false
 }

@@ -15,9 +15,8 @@ def decode_token(token: str):
         payload = jwt.decode(token, ENV.SECRET_KEY, algorithms=[ENV.ALGORITHM])
         return payload
     except JWTError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    except JWTError as e:
-        raise HTTPException(status_code=401, detail=(e))
+        # HTTP status code to send to the client.
+        raise HTTPException(status_code=401, detail=str(e)) from e
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
