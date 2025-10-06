@@ -44,6 +44,8 @@ class ENV(BaseSettings):
     HUBNET_USER: str
     HUBNET_PASSWORD: str
 
+    REDIS_URL: str = "redis://localhost:6379/5"
+
     class Config:
         env_file = ".env"  # otomatis baca file .env
         env_file_encoding = "utf-8"

@@ -13,13 +13,15 @@ let total: number = 0;
 
 try {
   const cookieHeader = Astro.request.headers.get("cookie") || "";
+  console.log("Cookie Header:", cookieHeader); // Debug: Log the cookie header
+
   const cookies = Object.fromEntries(
     cookieHeader.split(/; */).map(c => {
       const [key, ...v] = c.split("=");
       return [key, v.join("=")];
     })
   );
-  const token = cookies["auth_token"];
+  const token = cookies["access_token"];
 
   const apiInstance = axios.create({
     baseURL: import.meta.env.PUBLIC_BACKEND_PATH,
@@ -51,7 +53,15 @@ try {
   total = cardArray.reduce((acc, item) => acc + item.value, 0);
   // console.log(cardArray);
 } catch (err) {
-  console.error("Auth check failed:", err);
+  if (axios.isAxiosError(err) && err.response) {
+    console.error("Error response data:", err.response.data);
+    console.error("Error response status:", err.response.status);
+    console.error("Error response headers:", err.response.headers);
+  } else if (axios.isAxiosError(err) && err.request) {
+    console.error("Error request:", err.request);
+  } else {
+    console.error("Error message:", (err as Error).message);
+  }
 }
 ---
 

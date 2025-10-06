@@ -13,12 +13,16 @@ window.apiPath = apiPath;
 
 document.addEventListener("DOMContentLoaded", () => {
   nodeWaves.init();
-  const token = getCookie('auth_token');
+  const token = getCookie('access_token');
+  console.log("Token from cookie client:", token);
   if (!token) {
     window.location.href = '/auth/login/';
   }
 
   $.ajaxSetup({
+    xhrFields: {
+      withCredentials: true // <--- WAJIB agar browser simpan cookie dari server
+    },
     headers: {
       'Authorization': 'Bearer ' + token,
     },

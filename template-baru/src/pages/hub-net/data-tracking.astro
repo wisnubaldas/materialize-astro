@@ -1,28 +1,68 @@
 ---
-import Layout from '@layouts/Layout.astro';
+import Layout from "@layouts/Layout.astro";
 ---
 
 <Layout title='Status Response'>
   <div class='row'>
-    <h1>Status Response</h1>
     <!-- Float label (Outline) -->
     <div class='col-md'>
       <div class='card'>
-        <h5 class='card-header'>Float label (Outline)</h5>
+        <h5 class='card-header'>Status Response Sending Data ke HUBNET</h5>
         <div class='card-body'>
-          <div class='form-floating form-floating-outline'>
-            <input
-              type='text'
-              class='form-control'
-              id='floatingInput'
-              placeholder='John Doe'
-              aria-describedby='floatingInputHelp'
-            />
-            <label for='floatingInput'>Name</label>
-            <div id='floatingInputHelp' class='form-text'>We'll never share your details with anyone else.</div>
+          <div id='stats'>
+            <div>Total Records: <span id='total_records'>0</span></div>
+            <div>Total Weight: <span id='total_weight'>0</span></div>
+            <div>Total Netto: <span id='total_netto'>0</span></div>
+            <small id='last_update'>-</small>
           </div>
+
+          <div id='list'></div>
         </div>
       </div>
     </div>
   </div>
 </Layout>
+<script>
+  // @ts-nocheck
+  // Pastikan base path sesuai reverse proxy kamu
+  // console.log(window.apiPath);
+  const es = new EventSource(window.apiPath + "/monitor/sse", { withCredentials: false });
+  es.addEventListener("snapshot", ev => {
+    try {
+      const payload = JSON.parse(ev.data);
+      const s = payload.stats || {};
+      document.getElementById("total_records").textContent = s.total_records ?? 0;
+      document.getElementById("total_weight").textContent = (s.total_weight ?? 0).toFixed(2);
+      document.getElementById("total_netto").textContent = (s.total_netto ?? 0).toFixed(2);
+      document.getElementById("last_update").textContent = `Updated: ${payload.ts}`;
+
+      // Render sample list
+      const sample = payload.sample || [];
+      const html = sample
+        .map(
+          row => `
+        <div class="row">
+          <strong>${row.MasterAWB}</strong> — ${row.FlightNo} (${row.Origin})
+          | Weight: ${row.Weight} | Consignee: ${row.Consigneename ?? "-"}
+        </div>
+      `
+        )
+        .join("");
+      const listElement = document.getElementById("list");
+      if (listElement) {
+        listElement.innerHTML = html;
+      }
+    } catch (e) {
+      console.error("bad SSE data", e);
+    }
+  });
+
+  // Heartbeat (opsional)
+  es.addEventListener("ping", () => {
+    // bisa tampilkan indikator online
+  });
+
+  es.onerror = e => {
+    console.warn("SSE error, will auto-reconnect by browser...", e);
+  };
+</script>

@@ -30,7 +30,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
             302
         );
     }
-
+    console.log("token found in cookie:", token);
     // 4️⃣ Verifikasi token ke backend FastAPI
     try {
         // @ts-ignore
@@ -40,9 +40,15 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
             headers: { Authorization: `Bearer ${token}` }, // ✅ gunakan Authorization header
             credentials: "include", // kirim cookie backend juga kalau ada
         });
-
         // kalau backend tidak valid → redirect ke login
         if (!verifyResponse.ok) {
+            console.error("Request gagal:", verifyResponse.status);
+            const errorText = await verifyResponse.text(); // <-- tangkap isi response (plain text)
+            console.log("Isi response error:", errorText);
+
+            // ❌ Token invalid/expired — hapus cookies & redirect
+            context.cookies.delete("access_token", { path: "/" });
+
             const redirectTo = encodeURIComponent(url.pathname + url.search);
             return Response.redirect(
                 new URL(`/auth/login/?redirect=${redirectTo}`, context.url),

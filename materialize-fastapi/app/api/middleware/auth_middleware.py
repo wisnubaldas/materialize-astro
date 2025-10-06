@@ -7,7 +7,7 @@ from starlette.requests import Request
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
-EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json"]
+EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json", "/monitor/sse"]
 
 
 def decode_token(token: str):

@@ -8,6 +8,10 @@ let formAuthentication;
 const backend_path = import.meta.env.PUBLIC_BACKEND_PATH;
 // console.log('pathnya--->', backend_path);
 document.addEventListener('DOMContentLoaded', function () {
+  // // Menghapus localStorage
+  localStorage.clear();
+  // // Menghapus sessionStorage
+  sessionStorage.clear();
   (() => {
     formAuthentication = document.querySelector('#formAuthentication');
     // Form validation for Add new record
