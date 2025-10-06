@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }),
           success: function (result) {
             // simpan token ke cookie (expires 1 hari)
-            // document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
+            // Cookie HttpOnly sudah dibuat oleh backend FastAPI melalui set_jwt_cookie
             localStorage.setItem('access_token', result.access_token);
             // ambil redirect dari query param
             const params = new URLSearchParams(window.location.search);
