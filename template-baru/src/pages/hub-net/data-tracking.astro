@@ -10,7 +10,7 @@ import Layout from "@layouts/Layout.astro";
         <h5 class='card-header'>Status Response Sending Data ke HUBNET</h5>
         <div class='card-body'>
           <div id='stats'>
-            <div>Total Records: <span id='total_records'>0</span></div>
+            <div>Total Records: <span id='fib'>0</span></div>
             <div>Total Weight: <span id='total_weight'>0</span></div>
             <div>Total Netto: <span id='total_netto'>0</span></div>
             <small id='last_update'>-</small>
@@ -24,45 +24,19 @@ import Layout from "@layouts/Layout.astro";
 </Layout>
 <script>
   // @ts-nocheck
-  // Pastikan base path sesuai reverse proxy kamu
-  // console.log(window.apiPath);
-  const es = new EventSource(window.apiPath + "/monitor/sse", { withCredentials: false });
-  es.addEventListener("snapshot", ev => {
-    try {
-      const payload = JSON.parse(ev.data);
-      const s = payload.stats || {};
-      document.getElementById("total_records").textContent = s.total_records ?? 0;
-      document.getElementById("total_weight").textContent = (s.total_weight ?? 0).toFixed(2);
-      document.getElementById("total_netto").textContent = (s.total_netto ?? 0).toFixed(2);
-      document.getElementById("last_update").textContent = `Updated: ${payload.ts}`;
+  import { encryptKey } from "@assets/js/crypto.js";
+  const user = "wisnu"; // misalnya diambil dari session login
+  const encryptedKey = await encryptKey({ user });
+  // const evtSource = new EventSource(`http://localhost:8000/sse/fibonacci?key=${encodeURIComponent(encryptedKey)}`);
 
-      // Render sample list
-      const sample = payload.sample || [];
-      const html = sample
-        .map(
-          row => `
-        <div class="row">
-          <strong>${row.MasterAWB}</strong> — ${row.FlightNo} (${row.Origin})
-          | Weight: ${row.Weight} | Consignee: ${row.Consigneename ?? "-"}
-        </div>
-      `
-        )
-        .join("");
-      const listElement = document.getElementById("list");
-      if (listElement) {
-        listElement.innerHTML = html;
-      }
-    } catch (e) {
-      console.error("bad SSE data", e);
-    }
-  });
+  // evtSource.onmessage = event => {
+  //   console.log("📡 Fibonacci:", event.data);
+  //   document.getElementById("fib").textContent = event.data;
+  // };
 
-  // Heartbeat (opsional)
-  es.addEventListener("ping", () => {
-    // bisa tampilkan indikator online
-  });
-
-  es.onerror = e => {
-    console.warn("SSE error, will auto-reconnect by browser...", e);
-  };
+  const channels = ["fibonacci", "arithmetic", "geometric", "power", "factorial"];
+  for (const path of channels) {
+    const evt = new EventSource(`http://localhost:8000/sse/${path}?key=${encodeURIComponent(encryptedKey)}`);
+    evt.onmessage = e => console.log(`📡 ${path}:`, e.data);
+  }
 </script>

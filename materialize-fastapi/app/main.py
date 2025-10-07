@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
-from app.tasks.init_apscheduler import InitApscheduler
+from app.utils.scheduler import start_scheduler, stop_scheduler
 
 # from app.utils.logging_config import setup_logging
 
@@ -16,7 +16,15 @@ app = FastAPI(title="FastAPI App with Poetry")
 
 
 # register_exception_handlers(app)
-InitApscheduler.run()
+@app.on_event("startup")
+async def startup():
+    await start_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await stop_scheduler()
+
 
 # error handler
 

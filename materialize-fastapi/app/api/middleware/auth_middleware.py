@@ -7,7 +7,7 @@ from starlette.requests import Request
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
-EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json", "/monitor/sse"]
+EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json"]
 
 
 def decode_token(token: str):
@@ -27,6 +27,10 @@ class JWTMiddleware(BaseHTTPMiddleware):
 
         # Lewatkan path yang tidak perlu dicek token-nya
         if request.url.path in EXCLUDED_PATHS:
+            return await call_next(request)
+
+        path = request.url.path
+        if path == "/sse" or path.startswith("/sse/"):
             return await call_next(request)
 
         # Ambil token dari header Authorization

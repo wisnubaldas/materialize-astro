@@ -45,6 +45,7 @@ class ENV(BaseSettings):
     HUBNET_PASSWORD: str
 
     REDIS_URL: str = "redis://localhost:6379/5"
+    SSE_KEY: str = None
 
     class Config:
         env_file = ".env"  # otomatis baca file .env

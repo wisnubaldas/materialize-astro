@@ -22,4 +22,4 @@ b.Consigneename,
 b.Consigneeaddress,
 b.Consigneecity
 FROM imp_breakdowndetail AS a
-JOIN imp_hostawb AS b ON a.MasterAWB = b.MasterAWB  WHERE b.DateOfFlight = '2023-01-03'
+JOIN imp_hostawb AS b ON a.MasterAWB = b.MasterAWB  WHERE b.DateOfFlight = :date_of_flight
