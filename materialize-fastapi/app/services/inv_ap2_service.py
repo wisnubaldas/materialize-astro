@@ -78,7 +78,8 @@ HEADERS = {
 
 ## method protected
 def get_dynamic_params(interval_minutes: int = 30):
-    now = datetime.datetime.now()
+    # gunakan datetime.now() (bukan datetime.datetime.now())
+    now = datetime.now()  # noqa: DTZ005
     hari = now.strftime("%Y-%m-%d")
     start_from = now.strftime("%H:%M:%S")
     end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
@@ -90,8 +91,9 @@ class INVAp2Service:
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
         return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
+    # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
-    def get_data_inv():
+    def get_data_inv():  # noqa: PLR0912
         db1 = SessionDB1W()
         db2 = SessionDB2R()
         try:
@@ -100,25 +102,46 @@ class INVAp2Service:
             query = HELPER.load_sql_query("app/services/query/generate_inv_ekspor.sql")
             sql = text(query)
             invoices = db2.execute(sql, params).mappings().all()
-            data_inv = []
             for row in invoices:
-                mapped_row = {}
+                mapped_row: dict = {}
                 for k, v in row.items():
                     field_name = INVTOAP2INV.get(k, k)
-                    if field_name in InvoiceCreate.model_fields.keys():
+                    if field_name in InvoiceCreate.model_fields.keys():  # noqa: SIM118
                         if isinstance(v, (Decimal, float, int)):
                             mapped_row[field_name] = HELPER.to_string_rounded(v, digits=0)
                         else:
-                            mapped_row[field_name] = v  # default bulatkan tanpa desimal
+                            mapped_row[field_name] = v
+
                 # Hardcode values (overwrite jika ada di query)
                 mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
+
+                # Validasi dan normalisasi via schema
                 invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore
-                invoice_model = InvAp2(**invoice_schema.model_dump())
-                db1.add(invoice_model)
-                data_inv.append(invoice_model)
+                values = invoice_schema.model_dump()
+
+                # Upsert berdasarkan NO_INVOICE (jika None maka dianggap selalu insert)
+                no_invoice = values.get("NO_INVOICE")
+                if no_invoice:
+                    existing = (
+                        db1.query(InvAp2)
+                        .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
+                        .first()
+                    )
+                else:
+                    existing = None
+
+                if existing is not None:
+                    # Update semua kolom dari schema ke model
+                    for key, val in values.items():
+                        if hasattr(existing, key):
+                            setattr(existing, key, val)
+                else:
+                    db1.add(InvAp2(**values))
+
             db1.commit()
         except Exception as e:
-            print("Error sync breakdown:", e)
+            db1.rollback()
+            logger.error("Error sync breakdown: %s", e, exc_info=True)
         finally:
             db1.close()
             db2.close()
@@ -133,6 +156,7 @@ class INVAp2Service:
     def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
         return fail_inv_ap2.get_datatable(db=db, params=params)
 
+    # send invoice ke AP2
     @staticmethod
     async def send_invoice(date_prefix: str):
         db1 = SessionDB1W()

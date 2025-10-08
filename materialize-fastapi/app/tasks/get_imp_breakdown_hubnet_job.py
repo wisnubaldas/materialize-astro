@@ -1,8 +1,19 @@
+from datetime import datetime
+from json import dumps
+
+import pytz
 from sqlalchemy import select, text
 
 from app.db.mysql import SessionDB1W, SessionDB2R
 from app.models.hubnet_request import HubnetRequest
-from app.utils.helper import HELPER as Helper
+from app.services.redis_service import publish_sync
+from app.utils.helper import HELPER as Helper  # noqa: N811
+
+jakarta_tz = pytz.timezone("Asia/Jakarta")
+now_wib = datetime.now(jakarta_tz)
+
+
+CHANNEL_NAME = "sending_ke_hubnet_channel"
 
 
 def run_breakdown():
@@ -10,7 +21,7 @@ def run_breakdown():
         qfile = "app/services/query/get_imp_hubnet.sql"
         db2 = SessionDB2R()
         query = Helper.load_sql_query(qfile)
-        param = {"date_of_flight": "2023-01-03"}
+        param = {"date_of_flight": now_wib.strftime("%Y-%m-%d")}
         sql = text(query)
         customers = db2.execute(sql, param).mappings().all()
 
@@ -18,6 +29,15 @@ def run_breakdown():
             # print(cust["MasterAWB"])
             if __cek_hostawb(cust["MasterAWB"]):
                 print(f"AWB_NO {cust["MasterAWB"]} sudah ada, skip insert")
+                publish_sync(
+                    CHANNEL_NAME,
+                    dumps(
+                        {
+                            "level": "info",
+                            "message": f"📟 AWB_NO {cust['MasterAWB']} sudah ada, skip insert",
+                        }
+                    ),
+                )
             else:
                 with SessionDB1W() as db1:
                     new_request = HubnetRequest(
@@ -48,9 +68,22 @@ def run_breakdown():
                     db1.add(new_request)
                     db1.commit()
                     print(f"Insert AWB_NO {cust['MasterAWB']} berhasil")
+                    publish_sync(
+                        CHANNEL_NAME,
+                        dumps(
+                            {
+                                "level": "info",
+                                "message": f"✅ Insert AWB_NO {cust['MasterAWB']} berhasil",
+                            }
+                        ),
+                    )
 
     except Exception as e:
         print("Error :", e)
+        publish_sync(
+            CHANNEL_NAME,
+            dumps({"level": "error", "message": f"Error: {e!s}"}),
+        )
     finally:
         db2.close()
 
