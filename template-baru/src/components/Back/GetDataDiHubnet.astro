@@ -1,17 +1,5 @@
 ---
-import axios from "axios";
-import { useState, useEffect } from "react";
-
-const cookieHeader = Astro.request.headers.get("cookie") || "";
-const cookies = Object.fromEntries(
-  cookieHeader.split(/; */).map(c => {
-    const [key, ...v] = c.split("=");
-    return [key, v.join("=")];
-  })
-);
-const token = cookies["access_token"];
-
-// Buat tanggal hari ini dalam format YYYY-MM-DD
+// Buat tanggal hari ini dalam format YYYY-MM-DD (dipakai di client)
 const today = new Date().toISOString().split("T")[0];
 
 interface HubnetData {
@@ -30,20 +18,6 @@ interface HubnetData {
 }
 
 let initialData: HubnetData | null = null;
-try {
-  const apiInstance = axios.create({
-    baseURL: import.meta.env.PUBLIC_BACKEND_PATH,
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
-  });
-
-  const res = await apiInstance.get("/hubnet/get-data-terkirim/", {
-    params: { flt_date: today, page: 1, per_page: 10 }
-  });
-  initialData = res.data;
-} catch (err) {
-  const message = err instanceof Error ? err.message : String(err);
-  console.error("Gagal memuat data hubnet:", message);
-}
 ---
 
 <div class='col-md'>
@@ -126,55 +100,81 @@ try {
 <script>
   // @ts-nocheck
   const backend = import.meta.env.PUBLIC_BACKEND_PATH;
-  const token = "{cookies.auth_token}";
+  // Ambil token dari cookie di sisi klien
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+  const token = getCookie('access_token');
   const today = "{today}";
   let currentPage = 1;
 
-  async function fetchData(page = 1) {
-    try {
-      const res = await fetch(`${backend}/hubnet/get-data-terkirim/?flt_date=${today}&page=${page}&per_page=10`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const json = await res.json();
-
-      const tbody = document.getElementById("dataBody");
-      tbody.innerHTML = json.data
-        .map(
-          item => `
-          <tr>
-            <td>${item.AWB_NO}</td>
-            <td>${item.FLT_NUMBER}</td>
-            <td>${item.FLT_DATE}</td>
-            <td>${item.ORI}</td>
-            <td>${item.DEST}</td>
-            <td>${item.T}</td>
-            <td>${item.K}</td>
-            <td>${item.CH_WEIGHT}</td>
-            <td><span class="badge bg-label-info">${
-              item.IS_INTERNATIONAL === 1 ? "INTERNATIONAL" : "DOMESTIK"
-            }</span></td>
-            <td><span class="badge bg-label-primary">${item.IS_EKSPOR === 1 ? "EKSPORT" : "IMPORT"}</span></td>
-          </tr>`
-        )
-        .join("");
-    } catch (e) {
-      console.error("Fetch error:", e);
-    }
+  function fetchData(page = 1) {
+    $.ajax({
+      url: `${backend}/hubnet/get-data-terkirim/`,
+      method: 'GET',
+      data: { flt_date: today, page, per_page: 10 },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      success: function (json) {
+        const tbody = document.getElementById('dataBody');
+        tbody.innerHTML = (json.data || [])
+          .map(
+            item => `
+            <tr>
+              <td>${item.AWB_NO}</td>
+              <td>${item.FLT_NUMBER}</td>
+              <td>${item.FLT_DATE}</td>
+              <td>${item.ORI}</td>
+              <td>${item.DEST}</td>
+              <td>${item.T}</td>
+              <td>${item.K}</td>
+              <td>${item.CH_WEIGHT}</td>
+              <td><span class="badge bg-label-info">${
+                item.IS_INTERNATIONAL === 1 ? 'INTERNATIONAL' : 'DOMESTIK'
+              }</span></td>
+              <td><span class="badge bg-label-primary">${
+                item.IS_EKSPOR === 1 ? 'EKSPORT' : 'IMPORT'
+              }</span></td>
+            </tr>`
+          )
+          .join('');
+      },
+      error: function (xhr, status, err) {
+        console.error('AJAX error:', status, err);
+      }
+    });
   }
 
-  // pagination click
-  document.querySelectorAll("#pagination a[data-page]").forEach(el => {
-    el.addEventListener("click", e => {
-      e.preventDefault();
-      const pageAttr = e.target.dataset.page;
-      if (pageAttr === "prev" && currentPage > 1) currentPage--;
-      else if (pageAttr === "next") currentPage++;
-      else currentPage = parseInt(pageAttr);
+  function setupClient() {
+    // pagination click
+    document.querySelectorAll('#pagination a[data-page]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        const pageAttr = e.target.dataset.page;
+        if (pageAttr === 'prev' && currentPage > 1) currentPage--;
+        else if (pageAttr === 'next') currentPage++;
+        else currentPage = parseInt(pageAttr);
 
-      fetchData(currentPage);
-      document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
-      const activeEl = document.querySelector(`#pagination a[data-page="${currentPage}"]`)?.parentElement;
-      if (activeEl) activeEl.classList.add("active");
+        fetchData(currentPage);
+        document
+          .querySelectorAll('#pagination li')
+          .forEach(li => li.classList.remove('active'));
+        const activeEl = document.querySelector(
+          `#pagination a[data-page="${currentPage}"]`
+        )?.parentElement;
+        if (activeEl) activeEl.classList.add('active');
+      });
     });
-  });
+
+    // Muat data awal di client juga (opsional untuk sinkron dengan SSR)
+    fetchData(currentPage);
+  }
+
+  if (window.jQuery) {
+    setupClient();
+  } else {
+    window.addEventListener('load', setupClient);
+  }
 </script>

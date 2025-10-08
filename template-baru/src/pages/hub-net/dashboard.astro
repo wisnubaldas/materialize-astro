@@ -1,80 +1,174 @@
 ---
 import "@assets/libs/apex-charts/apex-charts.scss";
-import CardCongratulations from "@components/Back/CardCongratulations.astro";
-import CardSmall from "@components/Back/CardSmall.astro";
 import GetDataDiHubnet from "@components/Back/GetDataDiHubnet.astro";
 import Layout from "@layouts/Layout.astro";
-import axios from "axios";
-
-// deklarasi awal di luar try
-let data: any = null;
-let cardArray: { title: string; value: number; icon: string }[] = [];
-let total: number = 0;
-
-try {
-  const cookieHeader = Astro.request.headers.get("cookie") || "";
-  console.log("Cookie Header:", cookieHeader); // Debug: Log the cookie header
-
-  const cookies = Object.fromEntries(
-    cookieHeader.split(/; */).map(c => {
-      const [key, ...v] = c.split("=");
-      return [key, v.join("=")];
-    })
-  );
-  const token = cookies["access_token"];
-
-  const apiInstance = axios.create({
-    baseURL: import.meta.env.PUBLIC_BACKEND_PATH,
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
-  });
-
-  const [lastSendingRes, cardDataRes] = await Promise.all([
-    apiInstance.get("/hubnet/last-sending"),
-    apiInstance.get("/hubnet/dashboard-card")
-  ]);
-
-  data = lastSendingRes.data;
-  const icn = [
-    "streamline-plump-color:ai-generate-portrait-image-spark-flat",
-    "streamline-plump-color:airplane-disabled",
-    "streamline-plump-color:add-bell-notification-flat",
-    "streamline-plump-color:bag-suitcase-4",
-    "streamline-plump-color:bus",
-    "streamline-plump-color:calendar-check-flat",
-    "streamline-plump-color:cog-automation",
-    "streamline-plump-color:convert-pdf-1-flat"
-  ];
-  // isi array
-  cardArray = Object.entries(cardDataRes.data).map(([key, value], index) => ({
-    title: key,
-    value: Number(value),
-    icon: icn[index]
-  }));
-  total = cardArray.reduce((acc, item) => acc + item.value, 0);
-  // console.log(cardArray);
-} catch (err) {
-  if (axios.isAxiosError(err) && err.response) {
-    console.error("Error response data:", err.response.data);
-    console.error("Error response status:", err.response.status);
-    console.error("Error response headers:", err.response.headers);
-  } else if (axios.isAxiosError(err) && err.request) {
-    console.error("Error request:", err.request);
-  } else {
-    console.error("Error message:", (err as Error).message);
-  }
-}
 ---
 
 <Layout title='Dashboard HUBNET'>
   <div class='container-xxl flex-grow-1 container-p-y'>
-    <div class='row gy-4 mb-4'>
-      <CardCongratulations data={data} total={total} />
-      {
-        cardArray.map((item, index) => (
-          <CardSmall key={index} total={total} title={item.title} value={item.value} icon={item.icon} />
-        ))
-      }
+    <div id='dashboardRow' class='row gy-4 mb-4'>
+      <!-- Placeholder Last Sending Card -->
+      <div id='card-last-sending' class='col-xl-8'>
+        <div class='card h-100'>
+          <div class='card-body'>
+            <div class='placeholder-glow'>
+              <span class='placeholder col-6'></span>
+              <span class='placeholder col-4'></span>
+              <span class='placeholder col-8'></span>
+            </div>
+          </div>
+          <img
+            src='/img/illustrations/rocket.png'
+            class='position-absolute bottom-0 end-0 me-7'
+            height='260'
+            alt='view sales'
+          />
+        </div>
+      </div>
+
+      <!-- Small cards will be injected here -->
+      <div id='small-cards-anchor'></div>
+
       <GetDataDiHubnet />
     </div>
   </div>
+
+  <script>
+    // @ts-nocheck
+    const backend = import.meta.env.PUBLIC_BACKEND_PATH;
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+
+    function percentColor(p) {
+      return p <= 30 ? "#eb3232" : p <= 60 ? "#b5b209" : "#09b548";
+    }
+
+    function renderLastSendingCard(data) {
+      const el = document.getElementById("card-last-sending");
+      if (!el) return;
+      const createdAt = data?.created_at ? new Date(data.created_at).toLocaleString() : "";
+      el.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body text-nowrap">
+            <h4 class="card-title mb-1 d-flex gap-2 flex-wrap">Last Send 🎉</h4>
+            <p class="pb-0">${createdAt} 🕞</p>
+            <h3 class="text-primary mb-1">HAWB ${data?.AWB_NO ?? ""} 🚚</h3>
+            <p class="mb-2 pb-1">
+              ${data?.IS_INTERNATIONAL == "1" ? "Internasional" : "Domestik "}
+              ${data?.IS_EKSPOR == "1" ? "Ekspor " : "Impor "}
+              ${data?.CNE_NAME ?? ""} 🚀
+            </p>
+            <a data-card='${JSON.stringify(data).replace(/'/g, "&#39;")}' href="javascript:;" class="btn btn-sm btn-primary" id="viewDetails-card">View Details</a>
+          </div>
+          <img src="/img/illustrations/rocket.png" class="position-absolute bottom-0 end-0 me-7" height="260" alt="view sales" />
+        </div>`;
+
+      // Optional SweetAlert details if available
+      const btn = document.getElementById("viewDetails-card");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          const raw = btn.getAttribute("data-card");
+          let payload = {};
+          try {
+            payload = JSON.parse(raw.replace(/&#39;/g, "'"));
+          } catch {}
+          if (window.Swal) {
+            const rows = Object.entries(payload)
+              .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+              .join("");
+            window.Swal.fire({
+              title: payload.AWB_NO || "Details",
+              html: `<div class="table-responsive"><table class="table table-bordered border-secondary table_component">${rows}</table></div>`,
+              confirmButtonText: "Ok"
+            });
+          } else {
+            console.log("Details:", payload);
+          }
+        });
+      }
+    }
+
+    function renderSmallCards(items) {
+      const row = document.getElementById("dashboardRow");
+      const anchor = document.getElementById("small-cards-anchor");
+      if (!row || !anchor) return;
+      // remove previously rendered small cards
+      row.querySelectorAll(".js-small-card").forEach(n => n.remove());
+
+      const total = items.reduce((acc, it) => acc + Number(it.value || 0), 0) || 0;
+      items.forEach(it => {
+        const value = Number(it.value || 0);
+        const pct = total ? (value / total) * 100 : 0;
+        const col = document.createElement("div");
+        col.className = "col-xl-2 col-md-3 col-sm-6 js-small-card";
+        col.innerHTML = `
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div class="avatar">
+                  <iconify-icon icon="${it.icon}" width="48" height="48"></iconify-icon>
+                </div>
+                <div class="d-flex align-items-center">
+                  <p class="mb-0 text-default me-1 h5">${pct.toFixed(2)}</p>
+                  <iconify-icon icon="fa7-solid:percent" width="24" height="24" style="color: ${percentColor(pct)}"></iconify-icon>
+                </div>
+              </div>
+              <div class="card-info mt-4 pt-1">
+                <h5 class="mb-2">${value}</h5>
+                <p>${String(it.title || "")
+                  .toUpperCase()
+                  .replaceAll("_", " ")}</p>
+              </div>
+            </div>
+          </div>`;
+        row.insertBefore(col, anchor.nextSibling);
+      });
+    }
+
+    function loadDashboard() {
+      const token = getCookie("access_token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const icons = [
+        "streamline-plump-color:ai-generate-portrait-image-spark-flat",
+        "streamline-plump-color:airplane-disabled",
+        "streamline-plump-color:add-bell-notification-flat",
+        "streamline-plump-color:bag-suitcase-4",
+        "streamline-plump-color:bus",
+        "streamline-plump-color:calendar-check-flat",
+        "streamline-plump-color:cog-automation",
+        "streamline-plump-color:convert-pdf-1-flat"
+      ];
+
+      const req1 = $.ajax({ url: `${backend}/hubnet/last-sending`, method: "GET", headers });
+      const req2 = $.ajax({ url: `${backend}/hubnet/dashboard-card`, method: "GET", headers });
+
+      $.when(req1, req2)
+        .done((res1, res2) => {
+          // jQuery returns [data, statusText, jqXHR] per request in when()
+          const lastSending = res1 && res1[0] ? res1[0] : {};
+          const cardData = res2 && res2[0] ? res2[0] : {};
+          renderLastSendingCard(lastSending);
+          const items = Object.entries(cardData).map(([key, value], idx) => ({
+            title: key,
+            value: Number(value),
+            icon: icons[idx]
+          }));
+          renderSmallCards(items);
+        })
+        .fail((xhr, status, err) => {
+          console.error("Dashboard AJAX error:", status, err);
+        });
+    }
+
+    if (window.jQuery) {
+      loadDashboard();
+    } else {
+      window.addEventListener("load", loadDashboard);
+    }
+  </script>
 </Layout>

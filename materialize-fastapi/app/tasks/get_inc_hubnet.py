@@ -14,7 +14,6 @@ def run_incoming():
         sql = text(query)
         inc = db2.execute(sql, param).mappings().all()
         for item in inc:
-            print(item)
             if __cek_hostawb(item["MasterAWB"]):
                 print(f"AWB_NO {item['MasterAWB']} sudah ada, skip insert")
             else:

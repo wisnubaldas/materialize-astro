@@ -6,7 +6,6 @@ from fastapi.responses import StreamingResponse
 from app.services.crypto_service import decrypt_key
 
 REDIS_URL = "redis://localhost:6379/0"
-CHANNEL_NAME = "fibonacci_channel"
 router = APIRouter(prefix="/sse", tags=["Routing untuk SSE server-sent event"])
 
 

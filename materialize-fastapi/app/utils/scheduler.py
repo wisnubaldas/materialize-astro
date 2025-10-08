@@ -19,7 +19,7 @@ def init_scheduler():
     scheduler.add_job(
         run_breakdown,
         "interval",
-        seconds=10,
+        minutes=60,
         id="breakdown_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=True,  # gabungkan job yang terlewat jika tertunda
@@ -28,7 +28,7 @@ def init_scheduler():
     scheduler.add_job(
         run_incoming,
         "interval",
-        seconds=11,
+        minutes=60,
         id="run_incoming_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=True,  # gabungkan job yang terlewat jika tertunda
