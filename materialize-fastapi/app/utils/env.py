@@ -43,6 +43,7 @@ class ENV(BaseSettings):
     HUBNET_URL_DEV: str
     HUBNET_USER: str
     HUBNET_PASSWORD: str
+    HUBNET_BATCH_LIMIT: int = 10
 
     REDIS_URL: str = "redis://localhost:6379/5"
     SSE_KEY: str = None

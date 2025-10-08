@@ -1,0 +1,73 @@
+/* Tema Monokai untuk log viewer */
+.log-viewer {
+  padding: 1rem;
+  border-radius: 8px;
+  background: #272822;
+  block-size: 400px;
+  box-shadow: inset 0 0 6px #00000080;
+  color: #f8f8f2;
+  font-family: "Fira Code", "Courier New", monospace;
+  /* stylelint-disable-next-line @stylistic/number-leading-zero */
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* Warna kategori log */
+.log-info {
+  color: #66d9ef;
+}
+
+.log-success {
+  color: #a6e22e;
+}
+
+.log-warning {
+  color: #e6db74;
+}
+
+.log-error {
+  color: #f92672;
+}
+
+.log-debug {
+  color: #fd971f;
+}
+
+/* Timestamp */
+.log-time {
+  color: #75715e;
+}
+
+/* Auto-scroll effect */
+.log-viewer::-webkit-scrollbar {
+  inline-size: 6px;
+}
+
+.log-viewer::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #555;
+}
+
+/* Blinking cursor to indicate active terminal */
+.log-cursor {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 1em;
+  margin-left: 2px;
+  background: #f8f8f2;
+  animation: log-cursor-blink 1s steps(1, end) infinite;
+}
+
+.log-cursor.online {
+  background: #a6e22e; /* success */
+}
+
+.log-cursor.offline {
+  background: #f92672; /* error */
+}
+
+@keyframes log-cursor-blink {
+  50% { opacity: 0; }
+}

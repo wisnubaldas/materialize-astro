@@ -56,6 +56,10 @@ export const menuData = [
         url: prefix.hubnet('dashboard')
       },
       {
+        name: 'Monitor Sending Data',
+        url: prefix.hubnet('data-tracking')
+      },
+      {
         name: 'Upload Excel Export',
         url: prefix.hubnet('upload-excel-export')
       },
@@ -63,10 +67,7 @@ export const menuData = [
         name: 'Kirim Ulang By Date',
         url: prefix.hubnet('kirim-ulang-by-date')
       },
-      {
-        name: 'Data Tracking',
-        url: prefix.hubnet('data-tracking')
-      }
+
     ]
   }
 ];

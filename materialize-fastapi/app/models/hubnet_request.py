@@ -7,6 +7,7 @@ class HubnetRequest(BaseDB1):
     __tablename__ = "hubnet_request"
     id = Column(Integer, primary_key=True, index=True)  # WAJIB ada PK
     AWB_NO = Column(String)
+    ref_id = Column(String)
     FLT_NUMBER = Column(String)
     FLT_DATE = Column(String)
     ORI = Column(String)
@@ -37,5 +38,6 @@ class HubnetRequest(BaseDB1):
     SUCCESS_MESSAGE = Column(String, default="NULL")
     IS_BREAK = Column(String, default="0")
     BREAK_MESSAGE = Column(String, default="NULL")
+    ref_id = Column(String, default="NULL")
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)

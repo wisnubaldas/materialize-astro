@@ -23,6 +23,18 @@ async def redis_to_sse(channel: str):
         await pubsub.close()
 
 
+@router.get("/sending-ke-hubnet")
+async def stream_sending_ke_hubnet(key: str):
+    try:
+        decrypt_key(key)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
+
+    return StreamingResponse(
+        redis_to_sse("sending_ke_hubnet_channel"), media_type="text/event-stream"
+    )
+
+
 @router.get("/fibonacci")
 async def stream_fibonacci(key: str):
     """

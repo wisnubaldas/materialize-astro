@@ -17,6 +17,11 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit"
   },
+  "editor.detectIndentation": false,
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+    },
   "python.linting.mypyEnabled": true,
   "python.linting.mypyPath": "mypy",
   
@@ -38,5 +43,12 @@
     "PYTHONPATH": "${workspaceFolder}/materialize-astro"
   },
   "CodeGPT.apiKey": "OpenAI",
-  "chatgpt.openOnStartup": false
+  "chatgpt.openOnStartup": false,
+
+  // Ensure consistent 2-space indent for CSS
+  "editor.detectIndentation": false,
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  }
 }

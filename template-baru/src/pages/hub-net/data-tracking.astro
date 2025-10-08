@@ -1,32 +1,22 @@
 ---
 import Layout from "@layouts/Layout.astro";
+import LogViewer from "@components/Back/LogViewer.astro";
+import { encryptKey } from "@assets/js/crypto.js";
+const user = "wisnu"; // misalnya diambil dari session login
+const encryptedKey = encodeURIComponent(await encryptKey({ user }));
+const streamUrl = "http://localhost:8000/sse/sending-ke-hubnet?key=" + encryptedKey;
 ---
 
 <Layout title='Status Response'>
   <div class='row'>
-    <!-- Float label (Outline) -->
-    <div class='col-md'>
-      <div class='card'>
-        <h5 class='card-header'>Status Response Sending Data ke HUBNET</h5>
-        <div class='card-body'>
-          <div id='stats'>
-            <div>Total Records: <span id='fib'>0</span></div>
-            <div>Total Weight: <span id='total_weight'>0</span></div>
-            <div>Total Netto: <span id='total_netto'>0</span></div>
-            <small id='last_update'>-</small>
-          </div>
-
-          <div id='list'></div>
-        </div>
-      </div>
-    </div>
+    <LogViewer title='Data Tracking Log' height='400px' streamUrl={streamUrl} />
   </div>
 </Layout>
 <script>
   // @ts-nocheck
-  import { encryptKey } from "@assets/js/crypto.js";
-  const user = "wisnu"; // misalnya diambil dari session login
-  const encryptedKey = await encryptKey({ user });
+  //   import { encryptKey } from "@assets/js/crypto.js";
+  //   const user = "wisnu"; // misalnya diambil dari session login
+  //   const encryptedKey = await encryptKey({ user });
   // const evtSource = new EventSource(`http://localhost:8000/sse/fibonacci?key=${encodeURIComponent(encryptedKey)}`);
 
   // evtSource.onmessage = event => {
@@ -34,9 +24,9 @@ import Layout from "@layouts/Layout.astro";
   //   document.getElementById("fib").textContent = event.data;
   // };
 
-  const channels = ["fibonacci", "arithmetic", "geometric", "power", "factorial"];
-  for (const path of channels) {
-    const evt = new EventSource(`http://localhost:8000/sse/${path}?key=${encodeURIComponent(encryptedKey)}`);
-    evt.onmessage = e => console.log(`📡 ${path}:`, e.data);
-  }
+  //   const channels = ["fibonacci", "arithmetic", "geometric", "power", "factorial"];
+  //   for (const path of channels) {
+  //     const evt = new EventSource(`http://localhost:8000/sse/${path}?key=${encodeURIComponent(encryptedKey)}`);
+  //     evt.onmessage = e => console.log(`📡 ${path}:`, e.data);
+  //   }
 </script>

@@ -1,0 +1,113 @@
+---
+import "@assets/css/monokai-log.css";
+
+export interface Props {
+  title?: string;
+  height?: string;
+  streamUrl?: string; // opsional: URL SSE untuk real-time log
+  chanel?: string; // opsional: channel SSE jika streamUrl tidak disediakan
+}
+
+const { title = "Real-Time Log", height = "600px", streamUrl, chanel = null } = Astro.props;
+---
+
+<div class='rounded-md border border-[#3e3d32] bg-[#272822]'>
+  <div class='flex items-center justify-between px-4 py-2 border-b border-[#3e3d32] bg-[#1e1f1c]'>
+    <h3 class='text-[#f8f8f2] text-sm font-semibold'>{title}</h3>
+  </div>
+  <div id='log-viewer' class='log-viewer' style={`height:${height}`}>
+    <div id='log-cursor' class='log-cursor' aria-hidden='true'></div>
+  </div>
+</div>
+
+<script define:vars={{ streamUrl, chanel }}>
+  // @ts-nocheck
+  const logContainer = document.getElementById("log-viewer");
+  const cursorEl = document.getElementById("log-cursor");
+  const MAX_LOGS = 15; // batas jumlah log yang disimpan di localStorage
+  const storageKey = `logviewer:${chanel || streamUrl || "default"}`;
+  let logs = [];
+
+  function saveLogs() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(logs));
+    } catch {}
+  }
+
+  function loadLogs() {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const arr = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(arr)) logs = arr.slice(-MAX_LOGS);
+    } catch {}
+  }
+
+  function renderAll() {
+    const items = Array.from(logContainer.children);
+    for (const el of items) {
+      if (!cursorEl || el !== cursorEl) logContainer.removeChild(el);
+    }
+    for (const entry of logs) {
+      const div = document.createElement("div");
+      const time = entry.time || new Date().toLocaleTimeString("id-ID", { hour12: false });
+      const level = entry.level || "info";
+      const message = entry.message ?? "";
+      div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${level}">${message}</span>`;
+      if (cursorEl && cursorEl.parentNode === logContainer) {
+        logContainer.insertBefore(div, cursorEl);
+      } else {
+        logContainer.appendChild(div);
+      }
+    }
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+
+  function appendLogBuffered(message, level = "info") {
+    const time = new Date().toLocaleTimeString("id-ID", { hour12: false });
+    logs.push({ time, message, level });
+    if (logs.length > MAX_LOGS) logs.shift();
+    saveLogs();
+    renderAll();
+  }
+
+  // Rehydrate from localStorage
+  loadLogs();
+  renderAll();
+
+  function appendLog(message, level = "info") {
+    const time = new Date().toLocaleTimeString("id-ID", { hour12: false });
+    const div = document.createElement("div");
+    div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${level}">${message}</span>`;
+    if (cursorEl && cursorEl.parentNode === logContainer) {
+      logContainer.insertBefore(div, cursorEl);
+    } else {
+      logContainer.appendChild(div);
+    }
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+
+  if (!streamUrl || typeof streamUrl !== "string") {
+    console.error("❌ Invalid streamUrl provided to LogViewer:", streamUrl);
+    appendLogBuffered("❌ Invalid stream URL. Cannot start stream.", "error");
+  } else {
+    const evtSource = new EventSource(streamUrl);
+    console.log("✅ Connected to log stream", streamUrl);
+    if (cursorEl) cursorEl.classList.add("online");
+    evtSource.onmessage = e => {
+      try {
+        const data = JSON.parse(e.data);
+        console.log("📡 Log message:", data);
+        appendLogBuffered(data.message, data.level || "info");
+      } catch (err) {
+        appendLogBuffered(e.data, "info");
+      }
+    };
+    evtSource.onerror = e => {
+      if (cursorEl) {
+        cursorEl.classList.remove("online");
+        cursorEl.classList.add("offline");
+      }
+      appendLogBuffered("❌ Connection lost...", "error");
+    };
+  }
+</script>
