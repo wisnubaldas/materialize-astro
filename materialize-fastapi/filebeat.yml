@@ -1,0 +1,29 @@
+# ================= Filebeat Inputs =================
+filebeat.inputs:
+  - type: filestream
+    id: fastapi-log
+    enabled: true
+    paths:
+      - "C:/Users/wisnu/Documents/Belajar/materialize-project/materialize-fastapi/logs/app.log"
+    fields:
+      service: fastapi
+      environment: dev
+    fields_under_root: true
+    # Tambahkan ini agar Filebeat tahu format timestamp-nya
+    multiline:
+      pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}'
+      negate: true
+      match: after
+# ================= Filebeat Outputs =================
+output.logstash:
+  hosts: ["11.10.10.21:5000"]
+  ssl.enabled: false
+
+# ================= Optional Logging =================
+logging:
+  level: info
+  to_files: true
+  files:
+    path: C:/Elastic/Filebeat/logs
+    name: filebeat
+    keepfiles: 7

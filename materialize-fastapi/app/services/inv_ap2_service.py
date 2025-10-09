@@ -95,12 +95,14 @@ class INVAp2Service:
     @staticmethod
     @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
+        print("Menampilkan semua data invoice")
         return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
     @log_execution(logger_name="angkasapura")
     def get_data_inv():  # noqa: PLR0912
+        print("sync data invoice untuk di send dari mysql2 ke mysql1")
         publish_sync(
             CHANNEL_NAME,
             dumps(

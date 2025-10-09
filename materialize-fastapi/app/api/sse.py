@@ -35,46 +35,58 @@ async def stream_sending_ke_hubnet(key: str):
     )
 
 
-@router.get("/fibonacci")
-async def stream_fibonacci(key: str):
-    """
-    Endpoint SSE dengan verifikasi key terenkripsi dari client Astro
-    """
-    print(f"🔑 Key diterima (Base64): {key}")
+@router.get("/log-send-invoice-ap2")
+async def log_send_invoice_ap2(key: str):
     try:
-        payload = decrypt_key(key)
-        # print(f"🔑 Payload dari key: {payload}")
-        user = payload.get("user")
-        print(f"📡 SSE Connected by: {user}")
+        decrypt_key(key)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
 
-    return StreamingResponse(redis_to_sse("fibonacci_channel"), media_type="text/event-stream")
+    return StreamingResponse(
+        redis_to_sse("send_invoice_ap2_channel"), media_type="text/event-stream"
+    )
 
 
-@router.get("/arithmetic")
-async def stream_arithmetic(key: str):
-    payload = decrypt_key(key)
-    print(f"📡 SSE Arithmetic Connected by {payload['user']}")
-    return StreamingResponse(redis_to_sse("arithmetic_channel"), media_type="text/event-stream")
+# @router.get("/fibonacci")
+# async def stream_fibonacci(key: str):
+#     """
+#     Endpoint SSE dengan verifikasi key terenkripsi dari client Astro
+#     """
+#     print(f"🔑 Key diterima (Base64): {key}")
+#     try:
+#         payload = decrypt_key(key)
+#         # print(f"🔑 Payload dari key: {payload}")
+#         user = payload.get("user")
+#         print(f"📡 SSE Connected by: {user}")
+#     except ValueError as e:
+#         raise HTTPException(status_code=401, detail=str(e))
+
+#     return StreamingResponse(redis_to_sse("fibonacci_channel"), media_type="text/event-stream")
 
 
-@router.get("/geometric")
-async def stream_geometric(key: str):
-    payload = decrypt_key(key)
-    print(f"📡 SSE Geometric Connected by {payload['user']}")
-    return StreamingResponse(redis_to_sse("geometric_channel"), media_type="text/event-stream")
+# @router.get("/arithmetic")
+# async def stream_arithmetic(key: str):
+#     payload = decrypt_key(key)
+#     print(f"📡 SSE Arithmetic Connected by {payload['user']}")
+#     return StreamingResponse(redis_to_sse("arithmetic_channel"), media_type="text/event-stream")
 
 
-@router.get("/power")
-async def stream_power(key: str):
-    payload = decrypt_key(key)
-    print(f"📡 SSE Power Connected by {payload['user']}")
-    return StreamingResponse(redis_to_sse("power_channel"), media_type="text/event-stream")
+# @router.get("/geometric")
+# async def stream_geometric(key: str):
+#     payload = decrypt_key(key)
+#     print(f"📡 SSE Geometric Connected by {payload['user']}")
+#     return StreamingResponse(redis_to_sse("geometric_channel"), media_type="text/event-stream")
 
 
-@router.get("/factorial")
-async def stream_factorial(key: str):
-    payload = decrypt_key(key)
-    print(f"📡 SSE Factorial Connected by {payload['user']}")
-    return StreamingResponse(redis_to_sse("factorial_channel"), media_type="text/event-stream")
+# @router.get("/power")
+# async def stream_power(key: str):
+#     payload = decrypt_key(key)
+#     print(f"📡 SSE Power Connected by {payload['user']}")
+#     return StreamingResponse(redis_to_sse("power_channel"), media_type="text/event-stream")
+
+
+# @router.get("/factorial")
+# async def stream_factorial(key: str):
+#     payload = decrypt_key(key)
+#     print(f"📡 SSE Factorial Connected by {payload['user']}")
+#     return StreamingResponse(redis_to_sse("factorial_channel"), media_type="text/event-stream")

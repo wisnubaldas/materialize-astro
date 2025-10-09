@@ -3,6 +3,7 @@
 Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materialize-astro**.
 
 ## Daftar Isi
+
 1. [Deploy di Portainer](#deploy-di-portainer)
 2. [Struktur Proyek](#struktur-proyek)
 3. [Dependensi Frontend (DataTables)](#dependensi-frontend-datatables)
@@ -16,6 +17,7 @@ Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materializ
 ---
 
 ## Deploy di Portainer
+
 1. Pastikan file berikut sudah dipush ke repository GitLab:
    - `backend/Dockerfile`
    - `frontend/Dockerfile`
@@ -27,35 +29,8 @@ Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materializ
 
 ---
 
-## Struktur Proyek
-Root path lokal: `C:\Users\wisnu\Documents\Belajar\materialize-project`
-
-```
-C:/Users/wisnu/Documents/Belajar/materialize-project/
-├─ .git/
-├─ .vscode/
-├─ html-version/
-├─ materialize-astro/
-├─ materialize-fastapi/
-│  ├─ __pycache__/
-│  ├─ .venv/
-│  ├─ app/
-│  ├─ migrations/
-│  ├─ .gitignore
-│  ├─ .pylintrc
-│  ├─ alembic.ini
-│  ├─ docker-compose.yml
-│  ├─ Dockerfile
-│  ├─ poetry.lock
-│  ├─ pyproject.toml
-│  ├─ README.md
-│  └─ test.py
-└─ .tree
-```
-
----
-
 ## Dependensi Frontend (DataTables)
+
 Install paket DataTables berikut sesuai kebutuhan komponen:
 
 ```bash
@@ -85,9 +60,11 @@ npm install datatables.net-staterestore-bs5
 ## Catatan Pembelajaran
 
 ### Celery & Logging
+
 Referensi diskusi: <https://chatgpt.com/share/68c3a2e1-8248-8013-b35d-6005f9a0af1d>
 
 ### ELK Stack
+
 Akses service yang berjalan:
 
 - **Elasticsearch:** `http://SERVER_IP:9200`
@@ -97,6 +74,7 @@ Akses service yang berjalan:
 ---
 
 ## Panduan Pengujian
+
 Gunakan `pytest` dengan opsi berikut sesuai kebutuhan:
 
 ```bash
@@ -119,11 +97,13 @@ pytest -v tests/test_invoice.py
 ---
 
 ## Sumber Ikon
+
 Gunakan ikon dari: <https://iconify.design/>
 
 ---
 
 ## Mengelola Remote Git
+
 Contoh konfigurasi satu proyek dengan dua remote:
 
 ```bash
@@ -136,6 +116,6 @@ git remote -v
 ```
 
 Remote yang digunakan:
+
 - `origin` → `git@gitlab.com:wisnubaldas/materialize-astro.git`
 - `office` → `git@gitlab.att.id:mau/mau-app.git`
-

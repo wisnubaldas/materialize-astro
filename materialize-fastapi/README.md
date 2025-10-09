@@ -219,3 +219,42 @@ server {
 ### Flower (monitoring)
 
 `celery -A app.celery_app.celery_app flower --port=5555`
+
+### Kirim Log ke ELK menggunakan Filebeat
+
+```yaml
+# ================= Filebeat Inputs =================
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - "materialize-fastapi/logs/app.log"
+    json.keys_under_root: true
+    json.add_error_key: true
+    fields:
+      service: fastapi
+      environment: production
+    fields_under_root: true
+
+# ================= Filebeat Outputs =================
+output.logstash:
+  hosts: ["11.10.10.21:5000"] # Logstash listener
+  ssl.enabled: false
+
+# ================= Optional Logging =================
+logging:
+  level: info
+  to_files: true
+  files:
+    path: filebeat-logs
+    name: filebeat
+    keepfiles: 7
+```
+
+```shell
+sudo filebeat test config
+sudo filebeat setup
+sudo systemctl enable filebeat
+sudo systemctl start filebeat
+
+```

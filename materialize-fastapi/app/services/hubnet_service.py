@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from io import BytesIO
 
@@ -18,6 +19,9 @@ from app.schemas.hubnet_request_schema import HubnetRequestGet
 from app.services.datatables_service import DataTablesService
 from app.utils.env import ENV
 from app.utils.helper import HELPER
+from app.utils.logging_utils import log_execution
+
+logger = logging.getLogger("hubnet")
 
 
 class HbnetRequestService:
@@ -272,6 +276,7 @@ class HbnetRequestService:
         return data
 
     @staticmethod
+    @log_execution(logger_name="hubnet")
     def get_data_terkirim(flt_date: str, page: int = 1, per_page: int = 10):
         try:
             payload = {"FLT_DATE": flt_date}
@@ -281,6 +286,7 @@ class HbnetRequestService:
                 auth=HTTPBasicAuth(ENV.HUBNET_USER, ENV.HUBNET_PASSWORD),
             )
             response.raise_for_status()
+            print(f"Menampilkan data terkirim dari hubnet, status: {response.status_code}")
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Terjadi kesalahan saat membuat permintaan: {e}")
