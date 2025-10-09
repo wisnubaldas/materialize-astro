@@ -1,10 +1,11 @@
-import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
+from json import dumps
 
 import httpx
+import requests
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -25,8 +26,11 @@ from app.schemas.void_invoice_schema import (
 )
 from app.services.datatables_service import DataTablesService
 from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
+from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
+
+CHANNEL_NAME = "send_invoice_ap2_channel"
 
 logger = logging.getLogger(__name__)
 # instance service untuk model InvAp2
@@ -94,49 +98,85 @@ class INVAp2Service:
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
     def get_data_inv():  # noqa: PLR0912
+        publish_sync(
+            CHANNEL_NAME,
+            dumps(
+                {
+                    "level": "info",
+                    "message": "sync data invoice untuk di send dari mysql2 ke mysql1",
+                }
+            ),
+        )
         db1 = SessionDB1W()
         db2 = SessionDB2R()
         try:
             params = get_dynamic_params(30)
 
-            query = HELPER.load_sql_query("app/services/query/generate_inv_ekspor.sql")
-            sql = text(query)
-            invoices = db2.execute(sql, params).mappings().all()
-            for row in invoices:
-                mapped_row: dict = {}
-                for k, v in row.items():
-                    field_name = INVTOAP2INV.get(k, k)
-                    if field_name in InvoiceCreate.model_fields.keys():  # noqa: SIM118
-                        if isinstance(v, (Decimal, float, int)):
-                            mapped_row[field_name] = HELPER.to_string_rounded(v, digits=0)
-                        else:
-                            mapped_row[field_name] = v
+            # Kumpulan query sumber data invoice
+            query_files = [
+                "app/services/query/generate_inv_ekspor.sql",
+                "app/services/query/send_invoice_imp.sql",
+                "app/services/query/send_inv_exp_pcp.sql",
+            ]
 
-                # Hardcode values (overwrite jika ada di query)
-                mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
+            for qpath in query_files:
+                query = HELPER.load_sql_query(qpath)
+                sql = text(query)
+                rows = db2.execute(sql, params).mappings().all()
+                print(f"Loaded {len(rows)} rows from {qpath}")
+                for row in rows:
+                    mapped_row: dict = {}
+                    for k, v in row.items():
+                        field_name = INVTOAP2INV.get(k, k)
+                        if field_name in InvoiceCreate.model_fields.keys():  # noqa: SIM118
+                            if isinstance(v, (Decimal, float, int)):
+                                mapped_row[field_name] = HELPER.to_string_rounded(v, digits=0)
+                            else:
+                                mapped_row[field_name] = v
 
-                # Validasi dan normalisasi via schema
-                invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore
-                values = invoice_schema.model_dump()
+                    # Hardcode values (overwrite jika ada di query)
+                    mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
 
-                # Upsert berdasarkan NO_INVOICE (jika None maka dianggap selalu insert)
-                no_invoice = values.get("NO_INVOICE")
-                if no_invoice:
-                    existing = (
-                        db1.query(InvAp2)
-                        .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
-                        .first()
+                    # Validasi dan normalisasi via schema
+                    publish_sync(
+                        CHANNEL_NAME,
+                        dumps(
+                            {
+                                "level": "info",
+                                "message": "Validasi dan normalisasi via schema",
+                            }
+                        ),
                     )
-                else:
-                    existing = None
+                    invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore
+                    values = invoice_schema.model_dump()
 
-                if existing is not None:
-                    # Update semua kolom dari schema ke model
-                    for key, val in values.items():
-                        if hasattr(existing, key):
-                            setattr(existing, key, val)
-                else:
-                    db1.add(InvAp2(**values))
+                    # Upsert berdasarkan NO_INVOICE (jika None maka dianggap selalu insert)
+                    no_invoice = values.get("NO_INVOICE")
+                    publish_sync(
+                        CHANNEL_NAME,
+                        dumps(
+                            {
+                                "level": "info",
+                                "message": f"Upsert berdasarkan NO_INVOICE = {no_invoice} (jika None maka dianggap selalu insert)",
+                            }
+                        ),
+                    )
+                    if no_invoice:
+                        existing = (
+                            db1.query(InvAp2)
+                            .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
+                            .first()
+                        )
+                    else:
+                        existing = None
+
+                    if existing is not None:
+                        # Update semua kolom dari schema ke model
+                        for key, val in values.items():
+                            if hasattr(existing, key):
+                                setattr(existing, key, val)
+                    else:
+                        db1.add(InvAp2(**values))
 
             db1.commit()
         except Exception as e:
@@ -156,59 +196,108 @@ class INVAp2Service:
     def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
         return fail_inv_ap2.get_datatable(db=db, params=params)
 
-    # send invoice ke AP2
+    # send invoice ke AP2 (sinkron)
     @staticmethod
-    async def send_invoice(date_prefix: str):
+    def send_invoice(date_prefix: str):
         db1 = SessionDB1W()
         results = []
         try:
-            sql = text("SELECT * FROM inv_ap2 WHERE TANGGAL LIKE :tgl")
+            publish_sync(
+                CHANNEL_NAME,
+                dumps({"level": "info", "message": f"Mulai kirim invoice prefix: {date_prefix}"}),
+            )
+
+            sql = text("SELECT * FROM inv_ap2 WHERE TANGGAL LIKE :tgl AND status = 0")
             rows = db1.execute(sql, {"tgl": f"{date_prefix}%"}).fetchall()
-            if rows is None:
-                raise Exception("Invoice not found")
-            async with httpx.AsyncClient() as client:
+            if not rows:
+                msg = "Invoice not found"
+                publish_sync(CHANNEL_NAME, dumps({"level": "info", "message": msg}))
+                db1.commit()
+                return []
+
+            publish_sync(
+                CHANNEL_NAME,
+                dumps({"level": "info", "message": f"Ditemukan {len(rows)} invoice untuk dikirim"}),
+            )
+
+            with requests.Session() as client:
                 for row in rows:
-                    # row._mapping untuk akses dict-like
                     row_dict = dict(row._mapping)
                     schema = AP2SendInv(USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD, **row_dict)
-                    # inject USR & PSW hardcode
                     payload = schema.model_dump()
-                    logger.info(f"[AP2] Payload dikirim: {payload}")
+
+                    inv_no = payload.get("NO_INVOICE")
+                    publish_sync(
+                        CHANNEL_NAME,
+                        dumps({"level": "info", "message": f"Kirim invoice: {inv_no}"}),
+                    )
+
                     try:
-                        resp = await client.post(
-                            f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2", headers=HEADERS, data=payload
+                        resp = client.post(
+                            f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2",
+                            headers=HEADERS,
+                            data=payload,
+                            timeout=60,
                         )
-                        resp.raise_for_status()
-                        results.append(
-                            {
-                                "invoice": payload.get("NO_INVOICE"),
-                                "status": "success",
-                                "response": resp.text,
-                            }
+
+                        response_data = {
+                            "affected_rows": 1,
+                            "message": resp.text[:255],
+                            "status": str(resp.status_code),
+                        }
+
+                        db1.add(
+                            ResponsInvAp2(
+                                inv=str(inv_no) if inv_no is not None else None,
+                                response=json.dumps(response_data),
+                                status=response_data["status"],
+                            )
                         )
-                        logger.info(f"[AP2] Results: {results}")
+
+                        results.append({"invoice": inv_no, **response_data})
+                        publish_sync(
+                            CHANNEL_NAME,
+                            dumps(
+                                {
+                                    "level": "info",
+                                    "message": f"Berhasil invoice: {inv_no} (HTTP {resp.status_code})",
+                                }
+                            ),
+                        )
                     except Exception as e:
-                        results.append(
-                            {
-                                "invoice": payload.get("NO_INVOICE"),
-                                "status": "error",
-                                "error": str(e),
-                            }
+                        response_data = {
+                            "affected_rows": 0,
+                            "message": f"Info: {e!s}",
+                            "status": "500",
+                        }
+                        db1.add(
+                            ResponsInvAp2(
+                                inv=str(inv_no) if inv_no is not None else None,
+                                response=json.dumps(response_data),
+                                status=response_data["status"],
+                            )
                         )
-                        logger.error(f"[AP2] Error: {e}", exc_info=True)
+                        results.append({"invoice": inv_no, **response_data})
+                        publish_sync(
+                            CHANNEL_NAME,
+                            dumps({"level": "info", "message": f"Info: {e!s}"}),
+                        )
+
             db1.commit()
+            publish_sync(
+                CHANNEL_NAME,
+                dumps({"level": "info", "message": f"Selesai kirim {len(results)} invoice"}),
+            )
         except Exception as e:
             db1.rollback()
-            raise e
+            publish_sync(
+                CHANNEL_NAME,
+                dumps({"level": "info", "message": f"Info: {e!s}"}),
+            )
+            raise
         finally:
             db1.close()
-        logger.info(f"[AP2] Final Results: {results}")
         return results
-
-    @staticmethod
-    def send_invoice_sync(date_prefix: str):
-        """Wrapper sync supaya bisa dipanggil Celery task biasa"""
-        return asyncio.run(INVAp2Service.send_invoice(date_prefix))
 
     @staticmethod
     async def void_invoice_ap2(
