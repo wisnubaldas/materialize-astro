@@ -29,6 +29,7 @@ from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
+from app.utils.logging_utils import log_execution
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
 
@@ -92,11 +93,13 @@ def get_dynamic_params(interval_minutes: int = 30):
 
 class INVAp2Service:
     @staticmethod
+    @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
         return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
+    @log_execution(logger_name="angkasapura")
     def get_data_inv():  # noqa: PLR0912
         publish_sync(
             CHANNEL_NAME,
@@ -187,17 +190,20 @@ class INVAp2Service:
             db2.close()
 
     @staticmethod
+    @log_execution(logger_name="angkasapura")
     def get_response_inv(
         db: Session, params: DataTablesParams
     ) -> DataTablesResponse[ResponsInvAp2Get]:
         return inv_ap2_response_inv.get_datatable(db=db, params=params)
 
     @staticmethod
+    @log_execution(logger_name="angkasapura")
     def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
         return fail_inv_ap2.get_datatable(db=db, params=params)
 
     # send invoice ke AP2 (sinkron)
     @staticmethod
+    @log_execution(logger_name="angkasapura")
     def send_invoice(date_prefix: str):
         db1 = SessionDB1W()
         results = []

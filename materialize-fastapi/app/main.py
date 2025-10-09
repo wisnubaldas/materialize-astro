@@ -5,11 +5,8 @@ from fastapi.security import HTTPBearer
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
+from app.utils.logging_config import setup_logging
 from app.utils.scheduler import start_scheduler, stop_scheduler
-
-# from app.utils.logging_config import setup_logging
-
-# setup_logging()
 
 # app
 app = FastAPI(title="FastAPI App with Poetry")
@@ -18,6 +15,8 @@ app = FastAPI(title="FastAPI App with Poetry")
 # register_exception_handlers(app)
 @app.on_event("startup")
 async def startup():
+    # init logging first so subsequent logs are captured
+    setup_logging()
     await start_scheduler()
 
 

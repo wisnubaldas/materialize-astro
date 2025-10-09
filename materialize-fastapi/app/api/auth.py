@@ -6,14 +6,17 @@ from app.db.mysql import get_db1_r
 from app.models.user import User
 from app.schemas.user_schema import LoginSchema, TokenSchema
 from app.utils.auth_util import create_token, set_jwt_cookie, verify_password, verify_token
+from app.utils.logging_utils import log_execution
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
 
 
 @router.post("/login", response_model=TokenSchema)
+@log_execution(logger_name="authentication")
 def login(payload: LoginSchema, response: Response, db: Session = Depends(get_db1_r)):
     # Cari user berdasarkan username
+
     user = db.query(User).filter(User.email == payload.email).first()
     # Kalau user tidak ada atau password tidak cocok
     if not user or not verify_password(payload.password, user.password):  # type: ignore
