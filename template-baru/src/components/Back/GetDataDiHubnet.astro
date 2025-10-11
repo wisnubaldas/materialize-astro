@@ -19,12 +19,13 @@ interface HubnetData {
 }
 
 let initialData: HubnetData = { data: [] };
+const { title } = Astro.props;
 ---
 
 <div class='col-md'>
   <div class='card mb-4'>
     <div class='card-header header-elements'>
-      <span class='me-2'>Data Hubnet Terkirim</span>
+      <span class='me-2 h5'>{title}</span>
       <div class='card-header-elements ms-auto'>
         <input
           id='searc-by-date'
@@ -35,7 +36,7 @@ let initialData: HubnetData = { data: [] };
       </div>
     </div>
 
-    <div class='card-body'>
+    <div class='card-body' id='section-block'>
       <div id='hubnetTable' class='table-responsive text-nowrap'>
         <table class='table table-sm table-hover'>
           <thead class='table-light'>
@@ -93,7 +94,6 @@ let initialData: HubnetData = { data: [] };
     </div>
   </div>
 </div>
-
 <script>
   // @ts-nocheck
   const backend = import.meta.env.PUBLIC_BACKEND_PATH;
@@ -204,6 +204,20 @@ let initialData: HubnetData = { data: [] };
       method: "GET",
       data: { flt_date: selectedDateDMY, page, per_page: perPage },
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+      beforeSend: function () {
+        $("#section-block").block({
+          message: '<div class="spinner-border text-primary" role="status"></div>',
+          timeout: 1000,
+          css: {
+            backgroundColor: "transparent",
+            border: "0"
+          },
+          overlayCSS: {
+            backgroundColor: "#fff",
+            opacity: 0.8
+          }
+        });
+      },
       success: function (json) {
         console.log("Data fetched:", json);
         currentPage = json?.pagination?.current_page || page;
@@ -218,10 +232,10 @@ let initialData: HubnetData = { data: [] };
 
   function setupClient() {
     // Init date picker
-    const dateInput = document.getElementById('searc-by-date');
+    const dateInput = document.getElementById("searc-by-date");
     if (dateInput) {
       dateInput.value = selectedDateInput; // set to today
-      dateInput.addEventListener('change', (e) => {
+      dateInput.addEventListener("change", e => {
         const v = e.target.value; // YYYY-MM-DD
         if (!v) return;
         selectedDateInput = v;

@@ -1,0 +1,373 @@
+{"timestamp": "2025-10-09T15:22:28.041", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:22:28.208", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 167}
+{"timestamp": "2025-10-09T15:22:59.409", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:22:59.456", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 46}
+{"timestamp": "2025-10-09T15:24:38.428", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T15:24:41.645", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.696", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.696", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.699", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.704", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.705", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.709", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.710", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.710", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.710", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.710", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.710", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:24:41.721", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:25:19.955", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:25:20.056", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T15:25:20.059", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 104}
+{"timestamp": "2025-10-09T15:25:31.049", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:25:31.076", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T15:25:31.079", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 29}
+{"timestamp": "2025-10-09T15:33:21.453", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T15:33:24.896", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.951", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.957", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.957", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.957", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.957", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.957", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.973", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.976", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.977", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.979", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.981", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:24.983", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:33:36.910", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:33:38.212", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1301}
+{"timestamp": "2025-10-09T15:34:13.174", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:34:14.628", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1455}
+{"timestamp": "2025-10-09T15:42:27.616", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T15:42:30.698", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.748", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.751", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.754", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.757", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.760", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.762", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.762", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.762", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.769", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.772", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.774", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:30.777", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:42:50.566", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:42:51.662", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet  200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T15:42:51.703", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1136}
+{"timestamp": "2025-10-09T15:43:25.933", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T15:43:29.165", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.214", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.221", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.224", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.224", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.229", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.232", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.234", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.238", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.239", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.239", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.244", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:43:29.247", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T15:44:26.434", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T15:44:27.921", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T15:44:27.961", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1527}
+{"timestamp": "2025-10-09T15:46:49.211", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T16:06:02.073", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.086", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.086", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.086", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.095", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.098", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.101", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.104", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.105", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.105", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.109", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.111", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:02.114", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T16:06:58.393", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler has been shut down", "taskName": null}
+{"timestamp": "2025-10-09T20:41:42.377", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.429", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.431", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.435", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.437", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.437", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Adding job tentatively -- it will be properly scheduled when the scheduler starts", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.441", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_sending_ke_hubnet\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.445", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_outgoing\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.445", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_breakdown\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.445", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"run_incoming\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.451", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"INVAp2Service.get_data_inv\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.455", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Added job \"__run_hubnet_invoice.<locals>.__send_invoice_today\" to job store \"default\"", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:41:42.457", "level": "INFO", "logger": "apscheduler.scheduler", "message": "Scheduler started", "taskName": "Task-2"}
+{"timestamp": "2025-10-09T20:42:36.550", "level": "WARNING", "logger": "passlib.handlers.bcrypt", "message": "(trapped) error reading bcrypt version", "taskName": null, "exception": "Traceback (most recent call last):\n  File \"C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Lib\\site-packages\\passlib\\handlers\\bcrypt.py\", line 620, in _load_backend_mixin\n    version = _bcrypt.__about__.__version__\n              ^^^^^^^^^^^^^^^^^\nAttributeError: module 'bcrypt' has no attribute '__about__'"}
+{"timestamp": "2025-10-09T20:42:38.911", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:42:40.435", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:42:40.441", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1529}
+{"timestamp": "2025-10-09T20:44:32.403", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:44:33.590", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:44:33.593", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1191}
+{"timestamp": "2025-10-09T20:44:54.548", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:44:55.811", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:44:55.850", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1303}
+{"timestamp": "2025-10-09T20:45:36.402", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:45:37.693", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:45:37.698", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1295}
+{"timestamp": "2025-10-09T20:45:42.270", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:45:43.632", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:45:43.672", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1401}
+{"timestamp": "2025-10-09T20:45:50.859", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:45:51.927", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:45:51.967", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1108}
+{"timestamp": "2025-10-09T20:45:56.615", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:45:57.862", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:45:57.907", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1291}
+{"timestamp": "2025-10-09T20:46:00.864", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:46:02.167", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:46:02.189", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1326}
+{"timestamp": "2025-10-09T20:47:45.511", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:47:46.616", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:47:46.619", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1110}
+{"timestamp": "2025-10-09T20:48:06.841", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:07.812", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:07.855", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1014}
+{"timestamp": "2025-10-09T20:48:23.137", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:24.520", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:24.577", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:24.584", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1448}
+{"timestamp": "2025-10-09T20:48:25.736", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:25.740", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1220}
+{"timestamp": "2025-10-09T20:48:25.842", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:26.826", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:26.870", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1028}
+{"timestamp": "2025-10-09T20:48:43.746", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:45.008", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:45.017", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1270}
+{"timestamp": "2025-10-09T20:48:46.121", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:48:47.025", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:48:47.031", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 909}
+{"timestamp": "2025-10-09T20:50:03.012", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:50:04.450", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:50:04.490", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1478}
+{"timestamp": "2025-10-09T20:50:14.319", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T20:50:15.714", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T20:50:15.742", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1425}
+{"timestamp": "2025-10-09T20:56:42.391", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:11:42 +07)\" (scheduled at 2025-10-09 20:56:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T20:56:46.515", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T21:05:28.868", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:05:30.177", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:05:30.220", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1353}
+{"timestamp": "2025-10-09T21:06:08.356", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:06:09.312", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:06:09.351", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 996}
+{"timestamp": "2025-10-09T21:06:14.743", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:06:16.141", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:06:16.183", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1438}
+{"timestamp": "2025-10-09T21:06:22.439", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:06:23.515", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:06:23.556", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1117}
+{"timestamp": "2025-10-09T21:06:28.703", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:06:30.171", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:06:30.210", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1507}
+{"timestamp": "2025-10-09T21:06:35.045", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:06:36.620", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:06:36.659", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1616}
+{"timestamp": "2025-10-09T21:07:05.143", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:07:06.216", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:07:06.253", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1111}
+{"timestamp": "2025-10-09T21:07:51.812", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:07:53.119", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:07:53.156", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1345}
+{"timestamp": "2025-10-09T21:08:05.256", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:08:06.432", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:08:06.473", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1217}
+{"timestamp": "2025-10-09T21:09:38.393", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:09:39.615", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:09:39.655", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1261}
+{"timestamp": "2025-10-09T21:11:42.388", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:26:42 +07)\" (scheduled at 2025-10-09 21:11:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T21:11:42.446", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 21:41:42 +07)\" (scheduled at 2025-10-09 21:11:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T21:11:42.447", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 21:41:42 +07)\" (scheduled at 2025-10-09 21:11:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T21:11:42.447", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:11:42.458", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T21:11:44.881", "level": "INFO", "logger": "angkasapura", "message": "sync data invoice untuk di send dari mysql2 ke mysql1", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:11:44.886", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 2434}
+{"timestamp": "2025-10-09T21:11:44.889", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 21:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T21:11:46.510", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:26:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T21:11:46.538", "level": "INFO", "logger": "angkasapura", "message": "Tidak ada data IS_SEND=0 untuk dikirim.", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:11:46.555", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/generate_inv_ekspor.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:11:46.555", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_invoice_imp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:11:46.562", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_inv_exp_pcp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T21:11:46.563", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 4105}
+{"timestamp": "2025-10-09T21:11:46.563", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 21:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T21:26:42.388", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:41:42 +07)\" (scheduled at 2025-10-09 21:26:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T21:26:46.460", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 21:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.022", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:07:49.645403", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.022", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"run_outgoing (trigger: interval[1:00:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:52:49.593613", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.024", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"run_breakdown (trigger: interval[1:00:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:52:49.593247", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.153", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"run_incoming (trigger: interval[1:00:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:52:49.718305", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.156", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:22:49.717320", "taskName": null}
+{"timestamp": "2025-10-09T22:34:32.162", "level": "WARNING", "logger": "apscheduler.executors.default", "message": "Run time of job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 22:41:42 +07)\" was missed by 0:22:49.724200", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.382", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 22:56:42 +07)\" (scheduled at 2025-10-09 22:41:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.445", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_outgoing (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 22:41:42.428958+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.445", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_breakdown (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 22:41:42.431343+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.446", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_incoming (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 22:41:42.435470+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.446", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 23:11:42 +07)\" (scheduled at 2025-10-09 22:41:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.446", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 23:11:42 +07)\" (scheduled at 2025-10-09 22:41:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.452", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:41:42.453", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:41:42.492", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_breakdown (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:41:42.603", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_outgoing (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:41:44.509", "level": "INFO", "logger": "angkasapura", "message": "sync data invoice untuk di send dari mysql2 ke mysql1", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:44.510", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 2058}
+{"timestamp": "2025-10-09T22:41:44.511", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 23:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:41:44.553", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_incoming (trigger: interval[1:00:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:41:46.469", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 22:56:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:41:46.531", "level": "INFO", "logger": "angkasapura", "message": "AWB_NO 1263334442 sudah ada, skip insert", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:46.534", "level": "INFO", "logger": "angkasapura", "message": "Tidak ada data IS_SEND=0 untuk dikirim.", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:46.536", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/generate_inv_ekspor.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:46.538", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_invoice_imp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:46.538", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_inv_exp_pcp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:41:46.539", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 4086}
+{"timestamp": "2025-10-09T22:41:46.540", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 23:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:50:42.477", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:50:42.523", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:50:42.531", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 54}
+{"timestamp": "2025-10-09T22:50:52.696", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:50:52.757", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 61}
+{"timestamp": "2025-10-09T22:50:54.954", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:50:54.961", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 7}
+{"timestamp": "2025-10-09T22:51:21.485", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:51:22.073", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:51:22.086", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 600}
+{"timestamp": "2025-10-09T22:51:35.585", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:51:36.243", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:51:36.256", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 671}
+{"timestamp": "2025-10-09T22:51:59.598", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:00.032", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:00.046", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 448}
+{"timestamp": "2025-10-09T22:52:23.410", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:24.037", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:24.042", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 632}
+{"timestamp": "2025-10-09T22:52:30.137", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:30.840", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:30.853", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 716}
+{"timestamp": "2025-10-09T22:52:48.626", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:49.214", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:49.226", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 600}
+{"timestamp": "2025-10-09T22:52:53.287", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:53.811", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:53.813", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 526}
+{"timestamp": "2025-10-09T22:52:58.139", "level": "INFO", "logger": "hubnet", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:52:59.168", "level": "INFO", "logger": "hubnet", "message": "Menampilkan data terkirim dari hubnet, status: 200", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:52:59.181", "level": "INFO", "logger": "hubnet", "message": "success", "taskName": null, "event": "success", "duration_ms": 1042}
+{"timestamp": "2025-10-09T22:55:23.338", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:23.362", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 23}
+{"timestamp": "2025-10-09T22:55:25.244", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:25.261", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 17}
+{"timestamp": "2025-10-09T22:55:29.361", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:29.412", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 50}
+{"timestamp": "2025-10-09T22:55:35.660", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:35.668", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:55:35.670", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 10}
+{"timestamp": "2025-10-09T22:55:43.079", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:43.096", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:55:43.097", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 18}
+{"timestamp": "2025-10-09T22:55:44.264", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:44.271", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:55:44.273", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 7}
+{"timestamp": "2025-10-09T22:55:46.962", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:55:46.978", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:55:46.980", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 17}
+{"timestamp": "2025-10-09T22:56:15.213", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:15.248", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 33}
+{"timestamp": "2025-10-09T22:56:21.325", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:21.532", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 206}
+{"timestamp": "2025-10-09T22:56:24.314", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:24.523", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 208}
+{"timestamp": "2025-10-09T22:56:25.943", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:26.139", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 195}
+{"timestamp": "2025-10-09T22:56:27.617", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:27.822", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 205}
+{"timestamp": "2025-10-09T22:56:29.155", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:29.373", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 218}
+{"timestamp": "2025-10-09T22:56:30.803", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:31.011", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 207}
+{"timestamp": "2025-10-09T22:56:32.115", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:32.132", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 17}
+{"timestamp": "2025-10-09T22:56:42.389", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:11:42 +07)\" (scheduled at 2025-10-09 22:56:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T22:56:46.486", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T22:56:47.359", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:47.407", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 48}
+{"timestamp": "2025-10-09T22:56:47.544", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:56:47.561", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 16}
+{"timestamp": "2025-10-09T22:57:09.732", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:57:09.759", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 27}
+{"timestamp": "2025-10-09T22:58:35.381", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:58:35.410", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 27}
+{"timestamp": "2025-10-09T22:58:40.324", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:58:40.331", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:58:40.333", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 8}
+{"timestamp": "2025-10-09T22:58:47.932", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:58:47.956", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 23}
+{"timestamp": "2025-10-09T22:58:49.319", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:58:49.323", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 5}
+{"timestamp": "2025-10-09T22:58:51.806", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T22:58:51.824", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T22:58:51.826", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 20}
+{"timestamp": "2025-10-09T23:01:55.624", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:01:55.629", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:01:55.632", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 7}
+{"timestamp": "2025-10-09T23:03:35.450", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:03:35.456", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:03:35.458", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 8}
+{"timestamp": "2025-10-09T23:11:42.385", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:26:42 +07)\" (scheduled at 2025-10-09 23:11:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:11:42.441", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 23:11:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:11:42.441", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 23:11:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:11:42.442", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:11:42.442", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:11:44.472", "level": "INFO", "logger": "angkasapura", "message": "sync data invoice untuk di send dari mysql2 ke mysql1", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:11:44.474", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 2031}
+{"timestamp": "2025-10-09T23:11:44.476", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:11:46.452", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:26:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:11:46.499", "level": "INFO", "logger": "angkasapura", "message": "Tidak ada data IS_SEND=0 untuk dikirim.", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:11:46.502", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/generate_inv_ekspor.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:11:46.503", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_invoice_imp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:11:46.504", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_inv_exp_pcp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:11:46.505", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 4060}
+{"timestamp": "2025-10-09T23:11:46.506", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:18:41.131", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:18:41.165", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 33}
+{"timestamp": "2025-10-09T23:18:46.699", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:18:46.716", "level": "INFO", "logger": "angkasapura", "message": "Menampilkan semua data invoice", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:18:46.718", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 19}
+{"timestamp": "2025-10-09T23:18:48.596", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:18:48.614", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 17}
+{"timestamp": "2025-10-09T23:26:42.387", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:41:42 +07)\" (scheduled at 2025-10-09 23:26:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:26:46.480", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:33:35.509", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:33:35.528", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 18}
+{"timestamp": "2025-10-09T23:41:42.386", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:56:42 +07)\" (scheduled at 2025-10-09 23:41:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.433", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_outgoing (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" (scheduled at 2025-10-09 23:41:42.428958+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.433", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_breakdown (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" (scheduled at 2025-10-09 23:41:42.431343+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.440", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_breakdown (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.444", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_incoming (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" (scheduled at 2025-10-09 23:41:42.435470+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.444", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-10 00:11:42 +07)\" (scheduled at 2025-10-09 23:41:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.444", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-10 00:11:42 +07)\" (scheduled at 2025-10-09 23:41:42.437479+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:41:42.446", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:41:42.449", "level": "INFO", "logger": "angkasapura", "message": "enter", "taskName": null, "event": "enter"}
+{"timestamp": "2025-10-09T23:41:42.471", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_outgoing (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:41:44.497", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_incoming (trigger: interval[1:00:00], next run at: 2025-10-10 00:41:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:41:44.506", "level": "INFO", "logger": "angkasapura", "message": "sync data invoice untuk di send dari mysql2 ke mysql1AWB_NO 1263334442 sudah ada, skip insert", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:41:44.512", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 2067}
+{"timestamp": "2025-10-09T23:41:44.516", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"INVAp2Service.get_data_inv (trigger: interval[0:30:00], next run at: 2025-10-10 00:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:41:46.501", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-09 23:56:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:41:46.551", "level": "INFO", "logger": "angkasapura", "message": "Tidak ada data IS_SEND=0 untuk dikirim.", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:41:46.552", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/generate_inv_ekspor.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:41:46.552", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_invoice_imp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:41:46.552", "level": "INFO", "logger": "angkasapura", "message": "Loaded 0 rows from app/services/query/send_inv_exp_pcp.sql", "taskName": null, "event": "print"}
+{"timestamp": "2025-10-09T23:41:46.552", "level": "INFO", "logger": "angkasapura", "message": "success", "taskName": null, "event": "success", "duration_ms": 4109}
+{"timestamp": "2025-10-09T23:41:46.560", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"__run_hubnet_invoice.<locals>.__send_invoice_today (trigger: interval[0:30:00], next run at: 2025-10-10 00:11:42 +07)\" executed successfully", "taskName": null}
+{"timestamp": "2025-10-09T23:56:42.391", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Running job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-10 00:11:42 +07)\" (scheduled at 2025-10-09 23:56:42.377168+07:00)", "taskName": null}
+{"timestamp": "2025-10-09T23:56:46.524", "level": "INFO", "logger": "apscheduler.executors.default", "message": "Job \"run_sending_ke_hubnet (trigger: interval[0:15:00], next run at: 2025-10-10 00:11:42 +07)\" executed successfully", "taskName": null}

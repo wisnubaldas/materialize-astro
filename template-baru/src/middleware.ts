@@ -35,7 +35,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
             302
         );
     }
-    console.log("token found in cookie:", token);
+    // console.log("token found in cookie:", token);
     // 4️⃣ Verifikasi token ke backend FastAPI
     try {
         // @ts-ignore
