@@ -1,0 +1,32 @@
+site_name: TPSOnline Modernization Documentation
+site_url: https://docs.tpsonline.local
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.expand
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light blue
+nav:
+  - Overview: 00-overview.md
+  - System Architecture: 01-architecture.md
+  - Database Schema: 02-database-schema.md
+  - API Design: 03-api-design.md
+  - Integration Endpoints: 04-integration-endpoints.md
+  - Migration Plan: 05-migration-plan.md
+  - Deployment Guide: 06-deployment-guide.md
+  - Security & Authentication: 07-security-and-authentication.md
+  - Monitoring & Logging: 08-monitoring-and-logging.md
+  - Maintenance & Future Plan: 09-maintenance-and-future-plan.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - toc:
+      permalink: true

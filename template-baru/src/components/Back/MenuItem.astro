@@ -1,6 +1,6 @@
 ---
-import type { SubMenu } from './SubMenu.astro';
-import SubMenuComponent from './SubMenu.astro';
+import type { SubMenu } from "./SubMenu.astro";
+import SubMenuComponent from "./SubMenu.astro";
 
 export interface Props {
   item: {
@@ -34,23 +34,12 @@ const isMenuItemActive = isActiveLink || hasActiveSubItem;
 // const isActive =
 //   currentPath === item.url || (item.subItems && item.subItems.some(subItem => subItem.url === currentPath));
 // const isParentActive = item.subItems && item.subItems.some(subItem => subItem.url === currentPath);
+const toIconClass = id => "icon-" + String(id || "").replace(":", "-");
 ---
 
-<li class={`menu-item ${isParentActive ? 'open active' : ''} ${isMenuItemActive && !item.subItems ? 'active' : ''}`}>
-  <a href={item.url} class={`menu-link ${item.subItems ? 'menu-toggle' : ''} ${isActiveLink ? 'active' : ''}`}>
-    {
-      item.icon && (
-        <iconify-icon
-          icon={item.icon}
-          width='24'
-          height='24'
-          line-animation='none'
-          line-animation-trigger='hover'
-          line-animation-reset='true'
-          class='iconify'
-        />
-      )
-    }
+<li class={`menu-item ${isParentActive ? "open active" : ""} ${isMenuItemActive && !item.subItems ? "active" : ""}`}>
+  <a href={item.url} class={`menu-link ${item.subItems ? "menu-toggle" : ""} ${isActiveLink ? "active" : ""}`}>
+    {item.icon && <i class={`icon icon-24 ${toIconClass(item.icon)}`} />}
     <div data-i18n={item.name}>&thinsp;{item.name}</div>
   </a>
   {item.subItems && <SubMenuComponent items={item.subItems} currentPath={currentPath} />}
