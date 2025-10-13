@@ -1,7 +1,5 @@
 # Monitoring & Logging
 
-## Log Pipeline
-
 ```mermaid
 flowchart LR
   A1[FastAPI Log File] --> B1[Filebeat]

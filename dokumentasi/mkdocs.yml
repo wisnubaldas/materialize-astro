@@ -8,6 +8,8 @@ theme:
     - navigation.expand
     - toc.integrate
     - content.code.copy
+    - search.highlight
+    - search.share
   palette:
     - scheme: default
       primary: blue
@@ -25,8 +27,10 @@ nav:
   - Maintenance & Future Plan: 09-maintenance-and-future-plan.md
 markdown_extensions:
   - admonition
+  - toc:
+      permalink: true
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.highlight
-  - toc:
-      permalink: true
+  - pymdownx.tasklist
+  - pymdownx.tabbed
