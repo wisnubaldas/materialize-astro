@@ -29,7 +29,7 @@ from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
-from app.utils.logging_utils import log_execution
+from app.utils.logging_utils import log_execution, task_name
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
 
@@ -95,8 +95,9 @@ class INVAp2Service:
     @staticmethod
     @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
-        print("Menampilkan semua data invoice")
-        return inv_ap2_datatable_service.get_datatable(db=db, params=params)
+        with task_name("Datatables"):
+            print("Menampilkan semua data invoice")
+            return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod

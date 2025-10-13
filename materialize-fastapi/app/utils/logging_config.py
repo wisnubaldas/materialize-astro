@@ -117,7 +117,7 @@ def setup_logging():
     root_logger.addFilter(TaskNameFilter())
     root_logger.addHandler(console_handler)
     root_logger.addHandler(file_handler)
-    root_logger.addHandler(db_handler)
+    # root_logger.addHandler(db_handler)
 
     # pastikan logger angkasapura ikut root
     angkasapura_logger = logging.getLogger("angkasapura")

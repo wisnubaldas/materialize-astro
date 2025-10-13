@@ -98,6 +98,7 @@ import Layout from "@layouts/Layout.astro";
       row.querySelectorAll(".js-small-card").forEach(n => n.remove());
 
       const total = items.reduce((acc, it) => acc + Number(it.value || 0), 0) || 0;
+      const toIconClass = id => `icon-${String(id).replace(':', '-')}`;
       items.forEach(it => {
         const value = Number(it.value || 0);
         const pct = total ? (value / total) * 100 : 0;
@@ -108,11 +109,11 @@ import Layout from "@layouts/Layout.astro";
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div class="avatar">
-                  <iconify-icon icon="${it.icon}" width="48" height="48"></iconify-icon>
+                  <i class="icon icon-48 ${toIconClass(it.icon)}"></i>
                 </div>
                 <div class="d-flex align-items-center">
                   <p class="mb-0 text-default me-1 h5">${pct.toFixed(2)}</p>
-                  <iconify-icon icon="fa7-solid:percent" width="24" height="24" style="color: ${percentColor(pct)}"></iconify-icon>
+                  <i class="icon icon-mask icon-24 icon-fa7-solid-percent" style="color: ${percentColor(pct)}"></i>
                 </div>
               </div>
               <div class="card-info mt-4 pt-1">

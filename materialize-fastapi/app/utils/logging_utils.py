@@ -2,9 +2,9 @@ import io
 import logging
 import sys
 import time
-from contextvars import ContextVar
-from contextlib import contextmanager
 from collections.abc import Callable
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import wraps
 from typing import Any, TypeVar, cast
 
@@ -35,7 +35,7 @@ def task_name(name: str):
 
 
 class TaskNameFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:  # noqa: D401
+    def filter(self, record: logging.LogRecord) -> bool:
         # Ensure every record has taskName, even if None
         try:
             record.taskName  # type: ignore[attr-defined]
@@ -103,8 +103,8 @@ def log_execution(
                         "enter",
                         extra={"event": "enter", "args": str(args), "kwargs": str(kwargs)},
                     )
-                else:
-                    logger.log(level, "enter", extra={"event": "enter"})
+                # else:
+                #     logger.log(level, "enter", extra={"event": "enter"})
 
                 # Redirect stdout to tee
                 orig_stdout = sys.stdout

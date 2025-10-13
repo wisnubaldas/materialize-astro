@@ -128,10 +128,10 @@ $(document).ready(function () {
     } : false,
     language: {
       paginate: {
-        first: '<iconify-icon icon="line-md:arrow-close-left" width="24" height="24"></iconify-icon>',   // First
-        last: '<iconify-icon icon="line-md:arrow-close-right" width="24" height="24"></iconify-icon>',   // Last
-        next: '<iconify-icon icon="line-md:arrow-right" width="24" height="24"></iconify-icon>',          // Next
-        previous: '<iconify-icon icon="line-md:arrow-left" width="24" height="24"></iconify-icon>'        // Previous
+        first: '<i class="icon icon-24 icon-line-md-arrow-close-left"></i>',   // First
+        last: '<i class="icon icon-24 icon-line-md-arrow-close-right"></i>',   // Last
+        next: '<i class="icon icon-24 icon-line-md-arrow-right"></i>',          // Next
+        previous: '<i class="icon icon-24 icon-line-md-arrow-left"></i>'        // Previous
       }
     }
   });
