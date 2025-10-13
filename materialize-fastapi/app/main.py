@@ -60,7 +60,7 @@ app.openapi = custom_openapi
 origins = [
     "http://localhost:4321",  # Ganti dengan origin frontend Anda
     "http://127.0.0.1:4321",
-    "https://ap2.mitraadira.com",
+    "https://app.mitraadira.com",
     "https://mitraadira.com",
 ]
 app.add_middleware(
