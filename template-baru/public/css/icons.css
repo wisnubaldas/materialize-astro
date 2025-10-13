@@ -1,0 +1,159 @@
+/* stylelint-disable order/properties-order */
+
+/* Base icon */
+.icon {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  vertical-align: middle;
+}
+
+/* Size utilities */
+.icon-20 {
+  inline-size: 20px;
+  block-size: 20px;
+}
+.icon-24 {
+  inline-size: 24px;
+  block-size: 24px;
+}
+.icon-32 {
+  inline-size: 32px;
+  block-size: 32px;
+}
+.icon-34 {
+  inline-size: 34px;
+  block-size: 34px;
+}
+.icon-48 {
+  inline-size: 48px;
+  block-size: 48px;
+}
+.icon-100 {
+  inline-size: 100px;
+  block-size: 100px;
+}
+
+/* Monochrome mask support (color via currentColor) */
+.icon-mask {
+  background-color: currentcolor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+/* Icon mappings (background-image) */
+.icon-material-symbols-save-rounded {
+  background-image: url("/icons/material-symbols/save-rounded.svg");
+}
+
+/* Line-md (colorful, keep as images) */
+.icon-line-md-sun-rising-twotone-loop {
+  background-image: url("/icons/line-md/sun-rising-twotone-loop.svg");
+}
+.icon-line-md-arrow-close-left {
+  background-image: url("/icons/line-md/arrow-close-left.svg");
+}
+.icon-line-md-arrow-close-right {
+  background-image: url("/icons/line-md/arrow-close-right.svg");
+}
+.icon-line-md-arrow-right {
+  background-image: url("/icons/line-md/arrow-right.svg");
+}
+.icon-line-md-arrow-left {
+  background-image: url("/icons/line-md/arrow-left.svg");
+}
+.icon-line-md-coffee-twotone-loop {
+  background-image: url("/icons/line-md/coffee-twotone-loop.min.svg");
+}
+.icon-line-md-home-twotone {
+  background-image: url("/icons/line-md/home-twotone.min.svg");
+}
+.icon-line-md-clipboard-check-twotone {
+  background-image: url("/icons/line-md/clipboard-check-twotone.min.svg");
+}
+.icon-line-md-alert-twotone-loop {
+  background-image: url("/icons/line-md/alert-twotone-loop.svg");
+}
+.icon-line-md-cloud-alt-print-twotone-loop {
+  background-image: url("/icons/line-md/cloud-alt-print-twotone-loop.svg");
+}
+
+/* Streamline colorful sets (keep as images) */
+.icon-streamline-ultimate-color-delivery-truck-cargo {
+  background-image: url("/icons/streamline-ultimate-color/delivery-truck-cargo.svg");
+}
+.icon-streamline-emojis-delivery-truck {
+  background-image: url("/icons/streamline-emojis/delivery-truck.svg");
+}
+.icon-streamline-emojis-bar-chart {
+  background-image: url("/icons/streamline-emojis/bar-chart.svg");
+}
+.icon-streamline-emojis-package {
+  background-image: url("/icons/streamline-emojis/package.svg");
+}
+.icon-streamline-plump-color-smiley-laughing-1 {
+  background-image: url("/icons/streamline-plump-color/smiley-laughing-1.svg");
+}
+.icon-streamline-plump-color-screwdriver {
+  background-image: url("/icons/streamline-plump-color/screwdriver.svg");
+}
+.icon-streamline-plump-color-script-2 {
+  background-image: url("/icons/streamline-plump-color/script-2.svg");
+}
+.icon-streamline-plump-color-bitcoin-circle-1 {
+  background-image: url("/icons/streamline-plump-color/bitcoin-circle-1.svg");
+}
+.icon-streamline-plump-color-information-desk {
+  background-image: url("/icons/streamline-plump-color/information-desk.svg");
+}
+.icon-streamline-plump-color-button-power-1 {
+  background-image: url("/icons/streamline-plump-color/button-power-1.svg");
+}
+.icon-streamline-plump-color-ai-generate-portrait-image-spark-flat {
+  background-image: url("/icons/streamline-plump-color/ai-generate-portrait-image-spark-flat.svg");
+}
+.icon-streamline-plump-color-airplane-disabled {
+  background-image: url("/icons/streamline-plump-color/airplane-disabled.svg");
+}
+.icon-streamline-plump-color-add-bell-notification-flat {
+  background-image: url("/icons/streamline-plump-color/add-bell-notification-flat.svg");
+}
+.icon-streamline-plump-color-bag-suitcase-4 {
+  background-image: url("/icons/streamline-plump-color/bag-suitcase-4.svg");
+}
+.icon-streamline-plump-color-bus {
+  background-image: url("/icons/streamline-plump-color/bus.svg");
+}
+.icon-streamline-plump-color-calendar-check-flat {
+  background-image: url("/icons/streamline-plump-color/calendar-check-flat.svg");
+}
+.icon-streamline-plump-color-cog-automation {
+  background-image: url("/icons/streamline-plump-color/cog-automation.svg");
+}
+.icon-streamline-plump-color-convert-pdf-1-flat {
+  background-image: url("/icons/streamline-plump-color/convert-pdf-1-flat.svg");
+}
+
+/* Fluent colorful */
+.icon-fluent-color-layer-diagonal-person-16 {
+  background-image: url("/icons/fluent-color/layer-diagonal-person-16.svg");
+}
+
+/* Mask-based monochrome icons (use with .icon-mask) */
+.icon-fa7-solid-percent.icon-mask {
+  mask-image: url("/icons/fa7-solid/percent.svg");
+}
+.icon-ri-menu-fill.icon-mask {
+  mask-image: url("/icons/ri/menu-fill.svg");
+}
+.icon-ri-sun-line.icon-mask {
+  mask-image: url("/icons/ri/sun-line.svg");
+}
+.icon-ri-shield-user-line.icon-mask {
+  mask-image: url("/icons/ri/shield-user-line.svg");
+}
+.icon-ri-menu-line.icon-mask {
+  mask-image: url("/icons/ri/menu-line.svg");
+}
