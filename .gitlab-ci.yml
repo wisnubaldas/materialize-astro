@@ -1,0 +1,14 @@
+production:
+  script:
+        - echo "Build production"
+        - ssh -o StrictHostKeyChecking=no root@$server -p 23022 $script
+  only:
+      - production
+
+
+development:
+  script:
+        - echo "Build development"
+        - ssh -o StrictHostKeyChecking=no root@$server_dev -p 23022 $script_dev
+  only:
+      - development
