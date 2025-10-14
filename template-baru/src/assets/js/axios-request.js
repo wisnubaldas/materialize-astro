@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getCookie } from "./cookies";
 
 let api = {}
 api.token = null;
@@ -10,13 +11,14 @@ api.axios = axios.create({
 });
 
 api.axios.interceptors.request.use(
-    (config) => {
-        if (api.token) {
-            config.headers.Authorization = `Bearer ${api.token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = api.token || getCookie('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 export default api

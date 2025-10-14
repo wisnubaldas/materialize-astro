@@ -1,10 +1,27 @@
 export function getCookie(name) {
-  // ambil dari local storage aja, karena kalau di cookie kadang ada masalah CORS
+  // Prefer true cookie to support SSR/middleware access; fallback to localStorage
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    const raw = parts.pop().split(';').shift();
+    if (raw) return decodeURIComponent(raw);
+  }
   return localStorage.getItem(name);
-  // const value = `; ${document.cookie}`;
-  // const parts = value.split(`; ${name}=`);
-  // if (parts.length === 2) return parts.pop().split(';').shift();
-  // return null;
+}
+
+export function setCookie(name, value, options = {}) {
+  const {
+    days = 1,
+    path = '/',
+    sameSite = 'Lax'
+  } = options;
+  const maxAge = Math.floor(days * 24 * 60 * 60);
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=${path}; max-age=${maxAge}; SameSite=${sameSite}`;
+}
+
+export function removeCookie(name, options = {}) {
+  const { path = '/' } = options;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
 }
 
 export function delCookie() {

@@ -2,16 +2,15 @@
  *  Pages Authentication
  */
 // #ts-nocheck
-'use strict';
+"use strict";
 let fv;
 let formAuthentication;
 const backend_path = import.meta.env.PUBLIC_BACKEND_PATH;
 // console.log('pathnya--->', backend_path);
 document.addEventListener('DOMContentLoaded', function () {
-    // // Menghapus localStorage
-    localStorage.clear();
-    // // Menghapus sessionStorage
-    sessionStorage.clear();
+    // Bersihkan state login hanya untuk token, jangan hapus semua storage
+    try { localStorage.removeItem('access_token'); } catch (e) {}
+    try { document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch (e) {}
     (() => {
         formAuthentication = document.querySelector('#formAuthentication');
         // Form validation for Add new record
@@ -118,9 +117,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         password: password
                     }),
                     success: function (result) {
-                        // simpan token ke cookie (expires 1 hari)
-                        // document.cookie = `auth_token=${result.access_token}; path=/; max-age=86400; SameSite=Lax`;
-                        localStorage.setItem('access_token', result.access_token);
+                        // simpan token ke cookie (expires 1 hari) dan localStorage untuk kompatibilitas
+                        if (result && result.access_token) {
+                          try { localStorage.setItem('access_token', result.access_token); } catch (e) {}
+                          try {
+                            const days = 1; const maxAge = Math.floor(days * 24 * 60 * 60);
+                            document.cookie = `access_token=${encodeURIComponent(result.access_token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+                          } catch (e) {}
+                        }
                         // ambil redirect dari query param
                         const params = new URLSearchParams(window.location.search);
                         const redirectUrl = params.get('redirect') || '/admin';
