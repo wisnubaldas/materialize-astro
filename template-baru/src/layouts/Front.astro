@@ -71,25 +71,29 @@ import Navbar from "../components/Front/Navbar.astro";
     </div>
     <Footer />
 
-    <!-- Vendors JS -->
-    <script src='@assets/front-landing/front-page-landing.js'></script>
-    <script src='@assets/front-landing/front-main.js'></script>
+    <!-- Core/Vendor JS (must load first for globals) -->
+    <script src='/vendor/js/helpers.js' is:inline></script>
+    <script src='/vendor/libs/jquery/jquery.js' is:inline></script>
+    <script src='/vendor/libs/popper/popper.js' is:inline></script>
+    <script src='/vendor/js/bootstrap.js' is:inline></script>
+    <script src='/vendor/libs/node-waves/node-waves.js' is:inline></script>
+    <script src='/vendor/js/menu.js' is:inline></script>
+    <script src='/vendor/js/mega-dropdown.js' is:inline></script>
+    <script src='@assets/libs/@algolia/autocomplete-js.js'></script>
+    <script src='/vendor/libs/pickr/pickr.js' is:inline></script>
+    <script src='/vendor/libs/nouislider/nouislider.js' is:inline></script>
+    <script src='/vendor/libs/swiper/swiper.js' is:inline></script>
+
+    <!-- Front config depends on Helpers -->
     <script src='@assets/front-landing/front-config.js'></script>
+    <!-- Front main depends on Helpers, Bootstrap, Waves -->
+    <script src='@assets/front-landing/front-main.js'></script>
+    <!-- Landing page components depend on noUiSlider/Swiper -->
+    <script src='@assets/front-landing/front-page-landing.js'></script>
 
     <!-- Main JS -->
     <script src='@assets/js/app.js'></script>
     <script src='@assets/js/dropdown-hover.js'></script>
     <script src='@assets/js/mega-dropdown.js'></script>
-
-    <script src='@assets/libs/jquery/jquery.js'></script>
-
-    <script src='@assets/libs/popper/popper.js'></script>
-    <script src='@assets/js/bootstrap.js'></script>
-    <script src='@assets/libs/node-waves/node-waves.js'></script>
-
-    <script src='@assets/libs/@algolia/autocomplete-js.js'></script>
-    <script src='@assets/libs/pickr/pickr.js'></script>
-    <script src='@assets/libs/nouislider/nouislider.js'></script>
-    <script src='@assets/libs/swiper/swiper.js'></script>
   </body>
 </html>
