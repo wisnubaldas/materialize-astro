@@ -41,7 +41,7 @@ def set_jwt_cookie(response: Response, token: str):
     """
     Set cookie JWT secara aman dengan environment-aware.
     """
-    print(ENV.APP_ENV)
+    # print(ENV.APP_ENV)
     if ENV.APP_ENV == "production":
         # cookie lintas subdomain (untuk mitraadira.com)
         response.set_cookie(
