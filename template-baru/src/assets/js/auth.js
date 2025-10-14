@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const json = JSON.parse(xhr.responseText); // parse ke JSON
                             console.error('Error JSON:', json);
                         } catch (e) {
-                            //   window.location.href = '/auth/login/';
+                            window.location.href = '/auth/login/';
                             //   console.log(xhr.responseText);
                             console.log(xhr.statusText);
                             console.error('Bukan JSON:', xhr.responseText);
