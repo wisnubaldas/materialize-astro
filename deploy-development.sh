@@ -96,7 +96,8 @@ if [ -f "$SSR_ENTRY" ]; then
     if pm2 list | grep -q "astro-dev"; then
       pm2 restart astro-dev
     else
-      pm2 start "node $SSR_ENTRY --host 0.0.0.0 --port 4321" --name astro-dev
+    #   pm2 start "node $SSR_ENTRY --host 0.0.0.0 --port 4321" --name astro-dev
+      pm2 start "npm run preview" --name astro-dev
     fi
     pm2 save
     echo "✅ Frontend SSR is running (PM2)."
