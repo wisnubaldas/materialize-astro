@@ -86,6 +86,7 @@ elif pgrep gunicorn > /dev/null; then
   nohup poetry run gunicorn app.main:app --bind 0.0.0.0:8000 --workers 4 --daemon &
 fi
 
+chmod 775 /home/wisnu/mau-app/materialize-fastapi/run-prod.sh
 echo "✅ Deployment finished successfully."
 send_telegram "✅ Success"
 echo "=============================================="

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import HTTPBearer
 
@@ -56,23 +55,23 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-# middleware
-origins = [
-    "http://localhost:4321",  # Ganti dengan origin frontend Anda
-    "http://127.0.0.1:4321",
-    "https://app.mitraadira.com",
-    "https://api.mitraadira.com",
-    "https://mitraadira.com",
-    "http://110.239.87.173:8000",
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_origin_regex=r"https://.*\.mitraadira\.com",
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# middleware CORS di handle apache
+# origins = [
+#     "http://localhost:4321",  # Ganti dengan origin frontend Anda
+#     "http://127.0.0.1:4321",
+#     "https://app.mitraadira.com",
+#     "https://api.mitraadira.com",
+#     "https://mitraadira.com",
+#     "http://110.239.87.173:8000",
+# ]
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_origin_regex=r"https://.*\.mitraadira\.com",
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 app.add_middleware(JWTMiddleware)
 
 # routes
