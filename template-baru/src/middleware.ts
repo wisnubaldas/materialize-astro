@@ -43,8 +43,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     const token = context.cookies.get("access_token")?.value;
     if (!token) {
         const redirectTo = encodeURIComponent(url.pathname + url.search);
-        return next();
-        // return Response.redirect(new URL(`/auth/login/?redirect=${redirectTo}`, context.url), 302);
+        return Response.redirect(new URL(`/auth/login/?redirect=${redirectTo}`, context.url), 302);
     }
 
     // 4) Verifikasi lokal token (cek exp tanpa request ke backend)
@@ -53,8 +52,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     if (!payload || (typeof payload.exp === "number" && payload.exp < now)) {
         context.cookies.delete("access_token", { path: "/" });
         const redirectTo = encodeURIComponent(url.pathname + url.search);
-        return next();
-        // return Response.redirect(new URL(`/auth/login/?redirect=${redirectTo}`, context.url), 302);
+        return Response.redirect(new URL(`/auth/login/?redirect=${redirectTo}`, context.url), 302);
     }
 
     // 5) Lolos → lanjut render halaman

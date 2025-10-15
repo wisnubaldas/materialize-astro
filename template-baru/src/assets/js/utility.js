@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(thrownError)
             // Silent log to avoid noisy console in production
             if (xhr.status === 401) {
-                // window.location.href = '/auth/login/';
+                window.location.href = '/auth/login/';
                 console.error(xhr)
 
             }

@@ -63,7 +63,6 @@ origins = [
     "http://localhost:4321",  # Ganti dengan origin frontend Anda
     "http://127.0.0.1:4321",
     "https://app.mitraadira.com",
-    "https://api.mitraadira.com",
     "https://mitraadira.com",
 ]
 app.add_middleware(

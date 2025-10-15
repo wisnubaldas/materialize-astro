@@ -154,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function () {
             $('#login').on('click', function () {
                 const email = formAuthentication.username.value;
                 const password = formAuthentication.password.value;
-                alert(buildBackendUrl('/auth/login'))
                 $.ajax({
                     url: buildBackendUrl('/auth/login'),
                     type: 'POST',

@@ -1,19 +1,44 @@
 site_name: TPSOnline Modernization Documentation
 site_url: https://docs.tpsonline.local
+site_description: Comprehensive documentation for TPSOnline modernization project
+repo_name: mitraadira/tpsonline-modernization
+repo_url: https://github.com/mitraadira/tpsonline-modernization
+
 theme:
   name: material
   language: en
+  logo: assets/images/favicon/android-chrome-512x512.png
+  favicon: assets/images/favicon/favicon.ico
+  font:
+    text: Ubuntu
+    code: Ubuntu Mono
   features:
     - navigation.tabs
+    - navigation.sections
     - navigation.expand
     - toc.integrate
     - content.code.copy
+    - content.action.edit
+    - content.code.annotate
     - search.highlight
     - search.share
   palette:
     - scheme: default
       primary: blue
       accent: light blue
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+extra_css:
+  - assets/stylesheets/custom.css
+
+extra_javascript:
+  - assets/stylesheets/custom.js
+
 nav:
   - Overview: 00-overview.md
   - System Architecture: 01-architecture.md
@@ -25,6 +50,7 @@ nav:
   - Security & Authentication: 07-security-and-authentication.md
   - Monitoring & Logging: 08-monitoring-and-logging.md
   - Maintenance & Future Plan: 09-maintenance-and-future-plan.md
+
 markdown_extensions:
   - admonition
   - toc:
@@ -34,3 +60,11 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.tasklist
   - pymdownx.tabbed
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.snippets
+  - attr_list
+  - def_list
+  - tables
+  - md_in_html
