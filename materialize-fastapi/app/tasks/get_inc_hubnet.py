@@ -1,5 +1,7 @@
+from datetime import datetime
 from json import dumps
 
+import pytz
 from sqlalchemy import select, text
 
 from app.db.mysql import SessionDB1W, SessionDB2R
@@ -8,6 +10,8 @@ from app.services.redis_service import publish_sync
 from app.utils.helper import HELPER
 
 CHANNEL_NAME = "sending_ke_hubnet_channel"
+jakarta_tz = pytz.timezone("Asia/Jakarta")
+now_wib = datetime.now(jakarta_tz)
 
 
 def run_incoming():
@@ -15,7 +19,7 @@ def run_incoming():
         query_file = "app/services/query/get_inc_hubnet.sql"
         db2 = SessionDB2R()
         query = HELPER.load_sql_query(query_file)
-        param = {"date_of_arrival": "2021-09-06"}
+        param = {"date_of_arrival": now_wib.strftime("%Y-%m-%d")}
         sql = text(query)
         inc = db2.execute(sql, param).mappings().all()
         for item in inc:

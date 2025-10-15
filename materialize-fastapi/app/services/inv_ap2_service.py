@@ -88,6 +88,7 @@ def get_dynamic_params(interval_minutes: int = 30):
     hari = now.strftime("%Y-%m-%d")
     start_from = now.strftime("%H:%M:%S")
     end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
+    print(f"Cari data invoice per {hari} dari jam {start_from} sampai {end_from}")
     return {"hari": hari, "start_from": start_from, "end_from": end_from}
 
 
@@ -173,8 +174,12 @@ class INVAp2Service:
                             .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
                             .first()
                         )
+                        print(
+                            f"invoice number sudah ada di tabel inv_ap2 {no_invoice} jalankan update"
+                        )
                     else:
                         existing = None
+                        print(f"invoice belom ada di tabel inv_ap2 {no_invoice} jalankan insert")
 
                     if existing is not None:
                         # Update semua kolom dari schema ke model
