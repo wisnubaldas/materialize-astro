@@ -59,6 +59,7 @@ app.openapi = custom_openapi
 
 # middleware CORS di handle apache
 origins = [
+    "http://110.239.87.173:4321",
     "http://localhost:4321",  # Ganti dengan origin frontend Anda
     "http://127.0.0.1:4321",
     "https://app.mitraadira.com",
