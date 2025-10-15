@@ -9,8 +9,8 @@ const backend_path = import.meta.env.PUBLIC_BACKEND_PATH;
 // console.log('pathnya--->', backend_path);
 document.addEventListener('DOMContentLoaded', function () {
     // Bersihkan state login hanya untuk token, jangan hapus semua storage
-    try { localStorage.removeItem('access_token'); } catch (e) {}
-    try { document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch (e) {}
+    try { localStorage.removeItem('access_token'); } catch (e) { }
+    try { document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch (e) { }
     (() => {
         formAuthentication = document.querySelector('#formAuthentication');
         // Form validation for Add new record
@@ -119,11 +119,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     success: function (result) {
                         // simpan token ke cookie (expires 1 hari) dan localStorage untuk kompatibilitas
                         if (result && result.access_token) {
-                          try { localStorage.setItem('access_token', result.access_token); } catch (e) {}
-                          try {
-                            const days = 1; const maxAge = Math.floor(days * 24 * 60 * 60);
-                            document.cookie = `access_token=${encodeURIComponent(result.access_token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-                          } catch (e) {}
+                            try { localStorage.setItem('access_token', result.access_token); } catch (e) { }
+                            try {
+                                const days = 1; const maxAge = Math.floor(days * 24 * 60 * 60);
+                                document.cookie = `access_token=${encodeURIComponent(result.access_token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+                            } catch (e) { }
                         }
                         // ambil redirect dari query param
                         const params = new URLSearchParams(window.location.search);
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const json = JSON.parse(xhr.responseText); // parse ke JSON
                             console.error('Error JSON:', json);
                         } catch (e) {
-                            window.location.href = '/auth/login/';
+                            // window.location.href = '/auth/login/';
                             //   console.log(xhr.responseText);
                             console.log(xhr.statusText);
                             console.error('Bukan JSON:', xhr.responseText);
