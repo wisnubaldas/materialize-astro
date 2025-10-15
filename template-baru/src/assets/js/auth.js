@@ -5,8 +5,58 @@
 "use strict";
 let fv;
 let formAuthentication;
-const backend_path = import.meta.env.PUBLIC_BACKEND_PATH;
-// console.log('pathnya--->', backend_path);
+const backend_path = (() => {
+    let fallbackOrigin = '';
+    try {
+        if (typeof window !== 'undefined') {
+            if (window.apiPath) {
+                return window.apiPath;
+            }
+            if (window.location?.origin) {
+                fallbackOrigin = window.location.origin;
+            }
+        }
+    } catch (e) { }
+    try {
+        if (typeof import.meta !== 'undefined' && import.meta.env?.PUBLIC_BACKEND_PATH) {
+            return import.meta.env.PUBLIC_BACKEND_PATH;
+        }
+    } catch (e) { }
+    return fallbackOrigin;
+})();
+
+const buildBackendUrl = (path) => {
+    if (!backend_path) {
+        return path;
+    }
+    const trimmedBase = backend_path.replace(/\/+$/, '');
+    const trimmedPath = path.replace(/^\/+/, '');
+    return `${trimmedBase}/${trimmedPath}`;
+};
+
+const resolveRedirectUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+    const fallback = '/admin';
+    const redirectParam = params.get('redirect');
+
+    if (!redirectParam) {
+        return fallback;
+    }
+
+    try {
+        const candidate = new URL(redirectParam, window.location.origin);
+        if (candidate.origin !== window.location.origin) {
+            return fallback;
+        }
+        const normalizedPath = candidate.pathname || fallback;
+        return `${normalizedPath}${candidate.search}${candidate.hash}` || fallback;
+    } catch (e) {
+        if (redirectParam.startsWith('/')) {
+            return redirectParam;
+        }
+        return fallback;
+    }
+};
 document.addEventListener('DOMContentLoaded', function () {
     // Bersihkan state login hanya untuk token, jangan hapus semua storage
     try { localStorage.removeItem('access_token'); } catch (e) { }
@@ -102,10 +152,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             $('#login').on('click', function () {
+                alert("jing ini alert")
                 const email = formAuthentication.username.value;
                 const password = formAuthentication.password.value;
                 $.ajax({
-                    url: backend_path + '/auth/login',
+                    url: buildBackendUrl('/auth/login'),
                     type: 'POST',
                     contentType: 'application/json',
                     dataType: 'json',
@@ -126,9 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             } catch (e) { }
                         }
                         // ambil redirect dari query param
-                        const params = new URLSearchParams(window.location.search);
-                        const redirectUrl = params.get('redirect') || '/admin';
-                        // redirect user ke halaman terakhir / default dashboard
+                        const redirectUrl = resolveRedirectUrl();
                         window.location.href = redirectUrl;
                     },
                     error: function (xhr, status, error) {
