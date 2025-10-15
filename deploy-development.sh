@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================
-# 🚀 Deployment Script for Development - MAU App
+# ?? Deployment Script for Development - MAU App
 # Author: Wisnu Hidayat
 # ============================================
 
@@ -19,39 +19,39 @@ LOG_FILE="$APP_DIR/deploy-logs/development-$(date +'%Y%m%d_%H%M%S').log"
 mkdir -p "$APP_DIR/deploy-logs"
 
 # Simple failure trap for clear feedback in logs
-trap 'echo "❌ Deployment failed at $(date). See log: $LOG_FILE"' ERR
+trap 'echo "? Deployment failed at $(date). See log: $LOG_FILE"' ERR
 
 {
 echo "=============================================="
-echo "🛠️  DEVELOPMENT DEPLOYMENT STARTED: $(date)"
+echo "???  DEVELOPMENT DEPLOYMENT STARTED: $(date)"
 echo "Branch: $BRANCH"
 echo "Working directory: $APP_DIR"
 echo "=============================================="
 
 # --- Update repository (align with production) ---
 cd "$APP_DIR"
-echo "📥 Pulling latest changes from $BRANCH..."
+echo "?? Pulling latest changes from $BRANCH..."
 git fetch origin
 git checkout $BRANCH
 git reset --hard origin/$BRANCH
 git clean -fd
 git pull origin $BRANCH
-echo "✅ Git updated successfully."
+echo "? Git updated successfully."
 
 # --- Build Frontend (Astro) ---
 if [ -d "$FRONTEND_DIR" ]; then
-  echo "🔧 Building frontend (Astro)..."
+  echo "?? Building frontend (Astro)..."
   cd "$FRONTEND_DIR"
   npm install --legacy-peer-deps
   npm run build
-  echo "✅ Frontend build completed."
+  echo "? Frontend build completed."
 else
-  echo "⚠️  Frontend directory not found: $FRONTEND_DIR"
+  echo "??  Frontend directory not found: $FRONTEND_DIR"
 fi
 
 # --- Backend dependencies (poetry) ---
 if [ -d "$BACKEND_DIR" ]; then
-  echo "📦 Installing backend dependencies (poetry)..."
+  echo "?? Installing backend dependencies (poetry)..."
   cd "$BACKEND_DIR"
   if command -v poetry &> /dev/null; then
     poetry install
@@ -60,60 +60,76 @@ if [ -d "$BACKEND_DIR" ]; then
   elif [ -x "/usr/local/bin/poetry" ]; then
     /usr/local/bin/poetry install
   else
-    echo "❌ Poetry not found. Please install poetry for development."
+    echo "? Poetry not found. Please install poetry for development."
     exit 1
   fi
-  echo "✅ Backend dependencies installed."
+  echo "? Backend dependencies installed."
 else
-  echo "⚠️  Backend directory not found: $BACKEND_DIR"
+  echo "??  Backend directory not found: $BACKEND_DIR"
 fi
 
-# --- Restart Backend (Uvicorn via PM2 or fallback) ---
+# --- Restart Backend (via Supervisor) ---
 if [ -d "$BACKEND_DIR" ]; then
-  echo "🔁 Restarting backend (Uvicorn)..."
+  echo "?? Restarting backend via Supervisor..."
   cd "$BACKEND_DIR"
-  if command -v pm2 &> /dev/null; then
-    if pm2 list | grep -q "fastapi-dev"; then
-      echo "↻ Restarting existing PM2 process: fastapi-dev"
-      pm2 restart fastapi-dev
-    else
-      echo "▶️  Starting FastAPI dev server via PM2..."
-      pm2 start "poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload" --name fastapi-dev
-    fi
-    pm2 save
-  else
-    echo "▶️  Running direct uvicorn (nohup fallback)..."
-    nohup poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > "$APP_DIR/deploy-logs/uvicorn.log" 2>&1 &
+
+  # Ensure run script is executable
+  chmod 775 "$BACKEND_DIR/run-prod.sh"
+
+  # Ensure log directory exists and is writable by target user
+  if [ ! -d "/var/log/materialize-fastapi" ]; then
+    echo "? Creating log directory: /var/log/materialize-fastapi"
+    sudo mkdir -p /var/log/materialize-fastapi || true
+    sudo chown wisnu:wisnu /var/log/materialize-fastapi || true
   fi
-  echo "✅ Backend is running."
+
+  if command -v supervisorctl &> /dev/null; then
+    echo "? Reloading Supervisor configs..."
+    sudo supervisorctl reread || true
+    sudo supervisorctl update || true
+    echo "? Restarting program: materialize-fastapi"
+    sudo supervisorctl restart materialize-fastapi
+  else
+    echo "??  supervisorctl not found. Please install/configure Supervisor."
+    exit 1
+  fi
+  echo "? Backend restarted via Supervisor."
 fi
 
-# --- Restart Frontend SSR (Astro via PM2 or fallback) ---
-SSR_ENTRY="$FRONTEND_DIR/dist/server/entry.mjs"
-if [ -f "$SSR_ENTRY" ]; then
-  if command -v pm2 &> /dev/null; then
-    echo "🔁 Restarting Astro SSR (PM2)..."
-    if pm2 list | grep -q "astro-dev"; then
-      pm2 restart astro-dev
-    else
-    #   pm2 start "node $SSR_ENTRY --host 0.0.0.0 --port 4321" --name astro-dev
-      pm2 start "npm run preview" --name astro-dev
-    fi
-    pm2 save
-    echo "✅ Frontend SSR is running (PM2)."
-  else
-    echo "▶️  Starting Astro SSR (nohup fallback)..."
-    nohup node "$SSR_ENTRY" --host 0.0.0.0 --port 4321 > "$APP_DIR/deploy-logs/astro.log" 2>&1 &
-    echo "✅ Frontend SSR started (nohup)."
+# --- Restart Frontend SSR (via Supervisor) ---
+if [ -d "$FRONTEND_DIR" ]; then
+  echo "?? Restarting frontend via Supervisor..."
+  cd "$FRONTEND_DIR"
+
+  # Ensure build artifacts exist before attempting to start preview
+  if [ ! -f "$FRONTEND_DIR/dist/server/entry.mjs" ]; then
+    echo "??  SSR entry not found: $FRONTEND_DIR/dist/server/entry.mjs (did the build succeed?)"
   fi
-else
-  echo "⚠️  SSR entry not found: $SSR_ENTRY (did the build succeed?)"
+
+  # Ensure log directory exists and is writable by target user
+  if [ ! -d "/var/log/astro" ]; then
+    echo "? Creating log directory: /var/log/astro"
+    sudo mkdir -p /var/log/astro || true
+    sudo chown wisnu:wisnu /var/log/astro || true
+  fi
+
+  if command -v supervisorctl &> /dev/null; then
+    echo "? Reloading Supervisor configs..."
+    sudo supervisorctl reread || true
+    sudo supervisorctl update || true
+    echo "? Restarting program: astro-app"
+    sudo supervisorctl restart astro-app
+  else
+    echo "??  supervisorctl not found. Please install/configure Supervisor."
+    exit 1
+  fi
+  echo "? Frontend restarted via Supervisor."
 fi
 
+# Ensure executable bit set (idempotent)
 chmod 775 /home/wisnu/mau-app/materialize-fastapi/run-prod.sh
 
-echo "🎉 Development deployment completed successfully."
+echo "?? Development deployment completed successfully."
 echo "=============================================="
 echo "Completed at: $(date)"
 } | tee -a "$LOG_FILE"
-
