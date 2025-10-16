@@ -1,5 +1,6 @@
 # app/core/scheduler.py
 
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.services.inv_ap2_service import INVAp2Service
@@ -54,20 +55,22 @@ def init_scheduler():
     scheduler.add_job(
         INVAp2Service.get_data_inv,
         "interval",
-        minutes=30,
+        minutes=1,
         id="get_data_inv_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=True,  # gabungkan job yang terlewat jika tertunda
-        misfire_grace_time=30,
+        coalesce=False,
+        misfire_grace_time=None,
+        replace_existing=True,
     )
     scheduler.add_job(
         INVAp2Service.send_invoice,
         "interval",
-        minutes=30,
+        minutes=10,
         id="send_invoice_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=True,  # gabungkan job yang terlewat jika tertunda
-        misfire_grace_time=30,
+        coalesce=False,
+        misfire_grace_time=None,
+        replace_existing=True,
     )
 
 

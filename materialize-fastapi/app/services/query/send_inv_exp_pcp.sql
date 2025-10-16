@@ -1,8 +1,6 @@
 -- Refactored from procedure `send_inv_exp_pcp` into plain query
 -- Parameters:
 --   :hari        -> match a.DateOfTransaction (YYYY-MM-DD)
---   :start_from  -> lower bound for a.TimeOfTransaction (HH:MM:SS)
---   :end_from    -> upper bound for a.TimeOfTransaction (HH:MM:SS)
 
 SELECT DISTINCT
     a.CustomerCode,

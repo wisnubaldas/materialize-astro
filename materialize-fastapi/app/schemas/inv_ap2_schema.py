@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class InvAp2Base(BaseModel):
-    NO_INVOICE: str | None = None
+    NO_INVOICE: str
     TANGGAL: str
     SMU: str
     KDAIRLINE: str
@@ -13,7 +13,7 @@ class InvAp2Base(BaseModel):
     DOM_INT: str
     INC_OUT: str
     ASAL: str
-    TUJUAN: str
+    TUJUAN: str | None = "CGK"
     JENIS_KARGO: str
     TARIF_KARGO: int | str
     KOLI: str

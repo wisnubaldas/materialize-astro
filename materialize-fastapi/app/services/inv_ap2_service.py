@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from json import dumps
 
@@ -86,9 +86,7 @@ def get_dynamic_params(interval_minutes: int = 30):
     # gunakan datetime.now() (bukan datetime.datetime.now())
     now = datetime.now()  # noqa: DTZ005
     hari = now.strftime("%Y-%m-%d")
-    start_from = now.strftime("%H:%M:%S")
-    end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
-    return {"hari": "2024-02-19"}
+    return {"hari": hari}
 
 
 class INVAp2Service:
@@ -102,7 +100,7 @@ class INVAp2Service:
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
     @log_execution(logger_name="angkasapura")
-    def get_data_inv():
+    def get_data_inv():  # noqa: PLR0912, PLR0915
         print("sync data invoice untuk di send dari mysql2 ke mysql1")
         publish_sync(
             CHANNEL_NAME,
@@ -126,6 +124,8 @@ class INVAp2Service:
                 "app/services/query/send_inv_exp_pcp.sql",
             ]
 
+            pending_records: list[dict] = []
+
             for qpath in query_files:
                 query = HELPER.load_sql_query(qpath)
                 sql = text(query)
@@ -145,47 +145,75 @@ class INVAp2Service:
                     mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
 
                     # Validasi dan normalisasi via schema
-                    publish_sync(
-                        CHANNEL_NAME,
-                        dumps(
-                            {
-                                "level": "info",
-                                "message": "Validasi dan normalisasi via schema",
-                            }
-                        ),
-                    )
                     invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore
                     values = invoice_schema.model_dump()
 
-                    # Upsert berdasarkan NO_INVOICE (jika None maka dianggap selalu insert)
-                    no_invoice = values.get("NO_INVOICE")
-                    publish_sync(
-                        CHANNEL_NAME,
-                        dumps(
-                            {
-                                "level": "info",
-                                "message": f"Upsert berdasarkan NO_INVOICE = {no_invoice} (jika None maka dianggap selalu insert)",
-                            }
-                        ),
-                    )
-                    if no_invoice:
-                        existing = (
-                            db1.query(InvAp2)
-                            .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
-                            .first()
-                        )
-                        if existing:
-                            print(
-                                f"invoice number {no_invoice} sudah ada di tabel inv_ap2, lewati penambahan"
-                            )
-                            continue
-                        print(
-                            f"invoice belum ada di tabel inv_ap2 dengan nomor {no_invoice}, jalankan insert"
-                        )
-                    else:
-                        print("NO_INVOICE tidak tersedia, jalankan insert baru")
+                    pending_records.append(values)
 
-                    db1.add(InvAp2(**values))
+            if not pending_records:
+                print("Tidak ada data invoice yang ditemukan untuk sinkronisasi")
+                return
+
+            unique_invoices = {
+                str(inv_no)
+                for inv_no in (item.get("NO_INVOICE") for item in pending_records)
+                if inv_no is not None
+            }
+            existing_numbers: set[str] = set()
+            if unique_invoices:
+                existing_numbers = {
+                    str(existing_no)
+                    for (existing_no,) in db1.query(InvAp2.NO_INVOICE)
+                    .filter(InvAp2.NO_INVOICE.in_(unique_invoices))
+                    .all()
+                }
+
+            records_to_insert: list[dict] = []
+            seen_numbers = set(existing_numbers)
+            skipped = 0
+
+            for values in pending_records:
+                no_invoice_raw = values.get("NO_INVOICE")
+                normalized_no_invoice = str(no_invoice_raw) if no_invoice_raw is not None else None
+
+                if normalized_no_invoice:
+                    if normalized_no_invoice in seen_numbers:
+                        skipped += 1
+                        continue
+                    seen_numbers.add(normalized_no_invoice)
+                    values["NO_INVOICE"] = normalized_no_invoice
+                else:
+                    print("NO_INVOICE tidak tersedia, jalankan insert baru")
+
+                records_to_insert.append(values)
+
+            if not records_to_insert:
+                print("Semua invoice sudah ada, tidak ada data baru untuk ditambahkan")
+                publish_sync(
+                    CHANNEL_NAME,
+                    dumps(
+                        {
+                            "level": "info",
+                            "message": "Semua invoice sudah ada, tidak ada data baru untuk ditambahkan",
+                        }
+                    ),
+                )
+                return
+
+            db1.bulk_insert_mappings(InvAp2, records_to_insert)
+
+            print(
+                f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)"
+            )
+            publish_sync(
+                CHANNEL_NAME,
+                dumps(
+                    {
+                        "level": "info",
+                        "message": f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)",
+                    }
+                ),
+            )
 
             db1.commit()
         except Exception as e:
@@ -232,6 +260,7 @@ class INVAp2Service:
                         dumps({"level": "info", "message": f"Kirim invoice: {inv_no}"}),
                     )
 
+                    success = False
                     try:
                         resp = client.post(
                             f"{ENV.AP2_URL}/api/invo_dtl_v2",
@@ -240,52 +269,58 @@ class INVAp2Service:
                             timeout=60,
                         )
 
+                        success = resp.status_code == 200
                         response_data = {
-                            "affected_rows": 1,
+                            "affected_rows": 1 if success else 0,
                             "message": resp.text[:255],
                             "status": str(resp.status_code),
                         }
-                        if str(resp.status_code) == "200":
-                            inv = str(inv_no)
-                            sql = text("UPDATE inv_ap2 WHERE status = 1 WHERE NO_INVOICE = :inv")
-                            rows = db1.execute(sql, {"inv": inv})
-                            rows.commit()
-
-                        db1.add(
-                            ResponsInvAp2(
-                                inv=str(inv_no) if inv_no is not None else None,
-                                response=json.dumps(response_data),
-                                status=response_data["status"],
-                            )
-                        )
-
-                        results.append({"invoice": inv_no, **response_data})
-                        publish_sync(
-                            CHANNEL_NAME,
-                            dumps(
-                                {
-                                    "level": "info",
-                                    "message": f"Berhasil invoice: {inv_no} (HTTP {resp.status_code})",
-                                }
-                            ),
-                        )
                     except Exception as e:
                         response_data = {
                             "affected_rows": 0,
                             "message": f"Info: {e!s}",
                             "status": "500",
                         }
-                        db1.add(
-                            ResponsInvAp2(
-                                inv=str(inv_no) if inv_no is not None else None,
-                                response=json.dumps(response_data),
-                                status=response_data["status"],
-                            )
-                        )
-                        results.append({"invoice": inv_no, **response_data})
                         publish_sync(
                             CHANNEL_NAME,
                             dumps({"level": "info", "message": f"Info: {e!s}"}),
+                        )
+                    finally:
+                        if inv_no:
+                            db1.execute(
+                                text("UPDATE inv_ap2 SET status = :status WHERE NO_INVOICE = :inv"),
+                                {"status": 1 if success else 2, "inv": str(inv_no)},
+                            )
+
+                    db1.add(
+                        ResponsInvAp2(
+                            inv=str(inv_no) if inv_no is not None else None,
+                            response=json.dumps(response_data),
+                            status=response_data["status"],
+                        )
+                    )
+
+                    results.append({"invoice": inv_no, **response_data})
+
+                    if success:
+                        publish_sync(
+                            CHANNEL_NAME,
+                            dumps(
+                                {
+                                    "level": "info",
+                                    "message": f"Berhasil invoice: {inv_no} (HTTP {response_data['status']})",
+                                }
+                            ),
+                        )
+                    else:
+                        publish_sync(
+                            CHANNEL_NAME,
+                            dumps(
+                                {
+                                    "level": "info",
+                                    "message": f"Gagal invoice: {inv_no} (HTTP {response_data['status']})",
+                                }
+                            ),
                         )
 
             db1.commit()
