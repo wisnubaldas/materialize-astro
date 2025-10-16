@@ -245,6 +245,11 @@ class INVAp2Service:
                             "message": resp.text[:255],
                             "status": str(resp.status_code),
                         }
+                        if str(resp.status_code) == "200":
+                            inv = str(inv_no)
+                            sql = text("UPDATE inv_ap2 WHERE status = 1 WHERE NO_INVOICE = :inv")
+                            rows = db1.execute(sql, {"inv": inv})
+                            rows.commit()
 
                         db1.add(
                             ResponsInvAp2(

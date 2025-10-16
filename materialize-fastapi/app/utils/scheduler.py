@@ -54,7 +54,7 @@ def init_scheduler():
     scheduler.add_job(
         INVAp2Service.get_data_inv,
         "interval",
-        minutes=1,
+        minutes=30,
         id="get_data_inv_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=True,  # gabungkan job yang terlewat jika tertunda
@@ -63,7 +63,7 @@ def init_scheduler():
     scheduler.add_job(
         INVAp2Service.send_invoice,
         "interval",
-        minutes=1,
+        minutes=30,
         id="send_invoice_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=True,  # gabungkan job yang terlewat jika tertunda

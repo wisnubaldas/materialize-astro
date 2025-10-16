@@ -1,4 +1,4 @@
-SELECT 
+SELECT DISTINCT
     a.PaymentCode,
     a.CustomerCode,
     a.InvoiceNumber,

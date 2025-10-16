@@ -4,7 +4,7 @@
 --   :start_from  -> lower bound for a.TimeOfTransaction (HH:MM:SS)
 --   :end_from    -> upper bound for a.TimeOfTransaction (HH:MM:SS)
 
-SELECT
+SELECT DISTINCT
     a.PaymentCode,
     a.CustomerCode,
     a.InvoiceNumber,
