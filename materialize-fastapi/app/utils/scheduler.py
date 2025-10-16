@@ -57,7 +57,7 @@ def init_scheduler():
         "interval",
         minutes=1,
         id="get_data_inv_job",
-        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
+        max_instances=60,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=False,
         misfire_grace_time=None,
         replace_existing=True,
