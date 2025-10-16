@@ -88,8 +88,7 @@ def get_dynamic_params(interval_minutes: int = 30):
     hari = now.strftime("%Y-%m-%d")
     start_from = now.strftime("%H:%M:%S")
     end_from = (now + timedelta(minutes=interval_minutes)).strftime("%H:%M:%S")
-    print(f"Cari data invoice per {hari} dari jam {start_from} sampai {end_from}")
-    return {"hari": hari, "start_from": start_from, "end_from": end_from}
+    return {"hari": "2024-02-19"}
 
 
 class INVAp2Service:
@@ -103,7 +102,7 @@ class INVAp2Service:
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
     @log_execution(logger_name="angkasapura")
-    def get_data_inv():  # noqa: PLR0912
+    def get_data_inv():
         print("sync data invoice untuk di send dari mysql2 ke mysql1")
         publish_sync(
             CHANNEL_NAME,
@@ -118,6 +117,7 @@ class INVAp2Service:
         db2 = SessionDB2R()
         try:
             params = get_dynamic_params(30)
+            print(f"param query nya {params}")
 
             # Kumpulan query sumber data invoice
             query_files = [
@@ -174,20 +174,18 @@ class INVAp2Service:
                             .filter(InvAp2.NO_INVOICE == no_invoice)  # noqa: SIM300
                             .first()
                         )
+                        if existing:
+                            print(
+                                f"invoice number {no_invoice} sudah ada di tabel inv_ap2, lewati penambahan"
+                            )
+                            continue
                         print(
-                            f"invoice number sudah ada di tabel inv_ap2 {no_invoice} jalankan update"
+                            f"invoice belum ada di tabel inv_ap2 dengan nomor {no_invoice}, jalankan insert"
                         )
                     else:
-                        existing = None
-                        print(f"invoice belom ada di tabel inv_ap2 {no_invoice} jalankan insert")
+                        print("NO_INVOICE tidak tersedia, jalankan insert baru")
 
-                    if existing is not None:
-                        # Update semua kolom dari schema ke model
-                        for key, val in values.items():
-                            if hasattr(existing, key):
-                                setattr(existing, key, val)
-                    else:
-                        db1.add(InvAp2(**values))
+                    db1.add(InvAp2(**values))
 
             db1.commit()
         except Exception as e:
@@ -197,32 +195,20 @@ class INVAp2Service:
             db1.close()
             db2.close()
 
-    @staticmethod
-    @log_execution(logger_name="angkasapura")
-    def get_response_inv(
-        db: Session, params: DataTablesParams
-    ) -> DataTablesResponse[ResponsInvAp2Get]:
-        return inv_ap2_response_inv.get_datatable(db=db, params=params)
-
-    @staticmethod
-    @log_execution(logger_name="angkasapura")
-    def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
-        return fail_inv_ap2.get_datatable(db=db, params=params)
-
     # send invoice ke AP2 (sinkron)
     @staticmethod
     @log_execution(logger_name="angkasapura")
-    def send_invoice(date_prefix: str):
+    def send_invoice():
         db1 = SessionDB1W()
         results = []
         try:
             publish_sync(
                 CHANNEL_NAME,
-                dumps({"level": "info", "message": f"Mulai kirim invoice prefix: {date_prefix}"}),
+                dumps({"level": "info", "message": "Mulai kirim invoice"}),
             )
 
-            sql = text("SELECT * FROM inv_ap2 WHERE TANGGAL LIKE :tgl AND status = 0")
-            rows = db1.execute(sql, {"tgl": f"{date_prefix}%"}).fetchall()
+            sql = text("SELECT * FROM inv_ap2 WHERE status = 0 LIMIT 10")
+            rows = db1.execute(sql).fetchall()
             if not rows:
                 msg = "Invoice not found"
                 publish_sync(CHANNEL_NAME, dumps({"level": "info", "message": msg}))
@@ -237,7 +223,7 @@ class INVAp2Service:
             with requests.Session() as client:
                 for row in rows:
                     row_dict = dict(row._mapping)
-                    schema = AP2SendInv(USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD, **row_dict)
+                    schema = AP2SendInv(USR=ENV.AP2_USER, PSW=ENV.AP2_PASSWORD, **row_dict)
                     payload = schema.model_dump()
 
                     inv_no = payload.get("NO_INVOICE")
@@ -248,7 +234,7 @@ class INVAp2Service:
 
                     try:
                         resp = client.post(
-                            f"{ENV.AP2_DEV_URL}/api/invo_dtl_v2",
+                            f"{ENV.AP2_URL}/api/invo_dtl_v2",
                             headers=HEADERS,
                             data=payload,
                             timeout=60,
@@ -312,6 +298,18 @@ class INVAp2Service:
         finally:
             db1.close()
         return results
+
+    @staticmethod
+    @log_execution(logger_name="angkasapura")
+    def get_response_inv(
+        db: Session, params: DataTablesParams
+    ) -> DataTablesResponse[ResponsInvAp2Get]:
+        return inv_ap2_response_inv.get_datatable(db=db, params=params)
+
+    @staticmethod
+    @log_execution(logger_name="angkasapura")
+    def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
+        return fail_inv_ap2.get_datatable(db=db, params=params)
 
     @staticmethod
     async def void_invoice_ap2(

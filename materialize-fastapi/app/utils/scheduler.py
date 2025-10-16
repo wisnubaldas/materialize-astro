@@ -1,5 +1,4 @@
 # app/core/scheduler.py
-from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -11,32 +10,6 @@ from app.tasks.sending_ke_hubnet_job import run_sending_ke_hubnet
 from app.utils.env import ENV
 
 scheduler = AsyncIOScheduler()
-
-
-def __run_hubnet_invoice():
-    print("Menjalankan job angkaspura invoice...")
-    scheduler.add_job(
-        INVAp2Service.get_data_inv,
-        "interval",
-        minutes=30,
-        id="get_data_inv_job",
-        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=True,  # gabungkan job yang terlewat jika tertunda
-        misfire_grace_time=30,
-    )
-
-    def __send_invoice_today():
-        INVAp2Service.send_invoice(datetime.now().strftime("%Y-%m-%d"))
-
-    scheduler.add_job(
-        __send_invoice_today,
-        "interval",
-        minutes=30,
-        id="send_invoice_job",
-        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=True,  # gabungkan job yang terlewat jika tertunda
-        misfire_grace_time=30,
-    )
 
 
 def init_scheduler():
@@ -78,13 +51,30 @@ def init_scheduler():
         coalesce=True,  # gabungkan job yang terlewat jika tertunda
         misfire_grace_time=30,
     )
+    scheduler.add_job(
+        INVAp2Service.get_data_inv,
+        "interval",
+        minutes=1,
+        id="get_data_inv_job",
+        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
+        coalesce=True,  # gabungkan job yang terlewat jika tertunda
+        misfire_grace_time=30,
+    )
+    scheduler.add_job(
+        INVAp2Service.send_invoice,
+        "interval",
+        minutes=1,
+        id="send_invoice_job",
+        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
+        coalesce=True,  # gabungkan job yang terlewat jika tertunda
+        misfire_grace_time=30,
+    )
 
 
 async def start_scheduler():
     if not scheduler.running:
         print("✅ APScheduler started")
         init_scheduler()
-        __run_hubnet_invoice()
         scheduler.start()
 
 

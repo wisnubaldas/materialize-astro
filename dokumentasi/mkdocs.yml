@@ -1,8 +1,8 @@
 site_name: TPSOnline Modernization Documentation
 site_url: https://docs.tpsonline.local
 site_description: Comprehensive documentation for TPSOnline modernization project
-repo_name: mitraadira/tpsonline-modernization
-repo_url: https://github.com/mitraadira/tpsonline-modernization
+repo_name: mau-app
+repo_url: https://gitlab.att.id/mau/mau-app.git
 
 theme:
   name: material
@@ -60,9 +60,6 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.tasklist
   - pymdownx.tabbed
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.snippets
   - attr_list
   - def_list

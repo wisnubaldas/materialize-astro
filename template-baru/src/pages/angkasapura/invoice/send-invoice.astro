@@ -4,7 +4,8 @@ import LogViewer from "@components/Back/LogViewer.astro";
 import Layout from "@layouts/Layout.astro";
 const user = "wisnu"; // misalnya diambil dari session login
 const encryptedKey = encodeURIComponent(await encryptKey({ user }));
-const streamUrl = "http://localhost:8000/sse/log-send-invoice-ap2?key=" + encryptedKey;
+const backend = import.meta.env.PUBLIC_BACKEND_PATH;
+const streamUrl = backend + "/sse/log-send-invoice-ap2?key=" + encryptedKey;
 ---
 
 <Layout title='Status Response Invoice Terkirim'>

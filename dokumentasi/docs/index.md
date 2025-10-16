@@ -15,3 +15,5 @@ mkdocs build
 # 4. Deploy ke static hosting / GitHub Pages / Netlify
 mkdocs gh-deploy
 ```
+
+> Jangan masuk ke venv langsung jalan kan dengan mode `mkdocs serve -v`
