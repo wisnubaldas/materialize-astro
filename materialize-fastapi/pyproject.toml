@@ -44,6 +44,7 @@ ruff = "^0.5.0"
 [tool.poetry.scripts]
 dev = "app.__main__:main"
 prod = "scripts.run_prod:main"
+scheduler = "scripts.run_scheduler:main"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

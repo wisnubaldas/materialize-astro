@@ -97,6 +97,12 @@ poetry run dev
 
 Visit `http://127.0.0.1:8000/docs` to access the interactive API documentation.
 
+To run the scheduler worker as a separate process (for example under Supervisor), use:
+
+```
+poetry run scheduler
+```
+
 ## Migrasi
 
 ```bash
