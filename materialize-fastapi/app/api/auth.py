@@ -24,17 +24,17 @@ def login(payload: LoginSchema, response: Response, db: Session = Depends(get_db
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.get("/verify")
-def verify(request: Request, access_token: str = Cookie(None)):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
+# @router.get("/verify")
+# def verify(request: Request, access_token: str = Cookie(None)):
+#     auth_header = request.headers.get("Authorization")
+#     if not auth_header:
+#         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
-    # Pastikan formatnya: Bearer <token>
-    if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid token format")
-    token = auth_header.split(" ")[1]
-    username = verify_token(token)
-    if not username:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return {"username": username, "valid": True}
+#     # Pastikan formatnya: Bearer <token>
+#     if not auth_header.startswith("Bearer "):
+#         raise HTTPException(status_code=401, detail="Invalid token format")
+#     token = auth_header.split(" ")[1]
+#     username = verify_token(token)
+#     if not username:
+#         raise HTTPException(status_code=401, detail="Invalid token")
+#     return {"username": username, "valid": True}

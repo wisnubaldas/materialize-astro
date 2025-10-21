@@ -1,7 +1,7 @@
 # app/schemas/invoice_schema.py
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class InvAp2Base(BaseModel):
@@ -13,7 +13,7 @@ class InvAp2Base(BaseModel):
     DOM_INT: str
     INC_OUT: str
     ASAL: str
-    TUJUAN: str | None = "CGK"
+    TUJUAN: str | None = Field(default=None, description="Kode tujuan")
     JENIS_KARGO: str
     TARIF_KARGO: int | str
     KOLI: str
@@ -61,7 +61,11 @@ class InvAp2Base(BaseModel):
 
     class Config:
         from_attributes = True  # Ubah `orm_mode = True` (Pydantic V1) menjadi `from_attributes = True` (Pydantic V2)
-
+    
+    def model_post_init(self, __context):
+        """Set nilai default TUJUAN ke 'CGK' jika None atau tidak dikirim."""
+        if not self.TUJUAN:
+            self.TUJUAN = "CGK"
 
 class InvoiceCreate(InvAp2Base):
     pass
