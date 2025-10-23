@@ -5,6 +5,8 @@ This is a FastAPI project structured to provide a clean and organized way to bui
 ## INV
 
 ```bash
+APP_ENV=production
+APP_DEBUG=True
 # Database
 DB1_HOST_R=localhost
 DB1_HOST_W=localhost
@@ -30,10 +32,13 @@ DB3_NAME=dbtpsonline_mau
 # JWT
 SECRET_KEY=supersecretkey
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 
-# Angkasapura API
 
+
+REDIS_URL=redis://localhost:6379/5
+
+SSE_KEY=92a936af44d2c94d919c0d0800f6617b008c4d1817a1981aeb0ecf3cad3373fa
 
 
 ```
@@ -72,15 +77,19 @@ fastapi-project
 3. **Activate the virtual environment:**
 
    - On Windows:
+
      ```
      venv\Scripts\activate
      ```
+
    - On macOS/Linux:
+
      ```
      source venv/bin/activate
      ```
 
 4. **Install dependencies:**
+
    ```
    pip install -r requirements.txt
    ```
@@ -181,7 +190,7 @@ python -m app.db.seeder
 
 `celery -A app.celery_app.celery_app worker -l debug`
 
-### coba cek modul task manual:
+### coba cek modul task manual
 
 `python -m app.tasks.task_angkasapura`
 
@@ -234,7 +243,7 @@ filebeat.inputs:
   - type: log
     enabled: true
     paths:
-      - "materialize-fastapi/logs/app.log"
+      - 'materialize-fastapi/logs/app.log'
     json.keys_under_root: true
     json.add_error_key: true
     fields:
@@ -244,7 +253,7 @@ filebeat.inputs:
 
 # ================= Filebeat Outputs =================
 output.logstash:
-  hosts: ["11.10.10.21:5000"] # Logstash listener
+  hosts: ['11.10.10.21:5000'] # Logstash listener
   ssl.enabled: false
 
 # ================= Optional Logging =================

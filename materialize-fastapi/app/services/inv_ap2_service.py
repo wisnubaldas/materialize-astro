@@ -6,6 +6,7 @@ from json import dumps
 
 import httpx
 import requests
+from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 inv_ap2_datatable_service = DataTablesService(
     model=InvAp2,
     schema=InvoiceGet,
-    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER"],
+    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER","KDAIRLINE","SMU"],
     custom_filters=[
         "NO_INVOICE",
         "TANGGAL",
@@ -46,6 +47,8 @@ inv_ap2_datatable_service = DataTablesService(
         "FLIGHT_NUMBER",
         "TANGGAL_AWAL",
         "TANGGAL_AKHIR",
+        "KDAIRLINE",
+        "SMU",
     ],
 )
 inv_ap2_response_inv = DataTablesService(
@@ -73,8 +76,8 @@ fail_inv_ap2 = DataTablesService(
 void_invoice = DataTablesService(
     model=VoidInvAp2,
     schema=VoidInvoiceSchemaResponse,
-    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU"],
-    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU"],
+    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU","KDAIRLINE"],
+    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU","KDAIRLINE"],
 )
 HEADERS = {
     "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
@@ -90,6 +93,27 @@ def get_dynamic_params(interval_minutes: int = 30):
 
 
 class INVAp2Service:
+    @staticmethod
+    def search_invoice_response(db: Session, invoice_number: str):
+        logger.info(f"Searching for invoice response with invoice number: {invoice_number}")
+        try:
+            result = (
+                db.query(ResponsInvAp2)
+                .filter(ResponsInvAp2.inv == invoice_number)
+                .first()
+            )
+            if result:
+                logger.info(f"Invoice response found: {result}")
+                return ResponsInvAp2Get.from_orm(result)
+            else:
+                logger.info("No invoice response found")
+                raise HTTPException(
+                        status_code=404,
+                        detail=f"Invoice number '{invoice_number}' not found."
+                    )
+        except Exception as e:
+            logger.error(f"Error searching for invoice response: {e}", exc_info=True)
+            raise
     @staticmethod
     @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:

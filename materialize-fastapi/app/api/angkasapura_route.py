@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
@@ -35,6 +35,10 @@ async def void_invoice(params: VoidInvoiceSchemaBase, db: Session = Depends(get_
 @router.post("/get-void-invoice", response_model=DataTablesResponse[VoidInvoiceSchemaResponse])
 def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return INVAp2Service.table_void_invoice(db=db, params=params)
+
+@router.get("/search-invoice-response/{invoice_number}", response_model=ResponsInvAp2Get,summary="Search Invoice Response by Invoice Number")
+def search_invoice_response(invoice_number: str, db: Session = Depends(get_db1_r)):
+    return INVAp2Service.search_invoice_response(db=db, invoice_number=invoice_number)
 
 
 # @router.post("/send-invoices/{date_prefix}")
