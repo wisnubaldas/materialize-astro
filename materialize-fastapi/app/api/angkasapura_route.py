@@ -36,7 +36,11 @@ async def void_invoice(params: VoidInvoiceSchemaBase, db: Session = Depends(get_
 def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return INVAp2Service.table_void_invoice(db=db, params=params)
 
-@router.get("/search-invoice-response/{invoice_number}", response_model=ResponsInvAp2Get,summary="Search Invoice Response by Invoice Number")
+@router.get(
+    "/search-invoice-response/{invoice_number}",
+    response_model=list[ResponsInvAp2Get],
+    summary="Search Invoice Response by Invoice Number",
+)
 def search_invoice_response(invoice_number: str, db: Session = Depends(get_db1_r)):
     return INVAp2Service.search_invoice_response(db=db, invoice_number=invoice_number)
 

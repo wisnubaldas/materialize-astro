@@ -1,3 +1,5 @@
+# linting: pylint: disable=too-many-lines, duplicate-code, too-many-statements, too-many-locals
+# pylint: disable=too-many-branches, too-many-nested-blocks, too-many-arguments, unused-argument
 import json
 import logging
 from datetime import datetime
@@ -39,7 +41,7 @@ logger = logging.getLogger(__name__)
 inv_ap2_datatable_service = DataTablesService(
     model=InvAp2,
     schema=InvoiceGet,
-    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER","KDAIRLINE","SMU"],
+    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER", "KDAIRLINE", "SMU"],
     custom_filters=[
         "NO_INVOICE",
         "TANGGAL",
@@ -76,8 +78,8 @@ fail_inv_ap2 = DataTablesService(
 void_invoice = DataTablesService(
     model=VoidInvAp2,
     schema=VoidInvoiceSchemaResponse,
-    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU","KDAIRLINE"],
-    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU","KDAIRLINE"],
+    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
+    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
 )
 HEADERS = {
     "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
@@ -95,25 +97,30 @@ def get_dynamic_params(interval_minutes: int = 30):
 class INVAp2Service:
     @staticmethod
     def search_invoice_response(db: Session, invoice_number: str):
-        logger.info(f"Searching for invoice response with invoice number: {invoice_number}")
+        logger.info(
+            "Searching for invoice responses with invoice number: %s", invoice_number
+        )
         try:
-            result = (
+            responses = (
                 db.query(ResponsInvAp2)
                 .filter(ResponsInvAp2.inv == invoice_number)
-                .first()
+                .order_by(ResponsInvAp2.created_at.desc())
+                .all()
             )
-            if result:
-                logger.info(f"Invoice response found: {result}")
-                return ResponsInvAp2Get.from_orm(result)
-            else:
+
+            if not responses:
                 logger.info("No invoice response found")
                 raise HTTPException(
-                        status_code=404,
-                        detail=f"Invoice number '{invoice_number}' not found."
-                    )
+                    status_code=404,
+                    detail=f"Invoice number '{invoice_number}' not found.",
+                )
+
+            logger.info("Found %d response entries", len(responses))
+            return [ResponsInvAp2Get.from_orm(item) for item in responses]
         except Exception as e:
-            logger.error(f"Error searching for invoice response: {e}", exc_info=True)
+            logger.error("Error searching for invoice response: %s", e, exc_info=True)
             raise
+
     @staticmethod
     @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
@@ -224,7 +231,7 @@ class INVAp2Service:
                 )
                 return
 
-            db1.bulk_insert_mappings(InvAp2, records_to_insert)
+            db1.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore
 
             print(
                 f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)"
