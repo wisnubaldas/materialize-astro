@@ -1,4 +1,5 @@
 {
+  "cSpell.enabled": false,
   "python.defaultInterpreterPath": "C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Scripts\\python.exe",
   "files.exclude": {
     "**/__pycache__": true,

@@ -9,7 +9,7 @@ from json import dumps
 import httpx
 import requests
 from fastapi import HTTPException
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.db.mysql import SessionDB1W, SessionDB2R
@@ -20,7 +20,12 @@ from app.models.void_inv_ap2 import VoidInvAp2
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.ap2_send_inv_schema import AP2SendInv
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.inv_ap2_schema import InvoiceCreate, InvoiceGet
+from app.schemas.inv_ap2_schema import (
+    InvoiceCreate,
+    InvoiceDailySummary,
+    InvoiceGet,
+    InvoiceMonthlySummary,
+)
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.void_invoice_schema import (
     VoidInvoiceSchemaBase,
@@ -95,6 +100,86 @@ def get_dynamic_params(interval_minutes: int = 30):
 
 
 class INVAp2Service:
+    @staticmethod
+    def _normalized_invoice_date():
+        return func.coalesce(
+            func.str_to_date(InvAp2.TANGGAL, "%Y-%m-%d"),
+            func.str_to_date(InvAp2.TANGGAL, "%Y-%m-%d %H:%i:%s"),
+            func.str_to_date(InvAp2.TANGGAL, "%d-%m-%Y"),
+            func.str_to_date(InvAp2.TANGGAL, "%d/%m/%Y"),
+            func.str_to_date(InvAp2.TANGGAL, "%Y/%m/%d"),
+            InvAp2.created_at,
+        )
+
+    @staticmethod
+    def invoice_perbulan(db: Session, tahun: int):
+        normalized_date = INVAp2Service._normalized_invoice_date()
+
+        rows = (
+            db.query(
+                func.year(normalized_date).label("year"),
+                func.month(normalized_date).label("month"),
+                func.count(InvAp2.id).label("total_sent"),
+            )
+            .filter(
+                InvAp2.status == 1,
+                func.year(normalized_date) == tahun,
+            )
+            .group_by(func.year(normalized_date), func.month(normalized_date))
+            .order_by(func.year(normalized_date), func.month(normalized_date))
+            .all()
+        )
+
+        return [
+            InvoiceMonthlySummary(
+                year=row.year,
+                month=row.month,
+                total_sent=row.total_sent,
+            )
+            for row in rows
+            if row.year is not None and row.month is not None
+        ]
+
+    @staticmethod
+    def invoice_perbulan_detail(db: Session, tahun: int, bulan: int):
+        normalized_date = INVAp2Service._normalized_invoice_date()
+
+        rows = (
+            db.query(
+                func.year(normalized_date).label("year"),
+                func.month(normalized_date).label("month"),
+                func.day(normalized_date).label("day"),
+                func.count(InvAp2.id).label("total_sent"),
+            )
+            .filter(
+                InvAp2.status == 1,
+                func.year(normalized_date) == tahun,
+                func.month(normalized_date) == bulan,
+            )
+            .group_by(
+                func.year(normalized_date),
+                func.month(normalized_date),
+                func.day(normalized_date),
+            )
+            .order_by(
+                func.year(normalized_date),
+                func.month(normalized_date),
+                func.day(normalized_date),
+            )
+            .all()
+        )
+
+        return [
+            InvoiceDailySummary(
+                year=row.year,
+                month=row.month,
+                day=row.day,
+                total_sent=row.total_sent,
+            )
+            for row in rows
+            if row.year is not None and row.month is not None and row.day is not None
+        ]
+    
     @staticmethod
     def search_invoice_response(db: Session, invoice_number: str):
         logger.info(

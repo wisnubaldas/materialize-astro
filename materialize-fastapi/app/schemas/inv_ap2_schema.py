@@ -75,3 +75,16 @@ class InvoiceGet(InvAp2Base):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class InvoiceMonthlySummary(BaseModel):
+    year: int
+    month: int
+    total_sent: int
+
+
+class InvoiceDailySummary(BaseModel):
+    year: int
+    month: int
+    day: int
+    total_sent: int

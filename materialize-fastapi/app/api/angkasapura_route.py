@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.mysql import get_db1_r, get_db1_w
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.inv_ap2_schema import InvoiceGet
+from app.schemas.inv_ap2_schema import InvoiceDailySummary, InvoiceGet, InvoiceMonthlySummary
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase, VoidInvoiceSchemaResponse
 from app.services.inv_ap2_service import INVAp2Service
@@ -44,6 +44,22 @@ def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r))
 def search_invoice_response(invoice_number: str, db: Session = Depends(get_db1_r)):
     return INVAp2Service.search_invoice_response(db=db, invoice_number=invoice_number)
 
+@router.get(
+    "/invoice-perbulan/{tahun}/{bulan}",
+    response_model=list[InvoiceDailySummary],
+    summary="Get sent invoices per day for a given month",
+)
+def invoice_perbulan_detail(tahun: int, bulan: int, db: Session = Depends(get_db1_r)):
+    return INVAp2Service.invoice_perbulan_detail(db=db, tahun=tahun, bulan=bulan)
+
+
+@router.get(
+    "/invoice-perbulan/{tahun}",
+    response_model=list[InvoiceMonthlySummary],
+    summary="Get sent invoices per month for a given year",
+)
+def invoice_perbulan(tahun: int, db: Session = Depends(get_db1_r)):
+    return INVAp2Service.invoice_perbulan(db=db, tahun=tahun)
 
 # @router.post("/send-invoices/{date_prefix}")
 # async def send_invoices(date_prefix: str):
