@@ -1,8 +1,7 @@
 # linting: pylint: disable=too-many-lines, duplicate-code, too-many-statements, too-many-locals
 # pylint: disable=too-many-branches, too-many-nested-blocks, too-many-arguments, unused-argument
-import json
 import logging
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from json import dumps
 
@@ -37,7 +36,7 @@ from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
-from app.utils.logging_utils import log_execution, task_name
+from app.utils.logging_utils import task_name
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
 
@@ -91,15 +90,19 @@ HEADERS = {
 }
 
 
-## method protected
-def get_dynamic_params(interval_minutes: int = 30):
-    # gunakan datetime.now() (bukan datetime.datetime.now())
+# Helper utilities
+def get_dynamic_params() -> dict[str, str]:
+    """Return dynamic parameters required by invoice sync queries."""
     now = datetime.now()  # noqa: DTZ005
-    hari = now.strftime("%Y-%m-%d")
-    return {"hari": hari}
+    return {"hari": now.strftime("%Y-%m-%d")}
 
 
 class INVAp2Service:
+    @staticmethod
+    def get_invoice_pdf_perbulan(db: Session, tgl: date) -> bytes:
+        logger.info("Generating invoice PDF for month: %s", tgl.strftime("%Y-%m-%d"))
+        print(f"{tgl}")
+
     @staticmethod
     def _normalized_invoice_date():
         return func.coalesce(
@@ -179,7 +182,7 @@ class INVAp2Service:
             for row in rows
             if row.year is not None and row.month is not None and row.day is not None
         ]
-    
+
     @staticmethod
     def search_invoice_response(db: Session, invoice_number: str):
         logger.info(
@@ -207,17 +210,15 @@ class INVAp2Service:
             raise
 
     @staticmethod
-    @log_execution(logger_name="angkasapura")
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
         with task_name("Datatables"):
-            print("Menampilkan semua data invoice")
+            logger.info("Menampilkan semua data invoice")
             return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
-    @log_execution(logger_name="angkasapura")
     def get_data_inv():  # noqa: PLR0912, PLR0915
-        print("sync data invoice untuk di send dari mysql2 ke mysql1")
+        logger.info("Sync data invoice untuk di send dari mysql2 ke mysql1")
         publish_sync(
             CHANNEL_NAME,
             dumps(
@@ -230,8 +231,8 @@ class INVAp2Service:
         db1 = SessionDB1W()
         db2 = SessionDB2R()
         try:
-            params = get_dynamic_params(30)
-            print(f"param query nya {params}")
+            params = get_dynamic_params()
+            logger.info("Parameter query: %s", params)
 
             # Kumpulan query sumber data invoice
             query_files = [
@@ -246,7 +247,7 @@ class INVAp2Service:
                 query = HELPER.load_sql_query(qpath)
                 sql = text(query)
                 rows = db2.execute(sql, params).mappings().all()
-                print(f"Loaded {len(rows)} rows from {qpath}")
+                logger.info("Loaded %d rows from %s", len(rows), qpath)
                 for row in rows:
                     mapped_row: dict = {}
                     for k, v in row.items():
@@ -267,7 +268,7 @@ class INVAp2Service:
                     pending_records.append(values)
 
             if not pending_records:
-                print("Tidak ada data invoice yang ditemukan untuk sinkronisasi")
+                logger.info("Tidak ada data invoice yang ditemukan untuk sinkronisasi")
                 return
 
             unique_invoices = {
@@ -299,12 +300,12 @@ class INVAp2Service:
                     seen_numbers.add(normalized_no_invoice)
                     values["NO_INVOICE"] = normalized_no_invoice
                 else:
-                    print("NO_INVOICE tidak tersedia, jalankan insert baru")
+                    logger.warning("NO_INVOICE tidak tersedia, jalankan insert baru")
 
                 records_to_insert.append(values)
 
             if not records_to_insert:
-                print("Semua invoice sudah ada, tidak ada data baru untuk ditambahkan")
+                logger.info("Semua invoice sudah ada, tidak ada data baru untuk ditambahkan")
                 publish_sync(
                     CHANNEL_NAME,
                     dumps(
@@ -318,8 +319,10 @@ class INVAp2Service:
 
             db1.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore
 
-            print(
-                f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)"
+            logger.info(
+                "Berhasil menambahkan %d invoice baru ke inv_ap2 (lewati %d duplikat)",
+                len(records_to_insert),
+                skipped,
             )
             publish_sync(
                 CHANNEL_NAME,
@@ -341,8 +344,8 @@ class INVAp2Service:
 
     # send invoice ke AP2 (sinkron)
     @staticmethod
-    @log_execution(logger_name="angkasapura")
     def send_invoice():
+        logger.info("Mulai proses kirim invoice ke AP2", extra={"event": "invoice.send.start"})
         db1 = SessionDB1W()
         results = []
         try:
@@ -355,6 +358,10 @@ class INVAp2Service:
             rows = db1.execute(sql).fetchall()
             if not rows:
                 msg = "Invoice not found"
+                logger.info(
+                    "Tidak ada invoice baru yang siap dikirim",
+                    extra={"event": "invoice.send.empty"},
+                )
                 publish_sync(CHANNEL_NAME, dumps({"level": "info", "message": msg}))
                 db1.commit()
                 return []
@@ -411,7 +418,7 @@ class INVAp2Service:
                     db1.add(
                         ResponsInvAp2(
                             inv=str(inv_no) if inv_no is not None else None,
-                            response=json.dumps(response_data),
+                            response=dumps(response_data),
                             status=response_data["status"],
                         )
                     )
@@ -444,8 +451,17 @@ class INVAp2Service:
                 CHANNEL_NAME,
                 dumps({"level": "info", "message": f"Selesai kirim {len(results)} invoice"}),
             )
+            logger.info(
+                "Selesai kirim %d invoice ke AP2",
+                len(results),
+                extra={"event": "invoice.send.complete", "count": len(results)},
+            )
         except Exception as e:
             db1.rollback()
+            logger.exception(
+                "Gagal mengirim invoice ke AP2",
+                extra={"event": "invoice.send.error"},
+            )
             publish_sync(
                 CHANNEL_NAME,
                 dumps({"level": "info", "message": f"Info: {e!s}"}),
@@ -456,15 +472,21 @@ class INVAp2Service:
         return results
 
     @staticmethod
-    @log_execution(logger_name="angkasapura")
     def get_response_inv(
         db: Session, params: DataTablesParams
     ) -> DataTablesResponse[ResponsInvAp2Get]:
+        logger.info(
+            "Memuat data response invoice AP2",
+            extra={"event": "datatable.fetch", "datatable": "respons_inv_ap2"},
+        )
         return inv_ap2_response_inv.get_datatable(db=db, params=params)
 
     @staticmethod
-    @log_execution(logger_name="angkasapura")
     def get_fail_inv(db: Session, params: DataTablesParams) -> DataTablesResponse[FailInvGet]:
+        logger.info(
+            "Memuat data invoice gagal AP2",
+            extra={"event": "datatable.fetch", "datatable": "fail_inv_ap2"},
+        )
         return fail_inv_ap2.get_datatable(db=db, params=params)
 
     @staticmethod
@@ -492,7 +514,7 @@ class INVAp2Service:
                 NO_INVOICE=result.NO_INVOICE,
                 HAWB=result.HAWB,
                 SMU=result.SMU,
-                RESPONSE=json.dumps(resp.json()),
+                RESPONSE=dumps(resp.json()),
             )
             db.add(obj_data)
             db.commit()

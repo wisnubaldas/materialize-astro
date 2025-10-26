@@ -19,7 +19,6 @@ from app.schemas.hubnet_request_schema import HubnetRequestGet
 from app.services.datatables_service import DataTablesService
 from app.utils.env import ENV
 from app.utils.helper import HELPER
-from app.utils.logging_utils import log_execution
 
 logger = logging.getLogger("hubnet")
 
@@ -276,22 +275,46 @@ class HbnetRequestService:
         return data
 
     @staticmethod
-    @log_execution(logger_name="hubnet")
     def get_data_terkirim(flt_date: str, page: int = 1, per_page: int = 10):
         try:
             payload = {"FLT_DATE": flt_date}
+            logger.info(
+                "Mengambil data terkirim Hubnet",
+                extra={
+                    "event": "hubnet.fetch.start",
+                    "flight_date": flt_date,
+                    "page": page,
+                    "per_page": per_page,
+                },
+            )
             response = requests.post(
                 f"{ENV.HUBNET_URL}/nle-udara/get-data-logistik?page={page}&per_page={per_page}",
                 data=payload,
                 auth=HTTPBasicAuth(ENV.HUBNET_USER, ENV.HUBNET_PASSWORD),
             )
             response.raise_for_status()
-            print(f"Menampilkan data terkirim dari hubnet, status: {response.status_code}")
+            logger.info(
+                "Menampilkan data terkirim dari Hubnet",
+                extra={
+                    "event": "hubnet.fetch.success",
+                    "status": response.status_code,
+                    "flight_date": flt_date,
+                },
+            )
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Terjadi kesalahan saat membuat permintaan: {e}")
-            if hasattr(e.response, "text"):
-                print(f"Respons server: {e.response.text}")
+            status_code = getattr(e.response, "status_code", None)
+            logger.exception(
+                "Terjadi kesalahan saat mengambil data Hubnet",
+                extra={"event": "hubnet.fetch.error", "status": status_code},
+            )
+            if getattr(e.response, "text", None):
+                logger.error(
+                    "Respons server Hubnet: %s",
+                    e.response.text,
+                    extra={"event": "hubnet.fetch.response_body"},
+                )
+            return None
 
     @staticmethod
     def delete_data_terkirim_api(params: DeleteDataTerkirimSchema):
@@ -307,9 +330,18 @@ class HbnetRequestService:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Terjadi kesalahan saat membuat permintaan: {e}")
-            if hasattr(e.response, "text"):
-                print(f"Respons server: {e.response.text}")
+            status_code = getattr(e.response, "status_code", None)
+            logger.exception(
+                "Terjadi kesalahan saat menghapus data Hubnet",
+                extra={"event": "hubnet.delete.error", "status": status_code},
+            )
+            if getattr(e.response, "text", None):
+                logger.error(
+                    "Respons server Hubnet (delete): %s",
+                    e.response.text,
+                    extra={"event": "hubnet.delete.response_body"},
+                )
+            return None
 
     @staticmethod
     def __get_hostawb(awb: str, qfile: str):
@@ -320,7 +352,10 @@ class HbnetRequestService:
             sql = text(query)
             customers = db2.execute(sql, param).mappings().first()
         except Exception as e:
-            print("Error :", e)
+            logger.exception(
+                "Gagal mengambil data host AWB",
+                extra={"event": "hubnet.hostawb.error", "awb": awb, "query": qfile},
+            )
         finally:
             db2.close()
 

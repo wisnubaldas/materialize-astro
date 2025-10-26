@@ -6,10 +6,16 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
+from app.utils.env import ENV
 from app.utils.logging_config import setup_logging
 
 # app
-app = FastAPI(title="FastAPI App with Poetry")
+app = FastAPI(
+    title="FastAPI App with Poetry",
+    docs_url="/docs" if ENV.APP_DEBUG else None,
+    redoc_url="/redoc" if ENV.APP_DEBUG else None,
+    openapi_url="/openapi.json" if ENV.APP_DEBUG else None
+)
 
 
 # register_exception_handlers(app)
@@ -29,9 +35,9 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="API RA",
+        title="MAU APP",
         version="1.0.0",
-        description="API untuk integrasi RA dan eksternal",
+        description="API Aplikasi MAU",
         routes=app.routes,
     )
     openapi_schema["components"]["securitySchemes"] = {

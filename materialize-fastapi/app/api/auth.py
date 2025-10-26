@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
 from app.models.user import User
 from app.schemas.user_schema import LoginSchema, TokenSchema
-from app.utils.auth_util import create_token, set_jwt_cookie, verify_password, verify_token
+from app.utils.auth_util import create_token, set_jwt_cookie, verify_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
@@ -13,6 +13,7 @@ security = HTTPBearer()
 
 @router.post("/login", response_model=TokenSchema)
 def login(payload: LoginSchema, response: Response, db: Session = Depends(get_db1_r)):
+    """prameter menggunakan username `fmorrison@example.org` dan password `password123` untuk login"""
     # Cari user berdasarkan username
 
     user = db.query(User).filter(User.email == payload.email).first()
