@@ -1,8 +1,10 @@
 """Define Angkasapura-related routes that delegate work to `INVAp2Service`."""
 
-from datetime import date
+import re
+from io import BytesIO
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
@@ -12,6 +14,8 @@ from app.schemas.inv_ap2_schema import InvoiceDailySummary, InvoiceGet, InvoiceM
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase, VoidInvoiceSchemaResponse
 from app.services.inv_ap2_service import INVAp2Service
+
+MONTH_PATTERN = re.compile(r"^\d{4}-\d{2}$")
 
 router = APIRouter(prefix="/angkasapura", tags=["Angkasapura"])
 
@@ -45,6 +49,7 @@ def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r))
     """Forward voided invoice datatable requests to `INVAp2Service.table_void_invoice`."""
     return INVAp2Service.table_void_invoice(db=db, params=params)
 
+
 @router.get(
     "/search-invoice-response/{invoice_number}",
     response_model=list[ResponsInvAp2Get],
@@ -54,15 +59,37 @@ def search_invoice_response(invoice_number: str, db: Session = Depends(get_db1_r
     """Bridge invoice response lookups to `INVAp2Service.search_invoice_response`."""
     return INVAp2Service.search_invoice_response(db=db, invoice_number=invoice_number)
 
-@router.get(
-    "/invoice-perbulan/pdf/{tgl}",
-    summary="Get invoice PDF for a given month",
-)
-def get_invoice_pdf_perbulan(tgl: date, db: Session = Depends(get_db1_r)):
-    """Fetch the latest invoice PDF by calling `INVAp2Service.get_invoice_pdf_perbulan`."""
-    return {"tanggal": tgl, "tipe": str(type(tgl))}
-    # return INVAp2Service.get_invoice_pdf_perbulan(db=db, tgl=tgl)
-    
+
+@router.get("/invoice-perbulan/excel/{bulan}", summary="Bikin invoice excel per bulan")
+def get_invoice_excel_perbulan(bulan: str, db: Session = Depends(get_db1_r)):
+    if not MONTH_PATTERN.match(bulan):
+        raise HTTPException(status_code=400, detail="Format bulan tidak valid, gunakan YYYY-MM.")
+    _excel = INVAp2Service.get_invoice_excel_perbulan(db=db, bulan=bulan)
+    # 4. siapkan nama file
+    filename = f"invoices-{bulan}.xlsx"
+    return StreamingResponse(
+        BytesIO(_excel),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/invoice-perbulan/pdf/{tgl}", summary="Get invoice PDF for a given month")
+def get_invoice_pdf_perbulan(tgl: str, db: Session = Depends(get_db1_r)):
+    """Fetch the latest invoice PDF by calling `INVAp2Service.get_invoice_pdf_perbulan` dengan format YYYY-MM."""
+    if not MONTH_PATTERN.match(tgl):
+        raise HTTPException(status_code=400, detail="Format bulan tidak valid, gunakan YYYY-MM.")
+
+    pdf_bytes = INVAp2Service.get_invoice_pdf_perbulan(db=db, bulan=tgl)
+    filename = f"invoice-{tgl}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get(
     "/invoice-perbulan/{tahun}/{bulan}",
     response_model=list[InvoiceDailySummary],
@@ -81,6 +108,3 @@ def invoice_perbulan_detail(tahun: int, bulan: int, db: Session = Depends(get_db
 def invoice_perbulan(tahun: int, db: Session = Depends(get_db1_r)):
     """Retrieve monthly aggregates via `INVAp2Service.invoice_perbulan`."""
     return INVAp2Service.invoice_perbulan(db=db, tahun=tahun)
-
-
-

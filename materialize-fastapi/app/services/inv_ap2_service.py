@@ -1,15 +1,22 @@
 # linting: pylint: disable=too-many-lines, duplicate-code, too-many-statements, too-many-locals
 # pylint: disable=too-many-branches, too-many-nested-blocks, too-many-arguments, unused-argument
+import calendar
 import logging
-from datetime import date, datetime
+import re
+from datetime import datetime
 from decimal import Decimal
+from io import BytesIO
 from json import dumps
+from pathlib import Path
 
 import httpx
+import pandas as pd
 import requests
 from fastapi import HTTPException
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
+from xhtml2pdf import pisa
 
 from app.db.mysql import SessionDB1W, SessionDB2R
 from app.models.ap2_fail_inv import AP2FAILINV
@@ -39,6 +46,8 @@ from app.utils.helper import HELPER
 from app.utils.logging_utils import task_name
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
+MONTH_PATTERN = re.compile(r"^\d{4}-\d{2}$")
+MONTH_NAMES = {index: name for index, name in enumerate(calendar.month_name) if index}
 
 logger = logging.getLogger(__name__)
 # instance service untuk model InvAp2
@@ -99,9 +108,193 @@ def get_dynamic_params() -> dict[str, str]:
 
 class INVAp2Service:
     @staticmethod
-    def get_invoice_pdf_perbulan(db: Session, tgl: date) -> bytes:
-        logger.info("Generating invoice PDF for month: %s", tgl.strftime("%Y-%m-%d"))
-        print(f"{tgl}")
+    def get_invoice_excel_perbulan(db: Session, bulan: str) -> bytes:
+        logger.info(
+            "Generating invoice Excel for month: %s",
+            bulan,
+            extra={"event": "invoice.excel.generate", "month": bulan},
+        )
+        results = (
+            db.query(InvAp2)
+            .filter(InvAp2.TANGGAL.like(f"{bulan}%"))
+            .order_by(InvAp2.TANGGAL.asc(), InvAp2.NO_INVOICE.asc())
+            .all()
+        )
+
+        if not results:
+            logger.info(
+                "tidak ada data Excel for month: %s",
+                bulan,
+                extra={"event": "invoice.excel.generate", "month": bulan},
+            )
+            raise HTTPException(
+                status_code=400, detail="Tidak ada data untuk di buat laporan Excel"
+            )
+        else:
+            _df = pd.DataFrame(
+                [
+                    {
+                        "Invoice Number": inv.NO_INVOICE,
+                        "Customer": inv.TANGGAL,
+                        "Total": float(
+                            inv.TOTAL_PENDAPATAN_DENGAN_PPN
+                        ),  # Decimal -> float supaya Excel ngerti
+                        "Tanggal": inv.TANGGAL,
+                    }
+                    for inv in results
+                ]
+            )
+
+        # tulis dataframe ke Excel (worksheet "Invoices")
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            _df.to_excel(writer, index=False, sheet_name="Invoices")
+            # optional formatting contoh: autosize kolom
+            ws = writer.sheets["Invoices"]
+            for col in ws.columns:
+                max_length = 0
+                col_letter = col[0].column_letter
+                for cell in col:
+                    val = "" if cell.value is None else str(cell.value)
+                    if len(val) > max_length:
+                        max_length = len(val)
+                ws.column_dimensions[col_letter].width = max_length + 2
+        # penting: pindahkan cursor ke awal dan kembalikan bytes
+        return output.getvalue()
+
+    @staticmethod
+    def get_invoice_pdf_perbulan(db: Session, bulan: str) -> bytes:  # noqa: PLR0915
+        if not MONTH_PATTERN.match(bulan):
+            logger.warning(
+                "Format bulan tidak valid: %s",
+                bulan,
+                extra={"event": "invoice.pdf.invalid_month", "month": bulan},
+            )
+            raise HTTPException(
+                status_code=400, detail="Format bulan tidak valid. Gunakan YYYY-MM."
+            )
+
+        logger.info(
+            "Generating invoice PDF for month: %s",
+            bulan,
+            extra={"event": "invoice.pdf.generate", "month": bulan},
+        )
+        month_prefix = bulan
+
+        results = (
+            db.query(InvAp2)
+            .filter(InvAp2.TANGGAL.like(f"{month_prefix}%"))
+            .order_by(InvAp2.TANGGAL.asc(), InvAp2.NO_INVOICE.asc())
+            .all()
+        )
+
+        if not results:
+            logger.warning(
+                "Tidak ada data invoice untuk bulan: %s",
+                month_prefix,
+                extra={"event": "invoice.pdf.empty", "month": month_prefix},
+            )
+            raise HTTPException(
+                status_code=404, detail="Data invoice tidak ditemukan untuk bulan tersebut."
+            )
+
+        # Lokasi folder templates
+        templates_dir = Path(__file__).resolve().parent.parent / "templates"
+
+        def to_decimal(raw_value: str | int | Decimal | None) -> Decimal:
+            if raw_value in (None, ""):
+                return Decimal("0")
+            if isinstance(raw_value, Decimal):
+                return raw_value
+            try:
+                return Decimal(str(raw_value).replace(",", "").strip())
+            except (ValueError, ArithmeticError) as exc:
+                logger.debug("Gagal konversi nilai ke Decimal: %s - %s", raw_value, exc)
+                return Decimal("0")
+
+        total_tanpa_ppn = sum(to_decimal(row.TOTAL_PENDAPATAN_TANPA_PPN) for row in results)
+        total_dengan_ppn = sum(to_decimal(row.TOTAL_PENDAPATAN_DENGAN_PPN) for row in results)
+        totals = {
+            "tanpa_ppn": total_tanpa_ppn,
+            "dengan_ppn": total_dengan_ppn,
+            "tanpa_ppn_display": format(total_tanpa_ppn, ",.2f"),
+            "dengan_ppn_display": format(total_dengan_ppn, ",.2f"),
+        }
+
+        invoices = []
+        for row in results:
+            item = InvoiceGet.model_validate(row).model_dump()
+            tanpa_ppn_value = to_decimal(row.TOTAL_PENDAPATAN_TANPA_PPN)
+            dengan_ppn_value = to_decimal(row.TOTAL_PENDAPATAN_DENGAN_PPN)
+            item["TOTAL_PENDAPATAN_TANPA_PPN_VALUE"] = tanpa_ppn_value
+            item["TOTAL_PENDAPATAN_DENGAN_PPN_VALUE"] = dengan_ppn_value
+            item["TOTAL_PENDAPATAN_TANPA_PPN_DISPLAY"] = format(tanpa_ppn_value, ",.2f")
+            item["TOTAL_PENDAPATAN_DENGAN_PPN_DISPLAY"] = format(dengan_ppn_value, ",.2f")
+            invoices.append(item)
+
+        env = Environment(
+            loader=FileSystemLoader(str(templates_dir)),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
+
+        month_label = month_prefix
+        try:
+            year_str, month_str = month_prefix.split("-", maxsplit=1)
+            month_index = int(month_str)
+            if 1 <= month_index <= 12:
+                month_label = f"{MONTH_NAMES.get(month_index, month_prefix)} {year_str}"
+        except (ValueError, AttributeError):
+            month_label = month_prefix
+
+        try:
+            template = env.get_template("invoice.html")
+            html_content = template.render(
+                invoices=invoices,
+                month=month_prefix,
+                month_label=month_label,
+                generated_at=datetime.now(),  # noqa: DTZ005
+                total_records=len(invoices),
+                totals=totals,
+            )
+            pdf_buffer = BytesIO()
+            pdf_result = pisa.CreatePDF(
+                src=html_content,
+                dest=pdf_buffer,
+                encoding="utf-8",
+                link_callback=None,
+            )
+        except Exception as exc:
+            logger.exception(
+                "Gagal menghasilkan PDF invoice untuk bulan: %s",
+                month_prefix,
+                extra={"event": "invoice.pdf.failure", "month": month_prefix},
+            )
+            raise HTTPException(status_code=500, detail="Gagal membuat PDF invoice.") from exc
+
+        if pdf_result.err:
+            logger.error(
+                "xhtml2pdf gagal menghasilkan output PDF untuk bulan: %s",
+                month_prefix,
+                extra={"event": "invoice.pdf.xhtml2pdf_error", "month": month_prefix},
+            )
+            raise HTTPException(status_code=500, detail="Gagal memproses file PDF.")
+
+        pdf_buffer.seek(0)
+        pdf_bytes = pdf_buffer.getvalue()
+        if not pdf_bytes:
+            logger.error(
+                "xhtml2pdf tidak menghasilkan output PDF untuk bulan: %s",
+                month_prefix,
+                extra={"event": "invoice.pdf.empty_output", "month": month_prefix},
+            )
+            raise HTTPException(status_code=500, detail="File PDF kosong.")
+
+        logger.info(
+            "Berhasil menghasilkan PDF invoice untuk bulan: %s",
+            month_prefix,
+            extra={"event": "invoice.pdf.success", "month": month_prefix, "rows": len(invoices)},
+        )
+        return pdf_bytes
 
     @staticmethod
     def _normalized_invoice_date():
@@ -185,9 +378,7 @@ class INVAp2Service:
 
     @staticmethod
     def search_invoice_response(db: Session, invoice_number: str):
-        logger.info(
-            "Searching for invoice responses with invoice number: %s", invoice_number
-        )
+        logger.info("Searching for invoice responses with invoice number: %s", invoice_number)
         try:
             responses = (
                 db.query(ResponsInvAp2)

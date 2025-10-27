@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Invoice </title>
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .meta {
+            margin-bottom: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th,
+        td {
+            border: 1px solid #555;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        tfoot td {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Laporan Invoice Bulanan</h1>
+    <div class="meta">
+        <div><strong>Bulan:</strong> {{ month_label }}</div>
+        <div><strong>Total Invoice:</strong> {{ total_records }}</div>
+        <div><strong>Generated at:</strong> {{ generated_at.strftime('%d %B %Y %H:%M') }}</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>No Invoice</th>
+                <th>Tanggal</th>
+                <th>SMU</th>
+                <th>Airline</th>
+                <th>Flight</th>
+                <th>Jenis Kargo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ invoice.NO_INVOICE }}</td>
+                <td>{{ invoice.TANGGAL }}</td>
+                <td>{{ invoice.SMU }}</td>
+                <td>{{ invoice.KDAIRLINE }}</td>
+                <td>{{ invoice.FLIGHT_NUMBER }}</td>
+                <td>{{ invoice.JENIS_KARGO }}</td>
+            </tr>
+            <tr>
+                <td colspan="5">Pendapatan Tanpa PPN</td>
+                <td colspan="2" style="text-align: right;">{{ invoice.TOTAL_PENDAPATAN_TANPA_PPN_DISPLAY }}</td>
+            </tr>
+            <tr>
+                <td colspan="5">Pendapatan Dengan PPN</td>
+                <td colspan="2" style="text-align: right;">{{ invoice.TOTAL_PENDAPATAN_DENGAN_PPN_DISPLAY }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5">Total Pendapatan Tanpa PPN</td>
+                <td colspan="2" style="text-align: right;">{{ totals.tanpa_ppn_display }}</td>
+            </tr>
+            <tr>
+                <td colspan="5">Total Pendapatan Dengan PPN</td>
+                <td colspan="2" style="text-align: right;">{{ totals.dengan_ppn_display }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+</body>
+
+</html>
