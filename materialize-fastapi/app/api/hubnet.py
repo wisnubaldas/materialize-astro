@@ -17,7 +17,7 @@ def data_terkirim(params: DataTablesParams, db: Session = Depends(get_db1_r)):
 
 @router.post("/upload-manifests")
 def upload_manifests(file: UploadFile = File(...), db: Session = Depends(get_db1_w)):
-    if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):
+    if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):  # type: ignore
         raise HTTPException(status_code=400, detail="Invalid file format")
     return HbnetRequestService.upload_manifest(file=file, db=db)
 
@@ -40,4 +40,4 @@ def get_data_terkirim(flt_date: str, page: int = 1, per_page: int = 10):
 
 @router.post("/delete-data-terkirim", summary="Delete data terkirim di API HUBNET")
 def delete_data_terkirim(params: list[DeleteDataTerkirimSchema]):
-    return HbnetRequestService.delete_data_terkirim_api(params=params)
+    return HbnetRequestService.delete_data_terkirim_api(params=params)  # type: ignore

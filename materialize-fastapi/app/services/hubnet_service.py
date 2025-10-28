@@ -39,7 +39,7 @@ class HbnetRequestService:
     @staticmethod
     def upload_manifest(file: UploadFile, db: Session):  # noqa: PLR0912, PLR0915
         # validasi ekstensi
-        if not file.filename.endswith((".xlsx", ".xlsm")):
+        if not file.filename.endswith((".xlsx", ".xlsm")):  # type: ignore
             raise HTTPException(
                 status_code=400, detail="Format file tidak valid, gunakan Excel (.xlsx / .xlsm)"
             )
@@ -61,7 +61,7 @@ class HbnetRequestService:
             "MC",
             "KATEGORI_CARGO",
         ]
-        headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+        headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]  # pyright: ignore[reportOptionalMemberAccess]
         if headers != expected_headers:
             raise HTTPException(
                 status_code=400,
@@ -74,7 +74,7 @@ class HbnetRequestService:
         batch = []
         batch_size = 500
 
-        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):  # pyright: ignore[reportOptionalMemberAccess]
             if not any(row):
                 continue
             AWB_NO, FLT_NUMBER, FLT_DATE, ORI, DEST, T, K, CH_WEIGHT, MC, KATEGORI_CARGO = row
@@ -303,18 +303,27 @@ class HbnetRequestService:
             )
             return response.json()
         except requests.exceptions.RequestException as e:
-            status_code = getattr(e.response, "status_code", None)
+            response_status = getattr(e.response, "status_code", None)
+            status_code = response_status or 502
             logger.exception(
                 "Terjadi kesalahan saat mengambil data Hubnet",
                 extra={"event": "hubnet.fetch.error", "status": status_code},
             )
-            if getattr(e.response, "text", None):
+            response_text = getattr(e.response, "text", None)
+            if response_text:
                 logger.error(
                     "Respons server Hubnet: %s",
-                    e.response.text,
+                    response_text,
                     extra={"event": "hubnet.fetch.response_body"},
                 )
-            return None
+            error_detail = response_text or str(e)
+            raise HTTPException(
+                status_code=status_code,
+                detail={
+                    "message": "Gagal terhubung ke layanan Hubnet.",
+                    "error": error_detail,
+                },
+            ) from e
 
     @staticmethod
     def delete_data_terkirim_api(params: DeleteDataTerkirimSchema):
@@ -351,7 +360,7 @@ class HbnetRequestService:
             param = {"awb": awb}
             sql = text(query)
             customers = db2.execute(sql, param).mappings().first()
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "Gagal mengambil data host AWB",
                 extra={"event": "hubnet.hostawb.error", "awb": awb, "query": qfile},
