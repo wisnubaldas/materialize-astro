@@ -684,34 +684,74 @@ class INVAp2Service:
     async def void_invoice_ap2(
         request: VoidInvoiceSchemaBase, db: Session
     ) -> VoidInvoiceSchemaResponse:
-        async with httpx.AsyncClient() as client:
-            ext_request = VoidInvoiceSchemaRequest(
-                **request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD
+        ext_request = VoidInvoiceSchemaRequest(
+            **request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD
+        )
+
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{ENV.AP2_DEV_URL}/api/void_invo_dtl",
+                    headers=HEADERS,
+                    data=ext_request.model_dump(),
+                )
+                resp.raise_for_status()
+        except httpx.TimeoutException as exc:
+            logger.error(
+                "Timeout saat menghubungi AP2 untuk void invoice %s",
+                request.NO_INVOICE,
+                exc_info=exc,
+                extra={"event": "invoice.void.timeout", "invoice": request.NO_INVOICE},
             )
-
-            resp = await client.post(
-                f"{ENV.AP2_DEV_URL}/api/void_invo_dtl",
-                headers=HEADERS,
-                data=ext_request.model_dump(),
+            raise HTTPException(status_code=504, detail="AP2 tidak merespons.") from exc
+        except httpx.HTTPStatusError as exc:
+            logger.error(
+                "AP2 mengembalikan status %s saat void invoice %s",
+                exc.response.status_code,
+                request.NO_INVOICE,
+                exc_info=exc,
+                extra={
+                    "event": "invoice.void.http_error",
+                    "invoice": request.NO_INVOICE,
+                    "status": exc.response.status_code,
+                },
             )
-            resp.raise_for_status()
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text) from exc
+        except httpx.RequestError as exc:
+            logger.error(
+                "Gagal menghubungi AP2 untuk void invoice %s",
+                request.NO_INVOICE,
+                exc_info=exc,
+                extra={"event": "invoice.void.connection_error", "invoice": request.NO_INVOICE},
+            )
+            raise HTTPException(status_code=502, detail="Gagal menghubungi layanan AP2.") from exc
 
-            merged = request.model_dump()
-            merged["RESPONSE"] = resp.json()
-            result = VoidInvoiceSchemaResponse(**merged)
+        resp_json = resp.json()
+        merged = request.model_dump()
+        merged["RESPONSE"] = resp_json
+        result = VoidInvoiceSchemaResponse(**merged)
 
+        try:
             obj_data = VoidInvAp2(
                 TANGGAL=result.TANGGAL,
                 NO_INVOICE=result.NO_INVOICE,
                 HAWB=result.HAWB,
                 SMU=result.SMU,
-                RESPONSE=dumps(resp.json()),
+                RESPONSE=dumps(resp_json),
             )
             db.add(obj_data)
             db.commit()
             db.refresh(obj_data)
+        except Exception as exc:  # pragma: no cover - defensive
+            db.rollback()
+            logger.exception(
+                "Gagal menyimpan data void invoice AP2 untuk %s",
+                result.NO_INVOICE,
+                extra={"event": "invoice.void.persist_error", "invoice": result.NO_INVOICE},
+            )
+            raise HTTPException(status_code=500, detail="Gagal menyimpan respons void invoice AP2.") from exc
 
-            return result
+        return result
 
     @staticmethod
     def table_void_invoice(
