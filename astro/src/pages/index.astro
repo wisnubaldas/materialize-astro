@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import WelcomeBanner from '@components/WelcomeBanner.jsx';
+---
+
+<BaseLayout
+  title="MAU APP "
+  description="Aplikasi Manajemen Gudang logistik lini 1 bandara Soekarno Hatta"
+>
+  <WelcomeBanner client:only name="Dashboard" />
+</BaseLayout>

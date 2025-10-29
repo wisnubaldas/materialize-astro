@@ -1,0 +1,19 @@
+---
+import '@vendor/css/invoice.css';
+import AdminLayout from '@layouts/BaseLayout.astro';
+import VoidInvoiceGrid from '@components/angkasapura/VoidInvoiceGrid';
+import VoidInvoiceForm from '@components/angkasapura/VoidInvoiceForm';
+---
+
+<AdminLayout
+  title="Void Invoice"
+  description="Halaman untuk void invoice yang sudah terkirim ke angkasapura"
+>
+  <!-- Komponen controller -->
+  <div class="row m-4" style="min-height: 500px;">
+    <div class="container-xxl grow container-p-y">
+      <VoidInvoiceGrid client:only />
+      <VoidInvoiceForm client:only />
+    </div>
+  </div>
+</AdminLayout>
