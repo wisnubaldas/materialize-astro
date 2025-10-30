@@ -35,6 +35,7 @@ redis = "^6.4.0"
 itsdangerous = "^2.2.0"
 jinja2 = "^3.1.6"
 xhtml2pdf = "^0.2.16"
+pycairo = { version = ">=1.25.0,<1.29.0", allow-prereleases = true }
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
