@@ -11,7 +11,7 @@ set -o pipefail
 export PATH="$PATH:/home/wisnu/.local/bin:/usr/local/bin:/usr/bin"
 
 APP_DIR="/home/wisnu/mau-app"
-FRONTEND_DIR="$APP_DIR/template-baru"
+FRONTEND_DIR="$APP_DIR/astro"
 BACKEND_DIR="$APP_DIR/materialize-fastapi"
 BRANCH="production"
 LOG_FILE="$APP_DIR/deploy-logs/production-$(date +'%Y%m%d_%H%M%S').log"
