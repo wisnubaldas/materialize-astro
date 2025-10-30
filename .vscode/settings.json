@@ -1,16 +1,17 @@
 {
+  "cSpell.enabled": false,
   "python.defaultInterpreterPath": "C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Scripts\\python.exe",
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
     "**/*.pyo": true,
-    "**/.pytest_cache":true,
-    "**/.ruff_cache":true
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true
   },
   "python.linting.enabled": true,
   "python.linting.ruffEnabled": true,
   "python.linting.ruffPath": ["ruff"],
-  
+
   // Formatter & linting tambahan opsional
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
@@ -21,10 +22,10 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.tabSize": 2
-    },
+  },
   "python.linting.mypyEnabled": true,
   "python.linting.mypyPath": "mypy",
-  
+
   "python.analysis.autoImportCompletions": true,
   "python.analysis.typeCheckingMode": "basic",
   "editor.quickSuggestions": {
@@ -44,12 +45,5 @@
   },
   "CodeGPT.apiKey": "OpenAI",
   "chatgpt.openOnStartup": false,
-
-  // Ensure consistent 2-space indent for CSS
-  "editor.detectIndentation": false,
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2
-},
-"svg.preview.background": "custom"
+  "svg.preview.background": "custom"
 }

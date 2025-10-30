@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import '@libs/animate-css/animate.scss';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 // 🔹 Context untuk React-komponen
 const ToastContext = createContext();
@@ -27,7 +27,7 @@ export function ToasterProvider({ children }) {
   // 🔹 Dengarkan event global dari luar React
   useEffect(() => {
     const handleGlobalToast = (e) => {
-      const { message, type = 'info', duration = 5000, title } = e.detail || {};
+      const { message, type = 'info', duration = 4000, title } = e.detail || {};
       addToast(message, type, duration, title);
     };
     window.addEventListener('toast', handleGlobalToast);
@@ -38,7 +38,7 @@ export function ToasterProvider({ children }) {
     <ToastContext.Provider value={{ addToast }}>
       {children}
 
-      <div className="toast-container position-absolute top-0 end-0" style={{ zIndex: 1080 }}>
+      <div className="toast-container position-absolute top-0 end-0 p-5" style={{ zIndex: 1080 }}>
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -47,7 +47,7 @@ export function ToasterProvider({ children }) {
             aria-live="assertive"
             aria-atomic="true"
           >
-            <div className="toast-header">
+            <div className={`toast-header bg-label-${t.type}`}>
               <i className={`icon-base ri ri-spam-fill text-${t.type} me-2`}></i>
               <div className="me-auto fw-medium">{t.title}</div>
               <small className="text-body-secondary">{Date.now()}</small>

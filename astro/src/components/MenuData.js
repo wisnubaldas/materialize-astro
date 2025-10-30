@@ -43,16 +43,12 @@ export const menuData = [
         url: prefix.hubnet('dashboard'),
       },
       {
-        name: 'Data Terkirim',
-        url: prefix.hubnet('data-terkirim'),
-      },
-      {
-        name: 'Monitor Sending Data',
+        name: 'Data Tracking',
         url: prefix.hubnet('data-tracking'),
       },
       {
-        name: 'Upload Excel Export',
-        url: prefix.hubnet('upload-excel-export'),
+        name: 'Upload Excel Sending Export',
+        url: prefix.hubnet('upload-excel-sending-export'),
       },
       {
         name: 'Kirim Ulang By Date',

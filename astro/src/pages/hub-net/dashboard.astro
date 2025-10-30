@@ -1,7 +1,8 @@
 ---
-import AdminLayout from '@layouts/BaseLayout.astro';
 import DashboardHubnet from '@components/hubnet/Dashboard';
+import AdminLayout from '@layouts/BaseLayout.astro';
 ---
+
 <AdminLayout title="HUBNET | Dashboard" , description="Dashboard data yang terkirim ke HUBNET">
-  <DashboardHubnet client:load />
+  <DashboardHubnet client:only />
 </AdminLayout>
