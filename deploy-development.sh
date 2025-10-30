@@ -50,33 +50,37 @@ else
 fi
 
 # --- Backend dependencies (Poetry) ---
-if [ -d "$BACKEND_DIR" ]; then
-  echo "📦 Installing backend dependencies (poetry)..."
-  cd "$BACKEND_DIR"
+  if [ -d "$BACKEND_DIR" ]; then
+    echo "📦 Installing backend dependencies (poetry)..."
+    cd "$BACKEND_DIR"
 
-  # Ensure Poetry is available
-  if ! command -v poetry &> /dev/null; then
-    echo "⚠️ Poetry not found. Installing local version..."
-    pip install --user "poetry==2.2.1"
-    export PATH="$HOME/.local/bin:$PATH"
+    if ! command -v poetry &> /dev/null; then
+      echo "⚠️ Poetry not found. Installing local version..."
+      pip install --user "poetry==2.2.1"
+      export PATH="$HOME/.local/bin:$PATH"
+    fi
+
+    POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
+    echo "ℹ️ Poetry version: $POETRY_VERSION"
+
+    # Fix for pycairo build issue
+    echo "🧩 Ensuring system deps for pycairo..."
+    if command -v apt-get &>/dev/null; then
+      sudo apt-get update -y
+      sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+    fi
+    pip install "pycairo==1.25.0" --no-use-pep517 --no-cache-dir || true
+
+    if ! poetry check --lock >/dev/null 2>&1; then
+      echo "⚠️  Lock file out of sync with pyproject.toml, regenerating..."
+      poetry lock --no-update
+    fi
+
+    poetry install --no-root --sync
+    echo "✅ Backend dependencies installed."
+  else
+    echo "⚠️  Backend directory not found: $BACKEND_DIR"
   fi
-
-  # Check Poetry version
-  POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
-  echo "ℹ️  Poetry version: $POETRY_VERSION"
-
-  # Auto-fix lock mismatch
-  if ! poetry check --lock >/dev/null 2>&1; then
-    echo "⚠️  Lock file out of sync with pyproject.toml, regenerating..."
-    poetry lock --no-update
-  fi
-
-  # Install deps safely
-  poetry install --no-root --sync
-  echo "✅ Backend dependencies installed."
-else
-  echo "⚠️  Backend directory not found: $BACKEND_DIR"
-fi
 
 # --- Restart Backend (via Supervisor) ---
 if [ -d "$BACKEND_DIR" ]; then
