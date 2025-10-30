@@ -1,6 +1,3 @@
-# app/core/scheduler.py
-
-
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.services.inv_ap2_service import INVAp2Service
@@ -14,7 +11,6 @@ scheduler = AsyncIOScheduler()
 
 
 def init_scheduler():
-    print("Menjalankan job hubnet...")
     scheduler.add_job(
         run_sending_ke_hubnet,
         "interval",

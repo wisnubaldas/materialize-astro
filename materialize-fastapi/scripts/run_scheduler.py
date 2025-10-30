@@ -6,10 +6,12 @@ from contextlib import suppress
 
 from app.utils.logging_config import setup_logging
 from app.utils.scheduler import start_scheduler, stop_scheduler
+from app.utils.startup_banner import print_startup_banner
 
 
 async def _serve_scheduler() -> None:
     """Boot the APScheduler jobs and keep the event loop alive until a stop signal arrives."""
+    print_startup_banner()
     setup_logging()
     await start_scheduler()
 
@@ -25,7 +27,7 @@ async def _serve_scheduler() -> None:
         if not stop_event.is_set():
             stop_event.set()
 
-    def _sync_handler(signum: int, frame: object | None = None) -> None:  # noqa: ARG001
+    def _sync_handler(signum: int, frame: object | None = None) -> None:
         _notify_stop()
 
     for sig in signals:
