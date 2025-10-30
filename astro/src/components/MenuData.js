@@ -50,10 +50,6 @@ export const menuData = [
         name: 'Upload Excel Sending Export',
         url: prefix.hubnet('upload-excel-sending-export'),
       },
-      {
-        name: 'Kirim Ulang By Date',
-        url: prefix.hubnet('kirim-ulang-by-date'),
-      },
     ],
   },
   {

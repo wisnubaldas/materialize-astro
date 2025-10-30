@@ -39,8 +39,14 @@ export default function UploadExcel() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Gagal mengunggah file. Silakan coba kembali.';
-
-      setFeedback({ variant: 'danger', message: errorMessage });
+      try {
+        const m = JSON.parse(errorMessage);
+        // console.log(m.detail.message);
+        setFeedback({ variant: 'danger', message: m.detail.message });
+      } catch (e) {
+        // return errorMessage;
+        setFeedback({ variant: 'danger', message: errorMessage });
+      }
     } finally {
       setIsUploading(false);
     }
@@ -105,10 +111,10 @@ export default function UploadExcel() {
   const dropzoneClassName = `dropzone needsclick${isDragActive ? ' dz-drag-hover' : ''}`;
   const feedbackTextClass =
     feedback.variant === 'success'
-      ? 'text-success'
+      ? 'success'
       : feedback.variant === 'danger'
-      ? 'text-danger'
-      : 'text-body';
+      ? 'danger'
+      : 'primary';
   const dropzoneStyle = {
     border: '2px dashed #cccccc',
     borderRadius: '4px',
@@ -154,11 +160,15 @@ export default function UploadExcel() {
               </div>
 
               <div className="col-md-8 col-xl-8 col-sm-12">
-                <div className="card h-100 ">
+                <div
+                  className={`card h-100 rounded-sm shadow-none bg-transparent border border-${feedbackTextClass} `}
+                >
                   <div className="d-flex align-items-end row">
                     <div className="col-md-6 order-2 order-md-1">
-                      <div className={`card-body card-response rounded-full ${feedbackTextClass}`}>
-                        <h4 className="card-title col-10 mb-0">{feedback.message}</h4>
+                      <div className="card-body">
+                        <h4 className={`card-title col-10 mb-0 text-${feedbackTextClass}`}>
+                          {feedback.message}
+                        </h4>
                       </div>
                     </div>
                     <div className="col-md-6 text-center text-md-end order-1 order-md-2">
@@ -167,7 +177,7 @@ export default function UploadExcel() {
                           icon="vscode-icons:file-type-excel"
                           width="96"
                           height="96"
-                          className="position-absolute bottom-0 end-0 me-0"
+                          className="position-absolute bottom-0 end-0 p-3"
                         />
                       </div>
                     </div>
