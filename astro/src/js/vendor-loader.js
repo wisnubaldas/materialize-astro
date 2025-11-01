@@ -1,59 +1,95 @@
-import "./vendor-bundle.js";
-import { Helpers } from "./helpers.js";
-import "./template-customizer.js";
-import "./config.js";
-import { Menu } from "./menu.js";
-Waves.init();
+const getWindow = () => (typeof window !== 'undefined' ? window : null);
 
-const initMenu = () => {
-  const menuElement = document.getElementById("layout-menu");
-  if (!menuElement || typeof window === "undefined") {
+const loadDependencies = async () => {
+  await import('./vendor-bundle.js');
+  // helpers must be available before config/menu/customizer run
+  await import('./helpers.js');
+  await import('./config.js');
+  await Promise.all([import('./template-customizer.js'), import('./menu.js')]);
+};
+
+const bindMenuToggles = (win, helpers) => {
+  const toggles = win.document.querySelectorAll('.layout-menu-toggle');
+
+  toggles.forEach((toggle) => {
+    if (toggle.dataset.menuToggleBound === 'true') return;
+
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      helpers?.toggleCollapsed?.();
+    });
+
+    toggle.dataset.menuToggleBound = 'true';
+  });
+};
+
+const initMenu = (win) => {
+  const menuElement = win.document.getElementById('layout-menu');
+  if (!menuElement) {
     return;
   }
 
-  const currentMenu = window.Helpers?.mainMenu;
-  if (currentMenu && typeof currentMenu.destroy === "function") {
+  const helpers = win.Helpers;
+  const MenuCtor = win.Menu;
+
+  if (!helpers || typeof MenuCtor !== 'function') {
+    return;
+  }
+
+  const currentMenu = helpers.mainMenu;
+  if (currentMenu && typeof currentMenu.destroy === 'function') {
     currentMenu.destroy();
   }
 
-  const showDropdownOnHover =
-    window.templateCustomizer?.settings?.showDropdownOnHover ?? false;
-  const perfectScrollbarLib = window.PerfectScrollbar ?? null;
+  const showDropdownOnHover = win.templateCustomizer?.settings?.showDropdownOnHover ?? false;
+  const perfectScrollbarLib = win.PerfectScrollbar ?? null;
 
-  window.Helpers.mainMenu = new Menu(
+  helpers.mainMenu = new MenuCtor(
     menuElement,
     {
-      orientation: "vertical",
+      orientation: 'vertical',
       closeChildren: true,
       showDropdownOnHover,
     },
     perfectScrollbarLib
   );
 
-  if (!Helpers.isSmallScreen()) {
-    Helpers._scrollToActive();
+  if (typeof helpers.isSmallScreen !== 'function' || !helpers.isSmallScreen()) {
+    helpers._scrollToActive?.();
   }
 
-  bindMenuToggles();
+  bindMenuToggles(win, helpers);
 };
 
-const bindMenuToggles = () => {
-  const toggles = document.querySelectorAll(".layout-menu-toggle");
+const bootstrap = async () => {
+  const win = getWindow();
+  if (!win) {
+    return;
+  }
 
-  toggles.forEach((toggle) => {
-    if (toggle.dataset.menuToggleBound === "true") return;
+  await loadDependencies();
 
-    toggle.addEventListener("click", (event) => {
-      event.preventDefault();
-      Helpers.toggleCollapsed();
-    });
+  const waves = win.Waves;
+  if (waves && typeof waves.init === 'function') {
+    waves.init();
+  }
 
-    toggle.dataset.menuToggleBound = "true";
-  });
+  const start = () => {
+    try {
+      initMenu(win);
+    } catch (error) {
+      console.error('[vendor-loader] initMenu failed', error);
+    }
+  };
+
+  if (win.document.readyState === 'loading') {
+    win.document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
 };
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initMenu, { once: true });
-} else {
-  initMenu();
-}
+bootstrap().catch((error) => {
+  console.error('[vendor-loader] bootstrap failed', error);
+  throw error;
+});

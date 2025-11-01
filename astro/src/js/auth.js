@@ -3,7 +3,7 @@ import {
   AUTH_COOKIE_NAME,
   AUTH_ENDPOINTS,
   AUTH_ERRORS,
-} from '@lib/auth/config';
+} from '../lib/auth/config';
 
 const SECURE_CONTEXT =
   typeof window !== 'undefined' && typeof window.location !== 'undefined'
@@ -120,4 +120,4 @@ function logout() {
   clearAuthCookie();
 }
 
-export { sha256, login, logout, getAccessToken, clearAuthCookie, AUTH_ERRORS };
+export { AUTH_ERRORS, clearAuthCookie, getAccessToken, login, logout, sha256 };

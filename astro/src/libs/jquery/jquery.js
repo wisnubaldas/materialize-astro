@@ -1,8 +1,15 @@
-import jQuery from 'jquery/dist/jquery';
+// import jQuery from '/node_modules/jquery/dist/jquery.min.js';
+import jQuery from 'jquery';
+if (typeof window !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log(window.location.href);
+    const $ = jQuery;
 
-const $ = jQuery;
-try {
-  window.jQuery = window.$ = jQuery;
-} catch (e) {}
+    // pastikan hanya 1x assign global
+    if (!window.jQuery) window.jQuery = jQuery;
+    if (!window.$) window.$ = $;
+    alert($);
+  });
+}
 
-export { jQuery, $ };
+export default jQuery;

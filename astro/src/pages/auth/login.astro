@@ -1,10 +1,13 @@
 ---
-// import '@assets/libs/sweetalert2/sweetalert2.scss';
-import { sha256 } from '@js/auth.js';
-import loginPageScriptUrl from '@js/pages/login-page.js?url';
-import vendorLoaderUrl from '@js/vendor-loader.js?url';
-import authCss from '@vendor/css/pages/page-auth.css?url';
-const hashedTitle = await sha256('belekok');
+import VendorLoader from '@components/VendorLoader';
+import '@js/_template-customizer/_template-customizer.scss';
+import '@libs/@form-validation/form-validation.scss';
+import '@libs/node-waves/node-waves.scss';
+import '@libs/perfect-scrollbar/perfect-scrollbar.scss';
+import '@libs/pickr/pickr-themes.scss';
+import '@scss/core.scss';
+import '@vendor/css/demo.css';
+import '@vendor/css/pages/page-auth.css';
 ---
 
 <!doctype html>
@@ -14,7 +17,7 @@ const hashedTitle = await sha256('belekok');
   dir="ltr"
   data-skin="default"
   data-bs-theme="light"
-  data-assets-path="/assets/"
+  data-assets-path="/"
   data-template="vertical-menu-template"
 >
   <head>
@@ -24,14 +27,11 @@ const hashedTitle = await sha256('belekok');
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Login-{hashedTitle}</title>
+    <title>Login</title>
 
     <meta name="description" content="" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="/assets/css/core.css" />
-    <link rel="stylesheet" href={authCss} />
-    <script type="module" src={vendorLoaderUrl}></script>
   </head>
 
   <body>
@@ -217,6 +217,6 @@ const hashedTitle = await sha256('belekok');
         </div>
       </div>
     </div>
-    <script type="module" src={loginPageScriptUrl}></script>
+    <VendorLoader client:only="react" loadLoginScripts />
   </body>
 </html>

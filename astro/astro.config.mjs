@@ -1,8 +1,9 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import node from '@astrojs/node';
-import sass from 'sass';
+import react from '@astrojs/react';
+import { defineConfig } from 'astro/config';
+
+// @ts-ignore
 
 // Configure Astro for SSR using the Node adapter and enable React components.
 export default defineConfig({
@@ -23,6 +24,7 @@ export default defineConfig({
         '@libs': '/src/libs',
       },
     },
+
     css: {
       preprocessorOptions: {
         scss: {
@@ -31,5 +33,13 @@ export default defineConfig({
         },
       },
     },
+    build: {
+      minify: 'terser', // bisa juga 'esbuild'
+      terserOptions: {
+        compress: true,
+        mangle: true,
+      },
+    },
+    plugins: [],
   },
 });

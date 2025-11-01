@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node minify-public-js.js",
     "preview": "astro preview",
     "astro": "astro",
     "css:build": "sass src/scss/core.scss public/assets/css/core.css --load-path=node_modules && node -e \"const fs=require('fs');const path=require('path');const dest=path.resolve('public/assets/vendor');fs.rmSync(dest,{recursive:true,force:true});fs.cpSync(path.resolve('src/vendor'),dest,{recursive:true});\""
@@ -14,6 +14,8 @@
     "@algolia/autocomplete-theme-classic": "^1.19.4",
     "@astrojs/node": "^9.5.0",
     "@astrojs/react": "^4.4.0",
+    "@form-validation/bundle": "^2.4.0",
+    "@form-validation/plugin-bootstrap5": "^2.4.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.6",
@@ -53,6 +55,8 @@
   "devDependencies": {
     "@iconify-icon/react": "^3.0.1",
     "sass": "^1.93.2",
-    "sass-embedded": "^1.93.2"
+    "sass-embedded": "^1.93.2",
+    "terser": "^5.44.0",
+    "vite-plugin-minify": "^2.1.0"
   }
 }

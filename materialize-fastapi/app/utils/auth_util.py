@@ -41,28 +41,30 @@ def set_jwt_cookie(response: Response, token: str):
     """
     Set cookie JWT secara aman dengan environment-aware.
     """
-    # print(ENV.APP_ENV)
-    if ENV.APP_ENV == "production":
-        # cookie lintas subdomain (untuk mitraadira.com)
-        response.set_cookie(
-            key="access_token",
-            value=token,
-            httponly=True,
-            secure=True,  # hanya via HTTPS
-            samesite="none",  # agar dikirim lintas subdomain
-            domain=".mitraadira.com",
-            max_age=60 * 60 * 24,  # 1 hari
-            path="/",
-        )
+    env_domain = (ENV.AUTH_COOKIE_DOMAIN or "").strip() if ENV.AUTH_COOKIE_DOMAIN else None
+    domain = env_domain if env_domain else (".mitraadira.com" if ENV.APP_ENV == "production" else None)
+
+    raw_same_site = (ENV.AUTH_COOKIE_SAMESITE or "").strip().lower() if ENV.AUTH_COOKIE_SAMESITE else None
+    default_same_site = "none" if ENV.APP_ENV == "production" else "lax"
+    same_site = raw_same_site if raw_same_site in {"lax", "strict", "none"} else default_same_site
+
+    # default secure flag
+    if ENV.AUTH_COOKIE_SECURE is None:
+        secure = ENV.APP_ENV == "production"
     else:
-        # local dev: tidak secure & tanpa domain
-        response.set_cookie(
-            key="access_token",
-            value=token,
-            httponly=True,
-            secure=False,  # karena http://localhost
-            samesite="lax",  # lebih aman daripada none di HTTP
-            domain=None,  # wajib None agar cocok dengan localhost
-            max_age=60 * 60 * 24,  # 1 hari
-            path="/",
-        )
+        secure = bool(ENV.AUTH_COOKIE_SECURE)
+
+    # SameSite=None mensyaratkan Secure=True
+    if same_site == "none":
+        secure = True
+
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=secure,
+        samesite=same_site,  # type: ignore[arg-type]
+        domain=domain,  # type: ignore[arg-type]
+        max_age=60 * 60 * 24,  # 1 hari
+        path="/",
+    )

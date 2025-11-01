@@ -47,6 +47,10 @@ class ENV(BaseSettings):
 
     REDIS_URL: str = "redis://localhost:6379/5"
     SSE_KEY: str = None
+    CORS_ALLOW_ORIGINS: str | None = None
+    AUTH_COOKIE_DOMAIN: str | None = None
+    AUTH_COOKIE_SAMESITE: str | None = None
+    AUTH_COOKIE_SECURE: bool | None = None
 
     class Config:
         env_file = ".env"  # otomatis baca file .env

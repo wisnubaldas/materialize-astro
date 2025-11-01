@@ -1,11 +1,8 @@
-import pkg from "@algolia/autocomplete-js";
+import { autocomplete } from '@algolia/autocomplete-js';
 
-// Support both CommonJS default export and named export shapes
-const autocomplete = pkg?.autocomplete ?? pkg;
-
-try {
-  window.autocomplete = autocomplete;
-} catch (e) {}
+if (typeof window !== 'undefined') {
+  window.autocomplete = window.autocomplete ?? autocomplete;
+}
 
 export { autocomplete };
 export default autocomplete;
