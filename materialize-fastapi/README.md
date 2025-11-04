@@ -45,7 +45,7 @@ SSE_KEY=92a936af44d2c94d919c0d0800f6617b008c4d1817a1981aeb0ecf3cad3373fa
 
 ## Project Structure
 
-```
+```shell
 fastapi-project
 ├── app
 │   ├── main.py          # Entry point of the FastAPI application
@@ -63,14 +63,14 @@ fastapi-project
 
 1. **Clone the repository:**
 
-   ```
+   ```shell
    git clone <repository-url>
    cd fastapi-project
    ```
 
 2. **Create a virtual environment:**
 
-   ```
+   ```shell
    python -m venv venv
    ```
 
@@ -78,19 +78,19 @@ fastapi-project
 
    - On Windows:
 
-     ```
+     ```shell
      venv\Scripts\activate
      ```
 
    - On macOS/Linux:
 
-     ```
+     ```shell
      source venv/bin/activate
      ```
 
 4. **Install dependencies:**
 
-   ```
+   ```python
    pip install -r requirements.txt
    ```
 
@@ -98,7 +98,7 @@ fastapi-project
 
 To run the FastAPI application, execute the following command:
 
-```
+```shell
 source .venv/Scripts/activate
 poetry run dev
 
@@ -108,7 +108,7 @@ Visit `http://127.0.0.1:8000/docs` to access the interactive API documentation.
 
 To run the scheduler worker as a separate process (for example under Supervisor), use:
 
-```
+```bash
 poetry run scheduler
 ```
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 python -m app.db.seeder
 ```
 
-# CELERY
+## CELERY
 
 ### Jalankan Celery Worker
 
@@ -273,3 +273,19 @@ sudo systemctl enable filebeat
 sudo systemctl start filebeat
 
 ```
+
+### Staging Server
+
+```text
+ini pak link aplikaisi mau-app
+backend: http://110.239.87.173:8000/
+frontend: http://110.239.87.173:4321/
+
+login:
+user: fmorrison@example.org
+pass: password123
+```
+
+## AI
+
+- [Membuat class interface OOP](https://chatgpt.com/share/6909e30e-387c-8013-88ad-14ef311827b2)

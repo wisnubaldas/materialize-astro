@@ -1,11 +1,11 @@
 ---
 import Menu from '@components/Menu.astro';
 import Nav from '@components/Nav.astro';
+import { ToasterProvider } from '@components/ToasterProvider.jsx';
 import VendorLoader from '@components/VendorLoader.jsx';
 import { ensureAuthenticated } from '@lib/auth/server-guard';
+import '@scss/core.scss';
 import favicon from '@vendor/favicon.ico?url';
-import { ToasterProvider } from '@components/ToasterProvider.jsx';
-
 interface Props {
   title: string;
   description: string;
@@ -45,7 +45,7 @@ ensureAuthenticated(Astro);
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="/assets/css/core.css" />
+    <!-- <link rel="stylesheet" href="/assets/css/core.css" /> -->
   </head>
   <body>
     <ToasterProvider client:load>

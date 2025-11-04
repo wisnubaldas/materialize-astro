@@ -50,7 +50,7 @@ async def _serve_scheduler() -> None:
 
 def main() -> None:
     """Entrypoint for running the scheduler as a standalone worker."""
-    try:
+    try:  # noqa: SIM105
         asyncio.run(_serve_scheduler())
     except KeyboardInterrupt:
         pass

@@ -30,6 +30,7 @@
     "apexcharts": "^5.3.5",
     "astro": "^5.14.6",
     "bootstrap": "^5.3.8",
+    "clean-css": "^5.3.3",
     "datatables.net-bs5": "^2.3.4",
     "datatables.net-dt": "^2.3.4",
     "datatables.net-react": "^1.0.1",
