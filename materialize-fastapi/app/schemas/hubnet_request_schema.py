@@ -46,13 +46,13 @@ class HubnetRequestCreate(HubnetRequestBase):
     """Schema untuk insert data baru dengan validasi unik AWB_NO."""
 
     @model_validator(mode="after")
-    def check_unique_awb(cls, values):
+    def check_unique_awb(self):
         """
         Validasi tambahan agar AWB_NO tidak duplikat.
         Pengecekan dilakukan secara manual oleh service.
         """
         # Catatan: ini hanya placeholder agar developer tahu harus validasi di service.
         # Pydantic tidak bisa query DB langsung, jadi validasi real dilakukan di service layer.
-        if not values.AWB_NO or not isinstance(values.AWB_NO, str):
+        if not self.AWB_NO or not isinstance(self.AWB_NO, str):
             raise ValueError("AWB_NO harus berupa string dan wajib diisi.")
-        return values
+        return self
