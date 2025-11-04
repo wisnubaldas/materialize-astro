@@ -180,3 +180,7 @@ Remote yang digunakan:
 
 - `origin` → `git@gitlab.com:wisnubaldas/materialize-astro.git`
 - `office` → `git@gitlab.att.id:mau/mau-app.git`
+
+## Baca Socket PC
+
+> [Diskusi terkait soket pc ada disini](https://chatgpt.com/share/69081225-145c-8013-b834-002f2e8a908b)

@@ -2,12 +2,24 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
+from app.deps.hubnet_deps import get_export_excel_service
+from app.report.hubnet_request_excel import HubnetRequestExcel
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema
 from app.schemas.hubnet_request_schema import HubnetRequestGet
 from app.services.hubnet_service import HbnetRequestService
 
 router = APIRouter(prefix="/hubnet", tags=["Hubnet"])
+
+
+@router.get("/export-excel/{bulan}")
+def export_excel(bulan: str, service=Depends(get_export_excel_service)):
+    try:
+        data = service.get_data_export_excel(bulan)
+
+        return HubnetRequestExcel.generate(data=data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/data-terkirim", response_model=DataTablesResponse[HubnetRequestGet])

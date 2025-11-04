@@ -13,6 +13,7 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from app.db.mysql import SessionDB1R, SessionDB1W, SessionDB2R
 from app.models.hubnet_request import HubnetRequest
+from app.repository.hubnet_request_repository import HubnetRequestRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema
 from app.schemas.hubnet_request_schema import HubnetRequestGet
@@ -24,6 +25,13 @@ logger = logging.getLogger("hubnet")
 
 
 class HbnetRequestService:
+    def __init__(self, repo: HubnetRequestRepository):
+        self.repo = repo
+
+    def get_data_export_excel(self, bulan: str) -> list[HubnetRequest]:
+        _data = self.repo.export_to_excel(bulan)
+        return _data
+
     @staticmethod
     def get_data_request(
         db: Session, params: DataTablesParams
