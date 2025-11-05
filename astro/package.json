@@ -51,7 +51,8 @@
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
     "react-select": "^5.10.2",
-    "react-spinners": "^0.17.0"
+    "react-spinners": "^0.17.0",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
     "@iconify-icon/react": "^3.0.1",
