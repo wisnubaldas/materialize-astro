@@ -3,7 +3,7 @@ import '@libs/flatpickr/flatpickr.scss';
 import flatpickr from 'flatpickr';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect';
 import { useEffect, useRef } from 'react';
-export default function SelectMonth({ title = 'Pilih Bulan', data, onMonthChange }) {
+export default function SelectMonth({ title = 'Pilih Bulan', data, callback }) {
   // flatficker bisa dipakai di sini buat report export
   const inputRef = useRef(null);
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function SelectMonth({ title = 'Pilih Bulan', data, onMonthChange
     const instance = flatpickr(inputRef.current, {
       dateFormat: 'Y-m',
       defaultDate: new Date(),
-      allowInput: true,
+      allowInput: false,
       plugins: [
         new monthSelectPlugin({
           shorthand: true, //defaults to false
@@ -28,18 +28,7 @@ export default function SelectMonth({ title = 'Pilih Bulan', data, onMonthChange
         try {
           const res = await data(dateStr);
           //   console.log(res);
-          onMonthChange(res);
-          //   const response = await apiClient.get(`/angkasapura/invoice-perbulan/pdf/${dateStr}`, {
-          //     headers: {
-          //       Accept: 'application/pdf',
-          //     },
-          //     raw: true,
-          //   });
-          //   const pdfBlob = await response.blob();
-          //   const pdfUrl = URL.createObjectURL(pdfBlob);
-          //   window.open(pdfUrl, '_blank');
-          // (opsional) hapus blob dari memori setelah beberapa waktu
-          //   setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+          callback(res);
         } catch (error) {
           if (error.status === 404) {
             showToast({

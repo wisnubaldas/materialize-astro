@@ -24,12 +24,12 @@ export const menuData = [
       },
       {
         name: 'Send Invoice',
-        url: 'javascript::void(0)', // prefix.angkasapura('invoice/send-invoice'),
+        url: 'javascript:void(0)', // prefix.angkasapura('invoice/send-invoice'),
       },
 
       {
         name: 'Status Response',
-        url: 'javascript::void(0)', // prefix.angkasapura('status-response'),
+        url: 'javascript:void(0)', // prefix.angkasapura('status-response'),
       },
     ],
   },

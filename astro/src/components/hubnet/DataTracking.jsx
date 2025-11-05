@@ -1,6 +1,7 @@
 import GridData from '@components/GridData';
 import SelectMonth from '@components/parsial/SelectMonth';
 import { hubnetApi } from '@lib/api/hubnetApi';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 export default function DataTracking() {
   const columns = [
@@ -44,7 +45,6 @@ export default function DataTracking() {
   ];
   const [trackingData, setTrackingData] = useState(null);
   const handleDataMonth = (data) => {
-    console.log(data);
     setTrackingData(data);
   };
   useEffect(() => {
@@ -63,7 +63,15 @@ export default function DataTracking() {
         }
 
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(pdfUrl, '_blank');
+        // window.open(pdfUrl, '_blank');
+        const now = dayjs();
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = now.format('DDMMYYYYhmmss');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
         timeoutId = window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
       } catch (error) {
         console.error('Failed to open tracking data PDF:', error);
@@ -88,7 +96,7 @@ export default function DataTracking() {
           <SelectMonth
             title="Pilih data tracking berdasarkan Bulan"
             data={hubnetApi.exportExcel}
-            onMonthChange={handleDataMonth}
+            callback={handleDataMonth}
           />
         </div>
         <GridData
