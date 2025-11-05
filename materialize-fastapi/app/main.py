@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -9,22 +11,25 @@ from app.api.middleware.auth_middleware import JWTMiddleware
 from app.utils.env import ENV
 from app.utils.logging_config import setup_logging
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Kode sebelum 'yield' adalah event startup
+    setup_logging()  # init logging first so subsequent logs are captured
+    yield  # Aplikasi mulai menerima request di titik ini
+    # Kode setelah 'yield' adalah event shutdown (opsional)
+    # Tambahkan logika cleanup di sini jika diperlukan
+    print("Application shutdown")
+
+
 # app
 app = FastAPI(
+    lifespan=lifespan,
     title="FastAPI App with Poetry",
     docs_url="/docs" if ENV.APP_DEBUG else None,
     redoc_url="/redoc" if ENV.APP_DEBUG else None,
-    openapi_url="/openapi.json" if ENV.APP_DEBUG else None
+    openapi_url="/openapi.json" if ENV.APP_DEBUG else None,
 )
-
-
-# register_exception_handlers(app)
-@app.on_event("startup")
-async def startup():
-    # init logging first so subsequent logs are captured
-    setup_logging()
-
-
 # error handler
 
 # Setup Skema OpenAPI dengan JWT Auth

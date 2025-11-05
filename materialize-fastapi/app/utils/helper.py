@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
@@ -17,3 +18,11 @@ class HELPER:
         elif isinstance(value, int):
             return str(value)  # int tidak perlu dibulatkan
         return value
+
+    @staticmethod
+    def str_date():
+        now = datetime.now()
+        return now.strftime("%Y%m%d%H%M%S")
+
+
+STR_DATE = HELPER.str_date()
