@@ -1,0 +1,97 @@
+---
+title: 'Page 2'
+description: 'Lorem ipsum dolor sit amet - 2'
+---
+
+import MermaidClient from '../../../components/MermaidClient.astro';
+
+<MermaidClient />
+
+
+
+## Visualisasi dengan Mermaid
+
+Mermaid memudahkan dokumentasi teknis dengan diagram yang ditulis langsung dalam Markdown. Berikut beberapa contoh yang sering dipakai.
+
+### Flowchart
+
+<div class="mermaid">
+{`graph TD
+    A[Mulai] --> B{Pengguna login?}
+    B -- Ya --> C[Ambil profil]
+    C --> D[Render dashboard]
+    B -- Tidak --> E[Tampilkan layar login]
+    E --> B`}
+</div>
+
+### Class Diagram
+
+<div class="mermaid">
+{`classDiagram
+    class User {
+      +string id
+      +string email
+      +login()
+    }
+    class Session {
+      +string token
+      +Date expiresAt
+      +refresh()
+    }
+    class AuditLog {
+      +string id
+      +string action
+      +Date createdAt
+    }
+    User "1" --> "1" Session : memiliki
+    User "1" --> "*" AuditLog : menghasilkan`}
+</div>
+
+### Brain Map (Mindmap)
+
+<div class="mermaid">
+{`mindmap
+  root((Roadmap Docs))
+    Explorer
+      Onboarding
+      First Query
+    Builder
+      API Reference
+      SDK Guides
+    Scale
+      Monitoring
+      Deployment
+      Changelog`}
+</div>
+
+### Gudang
+
+<div class="mermaid">
+{`
+    flowchart TD
+        A(("Barang Datang")) --> B{"Pemeriksaan Dokumen & Barang"}
+        B -- Lolos --> C["Pembuatan Data Barcode"]
+        B -- Tidak Lolos --> G["Penahanan/Pelaporan"]
+        C --> D["Penyimpanan di Gudang"]
+        D --> E{"Permintaan Pengeluaran Barang?"}
+        E -- Belum --> D
+        E -- Ya --> F["Pengambilan Barang"]
+        F --> H{"Pemeriksaan Akhir"}
+        H -- Lolos --> I(("Barang Keluar"))
+        H -- Tidak Lolos --> G
+`}
+</div>
+```shell
+
+flowchart TD
+    A(("Barang Datang")) --> B{"Pemeriksaan Dokumen & Barang"}
+    B -- Lolos --> C["Pembuatan Data Barcode"]
+    B -- Tidak Lolos --> G["Penahanan/Pelaporan"]
+    C --> D["Penyimpanan di Gudang"]
+    D --> E{"Permintaan Pengeluaran Barang?"}
+    E -- Belum --> D
+    E -- Ya --> F["Pengambilan Barang"]
+    F --> H{"Pemeriksaan Akhir"}
+    H -- Lolos --> I(("Barang Keluar"))
+    H -- Tidak Lolos --> G
+```
