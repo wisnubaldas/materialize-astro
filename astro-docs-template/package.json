@@ -12,7 +12,8 @@
     "start": "astro dev",
     "prettier:check": "prettier --check --plugin-search-dir=. .",
     "format": "prettier --cache --write --plugin-search-dir=. .",
-    "lint:scss": "stylelint \"src/**/*.{astro,css}\""
+    "lint:scss": "stylelint \"src/**/*.{astro,css}\"",
+    "sync:docs": "node scripts/sync-docs.mjs"
   },
   "dependencies": {
     "@algolia/client-search": "^4.20.0",
@@ -26,7 +27,10 @@
     "patch-package": "^8.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "fast-glob": "^3.3.2",
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@astrojs/mdx": "^1.1.5",

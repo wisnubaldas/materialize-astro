@@ -1,19 +1,21 @@
 ---
-title: 'APP MAU - Dokumentasi Teknis (Standar ISO)'
+title: 'Diagram'
 description: 'Lorem ipsum dolor sit amet - 2'
 ---
 
-import MermaidClient from '../../../components/MermaidClient.astro';
+import MermaidClient from '../../../components/MermaidClient.astro'
+import MermaidZoomSupport from '../../../components/MermaidZoomSupport.astro'
 
 <MermaidClient />
+<MermaidZoomSupport />
 
-## ✅ Ringkasan Teknis
+## <iconify-icon icon="line-md:briefcase-check-filled" width="24" height="24"></iconify-icon> Ringkasan Teknis
 APP MAU adalah sistem manajemen gudang lini 1 Bandara Soekarno-Hatta, mencakup pelaporan ke AP2, HUBNET, Bea Cukai, dan operasional CTOS. Sistem bekerja 24/7 menggunakan FastAPI, Astro, Redis dan APScheduler, dengan keamanan berbasis SSL, JWT, firewall, dan role-based access.
 
 ---
 
-## ✅ Diagram Arsitektur Jaringan
-<div class="mermaid">
+## <iconify-icon icon="line-md:cloud-alt-tags-twotone" width="24" height="24"></iconify-icon> Diagram Arsitektur Jaringan
+<div class="mermaid zoomable">
 {`graph TD
     subgraph Client
         A[User Browser]
@@ -47,9 +49,9 @@ APP MAU adalah sistem manajemen gudang lini 1 Bandara Soekarno-Hatta, mencakup p
 
 ---
 
-## ✅ ERD Database
-```mermaid
-erDiagram
+## <iconify-icon icon="line-md:calendar" width="24" height="24"></iconify-icon> ERD Database
+<div class="mermaid zoomable">
+{`erDiagram
     USERS ||--o{ ROLES : has
     USERS {
         int id PK
@@ -86,28 +88,28 @@ erDiagram
         int manifest_id FK
         string status
         datetime timestamp
-    }
-```
+    }`}
+</div>
 
 ---
 
-## ✅ BPMN - Workflow Bisnis
-```mermaid
-flowchart LR
+## <iconify-icon icon="line-md:briefcase-plus-twotone" width="24" height="24"></iconify-icon> BPMN - Workflow Bisnis
+<div class="mermaid zoomable">
+{`flowchart LR
     A[Cargo Masuk Gudang] --> B[Input Data Manifest]
     B --> C[Penimbangan Barang]
     C --> D{Data Valid?}
     D -- Ya --> E[Generate Invoice]
     E --> F[Kirim Status ke Airlines / AP2 / HUBNET]
     D -- Tidak --> G[Perbaikan Data]
-    F --> H[Monitoring Barang Keluar]
-```
+    F --> H[Monitoring Barang Keluar]`}
+</div>
 
 ---
 
-## ✅ Sequence Diagram (Proses Pembuatan Invoice)
-```mermaid
-sequenceDiagram
+## <iconify-icon icon="line-md:turn-sharp-left" width="24" height="24"></iconify-icon> Sequence Diagram (Proses Pembuatan Invoice)
+<div class="mermaid zoomable">
+{`sequenceDiagram
     participant User
     participant Frontend
     participant Backend
@@ -120,26 +122,26 @@ sequenceDiagram
     Database -->> Backend: OK
     Backend ->> AP2: Kirim laporan pendapatan
     AP2 -->> Backend: Response Success
-    Backend -->> Frontend: Tampilkan hasil
-```
+    Backend -->> Frontend: Tampilkan hasil`}
+</div>
 
 ---
 
-## ✅ State Machine Diagram (Status Barang)
-```mermaid
-stateDiagram-v2
+## <iconify-icon icon="line-md:speed-twotone-loop" width="24" height="24"></iconify-icon> State Machine Diagram (Status Barang)
+<div class="mermaid zoomable">
+{`stateDiagram-v2
     [*] --> Received
     Received --> Stored
     Stored --> Weighed
     Weighed --> Invoiced
     Invoiced --> Released
-    Released --> [*]
-```
+    Released --> [*]`}
+</div>
 
 ---
 
-## ✅ SOP Downtime / Disaster Recovery
-1. Sistem monitoring mendeteksi service mati → Kirim notifikasi
+## <iconify-icon icon="line-md:person-search-twotone" width="24" height="24"></iconify-icon> SOP Downtime / Disaster Recovery
+1. Sistem monitoring mendeteksi service mati �+' Kirim notifikasi
 2. Supervisor auto-restart semua service
 3. Jika gagal:
    ```bash
@@ -151,17 +153,15 @@ stateDiagram-v2
    - Restore snapshot VM
    - Restore database dari backup harian
 
-RTO: 5–10 menit  
+RTO: 5�?"10 menit  
 RPO: backup harian
 
 ---
 
-## ✅ Security Policy
+## <iconify-icon icon="line-md:security-twotone" width="24" height="24"></iconify-icon> Security Policy
 - SSL aktif, HTTPS only
 - Firewall hanya membuka 80/443/22
 - Login server via SSH Key
 - API pakai JWT
 - Hak akses berdasarkan role
 - Semua aktivitas dicatat di log
-
-

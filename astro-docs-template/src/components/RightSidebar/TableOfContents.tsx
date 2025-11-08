@@ -15,6 +15,15 @@ const TableOfContents: FC<{ headings: MarkdownHeading[] }> = ({
   const onThisPageID = 'on-this-page-heading'
   const itemOffsets = useRef<ItemOffsets[]>([])
   const [currentID, setCurrentID] = useState('overview')
+  const getDefaultLabel = (heading: MarkdownHeading) =>
+    unescape(heading.text).trim()
+  const [headingLabels, setHeadingLabels] = useState<Record<string, string>>(
+    () =>
+      headings.reduce<Record<string, string>>((acc, heading) => {
+        acc[heading.slug] = getDefaultLabel(heading)
+        return acc
+      }, {})
+  )
   useEffect(() => {
     const getItemOffsets = () => {
       const titles = document.querySelectorAll('article :is(h1, h2, h3, h4)')
@@ -67,6 +76,19 @@ const TableOfContents: FC<{ headings: MarkdownHeading[] }> = ({
     return () => headingsObserver.disconnect()
   }, [])
 
+  useEffect(() => {
+    const labels = headings.reduce<Record<string, string>>((acc, heading) => {
+      const headingElement =
+        typeof document !== 'undefined'
+          ? document.getElementById(heading.slug)
+          : null
+      acc[heading.slug] =
+        headingElement?.innerHTML.trim() ?? getDefaultLabel(heading)
+      return acc
+    }, {})
+    setHeadingLabels(labels)
+  }, [headings])
+
   const onLinkClick = (e: MouseEvent<HTMLAnchorElement>) => {
     const href = e.currentTarget.getAttribute('href')
     if (href) {
@@ -90,7 +112,13 @@ const TableOfContents: FC<{ headings: MarkdownHeading[] }> = ({
               }`.trim()}
             >
               <a href={`#${heading.slug}`} onClick={onLinkClick}>
-                {unescape(heading.text)}
+                <span
+                  className="toc-heading-label"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      headingLabels[heading.slug] ?? getDefaultLabel(heading)
+                  }}
+                />
               </a>
             </li>
           ))}
