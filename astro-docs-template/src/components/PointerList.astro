@@ -1,0 +1,38 @@
+---
+type PointerListItem = {
+  text?: string
+  html?: string
+}
+
+interface Props {
+  items: PointerListItem[]
+  icon?: string
+}
+
+const {
+  items = [],
+  icon = 'mdi:cursor-default-click'
+} = Astro.props as Props
+---
+
+<ul class="pointer-list">
+  {
+    items.map((item) => (
+      <li>
+        <iconify-icon
+          icon={icon}
+          width="1.2em"
+          height="1.2em"
+          aria-hidden="true"
+        ></iconify-icon>
+        {
+          item.html ? (
+            <span set:html={item.html}></span>
+          ) : (
+            <span>{item.text}</span>
+          )
+        }
+      </li>
+    ))
+  }
+</ul>

@@ -17,6 +17,7 @@ Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materializ
   - [Panduan Pengujian](#panduan-pengujian)
   - [Sumber Ikon](#sumber-ikon)
   - [Mengelola Remote Git](#mengelola-remote-git)
+  - [Baca Socket PC](#baca-socket-pc)
 
 ---
 
@@ -184,3 +185,5 @@ Remote yang digunakan:
 ## Baca Socket PC
 
 > [Diskusi terkait soket pc ada disini](https://chatgpt.com/share/69081225-145c-8013-b834-002f2e8a908b)
+>
+> [Perbaiki Git submodule](https://chatgpt.com/share/690ee6f5-d9ec-8013-bba8-f34f87ab0ce4)

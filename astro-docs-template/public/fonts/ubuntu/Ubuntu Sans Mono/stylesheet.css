@@ -1,0 +1,72 @@
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-Regular.woff2') format('woff2'),
+        url('UbuntuSansMono-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-Italic.woff2') format('woff2'),
+        url('UbuntuSansMono-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-BoldItalic.woff2') format('woff2'),
+        url('UbuntuSansMono-BoldItalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-MediumItalic.woff2') format('woff2'),
+        url('UbuntuSansMono-MediumItalic.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-Medium.woff2') format('woff2'),
+        url('UbuntuSansMono-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-Bold.woff2') format('woff2'),
+        url('UbuntuSansMono-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-SemiBold.woff2') format('woff2'),
+        url('UbuntuSansMono-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ubuntu Sans Mono';
+    src: url('UbuntuSansMono-SemiBoldItalic.woff2') format('woff2'),
+        url('UbuntuSansMono-SemiBoldItalic.woff') format('woff');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
