@@ -1,0 +1,176 @@
+---
+title: Diagram Arsitektur
+---
+
+import { Card } from '@astrojs/starlight/components';
+
+<div className="mermaid-wrapper">
+```mermaid
+classDiagram
+      accTitle: Demo Class Diagram
+      accDescr: This class diagram show the abstract Animal class, and 3 classes that inherit from it: Duck, Fish, and Zebra.
+
+      Animal <|-- Duck
+      Animal <|-- Fish
+      Animal <|-- Zebra
+      Animal : +int age
+      Animal : +String gender
+      Animal: +isMammal()
+      Animal: +mate()
+
+      class Duck{
+        +String beakColor
+        +swim()
+        +quack()
+      }
+      class Fish{
+        -Listint sizeInFeet
+        -canEat()
+      }
+      class Zebra{
+        +bool is_wild
+        +run(List~T~, List~OT~)
+        %% +run-composite(List~T, K~)
+        +run-nested(List~List~OT~~)
+      }
+
+````
+
+```mermaid
+flowchart LR
+  subgraph FRONTEND [Frontend Layer]
+    A1(Astro + Vue 3) -->|REST| B1(FastAPI API Gateway)
+  end
+  subgraph BACKEND [Backend Services]
+    B1 --> C1[Auth Service]
+    B1 --> C2[Cargo Service]
+    B1 --> C3[Invoice Service]
+    B1 --> C4[Report Service]
+    B1 --> C5["Scheduler Service (Celery + APScheduler)"]
+  end
+  subgraph INFRA [Infrastructure Layer]
+    D1[(MySQL DB1)]
+    D2[(MySQL DB2)]
+    D3[(Redis Broker)]
+    D4[(Elasticsearch)]
+  end
+  C1 --> D1
+  C2 --> D2
+  C5 --> D3
+  B1 --> D4
+````
+
+</div>
+
+## Issue
+
+Perfect — kamu sudah kasih semua informasi yang pas 👏
+dan dari hasil curl kamu, backend (FastAPI) sudah benar serta Apache juga sudah tidak salah.
+Tapi sekarang browser (melalui Cloudflare) tetap error:
+
+```
+Reason: CORS request did not succeed
+Status code: (null)
+```
+
+> 🔍 Kesimpulan singkat:
+> 🔸 Backend & Apache OK
+> 🔸 CORS headers muncul benar
+> 🔸 Error muncul setelah Cloudflare layer
+> 🔸 Di localhost (tanpa Cloudflare) semua jalan → artinya masalahnya ada di Cloudflare edge
+
+### 🧩 PENYEBAB UTAMA (Cloudflare Layer)
+
+Cloudflare kadang memblok request OPTIONS atau POST dengan credentials (cookie, Authorization) secara default,
+terutama untuk subdomain API yang proxied (awan oranye) jika belum diatur dengan benar.
+
+Kita akan fix dengan 3 langkah sederhana.
+
+### 🛠️ 1. Pastikan api.mitraadira.com tidak di-cache
+
+Masuk ke dashboard Cloudflare → Rules → Cache Rules
+👉 Tambahkan rule baru:
+
+If:
+
+```
+Hostname equals api.mitraadira.com
+```
+
+Then:
+
+```
+Cache level: Bypass
+```
+
+> ini penting karena kalau Cloudflare sempat meng-cache response preflight (OPTIONS) tanpa body → status (null) akan muncul di browser.
+
+### 🧱 2. Matikan fitur yang bisa memblok request
+
+Masuk ke:
+Cloudflare → Speed → Optimization
+
+- Matikan: 🚫 “Rocket Loader”
+- Matikan: 🚫 “Email Obfuscation”
+- Matikan: 🚫 “Auto Minify (JS)” (minimal sementara untuk test)
+
+Lalu ke:
+Cloudflare → Security → WAF Rules
+
+- Pastikan tidak ada rule custom yang memblokir OPTIONS atau POST dari app.mitraadira.com.
+- Pastikan Browser Integrity Check = OFF untuk subdomain API.
+
+### 🧩 3. Pastikan SSL Mode = Full (Strict)
+
+Cek di SSL/TLS → Overview
+✅ Mode harus: Full (strict)
+Jangan “Flexible” — kalau Flexible, Cloudflare bicara ke origin pakai HTTP, bukan HTTPS → preflight akan drop (status null).
+
+### 🧰 4. (Opsional) Tambahkan Page Rule keamanan ringan
+
+Page Rules → Create Rule
+
+```
+If URL matches: https://api.mitraadira.com/*
+Then:
+ - Cache Level: Bypass
+ - Security Level: Medium
+ - Disable Apps
+ - Disable Performance
+```
+
+### 🧪 5. Test lagi via curl dan browser
+
+Cek dari Cloudflare Edge:
+
+```
+curl -i -X OPTIONS "https://api.mitraadira.com/auth/login" \
+  -H "Origin: https://app.mitraadira.com" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+Harus dapat seperti ini:
+
+```
+HTTP/2 204
+access-control-allow-origin: https://app.mitraadira.com
+access-control-allow-credentials: true
+vary: Origin
+cf-cache-status: DYNAMIC
+```
+
+### 🚀 6. Debug tambahan di browser
+
+### ✅ Ringkasan Fix
+
+| Langkah | Aksi                                          | Tujuan                                        |
+| ------- | --------------------------------------------- | --------------------------------------------- |
+| 1       | Cache Rule: Bypass untuk `api.mitraadira.com` | Pastikan CORS header tidak dihapus Cloudflare |
+| 2       | Matikan Rocket Loader + minify                | Hindari distorsi JS                           |
+| 3       | SSL Full (Strict)                             | Pastikan koneksi end-to-end HTTPS             |
+| 4       | Disable WAF rules untuk OPTIONS               | Hindari drop preflight                        |
+| 5       | Pastikan fetch pakai `credentials: "include"` | Cookie cross-domain                           |
+| 6       | Tambah `Vary: Origin` (sudah benar di server) | Aman untuk cache multi-origin                 |
+
+Kalau kamu mau, kirimkan screenshot Cloudflare SSL/TLS overview dan Rules (cache & WAF) —
+aku bisa bantu verifikasi konfigurasi pastinya supaya API ini benar-benar “production safe” tanpa ganggu performa.

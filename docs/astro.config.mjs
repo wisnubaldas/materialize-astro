@@ -1,38 +1,72 @@
 // @ts-check
-import starlight from "@astrojs/starlight";
-import { defineConfig } from "astro/config";
-import starlightThemeObsidian from "starlight-theme-obsidian";
+import starlight from '@astrojs/starlight';
+import { defineConfig } from 'astro/config';
+import { remarkMermaid } from 'remark-mermaidjs';
+import starlightThemeObsidian from 'starlight-theme-obsidian';
+import remarkMermaidDefaults from './src/plugins/remarkMermaidDefaults.mjs';
 // https://astro.build/config
 export default defineConfig({
+  markdown: {
+    remarkPlugins: [
+      remarkMermaidDefaults,
+      // @ts-ignore
+      [
+        remarkMermaid,
+        {
+          theme: 'forest',
+          themeVariables: {
+            primaryColor: '#BB2528',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#7C0000',
+            lineColor: '#F8B229',
+            secondaryColor: '#006100',
+            tertiaryColor: '#fff',
+          },
+        },
+      ],
+    ],
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'dracula',
+      },
+    },
+  },
   integrations: [
     starlight({
-      title: "My Docs",
+      title: 'MAU APP DOC',
+      defaultLocale: 'root',
+      locales: {
+        root: {
+          label: 'Indonesia',
+          lang: 'id-ID',
+        },
+        en: {
+          label: 'English',
+          lang: 'en-EN',
+        },
+      },
       social: [
         {
-          icon: "github",
-          label: "GitHub",
-          href: "https://github.com/withastro/starlight",
+          icon: 'gitlab',
+          label: 'Gitlab',
+          href: 'https://gitlab.att.id/mau/mau-app.git',
         },
       ],
       plugins: [starlightThemeObsidian()],
+      customCss: ['./src/fonts/ubuntu.css', './src/styles/custom.css'],
       sidebar: [
         {
-          label: "Guides",
+          label: 'Home',
+          slug: '',
+        },
+        {
+          label: 'Arsitektur',
           items: [
             // Each item here is one entry in the navigation menu.
-            { label: "Example Guide", slug: "guides/example" },
+            { label: 'Diagram', slug: 'id/architecture/diagram' },
+            { label: 'Code', slug: 'id/architecture/code_trick' },
           ],
-        },
-        {
-          label: "Reference",
-          autogenerate: { directory: "reference" },
-        },
-        // A single link item labelled “Home”.
-        { label: "Home", link: "/" },
-        // A group linking to all pages in the reference directory.
-        {
-          label: "Reference",
-          autogenerate: { directory: "reference" },
         },
       ],
     }),

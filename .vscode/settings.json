@@ -1,56 +1,55 @@
 {
-    "cSpell.enabled": false,
-    "python.defaultInterpreterPath": "C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Scripts\\python.exe",
-    "files.exclude": {
-        "**/__pycache__": true,
-        "**/*.pyc": true,
-        "**/*.pyo": true,
-        "**/.pytest_cache": true,
-        "**/.ruff_cache": true
-    },
-    "python.linting.enabled": true,
-    "python.linting.ruffEnabled": true,
-    "python.linting.ruffPath": [
-        "ruff"
-    ],
-    // Formatter & linting tambahan opsional
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit",
-        "source.organizeImports": "explicit"
-    },
-    "editor.detectIndentation": false,
-    "[css]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.tabSize": 2
-    },
-    "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "mypy",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "basic",
-    "editor.quickSuggestions": {
-        "other": true,
-        "comments": false,
-        "strings": true
-    },
-    "python.analysis.extraPaths": [
-        "./materialize-fastapi", // pointing ke backend FastAPI
-        "./.venv/Lib/site-packages"
-    ],
-    "terminal.integrated.env.windows": {
-        "PYTHONPATH": "${workspaceFolder}/materialize-astro"
-    },
-    "terminal.integrated.env.linux": {
-        "PYTHONPATH": "${workspaceFolder}/materialize-astro"
-    },
-    "CodeGPT.apiKey": "OpenAI",
-    "chatgpt.openOnStartup": false,
-    "svg.preview.background": "custom",
-    "python-envs.pythonProjects": [
-        {
-            "path": "materialize-fastapi",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
-        }
-    ]
+  "cSpell.enabled": false,
+  "python.defaultInterpreterPath": "C:\\Users\\wisnu\\Documents\\Belajar\\materialize-project\\materialize-fastapi\\.venv\\Scripts\\python.exe",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.pyo": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true
+  },
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.linting.ruffPath": ["ruff"],
+  // Formatter & linting tambahan opsional
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.detectIndentation": false,
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyPath": "mypy",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  "python.analysis.extraPaths": [
+    "./materialize-fastapi", // pointing ke backend FastAPI
+    "./.venv/Lib/site-packages"
+  ],
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}/materialize-astro"
+  },
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/materialize-astro"
+  },
+  "CodeGPT.apiKey": "OpenAI",
+  "chatgpt.openOnStartup": false,
+  "svg.preview.background": "custom",
+  "python-envs.pythonProjects": [
+    {
+      "path": "materialize-fastapi",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ],
+  "git.ignoreLimitWarning": true
 }

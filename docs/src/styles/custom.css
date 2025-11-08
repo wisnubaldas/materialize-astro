@@ -1,0 +1,19 @@
+:root {
+  --diagram-max-width: 60rem;
+}
+
+.mermaid-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: var(--sl-border-radius);
+  background-color: var(--sl-color-bg-soft);
+  border: 1px solid var(--sl-color-hairline);
+}
+
+.mermaid-wrapper svg {
+  width: min(100%, var(--diagram-max-width));
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
