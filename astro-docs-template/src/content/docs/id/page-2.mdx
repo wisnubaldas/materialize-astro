@@ -1,5 +1,5 @@
 ---
-title: 'Page 2'
+title: 'APP MAU - Dokumentasi Teknis (Standar ISO)'
 description: 'Lorem ipsum dolor sit amet - 2'
 ---
 
@@ -7,91 +7,161 @@ import MermaidClient from '../../../components/MermaidClient.astro';
 
 <MermaidClient />
 
+## ✅ Ringkasan Teknis
+APP MAU adalah sistem manajemen gudang lini 1 Bandara Soekarno-Hatta, mencakup pelaporan ke AP2, HUBNET, Bea Cukai, dan operasional CTOS. Sistem bekerja 24/7 menggunakan FastAPI, Astro, Redis dan APScheduler, dengan keamanan berbasis SSL, JWT, firewall, dan role-based access.
 
+---
 
-## Visualisasi dengan Mermaid
-
-Mermaid memudahkan dokumentasi teknis dengan diagram yang ditulis langsung dalam Markdown. Berikut beberapa contoh yang sering dipakai.
-
-### Flowchart
-
+## ✅ Diagram Arsitektur Jaringan
 <div class="mermaid">
 {`graph TD
-    A[Mulai] --> B{Pengguna login?}
-    B -- Ya --> C[Ambil profil]
-    C --> D[Render dashboard]
-    B -- Tidak --> E[Tampilkan layar login]
-    E --> B`}
+    subgraph Client
+        A[User Browser]
+    end
+
+    subgraph Frontend
+        B[Astro Frontend - Node.js]
+    end
+
+    subgraph Backend
+        C[FastAPI Backend]
+        D[Redis Cache / Queue]
+        E[APScheduler Jobs]
+    end
+
+    subgraph External Systems
+        F[Angkasa Pura II API]
+        G[Kemenhub HUBNET API]
+        H[Bea Cukai TPS Online API]
+        I[Airlines Manifest API]
+    end
+
+    A --> B --> C
+    C --> D
+    C --> E
+    C --> F
+    C --> G
+    C --> H
+    C --> I`}
 </div>
 
-### Class Diagram
+---
 
-<div class="mermaid">
-{`classDiagram
-    class User {
-      +string id
-      +string email
-      +login()
+## ✅ ERD Database
+```mermaid
+erDiagram
+    USERS ||--o{ ROLES : has
+    USERS {
+        int id PK
+        string nama
+        string email
+        string password_hash
+        int role_id FK
     }
-    class Session {
-      +string token
-      +Date expiresAt
-      +refresh()
+    ROLES {
+        int id PK
+        string nama_role
     }
-    class AuditLog {
-      +string id
-      +string action
-      +Date createdAt
+
+    MANIFEST ||--o{ INVOICE : generates
+    MANIFEST {
+        int id PK
+        string awb_no
+        string flight_no
+        datetime flight_date
+        string shipper
+        string consignee
     }
-    User "1" --> "1" Session : memiliki
-    User "1" --> "*" AuditLog : menghasilkan`}
-</div>
 
-### Brain Map (Mindmap)
+    INVOICE {
+        int id PK
+        int manifest_id FK
+        decimal total_billing
+        datetime created_at
+    }
 
-<div class="mermaid">
-{`mindmap
-  root((Roadmap Docs))
-    Explorer
-      Onboarding
-      First Query
-    Builder
-      API Reference
-      SDK Guides
-    Scale
-      Monitoring
-      Deployment
-      Changelog`}
-</div>
-
-### Gudang
-
-<div class="mermaid">
-{`
-    flowchart TD
-        A(("Barang Datang")) --> B{"Pemeriksaan Dokumen & Barang"}
-        B -- Lolos --> C["Pembuatan Data Barcode"]
-        B -- Tidak Lolos --> G["Penahanan/Pelaporan"]
-        C --> D["Penyimpanan di Gudang"]
-        D --> E{"Permintaan Pengeluaran Barang?"}
-        E -- Belum --> D
-        E -- Ya --> F["Pengambilan Barang"]
-        F --> H{"Pemeriksaan Akhir"}
-        H -- Lolos --> I(("Barang Keluar"))
-        H -- Tidak Lolos --> G
-`}
-</div>
-```shell
-
-flowchart TD
-    A(("Barang Datang")) --> B{"Pemeriksaan Dokumen & Barang"}
-    B -- Lolos --> C["Pembuatan Data Barcode"]
-    B -- Tidak Lolos --> G["Penahanan/Pelaporan"]
-    C --> D["Penyimpanan di Gudang"]
-    D --> E{"Permintaan Pengeluaran Barang?"}
-    E -- Belum --> D
-    E -- Ya --> F["Pengambilan Barang"]
-    F --> H{"Pemeriksaan Akhir"}
-    H -- Lolos --> I(("Barang Keluar"))
-    H -- Tidak Lolos --> G
+    MOVEMENT ||--o{ MANIFEST : tracks
+    MOVEMENT {
+        int id PK
+        int manifest_id FK
+        string status
+        datetime timestamp
+    }
 ```
+
+---
+
+## ✅ BPMN - Workflow Bisnis
+```mermaid
+flowchart LR
+    A[Cargo Masuk Gudang] --> B[Input Data Manifest]
+    B --> C[Penimbangan Barang]
+    C --> D{Data Valid?}
+    D -- Ya --> E[Generate Invoice]
+    E --> F[Kirim Status ke Airlines / AP2 / HUBNET]
+    D -- Tidak --> G[Perbaikan Data]
+    F --> H[Monitoring Barang Keluar]
+```
+
+---
+
+## ✅ Sequence Diagram (Proses Pembuatan Invoice)
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Database
+    participant AP2
+
+    User ->> Frontend: Input data billing
+    Frontend ->> Backend: Kirim data invoice
+    Backend ->> Database: Simpan invoice
+    Database -->> Backend: OK
+    Backend ->> AP2: Kirim laporan pendapatan
+    AP2 -->> Backend: Response Success
+    Backend -->> Frontend: Tampilkan hasil
+```
+
+---
+
+## ✅ State Machine Diagram (Status Barang)
+```mermaid
+stateDiagram-v2
+    [*] --> Received
+    Received --> Stored
+    Stored --> Weighed
+    Weighed --> Invoiced
+    Invoiced --> Released
+    Released --> [*]
+```
+
+---
+
+## ✅ SOP Downtime / Disaster Recovery
+1. Sistem monitoring mendeteksi service mati → Kirim notifikasi
+2. Supervisor auto-restart semua service
+3. Jika gagal:
+   ```bash
+   sudo supervisorctl restart all
+   sudo systemctl status redis
+   sudo systemctl status nginx
+   ```
+4. Jika server rusak total:
+   - Restore snapshot VM
+   - Restore database dari backup harian
+
+RTO: 5–10 menit  
+RPO: backup harian
+
+---
+
+## ✅ Security Policy
+- SSL aktif, HTTPS only
+- Firewall hanya membuka 80/443/22
+- Login server via SSH Key
+- API pakai JWT
+- Hak akses berdasarkan role
+- Semua aktivitas dicatat di log
+
+

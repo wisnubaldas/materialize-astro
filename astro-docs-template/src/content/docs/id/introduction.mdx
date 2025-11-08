@@ -1,27 +1,161 @@
 ---
-title: 'Aplikasi MAU'
+title: ' DOKUMENTASI TEKNIS – APP MAU'
 description: 'Aplikasi warehouse MAU untuk operasional'
 ---
+import PointerList from '../../../components/PointerList.astro'
 
-**Welcome to Astro 2.0!**
+## <iconify-icon icon="material-symbols:arrow-split" width="24" height="24"></iconify-icon> Tujuan Dokumen
+Dokumen ini dibuat untuk mendeskripsikan spesifikasi teknis, arsitektur, infrastruktur, keamanan, dan operasional aplikasi **APP MAU** sesuai kebutuhan standar dokumentasi ISO 27001/9001.
 
-This is the `docs` starter template.
-It contains all of the features that you need to build a Markdown-powered documentation site, including:
+Dokumen ini digunakan untuk:
+<PointerList
+  items={[
+    { text: 'Audit internal dan eksternal' },
+    { text: 'Standarisasi operasional sistem' },
+    { text: 'Referensi pengembangan dan maintenance' }
+  ]}
+/>
 
-- 📝 **Full Markdown and MDX support**
-- 📱 **Responsive mobile-friendly design**
-- 🧭 **Sidebar navigation**
-- 🔎 **Search (powered by Algolia)**
-- 🔤 **Self-Hosted webfont (GDPR compliant)**
-- 🗨️ **Multi-language i18n**
-- 📃 **Automatic table of contents**
-- 🧑‍💻 **Automatic list of contributors**
-- 🌙 (and, best of all) **dark mode**
+---
 
-## Getting Started
+## <iconify-icon icon="material-symbols:balance" width="24" height="24"></iconify-icon> Ruang Lingkup (Scope)
+APP MAU adalah sistem terintegrasi untuk pengelolaan gudang lini 1 di Bandara Soekarno-Hatta, meliputi:
+<PointerList
+  items={[
+    { text: 'Pelaporan pendapatan ke Angkasa Pura II' },
+    { text: 'Pelaporan status barang ke Kemenhub (HUBNET)' },
+    { text: 'Monitoring dan audit barang oleh Bea Cukai (TPS Online)' },
+    { text: 'Operasional gudang seperti penimbangan, pembuatan invoice, dan manifest (CTOS)' }
+  ]}
+/>
 
-To get started with this theme, check out the `README.md` in your new project directory. It provides documentation on how to use and customize this template for your own project. Keep the README around so that you can always refer back to it as you build.
+Sistem berjalan pada server cloud, bersifat API-driven, dan terhubung dengan stakeholder eksternal.
 
-Found a missing feature that you can't live without? Please suggest it on Discord [(#ideas-and-suggestions channel)](https://astro.build/chat) and even consider adding it yourself on GitHub! Astro is an open source project and contributions from developers like you are how we grow!
+---
 
-Good luck out there, Astronaut. 🧑‍🚀
+## <iconify-icon icon="material-symbols:camera-outline" width="24" height="24"></iconify-icon> Deskripsi Sistem
+APP MAU terdiri dari beberapa komponen inti:
+
+| Layer | Teknologi |
+|-------|-----------|
+| Backend | FastAPI (Python) |
+| Frontend | Astro (React + JavaScript) |
+| Scheduler | APScheduler |
+| Cache / MQ | Redis |
+| Deployment | Supervisor sebagai service runner |
+
+### Fungsi Utama Sistem
+- Mengelola data barang keluar/masuk gudang
+- Mengirim laporan regulasi otomatis via API
+- Menerima manifest dan mengirim status ke maskapai
+- Pembuatan invoice dan penimbangan berat aktual
+
+---
+
+## 4. Infrastruktur Teknis
+| Komponen | Spesifikasi |
+|----------|-------------|
+| Cloud Provider | Huawei Cloud |
+| Jenis Server | Virtual Machine |
+| OS | Ubuntu Server 24 LTS |
+| CPU | 1 vCore |
+| RAM | 5 GB |
+| Storage | 200 GB HDD |
+| Service Manager | Supervisor |
+| Bahasa Backend | Python (Poetry) |
+| Bahasa Frontend | Node.js (npm) |
+
+
+Supervisor menjalankan:
+  - FastAPI server
+  - Redis server
+  - Node.js (Frontend)
+  - Scheduler APScheduler
+
+Sistem berjalan 24/7.
+
+---
+
+## 5. Arsitektur Sistem
+- Frontend → mengakses REST API FastAPI
+- Backend FastAPI → menangani request client, autentikasi, CRUD data
+- Redis → caching, messaging, task queue
+- APScheduler → menjalankan job otomatis (daily, hourly, real-time)
+- Integrasi antar sistem menggunakan REST API JSON
+
+Flow Sederhana:
+```User → Frontend (Astro) → Backend (FastAPI) → Database / API Eksternal```
+
+---
+
+## 6. Modul Aplikasi
+### ✅ 1. AP2 (Angkasa Pura II)
+- Mengirim laporan pendapatan gudang per hari
+- Format pengiriman: JSON + PDF
+- Integrasi via REST API
+
+### ✅ 2. HUBNET (Kemenhub)
+- Melaporkan transaksi barang keluar/masuk
+- Format pengiriman: JSON API
+
+### ✅ 3. TPS ONLINE (Bea Cukai)
+- Monitoring status barang (gate in/out)
+- Audit dan stok opname
+- Migrasi dari CodeIgniter 3 ke FastAPI
+
+### ✅ 4. CTOS (Operasional Gudang)
+- Membuat invoice
+- Penimbangan barang via digital scale
+- Input manifest dari maskapai
+- Kirim status FFM/FWB/FHL ke maskapai
+
+---
+
+## 7. Keamanan Sistem (Security)
+- HTTPS dengan SSL
+- Token-based authentication (JWT)
+- Firewall server aktif
+- Hak akses berbasis role internal
+- Supervisor memastikan sistem auto-restart jika crash
+- Akses server terbatas menggunakan SSH Key
+
+---
+
+## 8. Availability & SLA
+- Sistem dirancang berjalan 24/7
+- Supervisor menjaga service tetap aktif
+- Jika server restart, semua service otomatis hidup
+- Waktu pemulihan kegagalan (RTO): ± 5–10 menit
+
+---
+
+## 9. Backup & Restore
+- Backup database dilakukan secara berkala melalui skrip otomatis (opsional menyesuaikan implementasi)
+- File log disimpan untuk audit
+- Restore dilakukan melalui database snapshot
+
+---
+
+## 10. Logging & Monitoring
+- Log API dan service disimpan di server
+- Bisa diintegrasikan dengan ELK Stack (Elasticsearch / Logstash / Kibana) jika diperlukan
+- Monitoring uptime dapat menggunakan tools eksternal: UptimeRobot / Grafana
+
+---
+
+## 11. Maintenance
+- Update dependency melalui Poetry dan npm
+- Maintenance dilakukan oleh tim IT MAU
+- Perubahan sistem didokumentasikan pada repository versi kontrol
+
+---
+
+## 12. Versi & Pengembangan
+- Sistem dalam fase aktif pengembangan
+- Beberapa modul masih dalam migrasi (TPS & CTOS)
+
+---
+
+## 13. Kesimpulan
+APP MAU adalah sistem warehouse management yang terintegrasi dengan pihak regulator, berjalan di cloud, aman, dan mampu melakukan otomasi pelaporan operasional secara real-time.
+

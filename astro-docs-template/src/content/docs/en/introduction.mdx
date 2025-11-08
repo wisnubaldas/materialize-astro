@@ -1,27 +1,154 @@
 ---
-title: 'Introduction'
+title: 'TECHNICAL DOCUMENTATION – APP MAU'
 description: 'Docs intro'
 ---
+import PointerList from '../../../components/PointerList.astro'
 
-**Welcome to Astro 2.0!**
+## 1. Document Purpose
+This document describes the technical specifications, infrastructure, security, architecture, and operational aspects of **APP MAU** following ISO-style documentation standards.
 
-This is the `docs` starter template.
-It contains all of the features that you need to build a Markdown-powered documentation site, including:
+It serves as:
+<PointerList
+  items={[
+    { text: 'Internal and external audit reference' },
+    { text: 'System operation guideline' },
+    { text: 'Development and maintenance reference' }
+  ]}
+/>
 
-- 📝 **Full Markdown and MDX support**
-- 📱 **Responsive mobile-friendly design**
-- 🧭 **Sidebar navigation**
-- 🔎 **Search (powered by Algolia)**
-- 🔤 **Self-Hosted webfont (GDPR compliant)**
-- 🗨️ **Multi-language i18n**
-- 📃 **Automatic table of contents**
-- 🧑‍💻 **Automatic list of contributors**
-- 🌙 (and, best of all) **dark mode**
+---
 
-## Getting Started
+## 2. Scope
+APP MAU is an integrated warehouse management system for Line 1 of Soekarno-Hatta Airport, providing:
+- Revenue reporting to Angkasa Pura II
+- Cargo tracking reporting to Ministry of Transportation (HUBNET)
+- Customs monitoring and auditing (TPS Online)
+- Warehouse operational activities (CTOS): invoicing, weighing, manifest processing, cargo status updates
 
-To get started with this theme, check out the `README.md` in your new project directory. It provides documentation on how to use and customize this template for your own project. Keep the README around so that you can always refer back to it as you build.
+The system runs on cloud infrastructure and communicates via REST API.
 
-Found a missing feature that you can't live without? Please suggest it on Discord [(#ideas-and-suggestions channel)](https://astro.build/chat) and even consider adding it yourself on GitHub! Astro is an open source project and contributions from developers like you are how we grow!
+---
 
-Good luck out there, Astronaut. 🧑‍🚀
+## 3. System Description
+Core Components:
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI (Python) |
+| Frontend | Astro (React + JavaScript) |
+| Scheduler | APScheduler |
+| Cache / Messaging | Redis |
+| Deployment Runner | Supervisor |
+
+### System Functions
+- Manage inbound/outbound cargo data
+- Automated regulatory reporting
+- Create invoices and cargo weight records
+- Airline manifest processing and status submission
+
+---
+
+## 4. Technical Infrastructure
+| Component | Specification |
+|----------|--------------|
+| Cloud Provider | Huawei Cloud (VM) |
+| OS | Ubuntu Server 24 LTS |
+| CPU | 1 vCore |
+| RAM | 5 GB |
+| Storage | 200 GB HDD |
+| Service Runner | Supervisor |
+| Backend Runtime | Python + Poetry |
+| Frontend Runtime | Node.js + npm |
+
+Supervisor maintains:
+- FastAPI service
+- Redis service
+- Node.js frontend
+- APScheduler jobs
+
+---
+
+## 5. System Architecture
+- Astro frontend communicates with FastAPI via REST API
+- Redis used for caching and messaging
+- APScheduler handles automated background tasks
+- External system communication via JSON over HTTPs
+
+General Flow:
+```
+Client → Frontend → FastAPI Backend → Database / External API
+```
+
+
+---
+
+## 6. Application Modules
+### ✅ 1. AP2 (Angkasa Pura II)
+- Daily revenue submission
+- Automated JSON + PDF report delivery
+- REST API integration
+
+### ✅ 2. HUBNET (Ministry of Transportation)
+- Tracks inbound and outbound cargo
+- Automatically submitted via REST API
+
+### ✅ 3. TPS ONLINE (Customs)
+- Warehouse stock and status visibility
+- Audit & cargo release process
+- Migration from CodeIgniter 3 to FastAPI
+
+### ✅ 4. CTOS (Warehouse Operational System)
+- Invoice generation
+- Digital weighing machine integration
+- Airline manifest import (FFM/FWB/FHL)
+- Cargo status submission to airlines
+
+---
+
+## 7. Security
+- HTTPS encryption with SSL
+- Token-based authentication (JWT or similar)
+- Role-based authorization
+- SSH-key restricted server access
+- Firewall enabled
+- Automatic service recovery via Supervisor
+
+---
+
+## 8. Availability & SLA
+- Designed for 24/7 operation
+- Automatic service restart
+- Estimated recovery time on failure: 5–10 minutes
+
+---
+
+## 9. Backup & Restore
+- Scheduled database backup
+- Log storage for audit
+- Restore via database snapshot
+
+---
+
+## 10. Logging & Monitoring
+- Server-side logging for API and services
+- Can be integrated with ELK Stack or similar tools
+- Uptime monitoring with external tools (Grafana/UptimeRobot)
+
+---
+
+## 11. Maintenance
+- Dependency updates managed via Poetry & npm
+- Managed by MAU IT Team
+- All changes documented in version control repositories
+
+---
+
+## 12. Version & Development Status
+- System in active development
+- TPS and CTOS modules currently under migration phase
+
+---
+
+## 13. Conclusion
+APP MAU is a secure, cloud-based warehouse management platform integrating airport authorities, airlines, and government agencies, designed for automation and real-time operational processing.
+

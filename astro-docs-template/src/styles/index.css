@@ -69,24 +69,29 @@ h2 {
 }
 
 h1 {
-  font-size: 2.3rem;
+  font-size: 2rem;
   font-weight: 800;
+  color: oklch(37.2% 0.044 257.287);
+}
+
+:root.theme-dark h1 {
+  color: oklch(86.9% 0.022 252.894);
 }
 
 h2 {
-  font-size: 1.9rem;
+  font-size: 1.5rem;
 }
 
 h3 {
-  font-size: 1.75rem;
-}
-
-h4 {
   font-size: 1.3rem;
 }
 
-h5 {
+h4 {
   font-size: 1rem;
+}
+
+h5 {
+  font-size: 0.8rem;
 }
 
 p {
@@ -142,6 +147,30 @@ article > section nav {
 
 article > section ::marker {
   font-weight: bold;
+  color: var(--theme-text-light);
+}
+
+.pointer-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.pointer-list li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.pointer-list iconify-icon {
+  color: var(--theme-accent);
+  font-size: 1.1rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.pointer-list span {
   color: var(--theme-text-light);
 }
 
