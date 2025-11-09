@@ -11,6 +11,8 @@
 :root {
   --user-font-scale: 1rem - 16px;
   --max-width: calc(100% - 1rem);
+  --toc-hover-accent: oklch(70.7% 0.165 254.624);
+  --toc-hover-bg: oklch(70.7% 0.165 254.624 / 0.15);
 }
 
 @media (min-width: 50em) {
@@ -69,7 +71,7 @@ h2 {
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: oklch(37.2% 0.044 257.287);
 }
@@ -164,8 +166,8 @@ article > section ::marker {
 
 .pointer-list iconify-icon {
   color: var(--theme-accent);
-  font-size: 1.1rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 0.5;
   flex-shrink: 0;
   margin-top: 0.15rem;
 }
@@ -354,6 +356,9 @@ h2.heading {
   color: inherit;
   text-decoration: none;
   unicode-bidi: plaintext;
+  border-radius: 0.35rem;
+  align-items: center;
+  transition: color 150ms ease-out, background-color 150ms ease-out;
 }
 
 @media (min-width: 50em) {
@@ -370,14 +375,31 @@ h2.heading {
 
 .header-link:hover a,
 .header-link a:focus {
-  color: var(--theme-text);
-  text-decoration: underline;
+  color: var(--toc-hover-accent);
+  text-decoration: none;
+  background-color: var(--toc-hover-bg);
 }
-.header-link svg {
-  opacity: 0.6;
+.header-link :is(svg, iconify-icon) {
+  color: var(--theme-accent);
+  opacity: 0.85;
+  transition: color 150ms ease-out, opacity 150ms ease-out,
+    background-color 150ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  /* font-size: 0.85rem; */
+  flex-shrink: 0;
 }
-.header-link:hover svg {
-  opacity: 0.8;
+.header-link:hover :is(svg, iconify-icon),
+.header-link:focus-within :is(svg, iconify-icon),
+.current-header-link :is(svg, iconify-icon) {
+  /* color: var(--toc-hover-accent); */
+  background-color: var(--toc-hover-bg);
+  opacity: 1;
 }
 
 /* Add line and padding on the left side */

@@ -20,9 +20,9 @@ export const KNOWN_LANGUAGES = {
 } as const
 export const KNOWN_LANGUAGE_CODES = Object.values(KNOWN_LANGUAGES)
 
-export const EDIT_URL = `https://github.com/advanced-astro/astro-docs-template/tree/main`
+export const EDIT_URL = `#`
 
-export const COMMUNITY_INVITE_URL = `https://astro.build/chat`
+export const COMMUNITY_INVITE_URL = `#`
 
 // See "Algolia" section of the README for more information.
 export const ALGOLIA = {
@@ -39,19 +39,20 @@ export const SIDEBAR: Sidebar = {
   en: {
     'Section Header': [
       { text: 'Introduction', link: 'en/introduction' },
-      { text: 'Page 2', link: 'en/page-2' },
-      { text: 'Page 3', link: 'en/page-3' }
+      { text: 'Diagram', link: 'en/page-2' },
     ],
     'Another Section': [{ text: 'Page 4', link: 'en/page-4' }]
   },
   id: {
-    'Section Header': [
+    'Dokumentasi Teknis': [
       { text: 'Introduction', link: 'id/introduction' },
-      { text: 'Page 2', link: 'id/page-2' },
-      { text: 'Page 3', link: 'id/page-3' }
+      { text: 'Diagram', link: 'id/page-2' },
     ],
-    'Another Section': [{ text: 'Page 4', link: 'id/page-4' }],
-    'Blog Bacaan': [
+    'Dokumentasi Aplikasi': [
+      { text: 'Login', link: 'id/doc-app' },
+      { text: 'HUBNET', link: 'id/doc-app/hubnet' }
+    ],
+    'Blog': [
       { text: 'Install Supervisor', link: '#' },
       { text: 'Bikin Kancut', link: '#' }
     ]

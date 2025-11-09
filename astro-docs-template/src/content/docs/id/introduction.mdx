@@ -44,15 +44,19 @@ APP MAU terdiri dari beberapa komponen inti:
 | Cache / MQ | Redis |
 | Deployment | Supervisor sebagai service runner |
 
-### Fungsi Utama Sistem
-- Mengelola data barang keluar/masuk gudang
-- Mengirim laporan regulasi otomatis via API
-- Menerima manifest dan mengirim status ke maskapai
-- Pembuatan invoice dan penimbangan berat aktual
+## <iconify-icon icon="material-symbols:browse-activity-outline-rounded" width="24" height="24"></iconify-icon> Fungsi Utama Sistem
+<PointerList 
+items={[
+    { text: 'Mengelola data barang keluar/masuk gudang' },
+    { text: 'Mengirim laporan regulasi otomatis via API' },
+    { text: 'Menerima manifest dan mengirim status ke maskapai' },
+    { text: 'Pembuatan invoice dan penimbangan berat aktual' },
+]}
+/>
 
 ---
 
-## 4. Infrastruktur Teknis
+## <iconify-icon icon="material-symbols:construction" width="24" height="24"></iconify-icon> Infrastruktur Teknis
 | Komponen | Spesifikasi |
 |----------|-------------|
 | Cloud Provider | Huawei Cloud |
@@ -67,51 +71,76 @@ APP MAU terdiri dari beberapa komponen inti:
 
 
 Supervisor menjalankan:
-  - FastAPI server
-  - Redis server
-  - Node.js (Frontend)
-  - Scheduler APScheduler
-
-Sistem berjalan 24/7.
+  <PointerList
+  items={[
+  {text:'FastAPI server'},
+  {text:'Redis server'},
+  {text:'Node.js (Frontend)'},
+  {text:'Scheduler APScheduler'},
+  ]}
+   />
+> Sistem berjalan 24/7.
 
 ---
 
-## 5. Arsitektur Sistem
-- Frontend → mengakses REST API FastAPI
-- Backend FastAPI → menangani request client, autentikasi, CRUD data
-- Redis → caching, messaging, task queue
-- APScheduler → menjalankan job otomatis (daily, hourly, real-time)
-- Integrasi antar sistem menggunakan REST API JSON
+## <iconify-icon icon="material-symbols:emoji-transportation" width="24" height="24"></iconify-icon> Arsitektur Sistem
+<PointerList 
+items={[
+{text:'Frontend → mengakses REST API FastAPI'},
+{text:'Backend FastAPI → menangani request client, autentikasi, CRUD data'},
+{text:'Redis → caching, messaging, task queue'},
+{text:'APScheduler → menjalankan job otomatis (daily, hourly, real-time)'},
+{text:'Integrasi antar sistem menggunakan REST API JSON'},
+]}
+/>
+
 
 Flow Sederhana:
 ```User → Frontend (Astro) → Backend (FastAPI) → Database / API Eksternal```
 
 ---
 
-## 6. Modul Aplikasi
-### ✅ 1. AP2 (Angkasa Pura II)
-- Mengirim laporan pendapatan gudang per hari
-- Format pengiriman: JSON + PDF
-- Integrasi via REST API
+## <iconify-icon icon="material-symbols:select-window" width="24" height="24"></iconify-icon> Modul Aplikasi
+#### AP2 (Angkasa Pura II)
+<PointerList icon='material-symbols:add-circle'
+items={[
+{text:'Mengirim laporan pendapatan gudang per hari'},
+{text:'Format pengiriman: JSON + PDF'},
+{text:'Integrasi via REST API'},
+]}
+/>
 
-### ✅ 2. HUBNET (Kemenhub)
-- Melaporkan transaksi barang keluar/masuk
-- Format pengiriman: JSON API
 
-### ✅ 3. TPS ONLINE (Bea Cukai)
-- Monitoring status barang (gate in/out)
-- Audit dan stok opname
-- Migrasi dari CodeIgniter 3 ke FastAPI
+#### HUBNET (Kemenhub)
+<PointerList icon='material-symbols:add-circle'
+items={[
+{text:'Melaporkan transaksi barang keluar/masuk'},
+{text:'Format pengiriman: JSON API'},
+]} />
 
-### ✅ 4. CTOS (Operasional Gudang)
-- Membuat invoice
-- Penimbangan barang via digital scale
-- Input manifest dari maskapai
-- Kirim status FFM/FWB/FHL ke maskapai
+
+#### TPS ONLINE (Bea Cukai)
+<PointerList icon='material-symbols:add-circle'
+items={[
+{text:'Monitoring status barang (gate in/out)'},
+{text:'Audit dan stok opname'},
+{text:'Migrasi dari CodeIgniter 3 ke FastAPI'},
+]} />
+
+
+#### CTOS (Operasional Gudang)
+<PointerList icon='material-symbols:add-circle'
+items={[
+{text:'Membuat invoice'},
+{text:'Penimbangan barang via digital scale'},
+{text:'Input manifest dari maskapai'},
+{text:'Kirim status FFM/FWB/FHL ke maskapai'},
+]} />
+
 
 ---
 
-## 7. Keamanan Sistem (Security)
+## <iconify-icon icon="material-symbols:security" width="24" height="24"></iconify-icon> Keamanan Sistem (Security)
 - HTTPS dengan SSL
 - Token-based authentication (JWT)
 - Firewall server aktif
@@ -121,7 +150,7 @@ Flow Sederhana:
 
 ---
 
-## 8. Availability & SLA
+## <iconify-icon icon="material-symbols:settings-slow-motion" width="24" height="24"></iconify-icon> Availability & SLA
 - Sistem dirancang berjalan 24/7
 - Supervisor menjaga service tetap aktif
 - Jika server restart, semua service otomatis hidup
@@ -129,33 +158,33 @@ Flow Sederhana:
 
 ---
 
-## 9. Backup & Restore
+## <iconify-icon icon="material-symbols:home-storage-rounded" width="24" height="24"></iconify-icon> Backup & Restore
 - Backup database dilakukan secara berkala melalui skrip otomatis (opsional menyesuaikan implementasi)
 - File log disimpan untuk audit
 - Restore dilakukan melalui database snapshot
 
 ---
 
-## 10. Logging & Monitoring
+## <iconify-icon icon="material-symbols:nest-clock-farsight-analog" width="24" height="24"></iconify-icon> Logging & Monitoring
 - Log API dan service disimpan di server
 - Bisa diintegrasikan dengan ELK Stack (Elasticsearch / Logstash / Kibana) jika diperlukan
 - Monitoring uptime dapat menggunakan tools eksternal: UptimeRobot / Grafana
 
 ---
 
-## 11. Maintenance
+## <iconify-icon icon="material-symbols:repeat-one-on-rounded" width="24" height="24"></iconify-icon> Maintenance
 - Update dependency melalui Poetry dan npm
 - Maintenance dilakukan oleh tim IT MAU
 - Perubahan sistem didokumentasikan pada repository versi kontrol
 
 ---
 
-## 12. Versi & Pengembangan
+## <iconify-icon icon="material-symbols:conversion-path" width="24" height="24"></iconify-icon> Versi & Pengembangan
 - Sistem dalam fase aktif pengembangan
 - Beberapa modul masih dalam migrasi (TPS & CTOS)
 
 ---
 
-## 13. Kesimpulan
+## <iconify-icon icon="material-symbols:summarize" width="24" height="24"></iconify-icon> Kesimpulan
 APP MAU adalah sistem warehouse management yang terintegrasi dengan pihak regulator, berjalan di cloud, aman, dan mampu melakukan otomasi pelaporan operasional secara real-time.
 
