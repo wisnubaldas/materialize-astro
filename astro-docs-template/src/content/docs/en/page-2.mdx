@@ -1,12 +1,10 @@
 ---
-title: 'Diagram'
-description: 'Lorem ipsum dolor sit amet - 2'
+title: Diagram
+description: The customer should be very happy - 2
 ---
 
-import { text } from 'stream/consumers'
 import MermaidClient from '../../../components/MermaidClient.astro'
 import MermaidZoomSupport from '../../../components/MermaidZoomSupport.astro'
-import PointerList from '../../../components/PointerList.astro'
 
 <MermaidClient />
 <MermaidZoomSupport />
@@ -143,48 +141,27 @@ APP MAU adalah sistem manajemen gudang lini 1 Bandara Soekarno-Hatta, mencakup p
 ---
 
 ## <iconify-icon icon="line-md:person-search-twotone" width="24" height="24"></iconify-icon> SOP Downtime / Disaster Recovery
-<PointerList
-  items={[
-    { text: 'Sistem monitoring mendeteksi service mati - Kirim notifikasi' },
-    {
-html: `<div>
-<p>Supervisor auto-restart semua service</p>
-<code class="language-bash">
-<pre>
-sudo supervisorctl restart all
-sudo systemctl status redis
-sudo systemctl status nginx
-</pre>
-</code>
-</div>`,
-    },
-    {
-      text: 'Jika langkah otomatis gagal:',
-      children: [
-        { text: 'Jalankan restart manual untuk seluruh service' },
-        { text: 'Cek health service pendukung (Redis, Nginx, dsb)' },
-      ],
-    },
-    {
-      text: 'Jika server rusak total:',
-      children: [
-        { text: 'Restore snapshot VM' },
-        { text: 'Restore database dari backup harian' },
-      ],
-    },
-  ]}
-/>
+1. Sistem monitoring mendeteksi service mati �+' Kirim notifikasi
+2. Supervisor auto-restart semua service
+3. Jika gagal:
+   ```bash
+   sudo supervisorctl restart all
+   sudo systemctl status redis
+   sudo systemctl status nginx
+   ```
+4. If the server is completely damaged:
+   - Restore VM snapshots
+   - Restore database from daily backup
 
-RTO: 5??"10 menit  
-RPO: backup harian
+RTO: 5�?”10 minutes  
+RPO: daily backup
 
 ---
 
 ## <iconify-icon icon="line-md:security-twotone" width="24" height="24"></iconify-icon> Security Policy
-- SSL aktif, HTTPS only
-- Firewall hanya membuka 80/443/22
-- Login server via SSH Key
-- API pakai JWT
-- Hak akses berdasarkan role
-- Semua aktivitas dicatat di log
-
+- SSL active, HTTPS only
+- Firewall only opens 80/443/22
+- Login to the server via SSH Key
+- API uses JWT
+- Access rights based on role
+- All activities are recorded in the log

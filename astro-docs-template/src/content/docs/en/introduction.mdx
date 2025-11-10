@@ -1,16 +1,15 @@
 ---
-title: ' DOKUMENTASI TEKNIS – APP MAU'
-description: 'Aplikasi warehouse MAU untuk operasional'
+title: TECHNICAL DOCUMENTATION – APP MAU
+description: MAU warehouse application for operations
 ---
 import PointerList from '../../../components/PointerList.astro'
 
-## <iconify-icon icon="material-symbols:arrow-split" width="24" height="24"></iconify-icon> Tujuan Dokumen
-Dokumen ini dibuat untuk mendeskripsikan spesifikasi teknis, arsitektur, infrastruktur, keamanan, dan operasional aplikasi **APP MAU** sesuai kebutuhan standar dokumentasi ISO 27001/9001.
-
-Dokumen ini digunakan untuk:
+## <iconify-icon icon="material-symbols:arrow-split" width="24" height="24"></iconify-icon> Document Purpose
+This document was created to describe the technical, architectural, infrastructure, security and operational specifications of the **APP MAU** application according to the requirements of the ISO 27001/9001 documentation standard.
+This document is used for:
 <PointerList
   items={[
-    { text: 'Audit internal dan eksternal' },
+    { text: 'Internal and external audits' },
     { text: 'Standarisasi operasional sistem' },
     { text: 'Referensi pengembangan dan maintenance' }
   ]}
@@ -100,115 +99,91 @@ Flow Sederhana:
 
 ---
 
-## <iconify-icon icon="material-symbols:select-window" width="24" height="24"></iconify-icon> Modul Aplikasi
+## <iconify-icon icon="material-symbols:select-window" width="24" height="24"></iconify-icon> Application Module
 #### AP2 (Angkasa Pura II)
 <PointerList icon='material-symbols:add-circle'
 items={[
-{text:'Mengirim laporan pendapatan gudang per hari'},
-{text:'Format pengiriman: JSON + PDF'},
-{text:'Integrasi via REST API'},
+{text:'Send warehouse income report per day'},
+{text:'Sending format: JSON + PDF'},
+{text:'Integration via REST API'},
 ]}
 />
 
 
-#### HUBNET (Kemenhub)
+#### HUBNET (Ministry of Transportation)
 <PointerList icon='material-symbols:add-circle'
 items={[
-{text:'Melaporkan transaksi barang keluar/masuk'},
-{text:'Format pengiriman: JSON API'},
+{text:'Reporting outgoing/incoming goods transactions'},
+{text:'Sending format: JSON API'},
 ]} />
 
 
-#### TPS ONLINE (Bea Cukai)
+#### ONLINE TPS (Customs)
 <PointerList icon='material-symbols:add-circle'
 items={[
-{text:'Monitoring status barang (gate in/out)'},
-{text:'Audit dan stok opname'},
-{text:'Migrasi dari CodeIgniter 3 ke FastAPI'},
+{text:'Monitoring goods status (gate in/out)'},
+{text:'Audit and stock taking'},
+{text:'Migrating from CodeIgniter 3 to FastAPI'},
 ]} />
 
 
-#### CTOS (Operasional Gudang)
+#### CTOS (Warehouse Operations)
 <PointerList icon='material-symbols:add-circle'
 items={[
-{text:'Membuat invoice'},
-{text:'Penimbangan barang via digital scale'},
-{text:'Input manifest dari maskapai'},
-{text:'Kirim status FFM/FWB/FHL ke maskapai'},
+{text:'Create invoice'},
+{text:'Weighing goods via digital scale'},
+{text:'Input manifest from airline'},
+{text:'Send FFM/FWB/FHL status to airline'},
 ]} />
 
 
 ---
 
-## <iconify-icon icon="material-symbols:security" width="24" height="24"></iconify-icon> Keamanan Sistem (Security)
-<PointerList
-items={[
-{text:'HTTPS dengan SSL'},
-{text:'Token-based authentication (JWT)'},
-{text:'Firewall server aktif'},
-{text:'Hak akses berbasis role internal'},
-{text:'Supervisor memastikan sistem auto-restart jika crash'},
-{text:'Akses server terbatas menggunakan SSH Key'}
-]}
- />
-
+## <iconify-icon icon="material-symbols:security" width="24" height="24"></iconify-icon> System Security (Security)
+- HTTPS with SSL
+- Token-based authentication (JWT)
+- Active server firewall
+- Internal role-based access rights
+- Supervisor ensures system auto-restart if it crashes
+- Limited server access using SSH Key
 
 ---
 
 ## <iconify-icon icon="material-symbols:settings-slow-motion" width="24" height="24"></iconify-icon> Availability & SLA
-<PointerList
-items={[
-{text:'Sistem dirancang berjalan 24/7'},
-{text:'Supervisor menjaga service tetap aktif'},
-{text:'Jika server restart, semua service otomatis hidup'},
-{text:'Waktu pemulihan kegagalan (RTO): ± 5 – 10 menit'}
-]}
-/>
-
+- The system is designed to run 24/7
+- Supervisor keeps the service active
+- If the server restarts, all services will automatically start
+- Failure recovery time (RTO): ± 5–10 minutes
 
 ---
 
 ## <iconify-icon icon="material-symbols:home-storage-rounded" width="24" height="24"></iconify-icon> Backup & Restore
-<PointerList 
-items={[
-{text:'Backup database dilakukan secara berkala melalui skrip otomatis (opsional menyesuaikan implementasi)'},
-{text:'File log disimpan untuk audit'},
-{text:'Restore dilakukan melalui database snapshot'}
-]}
-/>
-
+- Database backups are performed periodically via automated scripts (optional to customize implementation)
+- Log files are saved for auditing
+- Restore is done via snapshot database
 
 ---
 
 ## <iconify-icon icon="material-symbols:nest-clock-farsight-analog" width="24" height="24"></iconify-icon> Logging & Monitoring
-<PointerList items={[
-{text:'Log API dan service disimpan di server'},
-{text:'Bisa diintegrasikan dengan ELK Stack (Elasticsearch / Logstash / Kibana) jika diperlukan'},
-{text:'Monitoring uptime dapat menggunakan tools eksternal: UptimeRobot / Grafana'}
-]}/>
-
+- API and service logs are stored on the server
+- Can be integrated with ELK Stack (Elasticsearch / Logstash / Kibana) if needed
+- Uptime monitoring can use external tools: UptimeRobot / Grafana
 
 ---
 
 ## <iconify-icon icon="material-symbols:repeat-one-on-rounded" width="24" height="24"></iconify-icon> Maintenance
-<PointerList items={[
-{text:'Update dependency melalui Poetry dan npm'},
-{text:'Maintenance dilakukan oleh tim IT MAU'},
-{text:'Perubahan sistem didokumentasikan pada repository versi kontrol'}
-]}/>
-
+- Update dependencies via Poetry and npm
+- Maintenance is carried out by the MAU IT team
+- System changes are documented in the version control repository
 
 ---
 
-## <iconify-icon icon="material-symbols:conversion-path" width="24" height="24"></iconify-icon> Versi & Pengembangan
-<PointerList items={[
-{text:'Sistem dalam fase aktif pengembangan'},
-{text:'Beberapa modul masih dalam migrasi (TPS & CTOS)'}
-]}/>
-
+## <iconify-icon icon="material-symbols:conversion-path" width="24" height="24"></iconify-icon> Versions & Development
+- The system is in the active phase of development
+- Some modules are still under migration (TPS & CTOS)
 
 ---
 
-## <iconify-icon icon="material-symbols:summarize" width="24" height="24"></iconify-icon> Kesimpulan
-APP MAU adalah sistem warehouse management yang terintegrasi dengan pihak regulator, berjalan di cloud, aman, dan mampu melakukan otomasi pelaporan operasional secara real-time.
+## <iconify-icon icon="material-symbols:summarize" width="24" height="24"></iconify-icon> Conclusion
+APP MAU is a warehouse management system that is integrated with regulators, runs in the cloud, is secure, and is capable of automating real-time operational reporting.
 

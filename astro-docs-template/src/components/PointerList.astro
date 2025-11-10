@@ -2,22 +2,35 @@
 type PointerListItem = {
   text?: string;
   html?: string;
+  children?: PointerListItem[];
 };
 
 interface Props {
   items: PointerListItem[];
   icon?: string;
+  nested?: boolean;
 }
 
-const { items = [], icon = "mdi:cursor-default-click" } = Astro.props as Props;
+const {
+  items = [],
+  icon = 'line-md:confirm-square-twotone',
+  nested = false,
+} = Astro.props as Props;
+
+const listClass = ['pointer-list', nested ? 'nested' : null].filter(Boolean).join(' ');
 ---
 
-<ul class="pointer-list">
+<ul class={listClass}>
   {
     items.map((item) => (
       <li>
         <iconify-icon icon={icon} width="1em" height="1em" aria-hidden="true" />
         {item.html ? <span set:html={item.html} /> : <span>{item.text}</span>}
+        {item.children && item.children.length > 0 ? (
+          <>
+            <Astro.self items={item.children} icon={icon} nested />
+          </>
+        ) : null}
       </li>
     ))
   }

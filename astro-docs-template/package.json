@@ -23,14 +23,17 @@
     "@types/node": "^20.9.1",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "@vitalets/google-translate-api": "^9.2.0",
     "astro": "^3.5.5",
+    "fast-glob": "^3.3.2",
+    "fs-extra": "^11.3.2",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "patch-package": "^8.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.2.2",
-    "@vitalets/google-translate-api": "^9.2.0",
-    "fast-glob": "^3.3.2",
-    "gray-matter": "^4.0.3"
+    "tub": "^0.4.0",
+    "typescript": "^5.2.2"
   },
   "devDependencies": {
     "@astrojs/mdx": "^1.1.5",

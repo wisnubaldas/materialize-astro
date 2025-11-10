@@ -1,0 +1,15 @@
+---
+title: Artikel 2025-11-10T04-19-12-217Z
+description: 11/10/2025
+---
+Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materialize-astro**.
+## <iconify-icon icon="devicon:portainer" width="24" height="24" /> Deploy di Portainer
+
+1. Pastikan file berikut sudah dipush ke repository GitLab:
+   - `backend/Dockerfile`
+   - `frontend/Dockerfile`
+   - `docker-compose.yml`
+2. Buka **Portainer** → **Stacks** → **Add stack**.
+3. Pilih opsi **Git repository** dan masukkan URL repository GitLab.
+4. Isi path ke `docker-compose.yml` dengan benar (`/docker-compose.yml`).
+5. Klik **Deploy the stack**.

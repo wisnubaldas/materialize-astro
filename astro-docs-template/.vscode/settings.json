@@ -1,5 +1,10 @@
 {
   "files.associations": {
-    "*.mdx": "markdown"
-  }
+    "*.mdx": "mdx"
+  },
+  "cSpell.enabled":false,
+  "cSpell.words": [
+    "komponen"
+  ],
+  "google-translate.firstLanguage": "en"
 }

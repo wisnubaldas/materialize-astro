@@ -1,13 +1,13 @@
 ---
-import ThemeToggleButton from './ThemeToggleButton'
-import { COMMUNITY_INVITE_URL } from '../../consts'
+import ThemeToggleButton from './ThemeToggleButton';
+import { COMMUNITY_INVITE_URL } from '../../consts';
 
 type Props = {
-  editHref: string
-}
+  editHref: string;
+};
 
-const { editHref } = Astro.props
-const showMoreSection = Boolean(COMMUNITY_INVITE_URL)
+const { editHref } = Astro.props;
+const showMoreSection = Boolean(COMMUNITY_INVITE_URL);
 ---
 
 {showMoreSection && <h2 class="heading">More</h2>}
@@ -15,14 +15,14 @@ const showMoreSection = Boolean(COMMUNITY_INVITE_URL)
   {
     editHref && (
       <li class={`header-link depth-2`}>
-        <a class="edit-on-github" href={editHref} target="_blank">
+        <a class="edit-on-github" href="https://gitlab.att.id/mau/mau-app.git" target="_blank">
           <iconify-icon
             icon="material-symbols:edit-note-rounded"
             width="1em"
             height="1em"
             aria-hidden="true"
           />
-          <span>Edit this page</span>
+          <span>Edit this s</span>
         </a>
       </li>
     )

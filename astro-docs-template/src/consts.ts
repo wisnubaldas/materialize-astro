@@ -53,8 +53,9 @@ export const SIDEBAR: Sidebar = {
       { text: 'HUBNET', link: 'id/doc-app/hubnet' }
     ],
     'Blog': [
-      { text: 'Install Supervisor', link: '#' },
-      { text: 'Bikin Kancut', link: '#' }
+      { text: '2025-11-10T04-19-12-217Z', link: 'id/artikel/2025-11-10t04-19-12-217z' },
+      { text: '2025-11-10T04-29-28-237Z', link: 'id/artikel/2025-11-10t04-29-28-237z' },
+      { text: '2025-11-10T04-30-30-047Z', link: 'id/artikel/2025-11-10t04-30-30-047z' }
     ]
   }
 }
