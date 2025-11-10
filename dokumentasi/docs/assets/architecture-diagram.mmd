@@ -1,7 +1,0 @@
-graph TD
-  User --> Astro[Astro Frontend]
-  Astro --> API[FastAPI Gateway]
-  API --> DB1[(MySQL Core)]
-  API --> Redis[(Redis Broker)]
-  API --> Logstash[(Logstash)]
-  Logstash --> ES[(Elasticsearch)]
