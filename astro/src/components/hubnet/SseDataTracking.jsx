@@ -40,7 +40,7 @@ export default function SseDataTracking() {
       cleanupConnection();
       const nextAttempt = retryAttemptRef.current + 1;
       retryAttemptRef.current = nextAttempt;
-      const delay = Math.min(1000 * 2 ** Math.min(nextAttempt - 1, 3), 10000);
+      const delay = Math.min(1000 * 2 ** Math.min(nextAttempt - 1, 3), 60000);
       reconnectTimerRef.current = window.setTimeout(() => {
         if (!isUnmountedRef.current) {
           connect();
