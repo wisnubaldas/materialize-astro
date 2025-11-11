@@ -99,6 +99,7 @@ if [ -d "$BACKEND_DIR" ]; then
     sudo supervisorctl reread || true
     sudo supervisorctl update || true
     sudo supervisorctl restart materialize-fastapi
+    sudo supervisorctl restart scheduler-fastapi
     echo "✅ Backend restarted via Supervisor."
   else
     echo "⚠️ supervisorctl not found. Please install/configure Supervisor."
