@@ -1,5 +1,6 @@
 import GridData from '@components/GridData';
 import SelectMonth from '@components/parsial/SelectMonth';
+import { Icon } from '@iconify-icon/react';
 import { hubnetApi } from '@lib/api/hubnetApi';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -13,6 +14,9 @@ export default function DataTracking() {
     {
       data: 'FLT_DATE',
       title: 'Flight Date',
+      render: (data, type, row) => {
+        return dayjs(data).format('DD-MM-YYYY HH:mm');
+      },
     },
     {
       data: 'ORI',
@@ -87,17 +91,38 @@ export default function DataTracking() {
       }
     };
   }, [trackingData]);
+
   return (
     <div className="row">
       <div className="mb-2">
-        <h5 className="fw-bold mb-1 text-uppercase">Data tracking</h5>
-        <p className="text-muted mb-0">Menampilkan data tracking </p>
-        <div className="col-5 mb-3">
-          <SelectMonth
-            title="Pilih data tracking berdasarkan Bulan"
-            data={hubnetApi.exportExcel}
-            callback={handleDataMonth}
-          />
+        <div className="col-12 mb-3 card shadow-none bg-label-primary">
+          <div className="d-flex align-items-end row">
+            <div className="col-md-6 order-2 order-md-1">
+              <div className="card-body">
+                <h4 className="card-title mb-4">
+                  Export Data <Icon icon="vscode-icons:file-type-excel2" width="64" height="64" />
+                </h4>
+                <SelectMonth
+                  title="Pilih data tracking berdasarkan Bulan"
+                  data={hubnetApi.exportExcel}
+                  callback={handleDataMonth}
+                />
+              </div>
+            </div>
+            <div className="col-md-6 text-center text-md-end order-1 order-md-2">
+              <div className="card-body pb-0 px-0 pt-2">
+                <img
+                  src="/assets/img/illustrations/illustration-john-light.png"
+                  height="186"
+                  className="scaleX-n1-rtl"
+                  alt="View Profile"
+                  data-app-light-img="illustrations/illustration-john-light.png"
+                  data-app-dark-img="illustrations/illustration-john-dark.png"
+                  style={{ visibility: 'visible' }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <GridData
           //   ref={hubnetApi.postDataTable}

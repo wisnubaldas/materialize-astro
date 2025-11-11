@@ -10,6 +10,7 @@ export default function DataTerkirim() {
   const [dataTable, setDataTable] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+
   // ini ngeset buat variable yg berubah2 di dom
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState(now); // default
@@ -45,7 +46,7 @@ export default function DataTerkirim() {
         });
         if (!cancelled) {
           setDataTable(response);
-          console.log(response);
+          //   console.log(response);
         }
       } catch (error) {
         if (!cancelled) {
@@ -95,23 +96,46 @@ export default function DataTerkirim() {
 
   return (
     <div className="raw">
-      <div className="col-md-12 col-xl-12 p-2 m-2 bg-label-warning ">
-        <label htmlFor="searc-by-date">Pilih Tanggal</label>
-        <input
-          ref={inputRef}
-          id="searc-by-date"
-          type="text"
-          className="form-control form-control-sm col-4"
-          placeholder="lihat data per tanggal"
-          style={{ width: '20%' }}
-        />
+      <div className="col-12 col-lg-12 mb-3 card shadow-none bg-label-info">
+        <div className="d-flex align-items-end row">
+          <div className="col-md-6 order-2 order-md-1">
+            <div className="card-body">
+              <h4 className="card-title mb-4">
+                Menampilkan data terkirim dari HUBNET{' '}
+                <Icon icon="streamline-ultimate-color:shipment-tracking" width="48" height="48" />
+              </h4>
+              <label htmlFor="searc-by-date">Pilih Tanggal</label>
+              <input
+                ref={inputRef}
+                id="searc-by-date"
+                type="text"
+                className="form-control form-control-sm col-12 bg-lighter"
+                placeholder="lihat data per tanggal"
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+          <div className="col-md-6 text-center text-md-end order-1 order-md-2">
+            <div className="card-body pb-0 px-0 pt-2">
+              <img
+                src="https://static.vecteezy.com/system/resources/previews/024/658/935/non_2x/3d-male-character-holding-and-presenting-to-a-laptop-with-empty-screen-free-png.png"
+                height="186"
+                className="scaleX-n1-rtl"
+                alt="View Profile"
+                data-app-light-img="illustrations/illustration-john-light.png"
+                data-app-dark-img="illustrations/illustration-john-dark.png"
+                style={{ visibility: 'visible' }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="col-md-12 col-lg-12">
         <BackdropLoader active={isLoading} message="Loading data dari HUBNET......" />
         {!isLoading && !errorMessage && dataTable?.pagination?.total === 0 ? (
           <div className="alert alert-primary alert-dismissible m-5" role="alert">
-            <span class="alert-icon rounded">
+            <span className="alert-icon rounded">
               <Icon
                 icon="line-md:alert-twotone-loop"
                 width="24"
@@ -120,12 +144,6 @@ export default function DataTerkirim() {
               />
             </span>
             <h5>Tidak ada data di tanggal berikut: {selectedDate}</h5>
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="alert"
-              aria-label="Close"
-            ></button>
           </div>
         ) : (
           <div>

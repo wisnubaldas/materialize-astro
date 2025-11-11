@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from json import dumps
 
@@ -15,6 +16,8 @@ from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 
 CHANNEL_NAME = "sending_ke_hubnet_channel"
+
+logger = logging.getLogger("hubnet")
 
 
 def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  # noqa: PLR0912, PLR0915
@@ -34,6 +37,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
         CHANNEL_NAME,
         dumps({"level": "info", "message": "🔔 Job sending_ke_hubnet dimulai"}),
     )
+    logger.info("🔔 Job sending_ke_hubnet dimulai")
     with SessionDB1R() as rsession:
         rows: list[HubnetRequest] = (
             rsession.query(HubnetRequest)
@@ -45,7 +49,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
 
     if not rows:
         msg = "Tidak ada data IS_SEND=0 untuk dikirim."
-        print(msg)
+        logger.info(msg)
         publish_sync(CHANNEL_NAME, dumps({"level": "info", "message": msg}))
         return
 
@@ -109,9 +113,10 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
         resp_json = None
         try:
             resp_json = resp.json()
+            logger.info("Berhasil sending ke hubnet", extra={"res": resp_json})
         except Exception:
             resp_json = None
-
+            logger.error(str(resp_json))
         # Bangun mapping AWB -> ref_id atau ref_id batch jika tersedia
         awb_to_ref: dict[str, str] = {}
         ref_id_global: str | None = None
@@ -198,7 +203,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
             wsession.commit()
 
         summary = f"Kirim data: HTTP {resp.status_code}. Detail: {resp.text[:200]}"
-        print(summary)
+        logger.info(summary)
         publish_sync(
             CHANNEL_NAME,
             dumps(
@@ -224,7 +229,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
                 db_row.ERROR_MESSAGE = err_text[:500]
             wsession.commit()
 
-        print(f"Gagal mengirim ke HUBNET: {err_text}")
+        logger.info(f"Gagal mengirim ke HUBNET: {err_text}")
         publish_sync(
             CHANNEL_NAME,
             dumps({"level": "error", "message": f"Gagal mengirim ke HUBNET: {err_text}"}),

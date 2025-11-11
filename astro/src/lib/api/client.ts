@@ -27,6 +27,12 @@ export interface ApiRequestOptions extends Omit<RequestInit, 'method' | 'body'> 
   body?: unknown;
 }
 
+export interface SseRequestOptions {
+  params?: Record<string, QueryParamValue>;
+  withCredentials?: boolean;
+  signal?: AbortSignal;
+}
+
 // ==== Helper pemeriksaan tipe body ====
 const isFormData = (value: unknown): value is FormData =>
   typeof FormData !== 'undefined' && value instanceof FormData;
@@ -204,9 +210,35 @@ export async function request<T = unknown>(
   return (await parseResponse(response)) as T;
 }
 
+export function requestSSE(endpoint: string, options: SseRequestOptions = {}) {
+  if (typeof globalThis === 'undefined' || typeof globalThis.EventSource === 'undefined') {
+    throw new Error('SSE requests require a browser environment that provides EventSource');
+  }
+
+  const { params, withCredentials = true, signal } = options;
+  const url = buildUrl(endpoint, params);
+  const eventSource = new EventSource(url, { withCredentials });
+
+  if (signal) {
+    const abortHandler = () => {
+      eventSource.close();
+      signal.removeEventListener('abort', abortHandler);
+    };
+
+    if (signal.aborted) {
+      abortHandler();
+    } else {
+      signal.addEventListener('abort', abortHandler);
+    }
+  }
+
+  return eventSource;
+}
+
 // ==== Wrapper singkat untuk method umum ====
 export const apiClient = {
   request,
+  sse: (endpoint: string, options?: SseRequestOptions) => requestSSE(endpoint, options),
   get: <T = unknown>(endpoint: string, options?: ApiRequestOptions) =>
     request<T>('GET', endpoint, options),
   post: <T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions) =>

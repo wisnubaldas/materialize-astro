@@ -1,6 +1,11 @@
 ---
-import { menuData } from './MenuData.js';
+import { menuAdmin, menuHubnet } from './MenuData.js';
 
+const user = Astro.locals as any;
+let menuData = menuAdmin;
+if (user.user?.username === 'hubnet@mitraadira.com') {
+  menuData = menuHubnet;
+}
 const currentPath = Astro.url?.pathname ?? '/';
 
 const isExternal = (url: any) => /^https?:\/\//i.test(url ?? '');

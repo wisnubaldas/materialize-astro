@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from json import dumps
 
@@ -12,6 +13,7 @@ from app.utils.helper import HELPER
 CHANNEL_NAME = "sending_ke_hubnet_channel"
 jakarta_tz = pytz.timezone("Asia/Jakarta")
 now_wib = datetime.now(jakarta_tz)
+logger = logging.getLogger("hubnet")
 
 
 def run_outgoing():
@@ -24,7 +26,7 @@ def run_outgoing():
         out_rows = db2.execute(sql, param).mappings().all()
         for item in out_rows:
             if __cek_hostawb(item["MasterAWB"]):
-                print(f"AWB_NO {item['MasterAWB']} sudah ada, skip insert")
+                logger.info(f"AWB_NO {item['MasterAWB']} sudah ada, skip insert")
                 publish_sync(
                     CHANNEL_NAME,
                     dumps(
@@ -63,7 +65,7 @@ def run_outgoing():
                     )
                     db1.add(new_request)
                     db1.commit()
-                    print(f"Insert AWB_NO {item['MasterAWB']} berhasil")
+                    logger.info(f"Insert AWB_NO {item['MasterAWB']} berhasil")
                     publish_sync(
                         CHANNEL_NAME,
                         dumps(
@@ -75,6 +77,7 @@ def run_outgoing():
                     )
     except Exception as e:
         print("Error :", e)
+        logger.error(f"Error: {e}")
         publish_sync(
             CHANNEL_NAME,
             dumps({"level": "error", "message": f"Error: {e!s}"}),
@@ -90,6 +93,6 @@ def __cek_hostawb(awb):
             return result is not None
 
     except Exception as e:
-        print("Error :", e)
+        logger.error(f"Error : {e}")
     finally:
         db1.close()

@@ -3,7 +3,8 @@ const prefix = {
   hubnet: (pat) => `/hub-net/${pat}`,
   tpsonline: (pat) => `/tps-online/${pat}`,
 };
-export const menuData = [
+
+const menuAdmin = [
   {
     name: 'Landing Page',
     url: '/',
@@ -49,6 +50,10 @@ export const menuData = [
       {
         name: 'Upload Excel Sending Export',
         url: prefix.hubnet('upload-excel-sending-export'),
+      },
+      {
+        name: 'Logging',
+        url: prefix.hubnet('logging'),
       },
     ],
   },
@@ -104,3 +109,36 @@ export const menuData = [
     ],
   },
 ];
+
+const menuHubnet = [
+  {
+    name: 'Landing Page',
+    url: '/',
+    icon: 'ri ri-home-smile-line',
+  },
+  {
+    name: 'HUB NET',
+    url: 'javascript:void(0)',
+    icon: 'ri ri-bus-2-fill',
+    subItems: [
+      {
+        name: 'Dashboard',
+        url: prefix.hubnet('dashboard'),
+      },
+      {
+        name: 'Data Tracking',
+        url: prefix.hubnet('data-tracking'),
+      },
+      {
+        name: 'Upload Excel Sending Export',
+        url: prefix.hubnet('upload-excel-sending-export'),
+      },
+      {
+        name: 'Logging',
+        url: prefix.hubnet('logging'),
+      },
+    ],
+  },
+];
+
+export { menuAdmin, menuHubnet };

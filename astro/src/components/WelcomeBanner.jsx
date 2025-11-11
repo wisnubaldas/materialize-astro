@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { menuAdmin } from '@components/MenuData.js';
 import '@vendor/css/pages/page-faq.css';
-import { menuData } from '@components/MenuData.js';
-import { apiClient } from '@lib/api/client';
+import { useMemo, useState } from 'react';
 
 const VOID_URL = 'javascript:void(0)';
 // const dataCard = await apiClient.get('/hubnet/dashboard-card');
@@ -29,7 +28,7 @@ const buildSelectOptions = (items, trail = []) =>
 
 // Simple interactive banner to verify React rendering inside Astro.
 export default function WelcomeBanner({ name = 'Astro' }) {
-  const options = useMemo(() => buildSelectOptions(menuData), []);
+  const options = useMemo(() => buildSelectOptions(menuAdmin), []);
   const [query, setQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const headerClasses = [

@@ -58,7 +58,7 @@ export default function SelectMonth({ title = 'Pilih Bulan', data, callback }) {
           id="floatingInput"
           ref={inputRef}
           type="text"
-          className="form-control form-control-sm"
+          className="form-control form-control-sm bg-light"
         />
       </div>
     </div>

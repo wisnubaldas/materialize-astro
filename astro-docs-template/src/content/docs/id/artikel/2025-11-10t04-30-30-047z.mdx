@@ -2,4 +2,108 @@
 title: 2025-11-10T04-30-30-047Z
 description: 11/10/2025
 ---
-## '2025-11-10T04-30-30-047Z'
+## Opsi Implementasi RBAC di FastAPI
+### ✅ 1. Menggunakan Library RBAC / Authorization
+Berikut library yang umum:
+| Library                   | Kelebihan                        | Keterangan                           |
+| ------------------------- | -------------------------------- | ------------------------------------ |
+| **fastapi-permissions**   | Sederhana, RBAC style permission | Integrasi dengan Pydantic models     |
+| **fastapi-user-auth**     | Multi-role, JWT, login system    | mirip keycloak mini                  |
+| **fastapi-users** + Roles | User management lengkap          | Kamu tinggal tambah kolom role       |
+| **casbin**                | Enterprise-grade RBAC            | Aturan policy berbasis file/database |
+
+🟢 Rekomendasi paling simple: fastapi-permissions
+🟢 Rekomendasi enterprise & fleksibel: Casbin
+### ✅ 2. Menyimpan Role di Database & Pydantic
+Ya, kamu bisa menyimpan role di Pydantic dan tabel user:
+##### ✅ Model SQLAlchemy
+```python
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True, nullable=False)
+    role = Column(String(50), nullable=False, default="user")  # admin, manager, user
+```
+##### ✅ Schema Pydantic
+```python
+from pydantic import BaseModel
+
+class UserSchema(BaseModel):
+    id: int
+    username: str
+    role: str
+
+    class Config:
+        orm_mode = True
+```
+Bisa juga make enum:
+```python
+from enum import Enum
+
+class RoleEnum(str, Enum):
+    admin = "admin"
+    manager = "manager"
+    user = "user"
+
+class UserSchema(BaseModel):
+    id: int
+    username: str
+    role: RoleEnum
+```
+:::note
+✅ Ini aman & umum dipakai
+:::
+### ✅ 3. RBAC via Dependency
+Contoh paling simpel: cek role di dependency sebelum masuk ke route
+```python
+from fastapi import Depends, HTTPException, status
+
+def require_role(role: str):
+    def role_checker(current_user = Depends(get_current_user)):
+        if current_user.role != role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        return current_user
+    return role_checker
+```
+##### ✅ Penggunaan
+```python
+@app.get("/admin/data")
+def get_admin_data(current_user = Depends(require_role("admin"))):
+    return {"msg": "Only admin can see this"}
+```
+→ Bisa di-expand untuk multi-role
+```python
+def require_roles(*roles):
+    def check(user=Depends(get_current_user)):
+        if user.role not in roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return user
+    return check
+```
+### ✅ 4. Contoh Implementasi dengan JWT + Role
+JWT menyimpan role di payload:
+```python
+def create_access_token(user):
+    payload = {
+        "sub": user.username,
+        "role": user.role
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+```
+Saat verify:
+```python
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    return payload  # payload["role"] bisa dicek
+```
+### ✅ KESIMPULAN
+| Cara                  | Cocok untuk                      |
+| --------------------- | -------------------------------- |
+| Pydantic + dependency | Paling cepat & simple            |
+| fastapi-permissions   | Built-in RBAC sederhana          |
+| fastapi-users + roles | Full user management             |
+| Casbin                | Sistem kompleks multi-level RBAC |

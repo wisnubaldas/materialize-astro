@@ -6,6 +6,7 @@ class ENV(BaseSettings):
     APP_DEBUG: bool = False
     APP_URL: str
     APP_PORT: int
+    APP_NAME: str
     DB1_HOST_R: str
     DB1_HOST_W: str
     DB1_PORT: int
@@ -53,6 +54,9 @@ class ENV(BaseSettings):
     AUTH_COOKIE_DOMAIN: str | None = None
     AUTH_COOKIE_SAMESITE: str | None = None
     AUTH_COOKIE_SECURE: bool | None = None
+
+    LOG_SERVICE_NAME: str | None = None
+    LOG_SERVICE_VERSION: int | None = None
 
     class Config:
         env_file = ".env"  # otomatis baca file .env

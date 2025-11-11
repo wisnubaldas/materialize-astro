@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -10,25 +12,30 @@ from app.schemas.hubnet_request_schema import HubnetRequestGet
 from app.services.hubnet_service import HbnetRequestService
 
 router = APIRouter(prefix="/hubnet", tags=["Hubnet"])
+logger = logging.getLogger("hubnet")
 
 
 @router.get("/export-excel/{bulan}")
 def export_excel(bulan: str, service=Depends(get_export_excel_service)):
     try:
         data = service.get_data_export_excel(bulan)
-
+        logger.info("Export data excel HUBNET")
         return HubnetRequestExcel.generate(data=data)
     except ValueError as e:
+        logger.info(f"Error {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/data-terkirim", response_model=DataTablesResponse[HubnetRequestGet])
 def data_terkirim(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    logger.info("Menampilkan data terkirim ke hubnet")
     return HbnetRequestService.get_data_request(db=db, params=params)
 
 
 @router.post("/upload-manifests")
 def upload_manifests(file: UploadFile = File(...), db: Session = Depends(get_db1_w)):
+    logger.info("Upload manifests")
+
     if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):  # type: ignore
         raise HTTPException(status_code=400, detail="Invalid file format")
     return HbnetRequestService.upload_manifest(file=file, db=db)
