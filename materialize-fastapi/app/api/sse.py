@@ -58,7 +58,7 @@ async def __log_event_stream():
     last_sent = None
     try:
         while True:
-            logs = SSEUTIL.read_last_json_lines(LOG_PATH, 10)
+            logs = SSEUTIL.read_last_json_lines(LOG_PATH, 50)
             # hanya kirim jika berubah (tidak broadcast spam)
             if logs != last_sent:
                 last_sent = logs

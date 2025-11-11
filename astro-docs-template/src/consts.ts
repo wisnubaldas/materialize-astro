@@ -55,7 +55,9 @@ export const SIDEBAR: Sidebar = {
     'Blog': [
       { text: '2025-11-10T04-19-12-217Z', link: 'id/artikel/2025-11-10t04-19-12-217z' },
       { text: '2025-11-10T04-29-28-237Z', link: 'id/artikel/2025-11-10t04-29-28-237z' },
-      { text: '2025-11-10T04-30-30-047Z', link: 'id/artikel/2025-11-10t04-30-30-047z' }
+      { text: '2025-11-10T04-30-30-047Z', link: 'id/artikel/2025-11-10t04-30-30-047z' },
+      { text: '2025-11-11T15-23-13-809Z', link: 'id/artikel/2025-11-11t15-23-13-809z' }
+
     ]
   }
 }

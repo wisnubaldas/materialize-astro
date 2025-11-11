@@ -83,7 +83,7 @@ app.add_middleware(
     expose_headers=["Content-Type", "Set-Cookie"],  # opsional
     max_age=86400,  # cache preflight 1 hari
 )
-# (Opsional) jika pakai server-side session Starlette
+
 # NOTE: untuk cookie cross-site → SameSite=None; Secure
 app.add_middleware(
     SessionMiddleware,
