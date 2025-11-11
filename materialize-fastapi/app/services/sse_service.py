@@ -16,7 +16,11 @@ class SSEUTIL:
                     f.seek(-2, os.SEEK_CUR)
                     char = f.read(1)
                     if char == b"\n":
-                        line = buffer.decode()[::-1]
+                        try:
+                            line = buffer.decode("utf-8")[::-1]
+                        except UnicodeDecodeError:
+                            line = buffer.decode("latin1")[::-1]
+                        # line = buffer.decode(errors="replace")[::-1]
                         try:  # noqa: SIM105
                             result.append(json.loads(line))
                         except json.JSONDecodeError:
