@@ -183,7 +183,7 @@ export default function SseDataTracking() {
           color: '#e0e0e0',
         }}
       >
-        <div style={{ maxHeight: 300, overflowY: 'auto' }}>{renderLogLines()}</div>
+        <div style={{ maxHeight: 400, overflowY: 'auto' }}>{renderLogLines()}</div>
       </div>
     </div>
   );
