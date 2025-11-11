@@ -65,7 +65,7 @@ async def __log_event_stream():
                 data = json.dumps(logs)
                 yield f"data: {data}\n\n"
 
-            await asyncio.sleep(2)  # interval cek log
+            await asyncio.sleep(5)  # interval cek log
     except asyncio.CancelledError:
         print("SSE client disconnected")
         raise
