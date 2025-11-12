@@ -24,7 +24,7 @@ export default function UploadExcel() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await hubnetApi.uploadManifests(formData);
+      const response = await hubnetApi.uploadOutgoing(formData);
       const successMessage =
         response &&
         typeof response === 'object' &&
@@ -116,21 +116,22 @@ export default function UploadExcel() {
       ? 'danger'
       : 'primary';
   const dropzoneStyle = {
-    border: '2px dashed #cccccc',
+    border: '2px dashed oklch(37.2% 0.044 257.287)',
     borderRadius: '4px',
     padding: '20px',
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'border .24s ease-in-out',
+    fontSize: '20px',
+    backgroundColor: 'oklch(96.8% 0.007 247.896)',
   };
   return (
     <div className="row">
       <div className="col-md">
         <div className="card shadow-none bg-transparent border border-secondary mb-3">
-          <h5 className="card-header">Upload Excel data manifest</h5>
           <div className="card-body">
             <div className="row">
-              <div className="col-md-4 col-xl-4 col-sm-12 ">
+              <div className="col-md-4 col-xl-4 col-sm-12">
                 <div {...getRootProps({ className: dropzoneClassName })} style={dropzoneStyle}>
                   <input key={inputKey} {...getInputProps({ name: 'manifestExcel' })} />
                   <div className="dz-message needsclick">

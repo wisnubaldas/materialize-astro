@@ -15,6 +15,7 @@ export const hubnetApi = {
   },
   // Upload manifest excel via multipart/form-data.
   uploadManifests: (formData: FormData) => apiClient.post('/hubnet/upload-manifests', formData),
+  uploadOutgoing: (formData: FormData) => apiClient.post('/hubnet/upload-outgoing', formData),
   exportExcel: (bulan: string) =>
     apiClient.get(`/hubnet/export-excel/${bulan}`, {
       headers: {

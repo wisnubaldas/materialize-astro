@@ -32,6 +32,15 @@ def data_terkirim(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return HbnetRequestService.get_data_request(db=db, params=params)
 
 
+@router.post("/upload-outgoing")
+def upload_outgoing(file: UploadFile = File(...), db: Session = Depends(get_db1_w)):
+    logger.info("Upload data outgoing")
+    if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):  # type: ignore
+        logger.error("Data excel tidak sesuai dengan requirment")
+        raise HTTPException(status_code=400, detail="Invalid file format")
+    return HbnetRequestService.upload_manifest(file=file, db=db)
+
+
 @router.post("/upload-manifests")
 def upload_manifests(file: UploadFile = File(...), db: Session = Depends(get_db1_w)):
     logger.info("Upload manifests")
@@ -39,11 +48,6 @@ def upload_manifests(file: UploadFile = File(...), db: Session = Depends(get_db1
     if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):  # type: ignore
         raise HTTPException(status_code=400, detail="Invalid file format")
     return HbnetRequestService.upload_manifest(file=file, db=db)
-
-
-@router.get("/dashboard-card", summary="Ini untuk card di dashboard")
-def dashboard_card():
-    return HbnetRequestService.dashboard_card()
 
 
 @router.get("/last-sending", summary="Data terakhir terkirim ke HUBNET")

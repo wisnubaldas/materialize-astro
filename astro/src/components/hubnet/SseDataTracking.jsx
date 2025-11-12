@@ -178,8 +178,8 @@ export default function SseDataTracking() {
       <div
         className="alert alert-secondary py-2 px-3 mb-0"
         style={{
-          fontFamily: 'Consolas, Menlo, Monaco, "Courier New", monospace',
-          backgroundColor: '#1e1e1e',
+          fontFamily: 'Ubuntu Mono, Consolas, Menlo, Monaco, "Courier New", monospace',
+          backgroundColor: 'oklch(20.8% 0.042 265.755)',
           color: '#e0e0e0',
         }}
       >

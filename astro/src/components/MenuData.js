@@ -52,6 +52,10 @@ const menuAdmin = [
         url: prefix.hubnet('upload-excel-sending-export'),
       },
       {
+        name: 'Upload Excel Outgoing',
+        url: prefix.hubnet('upload-excel-outgoing'),
+      },
+      {
         name: 'Logging',
         url: prefix.hubnet('logging'),
       },
@@ -130,8 +134,12 @@ const menuHubnet = [
         url: prefix.hubnet('data-tracking'),
       },
       {
-        name: 'Upload Excel Sending Export',
+        name: 'Upload Excel Export',
         url: prefix.hubnet('upload-excel-sending-export'),
+      },
+      {
+        name: 'Upload Excel Outgoing',
+        url: prefix.hubnet('upload-excel-outgoing'),
       },
       {
         name: 'Logging',

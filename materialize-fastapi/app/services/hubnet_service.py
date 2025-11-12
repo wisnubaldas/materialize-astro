@@ -7,11 +7,11 @@ import requests
 from fastapi import HTTPException, UploadFile
 from openpyxl import load_workbook
 from requests.auth import HTTPBasicAuth
-from sqlalchemy import and_, case, func, literal_column, select, text
+from sqlalchemy import and_, case, func, literal_column, text
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
-from app.db.mysql import SessionDB1R, SessionDB1W, SessionDB2R
+from app.db.mysql import SessionDB1R, SessionDB2R
 from app.models.hubnet_request import HubnetRequest
 from app.repository.hubnet_request_repository import HubnetRequestRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -45,7 +45,7 @@ class HbnetRequestService:
         return data_request.get_datatable(db=db, params=params)
 
     @staticmethod
-    def upload_manifest(file: UploadFile, db: Session):  # noqa: PLR0912, PLR0915
+    def upload_manifest(file: UploadFile, db: Session):  # noqa: PLR0915
         # validasi ekstensi
         if not file.filename.endswith((".xlsx", ".xlsm")):  # type: ignore
             raise HTTPException(
@@ -109,6 +109,7 @@ class HbnetRequestService:
                         },
                     },
                 )
+
             customer = None
             # mapping kategori cargo ke IS_INTERNATIONAL dan IS_EKSPOR
             if KATEGORI_CARGO == "EKSPORT":
@@ -135,8 +136,27 @@ class HbnetRequestService:
                 CNE_ADD = customer.get("Consigneeaddress") if customer else None
             elif KATEGORI_CARGO == "OUTGOING":
                 IS_INTERNATIONAL, IS_EKSPOR = 0, 1
+                customer = HbnetRequestService.__get_hostawb(
+                    awb=AWB_NO, qfile="app/services/query/get_ekspor_hawb.sql"
+                )
+                REMARKS = customer.get("descriptiongoods") if customer else None
+                AGT_NAME = customer.get("AgenCode") if customer else None
+                SHP_ADD = customer.get("shipperaddress") if customer else None
+                SHP_NAME = customer.get("shippername") if customer else None
+                CNE_NAME = customer.get("Consigneename") if customer else None
+                CNE_ADD = customer.get("Consigneeaddress") if customer else None
+
             elif KATEGORI_CARGO == "INCOMING":
                 IS_INTERNATIONAL, IS_EKSPOR = 0, 0
+                customer = HbnetRequestService.__get_hostawb(
+                    awb=AWB_NO, qfile="app/services/query/get_imp_hostawb.sql"
+                )
+                REMARKS = customer.get("descriptiongoods") if customer else None
+                AGT_NAME = customer.get("AgenCode") if customer else None
+                SHP_ADD = customer.get("shipperaddress") if customer else None
+                SHP_NAME = customer.get("shippername") if customer else None
+                CNE_NAME = customer.get("Consigneename") if customer else None
+                CNE_ADD = customer.get("Consigneeaddress") if customer else None
             else:
                 raise HTTPException(
                     status_code=400,
@@ -148,20 +168,8 @@ class HbnetRequestService:
                         },
                     },
                 )
-
-            # tambahin jam ke FLT_DATE
-            if isinstance(FLT_DATE, datetime):
-                flt_datetime = FLT_DATE
-            else:
-                try:
-                    base_date = datetime.strptime(str(FLT_DATE), "%d-%m-%Y")  # noqa: DTZ007
-                    tz = pytz.timezone("Asia/Jakarta")
-                    now = datetime.now(tz)
-                    flt_datetime = base_date.replace(
-                        hour=now.hour, minute=now.minute, second=now.second
-                    )
-                except Exception:
-                    raise ValueError(f"Baris {idx}: format tanggal tidak valid ({FLT_DATE})")  # noqa: B904
+                # tambahin jam ke FLT_DATE
+            flt_datetime = HbnetRequestService.__combine_date_with_current_time(FLT_DATE)
 
             batch.append(
                 HubnetRequest(
@@ -203,72 +211,6 @@ class HbnetRequestService:
             db.commit()
 
         return {"message": "Upload berhasil"}
-
-    @staticmethod
-    def dashboard_card():
-        # kriteria
-        IS_INTERNATIONAL_TRUE = HubnetRequest.IS_INTERNATIONAL == "1"
-        IS_INTERNATIONAL_FALSE = HubnetRequest.IS_INTERNATIONAL == "0"
-        IS_EXPORT_TRUE = HubnetRequest.IS_EKSPOR == "1"
-        IS_EXPORT_FALSE = HubnetRequest.IS_EKSPOR == "0"
-        IS_SEND_TRUE = HubnetRequest.IS_SEND == "1"
-        IS_SEND_FALSE = HubnetRequest.IS_SEND == "0"
-
-        export_send = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_TRUE, IS_EXPORT_TRUE, IS_SEND_TRUE], label="export_send"
-        )
-        export_send_not = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_TRUE, IS_EXPORT_TRUE, IS_SEND_FALSE],
-            label="export_send_not",
-        )
-        import_send = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_TRUE, IS_EXPORT_FALSE, IS_SEND_TRUE], label="import_send"
-        )
-        import_send_not = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_TRUE, IS_EXPORT_FALSE, IS_SEND_FALSE],
-            label="import_send_not",
-        )
-        incoming_send = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_FALSE, IS_EXPORT_FALSE, IS_SEND_TRUE],
-            label="incoming_send",
-        )
-        incoming_send_not = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_FALSE, IS_EXPORT_FALSE, IS_SEND_FALSE],
-            label="incoming_send_not",
-        )
-        outgoing_send = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_FALSE, IS_EXPORT_TRUE, IS_SEND_TRUE], label="outgoing_send"
-        )
-        outgoing_send_not = HbnetRequestService._create_conditional_count_expression(
-            conditions=[IS_INTERNATIONAL_FALSE, IS_EXPORT_TRUE, IS_SEND_FALSE],
-            label="outgoing_send_not",
-        )
-
-        # kueri
-        stmt = select(
-            export_send,
-            export_send_not,
-            import_send,
-            import_send_not,
-            incoming_send,
-            incoming_send_not,
-            outgoing_send,
-            outgoing_send_not,
-        )
-        # Eksekusi kueri
-
-        with SessionDB1W() as session:
-            result = session.execute(stmt).one()
-        return {
-            "export_send": result.export_send,
-            "export_send_not": result.export_send_not,
-            "import_send": result.import_send,
-            "import_send_not": result.import_send_not,
-            "incoming_send": result.incoming_send,
-            "incoming_send_not": result.incoming_send_not,
-            "outgoing_send": result.outgoing_send,
-            "outgoing_send_not": result.outgoing_send_not,
-        }
 
     @staticmethod
     def last_sending():
@@ -359,6 +301,34 @@ class HbnetRequestService:
                     extra={"event": "hubnet.delete.response_body"},
                 )
             return None
+
+    @staticmethod
+    def __combine_date_with_current_time(FLT_DATE, idx=0):  # noqa: N803
+        try:
+            # --- Parsing FLT_DATE ---
+            if isinstance(FLT_DATE, datetime):
+                base_date = FLT_DATE
+            else:
+                # coba 2 format umum
+                try:
+                    base_date = datetime.strptime(str(FLT_DATE), "%d-%m-%Y")  # noqa: DTZ007
+                except ValueError:
+                    base_date = datetime.strptime(str(FLT_DATE), "%Y-%m-%d")  # noqa: DTZ007
+
+            # --- Tambahkan jam saat ini (Asia/Jakarta) ---
+            tz = pytz.timezone("Asia/Jakarta")
+            now = datetime.now(tz)
+            flt_datetime = base_date.replace(
+                hour=now.hour, minute=now.minute, second=now.second, microsecond=0
+            )
+
+            # pastikan timezone-aware
+            flt_datetime = tz.localize(flt_datetime)
+            return flt_datetime
+
+        except Exception:
+            logger.error(f"Baris {idx}: format tanggal tidak valid ({FLT_DATE})")
+            raise ValueError(f"Baris {idx}: format tanggal tidak valid ({FLT_DATE})")  # noqa: B904
 
     @staticmethod
     def __get_hostawb(awb: str, qfile: str):

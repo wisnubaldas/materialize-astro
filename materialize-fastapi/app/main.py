@@ -1,5 +1,9 @@
+import os
+import platform
 from contextlib import asynccontextmanager
+from datetime import datetime
 
+import pytz
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -10,6 +14,17 @@ from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
 from app.utils.env import ENV
 from app.utils.logging_config import setup_logging
+
+# Set timezone environment variable
+os.environ["TZ"] = "Asia/Jakarta"
+
+# Hanya jalankan tzset() jika OS mendukung
+if hasattr(time := __import__("time"), "tzset") and platform.system() != "Windows":
+    time.tzset()
+
+# Untuk debugging
+tz = pytz.timezone("Asia/Jakarta")
+print("🕒 Current Jakarta time:", datetime.now(tz))
 
 
 @asynccontextmanager
