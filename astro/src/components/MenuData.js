@@ -10,6 +10,8 @@ const menuAdmin = [
     url: '/',
     icon: 'ri ri-home-smile-line',
   },
+];
+const menuAp2 = [
   {
     name: 'Angkasapura',
     url: 'javascript:void(0)',
@@ -34,6 +36,8 @@ const menuAdmin = [
       },
     ],
   },
+];
+const menuHubnet = [
   {
     name: 'HUB NET',
     url: 'javascript:void(0)',
@@ -48,7 +52,7 @@ const menuAdmin = [
         url: prefix.hubnet('data-tracking'),
       },
       {
-        name: 'Upload Excel Sending Export',
+        name: 'Upload Excel Export',
         url: prefix.hubnet('upload-excel-sending-export'),
       },
       {
@@ -61,6 +65,13 @@ const menuAdmin = [
       },
     ],
   },
+  {
+    name: 'REPORT HUBNET',
+    url: prefix.hubnet('report'),
+    icon: 'ri ri-artboard-line',
+  },
+];
+const menuTpsOnline = [
   {
     name: 'TPS',
     url: 'javascript:void(0)',
@@ -113,40 +124,4 @@ const menuAdmin = [
     ],
   },
 ];
-
-const menuHubnet = [
-  {
-    name: 'Landing Page',
-    url: '/',
-    icon: 'ri ri-home-smile-line',
-  },
-  {
-    name: 'HUB NET',
-    url: 'javascript:void(0)',
-    icon: 'ri ri-bus-2-fill',
-    subItems: [
-      {
-        name: 'Dashboard',
-        url: prefix.hubnet('dashboard'),
-      },
-      {
-        name: 'Data Tracking',
-        url: prefix.hubnet('data-tracking'),
-      },
-      {
-        name: 'Upload Excel Export',
-        url: prefix.hubnet('upload-excel-sending-export'),
-      },
-      {
-        name: 'Upload Excel Outgoing',
-        url: prefix.hubnet('upload-excel-outgoing'),
-      },
-      {
-        name: 'Logging',
-        url: prefix.hubnet('logging'),
-      },
-    ],
-  },
-];
-
-export { menuAdmin, menuHubnet };
+export { menuAdmin, menuAp2, menuHubnet, menuTpsOnline };

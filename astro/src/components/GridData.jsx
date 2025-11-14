@@ -1,3 +1,8 @@
+import { apiClient } from '@lib/api/client';
+import DataTablesCore from 'datatables.net-bs5';
+import 'datatables.net-bs5/css/dataTables.bootstrap5.css';
+import DataTable from 'datatables.net-react';
+import 'datatables.net-responsive-bs5';
 import {
   forwardRef,
   useCallback,
@@ -7,11 +12,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import DataTable from 'datatables.net-react';
-import DataTablesCore from 'datatables.net-bs5';
-import 'datatables.net-responsive-bs5';
-import 'datatables.net-bs5/css/dataTables.bootstrap5.css';
-import { apiClient } from '@lib/api/client';
 
 // Registrasi adaptor DataTables agar komponen React tahu harus pakai skin Bootstrap 5.
 DataTable.use(DataTablesCore);

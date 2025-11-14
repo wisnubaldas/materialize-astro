@@ -6,7 +6,7 @@ interface paggingDataTerkirim {
 }
 export const hubnetApi = {
   // Return the resolved payload so callers can consume the dashboard data.
-  dashboardCard: () => apiClient.get('/hubnet/dashboard-card'),
+  sendingPerbulan: (bulan:string) => apiClient.get(`/hubnet/sending-per-bulan/${bulan}`),
   // Forward params as query string (?page=1&per_page=10...)
   getDataTerkirim: (params: paggingDataTerkirim) =>
     apiClient.get('/hubnet/get-data-terkirim/', { params: params as Record<string, any> }),

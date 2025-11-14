@@ -5,6 +5,9 @@ import { hubnetApi } from '@lib/api/hubnetApi';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 export default function DataTracking() {
+  const tableOptions = {
+    order: [[2, 'desc']],
+  };
   const columns = [
     { data: 'AWB_NO', title: 'awb' },
     {
@@ -29,21 +32,29 @@ export default function DataTracking() {
     {
       data: 'IS_INTERNATIONAL',
       title: '#',
-      render: (data, type, row) => {
-        const fe = row.IS_EKSPOR;
-        const fi = row.IS_INTERNATIONAL;
-        if (fe === '1' && fi === '1') {
-          return `<span class="badge bg-label-primary">EKSPORT</span>`;
-        }
-        if (fe === '0' && fi === '1') {
-          return `<span class="badge bg-label-secondary">IMPORT</span>`;
-        }
-        if (fe === '1' && fi === '0') {
-          return `<span class="badge bg-label-warning">OUTGOING</span>`;
-        }
-        if (fe === '0' && fi === '0') {
-          return `<span class="badge bg-label-info">INCOMING</span>`;
-        }
+      render: {
+        display: (data, type, row) => {
+          const fe = row.IS_EKSPOR;
+          const fi = row.IS_INTERNATIONAL;
+
+          if (fe === '1' && fi === '1')
+            return `<span class="badge bg-label-primary">EKSPORT</span>`;
+          if (fe === '0' && fi === '1')
+            return `<span class="badge bg-label-secondary">IMPORT</span>`;
+          if (fe === '1' && fi === '0')
+            return `<span class="badge bg-label-warning">OUTGOING</span>`;
+          if (fe === '0' && fi === '0') return `<span class="badge bg-label-info">INCOMING</span>`;
+        },
+        filter: (data, type, row) => {
+          const fe = row.IS_EKSPOR;
+          const fi = row.IS_INTERNATIONAL;
+
+          if (fe === '1' && fi === '1') return 'EKSPORT';
+          if (fe === '0' && fi === '1') return 'IMPORT';
+          if (fe === '1' && fi === '0') return 'OUTGOING';
+          if (fe === '0' && fi === '0') return 'INCOMING';
+          return '';
+        },
       },
     },
   ];
@@ -129,7 +140,7 @@ export default function DataTracking() {
           columns={columns}
           ajaxEndpoint={hubnetApi.postDataTable()}
           //   filters={activeFilters}
-          //   options={tableOptions}
+          options={tableOptions}
           //   onProcessing={handleProcessing}
         />
       </div>

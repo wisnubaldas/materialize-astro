@@ -1,0 +1,140 @@
+---
+title: 'FFM FWB'
+description: 'sasd'
+---
+## FWB
+```xml
+FWB/16
+023-84947461CGKBKK/T5K309MC5.488
+FLT/FX6068/14/FX6091/15AUG
+RTG/CGKFX/BKKFX
+SHP
+/PT NIPPON EXPRESS INDONESIA
+/SOEWARNA BUSINESS PARK BLOK J LOT 12
+/SOEKARNO-HATTA INT'L AIRPORT
+/JAKARTA 19110-INDONESIA PIC:IRWAN
+/19110/TEL/‪+62-21-55911551‬ FX;62-21-55911532
+CNE
+/NIPPON EXPRESS LOGISTICS (THAILAND) CO LTD
+/ROOM 506-508 BFZ BLDG
+/NO.999 MOO 7 RACHATHEWA BANGPHLI
+/SAMUT PRAKARN 10540 TEL:02-1355000
+AGT
+/PT NIPPON EXPRESS INDONESIA
+/JKT
+CVD/IDR/PP/PP/NVD/NCV/XXX
+RTD/1/P5/K305/KQ/W915/R33465/T30620475
+/NC/CONSOLIDATION CARGO AS
+/NC/ PER ATTACHED MANIFEST
+/1/NH/8443.91.00
+OTH/P/AWC15000
+PPD/WT30620475
+/OC15000/CT30635475
+CER/PT NIPPON EXPRESS INDONESIA
+ISU/13AUG25/JAKARTA SOEKARNO-HATTA
+CDC/IDR0/0/0/0
+```
+## FFM
+```xml
+FFM/8
+01/TH1022/07FEB/CGK/9M-BZB
+KUL
+ULD/PAJ31333TH
+539-06630094CGKCGO/S65K2112T252/LIFE RICEFIELD EEL
+ULD/PAG80201TH
+539-06630094CGKCGO/S64K2086T252/LIFE RICEFIELD EEL
+ULD/PAG80084TH
+539-06630094CGKCGO/S65K2154T252/LIFE RICEFIELD EEL
+ULD/PAG80179TH
+539-06630094CGKCGO/S58K1920T252/LIFE RICEFIELD EEL
+LAST
+```
+## FHL
+```xml
+FHL/4
+MBI/023-84948415CGKSIN/T1K97
+HBS/STU-2508001/CGKSIN/T1/K97/NC/PISTON RINGS
+SHP/PT NT PISTON RING INDONESIA
+/KAWASAN INDUSTRI SURYA CIPTA
+/JL SURYA MADYA II KAV 1-27 A KUTANEGARA
+/CIAMPEL KARAWANG JAWA BARAT 41363
+/TAX ID (NPWP) : 018693606055000
+CNE/NPR SINGAPORE PTE.,LTD
+/28 PIONEER CRESCENT
+/#05-13, WEST PART BIZCENTRAL
+/628559, SINGAPORE
+/USD/CC/NVD/NCV
+```
+
+<a href="/file/157-49140490_MAWB[1].pdf" target="_blank" rel="noopener noreferrer">
+  PDF Manifest
+</a>
+<iframe
+  src="/file/157-49140490_MAWB[1].pdf"
+  style="width:100%; height:800px; border:none;"
+></iframe>
+
+
+## Convert FFM
+Berikut langkah meng-convert data MAWB pada PDF tersebut → format FFM (Cargo-IMP).
+
+Saya ambil data penting yang terbaca dari dokumen:
+| Field        | Nilai                                                       |
+| ------------ | ----------------------------------------------------------- |
+| Airline Code | QR (Qatar Airways)                                          |
+| Flight No    | FX6068                                                      |
+| Flight Date  | 07NOV (kemungkinan 07NOV2025)                               |
+| Origin       | CAN (Guangzhou)                                             |
+| Transit      | DOH (Doha)                                                  |
+| Destination  | ZRH (Zurich)                                                |
+| AWB          | **157-49140490**                                            |
+| Pieces       | 65                                                          |
+| Weight       | 1377.0 KG                                                   |
+| Shipper      | MAXTENA GLOBAL SOURCE AGENCY (SHENZHEN) CO., LTD            |
+| Consignee    | GLOBAL AIRFREIGHT GMBH (ZURICH)                             |
+| Commodity    | Women’s knit T-shirt, Women’s dresses, Men’s cotton T-shirt |
+| HS Code      | 6206400090 / 6105200090                                     |
+| Volume       | 11.2 CBM                                                    |
+| Handling     | FREIGHT PREPAID                                             |
+
+## Hasil Konversi ke Format FFM (Cargo-IMP)
+```swift
+FFM
+CANDO H07NOV 2200
+FLT/QR6068/07NOV
+AWB/15749140490/CAN/ZRH/65-1377/K
+SHP/MAXTENA GLOBAL SOURCE AGENCY (SHENZHEN) CO., LTD
+CNE/GLOBAL AIRFREIGHT GMBH
+RTG/CAN/DOH/ZRH
+HND/PREPAID
+OCI/HS6206400090 HS6105200090
+VOL/11.2CBM
+COM/WOMEN'S KNIT T-SHIRT; WOMEN'S DRESSES; MEN'S COTTON T-SHIRT
+```
+## Versi lainnya (lebih lengkap dan multi-line per AWB)
+```swift
+FFM
+CANDO H07NOV 2200
+FLT/QR6068/07NOV
+AWB/15749140490/CAN/ZRH/65-1377/K
+SHP/MAXTENA GLOBAL SOURCE AGENCY (SHENZHEN) CO., LTD
+CNE/GLOBAL AIRFREIGHT GMBH, ZURICH-AIRPORT
+RTG/CAN-DOH-ZRH
+HND/FREIGHT PREPAID
+COM/WOMEN'S KNIT T-SHIRT; WOMEN'S DRESSES; MEN'S COTTON T-SHIRT
+OCI/HS CODE 6206400090 6105200090
+VOL/11.2CBM
+```
+## Jika Mau Dikirim ke Airlines/GHA
+Biasanya dikirim dalam bentuk .txt dengan CRLF dan tanpa spasi kosong di tengah, contohnya:
+```swift
+FFM
+CANDO H07NOV 2200
+FLT/QR6068/07NOV
+AWB/15749140490/CAN/ZRH/65-1377/K
+SHP/MAXTENA GLOBAL SOURCE AGENCY (SHENZHEN) CO., LTD
+CNE/GLOBAL AIRFREIGHT GMBH
+RTG/CAN/DOH/ZRH
+HND/PREPAID
+```
+

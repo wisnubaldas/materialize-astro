@@ -30,6 +30,7 @@
     "apexcharts": "^5.3.5",
     "astro": "^5.14.6",
     "bootstrap": "^5.3.8",
+    "chart.js": "^4.5.1",
     "clean-css": "^5.3.3",
     "datatables.net-bs5": "^2.3.4",
     "datatables.net-dt": "^2.3.4",
@@ -48,6 +49,7 @@
     "react-apexcharts": "^1.8.0",
     "react-bootstrap": "^2.10.10",
     "react-bs-datatable": "^3.15.0",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
     "react-select": "^5.10.2",
@@ -56,6 +58,7 @@
     "styled-components": "^6.1.19"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@iconify-icon/react": "^3.0.1",
     "sass": "^1.93.2",
     "sass-embedded": "^1.93.2",

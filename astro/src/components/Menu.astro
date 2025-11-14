@@ -1,10 +1,12 @@
 ---
-import { menuAdmin, menuHubnet } from './MenuData.js';
+import { menuAdmin, menuAp2, menuHubnet, menuTpsOnline } from './MenuData.js';
 
 const user = Astro.locals as any;
-let menuData = menuAdmin;
+let menuData;
 if (user.user?.username === 'hubnet@mitraadira.com') {
   menuData = menuHubnet;
+} else {
+  menuData = [...menuAdmin, ...menuAp2, ...menuHubnet, ...menuTpsOnline];
 }
 const currentPath = Astro.url?.pathname ?? '/';
 

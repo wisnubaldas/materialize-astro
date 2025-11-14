@@ -28,6 +28,9 @@ class HbnetRequestService:
     def __init__(self, repo: HubnetRequestRepository):
         self.repo = repo
 
+    def data_sending_per_bulan(self, bulan: str) -> list[dict[str, int | str]]:
+        return self.repo.get_data_sending_perbulan(bulan)
+
     def get_data_export_excel(self, bulan: str) -> list[HubnetRequest]:
         _data = self.repo.export_to_excel(bulan)
         return _data

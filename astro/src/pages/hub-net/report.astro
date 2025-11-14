@@ -1,0 +1,10 @@
+---
+import ChartDataTerkirim from '@components/hubnet/ChartDataTerkirim';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout title="HUBNET | Report HUBNET" , description="List data tracking hubnet">
+  <div>
+    <ChartDataTerkirim client:load />
+  </div>
+</AdminLayout>

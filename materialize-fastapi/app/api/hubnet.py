@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.deps.hubnet_deps import get_export_excel_service
+from app.deps.hubnet_deps import get_data_sending_per_bulan_service, get_export_excel_service
 from app.report.hubnet_request_excel import HubnetRequestExcel
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema
@@ -50,11 +50,6 @@ def upload_manifests(file: UploadFile = File(...), db: Session = Depends(get_db1
     return HbnetRequestService.upload_manifest(file=file, db=db)
 
 
-@router.get("/last-sending", summary="Data terakhir terkirim ke HUBNET")
-def last_sending():
-    return HbnetRequestService.last_sending()
-
-
 @router.get("/get-data-terkirim/", summary="megecek data terkirim dari API HUBNET")
 # ini untuk query param url
 def get_data_terkirim(flt_date: str, page: int = 1, per_page: int = 10):
@@ -64,3 +59,23 @@ def get_data_terkirim(flt_date: str, page: int = 1, per_page: int = 10):
 @router.post("/delete-data-terkirim", summary="Delete data terkirim di API HUBNET")
 def delete_data_terkirim(params: list[DeleteDataTerkirimSchema]):
     return HbnetRequestService.delete_data_terkirim_api(params=params)  # type: ignore
+
+
+# --------------------------------------------------------------------------
+#    report
+# ---------------------------------------------------------------------------
+@router.get("/last-sending", summary="Data terakhir terkirim ke HUBNET")
+def last_sending():
+    return HbnetRequestService.last_sending()
+
+
+@router.get("/sending-per-bulan/{bulan}", summary="Data terkirim perbulan")
+def sending_per_bulan(
+    bulan: str, service: HbnetRequestService = Depends(get_data_sending_per_bulan_service)
+):
+    logger.info(f"Data terkirim perbulan {bulan}")
+    try:
+        return service.data_sending_per_bulan(bulan)
+    except ValueError as exc:
+        logger.warning("Validasi bulan gagal: %s", exc)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

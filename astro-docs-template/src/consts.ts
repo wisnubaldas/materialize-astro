@@ -37,16 +37,30 @@ export type Sidebar = Record<
 >
 export const SIDEBAR: Sidebar = {
   en: {
-    'Section Header': [
-      { text: 'Introduction', link: 'en/introduction' },
-      { text: 'Diagram', link: 'en/page-2' },
+    'Technical Documentation': [
+      { text: 'Introduction', link: 'id/introduction' },
+      { text: 'Diagram', link: 'id/page-2' },
+      { text: 'FFM FWB', link: 'id/doc-tech/ffm-fwb' },
+      { text: 'Stock Opname', link: 'id/doc-tech/stock-opname' },
     ],
-    'Another Section': [{ text: 'Page 4', link: 'en/page-4' }]
+    'Application Documentation': [
+      { text: 'Login', link: 'id/doc-app' },
+      { text: 'HUBNET', link: 'id/doc-app/hubnet' }
+    ],
+    'Blogs': [
+      { text: '2025-11-10T04-19-12-217Z', link: 'id/artikel/2025-11-10t04-19-12-217z' },
+      { text: '2025-11-10T04-29-28-237Z', link: 'id/artikel/2025-11-10t04-29-28-237z' },
+      { text: '2025-11-10T04-30-30-047Z', link: 'id/artikel/2025-11-10t04-30-30-047z' },
+      { text: '2025-11-11T15-23-13-809Z', link: 'id/artikel/2025-11-11t15-23-13-809z' }
+
+    ]
   },
   id: {
     'Dokumentasi Teknis': [
       { text: 'Introduction', link: 'id/introduction' },
       { text: 'Diagram', link: 'id/page-2' },
+      { text: 'FFM FWB', link: 'id/doc-tech/ffm-fwb' },
+      { text: 'Stock Opname', link: 'id/doc-tech/stock-opname' },
     ],
     'Dokumentasi Aplikasi': [
       { text: 'Login', link: 'id/doc-app' },
