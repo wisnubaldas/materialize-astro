@@ -64,33 +64,32 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
     for row in rows:
         # Validasi ringan via schema (akan raise jika field wajib tidak valid)
         HubnetRequestGet.model_validate(row)
-
-        payload.append(
-            {
-                "AWB_NO": _fmt_dt(row.AWB_NO),
-                "FLT_NUMBER": _fmt_dt(row.FLT_NUMBER),
-                "FLT_DATE": _fmt_dt(row.FLT_DATE),
-                "ORI": _fmt_dt(row.ORI),
-                "DEST": _fmt_dt(row.DEST),
-                "FLT_NUMBER1": _fmt_dt(row.FLT_NUMBER1),
-                "FLT_DATE1": _fmt_dt(row.FLT_DATE1),
-                "ORI1": _fmt_dt(row.ORI1),
-                "T": _fmt_dt(row.T),
-                "K": _fmt_dt(row.K),
-                "CH_WEIGHT": _fmt_dt(row.CH_WEIGHT),
-                "MC": _fmt_dt(row.MC),
-                "AGT_NAME": _fmt_dt(row.AGT_NAME),
-                "AGT_ADD": _fmt_dt(row.AGT_ADD),
-                "SHP_NAME": _fmt_dt(row.SHP_NAME),
-                "SHP_ADD": _fmt_dt(row.SHP_ADD),
-                "CNE_NAME": _fmt_dt(row.CNE_NAME),
-                "CNE_ADD": _fmt_dt(row.CNE_ADD),
-                "KATEGORI_CARGO": _fmt_dt(row.KATEGORI_CARGO),
-                "COMMODITY": _fmt_dt(row.COMMODITY),
-                "CARGO_TREATMENT": _fmt_dt(row.CARGO_TREATMENT),
-                "REMARKS": _fmt_dt(row.REMARKS) or "",
-            }
-        )
+        data_dikirim = {
+            "AWB_NO": row.AWB_NO,
+            "FLT_NUMBER": row.FLT_NUMBER,
+            "FLT_DATE": _fmt_dt(row.FLT_DATE),
+            "ORI": row.ORI,
+            "DEST": _fmt_dt(row.DEST),
+            "FLT_NUMBER1": _fmt_dt(row.FLT_NUMBER1),
+            "FLT_DATE1": _fmt_dt(row.FLT_DATE1),
+            "ORI1": _fmt_dt(row.ORI1),
+            "T": _fmt_dt(row.T),
+            "K": _fmt_dt(row.K),
+            "CH_WEIGHT": _fmt_dt(row.CH_WEIGHT),
+            "MC": _fmt_dt(row.MC),
+            "AGT_NAME": _fmt_dt(row.AGT_NAME),
+            "AGT_ADD": _fmt_dt(row.AGT_ADD),
+            "SHP_NAME": _fmt_dt(row.SHP_NAME),
+            "SHP_ADD": _fmt_dt(row.SHP_ADD),
+            "CNE_NAME": _fmt_dt(row.CNE_NAME),
+            "CNE_ADD": _fmt_dt(row.CNE_ADD),
+            "KATEGORI_CARGO": _fmt_dt(row.KATEGORI_CARGO),
+            "COMMODITY": _fmt_dt(row.COMMODITY),
+            "CARGO_TREATMENT": _fmt_dt(row.CARGO_TREATMENT),
+            "REMARKS": _fmt_dt(row.REMARKS) or "",
+        }
+        payload.append(data_dikirim)
+        logger.debug(f"data yg dikirim {data_dikirim}")
 
     try:
         publish_sync(
