@@ -31,6 +31,7 @@ def init_scheduler():
     #     coalesce=True,  # gabungkan job yang terlewat jika tertunda
     #     misfire_grace_time=30,
     # )
+    # tarik data untuk di sending
     scheduler.add_job(
         run_breakdown,
         "interval",
