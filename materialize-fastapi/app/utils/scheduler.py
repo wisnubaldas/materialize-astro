@@ -3,7 +3,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.inv_ap2_service import INVAp2Service
 from app.tasks.get_imp_breakdown_hubnet_job import run_breakdown
 from app.tasks.get_inc_hubnet import run_incoming
-from app.tasks.get_out_hubnet import run_outgoing
+
+# from app.tasks.get_out_hubnet import run_outgoings
 from app.tasks.sending_ke_hubnet_job import run_sending_ke_hubnet
 from app.utils.env import ENV
 
@@ -21,15 +22,15 @@ def init_scheduler():
         misfire_grace_time=30,
         kwargs={"limit": ENV.HUBNET_BATCH_LIMIT, "use_dev_url": False},
     )
-    scheduler.add_job(
-        run_outgoing,
-        "interval",
-        minutes=60,
-        id="run_outgoing_job",
-        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=True,  # gabungkan job yang terlewat jika tertunda
-        misfire_grace_time=30,
-    )
+    # scheduler.add_job(
+    #     run_outgoing,
+    #     "interval",
+    #     minutes=60,
+    #     id="run_outgoing_job",
+    #     max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
+    #     coalesce=True,  # gabungkan job yang terlewat jika tertunda
+    #     misfire_grace_time=30,
+    # )
     scheduler.add_job(
         run_breakdown,
         "interval",

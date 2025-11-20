@@ -2,6 +2,8 @@ from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
+from rich.pretty import pprint
+
 
 class HELPER:
     @staticmethod
@@ -21,8 +23,13 @@ class HELPER:
 
     @staticmethod
     def str_date():
-        now = datetime.now()
+        now = datetime.now()  # noqa: DTZ005
         return now.strftime("%Y%m%d%H%M%S")
+
+    @staticmethod
+    def dd(data: any):
+        pprint(data)
+        raise SystemExit()  # stop eksekusi
 
 
 STR_DATE = HELPER.str_date()
