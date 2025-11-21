@@ -13,7 +13,7 @@ CONCAT(c.Address1,' ',c.Address2,' ',c.City,' ',c.PostCode) AS shipperAddr,
 d.CompanyName conssigneeName,
 CONCAT(d.Address1,' ',d.Address2,' ',d.City,' ',d.PostCode) AS ConsigneeAddr
 FROM `eks_hostawb` a
-INNER JOIN mst_customer b ON a.AgenCode = b.CustomerCode
+LEFT JOIN mst_customer b ON a.AgenCode = b.CustomerCode
 INNER JOIN mst_customer c ON a.ShipperCode = c.CustomerCode
 INNER JOIN mst_customer d ON a.ConsigneeCode = d.CustomerCode
 WHERE MasterAWB = :awb ORDER BY a.TimeEntry DESC LIMIT 1;
