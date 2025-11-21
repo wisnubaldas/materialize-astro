@@ -16,4 +16,4 @@ FROM `eks_hostawb` a
 INNER JOIN mst_customer b ON a.AgenCode = b.CustomerCode
 INNER JOIN mst_customer c ON a.ShipperCode = c.CustomerCode
 INNER JOIN mst_customer d ON a.ConsigneeCode = d.CustomerCode
-FROM `eks_hostawb` WHERE MasterAWB = :awb ORDER BY a.TimeEntry DESC LIMIT 1;
+WHERE MasterAWB = :awb ORDER BY a.TimeEntry DESC LIMIT 1;

@@ -168,6 +168,13 @@ export default function SseDataTracking() {
             {fnName} ({fileName})
           </span>{' '}
           <span style={{ color: '#e0e0e0' }}>:: {message}</span>
+          {level === 'ERROR' && entry?.['error.message'] ? (
+            <p>
+              <span style={{ color: '#c20c0f' }}>{entry?.['error.message']} </span>
+            </p>
+          ) : (
+            ''
+          )}
         </div>
       );
     });

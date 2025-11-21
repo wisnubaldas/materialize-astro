@@ -15,7 +15,7 @@ def init_scheduler():
     scheduler.add_job(
         run_sending_ke_hubnet,
         "interval",
-        minutes=5,
+        minutes=20,
         id="sending_ke_hubnet_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=True,  # gabungkan job yang terlewat jika tertunda

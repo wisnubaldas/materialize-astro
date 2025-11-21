@@ -359,10 +359,17 @@ class HbnetRequestService:
             param = {"awb": awb}
             sql = text(query)
             customers = db2.execute(sql, param).mappings().first()
-        except Exception:
+        except Exception as e:
             logger.exception(
                 "Gagal mengambil data host AWB untuk customer",
-                extra={"event": "hubnet.hostawb.error", "awb": awb, "query": qfile},
+                extra={
+                    "event": "hubnet.hostawb.error",
+                    "awb": awb,
+                    "query_file": qfile,
+                    "error_message": str(e),  # Menampilkan pesan error
+                    "executed_sql": str(sql),  # Menampilkan query SQL yang dieksekusi
+                    "parameters": param,  # Menampilkan parameter yang digunakan
+                },
             )
         finally:
             db2.close()
