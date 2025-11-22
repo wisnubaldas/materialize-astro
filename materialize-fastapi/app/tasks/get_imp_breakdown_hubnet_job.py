@@ -1,17 +1,15 @@
+import logging
 from datetime import datetime
-from json import dumps
 
 import pytz
 from sqlalchemy import select, text
 
 from app.db.mysql import SessionDB1W, SessionDB2R
 from app.models.hubnet_request import HubnetRequest
-from app.services.redis_service import publish_sync
 from app.utils.helper import HELPER as Helper  # noqa: N811
 
 jakarta_tz = pytz.timezone("Asia/Jakarta")
 now_wib = datetime.now(jakarta_tz)
-import logging
 
 CHANNEL_NAME = "sending_ke_hubnet_channel"
 logger = logging.getLogger("hubnet")
@@ -19,26 +17,19 @@ logger = logging.getLogger("hubnet")
 
 def run_breakdown():
     try:
-        qfile = "app/services/query/get_imp_hubnet.sql"
+        qfile = "app/repository/hubnet_query/get_imp_hubnet.sql"
         db2 = SessionDB2R()
         query = Helper.load_sql_query(qfile)
         param = {"date_of_flight": now_wib.strftime("%Y-%m-%d")}
         sql = text(query)
         customers = db2.execute(sql, param).mappings().all()
-
+        total = len(customers)
+        logger.info(f"Data import berhasil di fetch {total} data 🩲")
         for cust in customers:
             # print(cust["MasterAWB"])
             if __cek_hostawb(cust["MasterAWB"]):
-                logger.info(f"AWB_NO {cust["MasterAWB"]} sudah ada, skip insert")
-                publish_sync(
-                    CHANNEL_NAME,
-                    dumps(
-                        {
-                            "level": "info",
-                            "message": f"📟 AWB_NO {cust['MasterAWB']} sudah ada, skip insert",
-                        }
-                    ),
-                )
+                logger.info(f"AWB_NO {cust["MasterAWB"]} sudah ada, skip insert 👈(ﾟヮﾟ👈)")
+                pass
             else:
                 with SessionDB1W() as db1:
                     new_request = HubnetRequest(
@@ -68,23 +59,23 @@ def run_breakdown():
                     )
                     db1.add(new_request)
                     db1.commit()
-                    logger.info(f"Insert AWB_NO {cust['MasterAWB']} berhasil")
-                    publish_sync(
-                        CHANNEL_NAME,
-                        dumps(
-                            {
-                                "level": "info",
-                                "message": f"✅ Insert AWB_NO {cust['MasterAWB']} berhasil",
-                            }
-                        ),
-                    )
+                    logger.info(f"Insert AWB_NO {cust['MasterAWB']} berhasil 🩲")
+                    # publish_sync(
+                    #     CHANNEL_NAME,
+                    #     dumps(
+                    #         {
+                    #             "level": "info",
+                    #             "message": f"✅ Insert AWB_NO {cust['MasterAWB']} berhasil",
+                    #         }
+                    #     ),
+                    # )
 
     except Exception as e:
-        logger.error(f"Error : {e}")
-        publish_sync(
-            CHANNEL_NAME,
-            dumps({"level": "error", "message": f"Error: {e!s}"}),
-        )
+        logger.error(f"Error import run_breakdown: {e}")
+        # publish_sync(
+        #     CHANNEL_NAME,
+        #     dumps({"level": "error", "message": f"Error: {e!s}"}),
+        # )cc
     finally:
         db2.close()
 
