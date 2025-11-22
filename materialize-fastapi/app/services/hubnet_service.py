@@ -1,8 +1,6 @@
 import logging
-from datetime import datetime
 from io import BytesIO
 
-import pytz
 import requests
 from fastapi import HTTPException, UploadFile
 from openpyxl import load_workbook
@@ -152,26 +150,26 @@ class HbnetRequestService:
                 customer = HbnetRequestService.__get_hostawb(
                     awb=AWB_NO, qfile="app/repository/hubnet_query/get_outgoing_customer.sql"
                 )
-                REMARKS = customer.get("descriptiongoods") if customer else None
-                AGT_NAME = customer.get("AgenCode") if customer else None
-                SHP_ADD = customer.get("shipperaddress") if customer else None
-                SHP_NAME = customer.get("shippername") if customer else None
-                CNE_NAME = customer.get("Consigneename") if customer else None
-                CNE_ADD = customer.get("Consigneeaddress") if customer else None
+                REMARKS = customer.get("kindofgood") if customer else None
+                AGT_NAME = customer.get("agenName") if customer else None
+                SHP_NAME = customer.get("shipperName") if customer else None
+                SHP_ADD = customer.get("shipperAddr") if customer else None
+                CNE_NAME = customer.get("consigneeName") if customer else None
+                CNE_ADD = customer.get("consigneeAddr") if customer else None
 
             elif KATEGORI_CARGO == "INCOMING":
                 category = "INCOMING"
-
-                IS_INTERNATIONAL, IS_EKSPOR = 0, 0
-                customer = HbnetRequestService.__get_hostawb(
-                    awb=AWB_NO, qfile="app/services/query/get_imp_hostawb.sql"
-                )
-                REMARKS = customer.get("descriptiongoods") if customer else None
-                AGT_NAME = customer.get("AgenCode") if customer else None
-                SHP_ADD = customer.get("shipperaddress") if customer else None
-                SHP_NAME = customer.get("shippername") if customer else None
-                CNE_NAME = customer.get("Consigneename") if customer else None
-                CNE_ADD = customer.get("Consigneeaddress") if customer else None
+                pass
+                # IS_INTERNATIONAL, IS_EKSPOR = 0, 0
+                # customer = HbnetRequestService.__get_hostawb(
+                #     awb=AWB_NO, qfile="app/services/query/get_imp_hostawb.sql"
+                # )
+                # REMARKS = customer.get("descriptiongoods") if customer else None
+                # AGT_NAME = customer.get("AgenCode") if customer else None
+                # SHP_ADD = customer.get("shipperaddress") if customer else None
+                # SHP_NAME = customer.get("shippername") if customer else None
+                # CNE_NAME = customer.get("Consigneename") if customer else None
+                # CNE_ADD = customer.get("Consigneeaddress") if customer else None
             else:
                 raise HTTPException(
                     status_code=400,
@@ -209,7 +207,7 @@ class HbnetRequestService:
                         CNE_NAME=CNE_NAME,
                         CNE_ADD=CNE_ADD,
                         KATEGORI_CARGO=KATEGORI_CARGO,
-                        COMMODITY="",
+                        COMMODITY=REMARKS,
                         CARGO_TREATMENT="",
                         REMARKS=REMARKS,
                     )
@@ -326,26 +324,27 @@ class HbnetRequestService:
     @staticmethod
     def __combine_date_with_current_time(FLT_DATE, idx=0):  # noqa: N803
         try:
-            # --- Parsing FLT_DATE ---
-            if isinstance(FLT_DATE, datetime):
-                base_date = FLT_DATE
-            else:
-                # coba 2 format umum
-                try:
-                    base_date = datetime.strptime(str(FLT_DATE), "%d-%m-%Y")  # noqa: DTZ007
-                except ValueError:
-                    base_date = datetime.strptime(str(FLT_DATE), "%Y-%m-%d")  # noqa: DTZ007
+            # # --- Parsing FLT_DATE ---
+            # if isinstance(FLT_DATE, datetime):
+            #     base_date = FLT_DATE
+            # else:
+            #     # coba 2 format umum
+            #     try:
+            #         base_date = datetime.strptime(str(FLT_DATE), "%d-%m-%Y")
+            #     except ValueError:
+            #         base_date = datetime.strptime(str(FLT_DATE), "%Y-%m-%d")
 
-            # --- Tambahkan jam saat ini (Asia/Jakarta) ---
-            tz = pytz.timezone("Asia/Jakarta")
-            now = datetime.now(tz)
-            flt_datetime = base_date.replace(
-                hour=now.hour, minute=now.minute, second=now.second, microsecond=0
-            )
+            # # --- Tambahkan jam saat ini (Asia/Jakarta) ---
+            # tz = pytz.timezone("Asia/Jakarta")
+            # now = datetime.now(tz)
+            # flt_datetime = base_date.replace(
+            #     hour=now.hour, minute=now.minute, second=now.second, microsecond=0
+            # )
 
-            # pastikan timezone-aware
-            flt_datetime = tz.localize(flt_datetime)
-            return flt_datetime
+            # # pastikan timezone-aware
+            # flt_datetime = tz.localize(flt_datetime)
+            # return flt_datetime
+            return FLT_DATE
 
         except Exception:
             logger.error(f"Baris {idx}: format tanggal tidak valid ({FLT_DATE})")

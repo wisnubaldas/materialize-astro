@@ -1,13 +1,16 @@
 ---
-import { menuAdmin, menuAp2, menuHubnet, menuTpsOnline } from './MenuData.js';
+import { menuAdmin, menuAp2, menuEdi, menuHubnet, menuTpsOnline } from './MenuData.js';
 
+// validasi menu yang di butuhkan
+// nanti ini bisa jadi RBAC untuk frontend
 const user = Astro.locals as any;
 let menuData;
 if (user.user?.username === 'hubnet@mitraadira.com') {
   menuData = menuHubnet;
 } else {
-  menuData = [...menuAdmin, ...menuAp2, ...menuHubnet, ...menuTpsOnline];
+  menuData = [...menuAdmin, ...menuAp2, ...menuHubnet, ...menuEdi, ...menuTpsOnline];
 }
+
 const currentPath = Astro.url?.pathname ?? '/';
 
 const isExternal = (url: any) => /^https?:\/\//i.test(url ?? '');

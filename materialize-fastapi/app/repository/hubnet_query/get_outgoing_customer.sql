@@ -1,5 +1,6 @@
 SELECT 
 a.MasterAWB,
+a.kindofgood,
 a.shipperCode,
 a.agentCode,
 a.consigneeCode,

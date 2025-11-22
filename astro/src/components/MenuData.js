@@ -63,12 +63,11 @@ const menuHubnet = [
         name: 'Logging',
         url: prefix.hubnet('logging'),
       },
+      {
+        name: 'Report Data Sending',
+        url: prefix.hubnet('report'),
+      },
     ],
-  },
-  {
-    name: 'REPORT HUBNET',
-    url: prefix.hubnet('report'),
-    icon: 'ri ri-artboard-line',
   },
 ];
 const menuTpsOnline = [
@@ -124,4 +123,75 @@ const menuTpsOnline = [
     ],
   },
 ];
-export { menuAdmin, menuAp2, menuHubnet, menuTpsOnline };
+const menuEdi = [
+  {
+    name: 'Electronic Data Interchange',
+    url: 'javascript:void(0)',
+    icon: 'ri ri-barcode-line',
+    subItems: [
+      {
+        name: 'Import',
+        url: 'javascript:void(0)',
+        subItems: [
+          {
+            name: 'Flight Manifest (FFM)',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'Consolidation List Message (FHL)',
+            url: 'javascript:void(0)',
+          },
+        ],
+      },
+      {
+        name: 'Export',
+        url: 'javascript:void(0)',
+        subItems: [
+          {
+            name: 'Air Waybill Data (FWB)',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'CPM',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'FFM',
+            url: 'javascript:void(0)',
+          },
+        ],
+      },
+      {
+        name: 'GH',
+        url: 'javascript:void(0)',
+        subItems: [
+          {
+            name: 'FFM',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'FWB',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'FHL',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'CPM',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'ULD',
+            url: 'javascript:void(0)',
+          },
+          {
+            name: 'BUP',
+            url: 'javascript:void(0)',
+          },
+        ],
+      },
+    ],
+  },
+];
+export { menuAdmin, menuAp2, menuEdi, menuHubnet, menuTpsOnline };
