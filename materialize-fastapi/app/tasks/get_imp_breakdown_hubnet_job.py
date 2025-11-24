@@ -24,7 +24,7 @@ def run_breakdown():
         sql = text(query)
         customers = db2.execute(sql, param).mappings().all()
         total = len(customers)
-        logger.info(f"Data import berhasil di fetch {total} data, 🩲 {param}")
+        logger.info(f"Data import berhasil di fetch {total} ➡️ data , 🕞 {param}")
         for cust in customers:
             # print(cust["MasterAWB"])
             if __cek_hostawb(cust["MasterAWB"]):
@@ -85,7 +85,6 @@ def __cek_hostawb(awb):
         with SessionDB1W() as db1:
             result = db1.scalar(select(HubnetRequest).where(awb == HubnetRequest.AWB_NO))
             return result is not None
-
     except Exception as e:
         logger.error(f"Error cek HAWB : {e}")
     finally:
