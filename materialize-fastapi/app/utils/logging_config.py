@@ -1,15 +1,19 @@
+import atexit
 import json
 import logging
 import os
+import queue
 import socket
 import sys
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import QueueHandler, QueueListener, TimedRotatingFileHandler
 from typing import Any
 
 from app.db.db_logger import DBLogHandler
 from app.utils.logging_utils import TaskNameFilter
+
+_listener: QueueListener | None = None
 
 
 class LogstashJSONFormatter(logging.Formatter):
@@ -141,7 +145,22 @@ def _safe_int(value: str | None, default: int) -> int:
         return default
 
 
+def _stop_listener() -> None:
+    """Stop queue listener if running (used on reconfigure/shutdown)."""
+    global _listener  # noqa: PLW0603
+    if _listener is not None:
+        _listener.stop()
+        _listener = None
+
+
+atexit.register(_stop_listener)
+
+
 def setup_logging() -> None:
+    global _listener  # noqa: PLW0603
+
+    _stop_listener()  # ensure we don't double-start listeners on reload
+
     service_name = (
         os.getenv("LOG_SERVICE_NAME")
         or os.getenv("APP_NAME")
@@ -162,7 +181,7 @@ def setup_logging() -> None:
     console_handler.setLevel(log_level)
     console_handler.setFormatter(formatter)
 
-    handlers: list[logging.Handler] = [console_handler]
+    listener_handlers: list[logging.Handler] = [console_handler]
 
     if _is_enabled(os.getenv("LOG_TO_FILE"), default=True):
         log_dir = os.getenv("LOG_DIR", "logs")
@@ -180,25 +199,35 @@ def setup_logging() -> None:
         )
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
-        handlers.append(file_handler)
+        listener_handlers.append(file_handler)
 
     if _is_enabled(os.getenv("LOG_TO_DB")):
         db_handler = DBLogHandler()
         db_handler.setLevel(log_level)
         db_handler.setFormatter(formatter)
-        handlers.append(db_handler)
+        listener_handlers.append(db_handler)
+
+    log_queue: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
+    queue_handler = QueueHandler(log_queue)
+    queue_handler.setLevel(log_level)
+    queue_handler.set_name("queue-handler")
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
     root_logger.handlers.clear()
     root_logger.addFilter(TaskNameFilter())
 
-    for handler in handlers:
-        root_logger.addHandler(handler)
+    # Send log records to a queue to avoid blocking on slow I/O handlers.
+    root_logger.addHandler(queue_handler)
+
+    _listener = QueueListener(log_queue, *listener_handlers, respect_handler_level=True)
+    _listener.daemon = True  # type: ignore
+    _listener.start()
 
     logging.captureWarnings(True)
 
     for logger_name in ("angkasapura", "hubnet"):
         named_logger = logging.getLogger(logger_name)
         named_logger.setLevel(log_level)
+        named_logger.propagate = True
         named_logger.propagate = True
