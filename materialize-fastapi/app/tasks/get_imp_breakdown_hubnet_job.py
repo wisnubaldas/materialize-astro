@@ -24,7 +24,7 @@ def run_breakdown():
         sql = text(query)
         customers = db2.execute(sql, param).mappings().all()
         total = len(customers)
-        logger.info(f"Data import berhasil di fetch {total} data 🩲")
+        logger.info(f"Data import berhasil di fetch {total} data, 🩲 {param}")
         for cust in customers:
             # print(cust["MasterAWB"])
             if __cek_hostawb(cust["MasterAWB"]):
