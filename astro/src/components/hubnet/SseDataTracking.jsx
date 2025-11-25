@@ -113,7 +113,8 @@ export default function SseDataTracking() {
     };
   }, []);
 
-  const entriesToRender = logAppEntries.filter((entry) => entry?.['log.logger'] === 'hubnet');
+  //   const entriesToRender = logAppEntries.filter((entry) => entry?.['log.logger'] === 'hubnet');
+  const entriesToRender = logAppEntries;
   const orderedLogEntries =
     entriesToRender.length > 0 ? [...entriesToRender].reverse() : [...logAppEntries].reverse();
 
