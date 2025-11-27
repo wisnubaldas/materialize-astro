@@ -9,7 +9,6 @@ version = "0.1.0"
 [tool.poetry.dependencies]
 alembic = "^1.13.2"
 bcrypt = "^4.3.0"
-faker = "^37.6.0"
 fastapi = "^0.112.0"
 flower = "^2.0.1"
 gunicorn = "^23.0.0"
@@ -37,6 +36,7 @@ jinja2 = "^3.1.6"
 xhtml2pdf = "^0.2.16"
 pycairo = { version = ">=1.25.0,<1.29.0", allow-prereleases = true }
 jsonlines = "^4.0.0"
+pyjwt = "^2.10.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
@@ -45,6 +45,8 @@ ptpython = "^3.0.31"
 pytest = "^8.0.0"
 ruff = "^0.5.0"
 rich = "^14.2.0"
+faker = "^38.2.0"
+faker-airtravel = "^0.4"
 
 [tool.poetry.scripts]
 dev = "app.__main__:main"
