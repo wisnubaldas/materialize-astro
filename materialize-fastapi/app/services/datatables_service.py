@@ -21,11 +21,13 @@ class DataTablesService:
         self,
         model: type[ModelType],
         schema: type[SchemaType],
+        pk_field: str = "id",
         search_columns: list[str] | None = None,
         custom_filters: list[str] | None = None,
     ):
         self.model = model
         self.schema = schema
+        self.pk_field = pk_field
         self.search_columns = search_columns if search_columns is not None else []
         self.custom_filters = custom_filters if custom_filters is not None else []
 
@@ -39,8 +41,11 @@ class DataTablesService:
         query = db.query(self.model)
 
         # Total records (sebelum filtering)
-        # ini berarti di tiap model harus ada id
-        total_records = db.query(func.count(self.model.id)).scalar()
+        # ini berarti di tiap model harus ada pk yang bisa di hitung
+        pk_column = getattr(self.model, self.pk_field, None)
+        if pk_column is None:
+            raise AttributeError(f"{self.model.__name__} tidak punya kolom {self.pk_field}")
+        total_records = db.query(func.count(pk_column)).scalar()
 
         # --- Logika Filter Kustom yang Dinamis ---
         custom_filter_conditions = []

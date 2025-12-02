@@ -28,6 +28,13 @@ class ENV(BaseSettings):
     DB3_PASSWORD: str | None
     DB3_NAME: str
 
+    DB4_HOST_R: str
+    DB4_HOST_W: str
+    DB4_PORT: int
+    DB4_USER: str
+    DB4_PASSWORD: str | None
+    DB4_NAME: str
+
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

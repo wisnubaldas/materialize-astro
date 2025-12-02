@@ -42,32 +42,6 @@ SessionDB1W = sessionmaker(bind=engine_db1_w, autoflush=False, autocommit=False)
 SessionDB1R = sessionmaker(bind=engine_db1_r, autoflush=False, autocommit=False)
 BaseDB1 = declarative_base()
 
-# DB2
-engine_db2_w = create_engine(
-    make_url(ENV.DB2_USER, ENV.DB2_PASSWORD, ENV.DB2_HOST_W, ENV.DB2_PORT, ENV.DB2_NAME),
-    pool_pre_ping=True,
-)
-engine_db2_r = create_engine(
-    make_url(ENV.DB2_USER, ENV.DB2_PASSWORD, ENV.DB2_HOST_R, ENV.DB2_PORT, ENV.DB2_NAME),
-    pool_pre_ping=True,
-)
-SessionDB2W = sessionmaker(bind=engine_db2_w, autoflush=False, autocommit=False)
-SessionDB2R = sessionmaker(bind=engine_db2_r, autoflush=False, autocommit=False)
-BaseDB2 = declarative_base()
-
-# DB3
-engine_db3_w = create_engine(
-    make_url(ENV.DB3_USER, ENV.DB3_PASSWORD, ENV.DB3_HOST_W, ENV.DB3_PORT, ENV.DB3_NAME),
-    pool_pre_ping=True,
-)
-engine_db3_r = create_engine(
-    make_url(ENV.DB3_USER, ENV.DB3_PASSWORD, ENV.DB3_HOST_R, ENV.DB3_PORT, ENV.DB3_NAME),
-    pool_pre_ping=True,
-)
-SessionDB3W = sessionmaker(bind=engine_db3_w, autoflush=False, autocommit=False)
-SessionDB3R = sessionmaker(bind=engine_db3_r, autoflush=False, autocommit=False)
-BaseDB3 = declarative_base()
-
 
 # Dependency
 def get_db1_w() -> Generator[Session, None, None] | Session:
@@ -86,6 +60,20 @@ def get_db1_r() -> Generator[Session, None, None] | Session:
         db.close()
 
 
+# DB2
+engine_db2_w = create_engine(
+    make_url(ENV.DB2_USER, ENV.DB2_PASSWORD, ENV.DB2_HOST_W, ENV.DB2_PORT, ENV.DB2_NAME),
+    pool_pre_ping=True,
+)
+engine_db2_r = create_engine(
+    make_url(ENV.DB2_USER, ENV.DB2_PASSWORD, ENV.DB2_HOST_R, ENV.DB2_PORT, ENV.DB2_NAME),
+    pool_pre_ping=True,
+)
+SessionDB2W = sessionmaker(bind=engine_db2_w, autoflush=False, autocommit=False)
+SessionDB2R = sessionmaker(bind=engine_db2_r, autoflush=False, autocommit=False)
+BaseDB2 = declarative_base()
+
+
 def get_db2_w() -> Generator[Session, None, None] | Session:
     db = SessionDB2W()
     try:
@@ -102,6 +90,20 @@ def get_db2_r() -> Generator[Session, None, None] | Session:
         db.close()
 
 
+# DB3
+engine_db3_w = create_engine(
+    make_url(ENV.DB3_USER, ENV.DB3_PASSWORD, ENV.DB3_HOST_W, ENV.DB3_PORT, ENV.DB3_NAME),
+    pool_pre_ping=True,
+)
+engine_db3_r = create_engine(
+    make_url(ENV.DB3_USER, ENV.DB3_PASSWORD, ENV.DB3_HOST_R, ENV.DB3_PORT, ENV.DB3_NAME),
+    pool_pre_ping=True,
+)
+SessionDB3W = sessionmaker(bind=engine_db3_w, autoflush=False, autocommit=False)
+SessionDB3R = sessionmaker(bind=engine_db3_r, autoflush=False, autocommit=False)
+BaseDB3 = declarative_base()
+
+
 def get_db3_w() -> Generator[Session, None, None] | Session:
     db = SessionDB3W()
     try:
@@ -112,6 +114,36 @@ def get_db3_w() -> Generator[Session, None, None] | Session:
 
 def get_db3_r() -> Generator[Session, None, None] | Session:
     db = SessionDB3R()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# DB4
+engine_db4_w = create_engine(
+    make_url(ENV.DB4_USER, ENV.DB4_PASSWORD, ENV.DB4_HOST_W, ENV.DB4_PORT, ENV.DB4_NAME),
+    pool_pre_ping=True,
+)
+engine_db4_r = create_engine(
+    make_url(ENV.DB4_USER, ENV.DB4_PASSWORD, ENV.DB4_HOST_R, ENV.DB4_PORT, ENV.DB4_NAME),
+    pool_pre_ping=True,
+)
+SessionDB4W = sessionmaker(bind=engine_db4_w, autoflush=False, autocommit=False)
+SessionDB4R = sessionmaker(bind=engine_db4_r, autoflush=False, autocommit=False)
+BaseDB4 = declarative_base()
+
+
+def get_db4_w() -> Generator[Session, None, None] | Session:
+    db = SessionDB4W()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_db4_r() -> Generator[Session, None, None] | Session:
+    db = SessionDB4R()
     try:
         yield db
     finally:
