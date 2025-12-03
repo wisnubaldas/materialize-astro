@@ -149,6 +149,14 @@ const menuEdi = [
     icon: 'ri ri-barcode-line',
     subItems: [
       {
+        name: 'FHL',
+        url: '/edi/fhl',
+      },
+      {
+        name: 'FWB',
+        url: '/edi/fwb',
+      },
+      {
         name: 'FFM',
         url: '/edi/ffm',
       },

@@ -1,0 +1,16 @@
+---
+import FHL from '@components/edi/fhl';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout
+  title="EDI | AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+  ,
+  description="AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+>
+  <div class="row">
+    <div class="col-md-12 col-xl-12">
+      <FHL client:only />
+    </div>
+  </div>
+</AdminLayout>

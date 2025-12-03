@@ -1,0 +1,57 @@
+---
+import AdminLayout from '@layouts/BaseLayout.astro';
+import { buildFfmMessage } from '@lib/parse_ffm';
+
+const url = new URL(Astro.request.url);
+const payload = Object.fromEntries(url.searchParams.entries());
+const hasData = Object.keys(payload).length > 0;
+const ffmMessage = hasData ? buildFfmMessage(payload) : '';
+console.log(payload); // kirim ke data buildup
+---
+
+<AdminLayout
+  title="EDI | AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+  description="AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          {
+            hasData ? (
+              <>
+                <div>
+                  <div>
+                    <label for="roundedInput" class="form-label">
+                      Email
+                    </label>
+                    <input
+                      id="roundedInput"
+                      class="form-control rounded-pill form-control-sm"
+                      type="email"
+                      placeholder="Pisahkan email dengan comma (,) "
+                    />
+                  </div>
+                  <label class="form-label fw-semibold">Payload FFM (IATA)</label>
+                  <textarea class="form-control font-monospace" rows="12">
+                    {ffmMessage}
+                  </textarea>
+                  <a href="/edi/ffm" class="btn btn-primary mt-2">
+                    Sending FFM
+                  </a>
+                  <a href="/edi/ffm" class="btn btn-label-primary mt-2">
+                    Kembali
+                  </a>
+                </div>
+              </>
+            ) : (
+              <p class="mb-0 text-muted">
+                Tidak ada data yang dikirim. Silakan pilih baris dari tabel sebelumnya.
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

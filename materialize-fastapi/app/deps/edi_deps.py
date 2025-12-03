@@ -16,3 +16,11 @@ def get_buildup_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
 
 def get_buildup_service(repo: EdiRepository = Depends(get_buildup_repo)) -> EdiService:
     return EdiService(repo)
+
+
+def get_weighing_header_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
+    return _build_repo(db)
+
+
+def get_weighing_header_service(repo: EdiRepository = Depends(get_weighing_header_repo)) -> EdiService:
+    return EdiService(repo)

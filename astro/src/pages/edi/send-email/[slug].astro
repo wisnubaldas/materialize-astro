@@ -1,0 +1,19 @@
+---
+import AdminLayout from '@layouts/BaseLayout.astro';
+import SendEmailFhl from '@components/edi/SendEmailFhl.jsx';
+
+const { slug = '' } = Astro.params;
+
+---
+
+<AdminLayout
+  title="EDI | AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+  ,
+  description="AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+>
+  <div class="row">
+    <div class="col-12">
+      <SendEmailFhl client:load slug={slug} />
+    </div>
+  </div>
+</AdminLayout>
