@@ -163,8 +163,17 @@ const GridData = forwardRef(
 
         const displayFactory = modalFactory({
           header: function (row) {
-            const data = row.data();
-            return 'Details of ' + (data?.full_name ?? '');
+            const data = typeof row.data === 'function' ? row.data() : {};
+            const label =
+              data?.full_name ??
+              data?.BuildUpNumber ??
+              data?.MasterAWB ??
+              data?.NO_INVOICE ??
+              data?.id ??
+              data?.noid ??
+              '';
+
+            return label ? `Details of ${label}` : 'Row details';
           },
         });
 
