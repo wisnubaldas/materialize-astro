@@ -1,0 +1,16 @@
+---
+import FWB from '@components/edi/fwb';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout
+  title="EDI | AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+  ,
+  description="AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+>
+  <div class="row">
+    <div class="col-md-12 col-xl-12">
+      <FWB client:only />
+    </div>
+  </div>
+</AdminLayout>

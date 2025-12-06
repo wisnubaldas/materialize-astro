@@ -1,9 +1,11 @@
 ---
-import AdminLayout from '@layouts/BaseLayout.astro';
+import SendEmailFfm from '@components/edi/SendEmailFfm.jsx';
 import SendEmailFhl from '@components/edi/SendEmailFhl.jsx';
+import SendEmailFwb from '@components/edi/SendEmailFwb.jsx';
+import AdminLayout from '@layouts/BaseLayout.astro';
 
 const { slug = '' } = Astro.params;
-
+const [tipe = '', mawb = ''] = (slug || '').split('@');
 ---
 
 <AdminLayout
@@ -13,7 +15,9 @@ const { slug = '' } = Astro.params;
 >
   <div class="row">
     <div class="col-12">
-      <SendEmailFhl client:load slug={slug} />
+      {tipe === 'fhl' ? <SendEmailFhl client:load slug={mawb} /> : ''}
+      {tipe === 'fwb' ? <SendEmailFwb client:load slug={mawb} /> : ''}
+      {tipe === 'ffm' ? <SendEmailFfm client:load slug={mawb} /> : ''}
     </div>
   </div>
 </AdminLayout>

@@ -1,0 +1,304 @@
+import GridData from '@components/GridData';
+import { Icon } from '@iconify-icon/react';
+import { EDI_EXPORT_BUILDUP_ENDPOINT } from '@lib/api/edi';
+import dayjs from 'dayjs';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+const numberRenderer = (value, type, fractionDigits = 0) => {
+  if (type !== 'display' && type !== 'filter') {
+    return value ?? null;
+  }
+
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return '';
+  }
+
+  return numeric.toLocaleString('id-ID', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  });
+};
+
+const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
+  if (type !== 'display' && type !== 'filter') {
+    return value;
+  }
+
+  if (!value) return '';
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.format(format) : value;
+};
+
+const createDefaultFilters = () => ({
+  buildup_number: '',
+  airlines_code: '',
+  flight_number: '',
+  destination_code: '',
+  date_of_flight: '',
+  employee_number: '',
+});
+
+export default function FfmDatatables() {
+  const tableRef = useRef(null);
+  const mountedRef = useRef(false);
+
+  const [formFilters, setFormFilters] = useState(createDefaultFilters);
+  const [activeFilters, setActiveFilters] = useState(createDefaultFilters);
+
+  useEffect(() => {
+    const api = tableRef.current;
+    if (!api?.reload) return;
+
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+
+    api.reload(true);
+  }, [activeFilters]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleApply = (event) => {
+    event?.preventDefault?.();
+    setActiveFilters({ ...formFilters });
+  };
+
+  const handleReset = () => {
+    const reset = createDefaultFilters();
+    setFormFilters(reset);
+    setActiveFilters(reset);
+  };
+
+  const columns = useMemo(
+    () => [
+      {
+        data: null,
+        title: '',
+        defaultContent: '',
+        className: 'dtr-control control text-center cursor-pointer',
+        orderable: false,
+        searchable: false,
+        responsivePriority: 1,
+        render: (_value, type) => {
+          if (type !== 'display') return '';
+          const markup = renderToStaticMarkup(
+            <Icon icon="line-md:check-list-3-filled" width="24" height="24" />
+          );
+          return (
+            markup ||
+            '<span class="text-primary fw-bold" aria-label="Toggle details">&#9662;</span>'
+          );
+        },
+      },
+      {
+        data: 'buildup_number',
+        title: 'Buildup #',
+        className: 'fw-semibold text-primary text-uppercase cursor-pointer',
+        responsivePriority: 2,
+        render: (_value) => {
+          return `<a href="/edi/send-email/ffm@${_value ?? ''}">${_value ?? ''}</a>`;
+        },
+      },
+      {
+        data: 'airlines_code',
+        title: 'Airlines',
+        className: 'text-uppercase',
+        responsivePriority: 3,
+      },
+      {
+        data: 'flight_number',
+        title: 'Flight',
+        className: 'text-uppercase',
+        responsivePriority: 4,
+      },
+      { data: 'destination_code', title: 'Destination', className: 'text-center text-uppercase' },
+      {
+        data: 'date_of_flight',
+        title: 'Flight Date',
+        className: 'text-nowrap',
+        render: (value, type) => dateRenderer(value, type),
+      },
+      { data: 'etd', title: 'ETD' },
+      { data: 'time_departure', title: 'Departure' },
+      {
+        data: 'total_master_awb',
+        title: 'Total MAWB',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type),
+      },
+      {
+        data: 'total_pieces',
+        title: 'Pieces',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type),
+      },
+      {
+        data: 'total_netto',
+        title: 'Netto (Kg)',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type, 2),
+      },
+      {
+        data: 'total_volume',
+        title: 'Volume (m3)',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type, 3),
+      },
+      { data: 'operator_name', title: 'Operator' },
+      { data: 'employee_number', title: 'Petugas' },
+      {
+        data: 'created_at',
+        title: 'Dibuat',
+        className: 'text-nowrap',
+        render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
+      },
+    ],
+    []
+  );
+
+  const tableOptions = useMemo(() => {
+    const findIndex = (key) => columns.findIndex((col) => col.data === key);
+    const createdIdx = findIndex('created_at');
+    const numberTargets = ['total_master_awb', 'total_pieces', 'total_netto', 'total_volume']
+      .map(findIndex)
+      .filter((idx) => idx >= 0);
+
+    const defs = [];
+    const controlIndex = findIndex(null);
+    if (controlIndex >= 0) {
+      defs.push({
+        targets: controlIndex,
+        className: 'dtr-control control text-center',
+        orderable: false,
+        searchable: false,
+      });
+    }
+
+    if (numberTargets.length) {
+      defs.push({ targets: numberTargets, className: 'text-end' });
+    }
+
+    return {
+      order: [[createdIdx >= 0 ? createdIdx : 1, 'desc']],
+      pageLength: 10,
+      lengthMenu: [10, 25, 50, 100],
+      autoWidth: false,
+      columnDefs: defs,
+    };
+  }, [columns]);
+
+  return (
+    <div className="card shadow-none border-0">
+      <div className="card-body pb-0">
+        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Buildup Export</h5>
+            <p className="mb-0 text-muted">
+              Filter berdasarkan nomor buildup, flight, tujuan, atau tanggal.
+            </p>
+          </div>
+          <div className="text-muted small">Endpoint: {EDI_EXPORT_BUILDUP_ENDPOINT}</div>
+        </div>
+
+        <form onSubmit={handleApply}>
+          <div className="row g-2 mb-3">
+            <div className="col-sm-6 col-md-3">
+              <label className="form-label mb-1">Buildup #</label>
+              <input
+                type="text"
+                name="buildup_number"
+                className="form-control"
+                placeholder="No buildup"
+                value={formFilters.buildup_number}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Airlines</label>
+              <input
+                type="text"
+                name="airlines_code"
+                className="form-control"
+                placeholder="GA"
+                value={formFilters.airlines_code}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Flight</label>
+              <input
+                type="text"
+                name="flight_number"
+                className="form-control"
+                placeholder="GA123"
+                value={formFilters.flight_number}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Destination</label>
+              <input
+                type="text"
+                name="destination_code"
+                className="form-control"
+                placeholder="SIN"
+                value={formFilters.destination_code}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Flight Date</label>
+              <input
+                type="date"
+                name="date_of_flight"
+                className="form-control"
+                value={formFilters.date_of_flight}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-1">
+              <label className="form-label mb-1">Petugas</label>
+              <input
+                type="text"
+                name="employee_number"
+                className="form-control"
+                placeholder="NIK"
+                value={formFilters.employee_number}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="d-flex gap-2 mb-3">
+            <button type="submit" className="btn btn-primary">
+              Terapkan Filter
+            </button>
+            <button type="button" className="btn btn-outline-secondary" onClick={handleReset}>
+              Reset
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="card-body pt-0">
+        <GridData
+          ref={tableRef}
+          columns={columns}
+          ajaxEndpoint={EDI_EXPORT_BUILDUP_ENDPOINT}
+          filters={activeFilters}
+          options={tableOptions}
+          className="table-bordered table-striped align-middle"
+        />
+      </div>
+    </div>
+  );
+}

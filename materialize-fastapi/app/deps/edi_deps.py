@@ -22,5 +22,23 @@ def get_weighing_header_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
     return _build_repo(db)
 
 
-def get_weighing_header_service(repo: EdiRepository = Depends(get_weighing_header_repo)) -> EdiService:
+def get_weighing_header_service(
+    repo: EdiRepository = Depends(get_weighing_header_repo),
+) -> EdiService:
+    return EdiService(repo)
+
+
+def get_masterwaybill_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
+    return _build_repo(db)
+
+
+def get_masterwaybill_service(repo: EdiRepository = Depends(get_masterwaybill_repo)) -> EdiService:
+    return EdiService(repo)
+
+
+def get_buildup_mawb_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
+    return _build_repo(db)
+
+
+def get_buildup_mawb_service(repo: EdiRepository = Depends(get_buildup_mawb_repo)) -> EdiService:
     return EdiService(repo)
