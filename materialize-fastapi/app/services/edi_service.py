@@ -7,6 +7,8 @@ from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.weighing_detail_schema import WeighingDetailOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
+from app.utils.jinja import jinja_env
+from app.utils.mail_config import smtp_email_service
 
 
 class EdiService:
@@ -44,3 +46,19 @@ class EdiService:
 
     def fetch_data_buildup_mawb(self, buildup_number: str):
         return self.repository.get_buildup_mawb(buildup_number)
+
+    @staticmethod
+    async def send_email_fhl(email: str, fhl: str):
+        try:
+            if "@" not in email:
+                raise ValueError("Invalid email format")
+            template = jinja_env.get_template("fhl.html")
+            html_str = template.render({"fhl": fhl})
+            await smtp_email_service.send_email(
+                to_email=email,
+                subject="FHL MessageSchema",
+                html_body=html_str,
+            )
+            # print(html_str)
+        except ValueError as e:
+            raise ValueError("Duplicate or invalid data") from e

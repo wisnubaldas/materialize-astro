@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date  # noqa: N999
 
 from pydantic import BaseModel, ConfigDict, Field
 

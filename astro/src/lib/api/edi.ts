@@ -292,9 +292,11 @@ const ediClient = {
   parseFhl: (awb: string) => apiClient.get<ParseFhlResponse>(`/edi/parse-fhl/${awb}`),
   exportAwbMawb: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<MasterWaybill>>(EDI_EXPORT_AWB_MAWB, params),
-  parseAwbMawb: (mawb: string) => apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-mawb/${mawb}`),
+  parseAwbMawb: (mawb: string) =>
+    apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-mawb/${mawb}`),
   parseBuildupMawb: (buildupNumber: string) =>
     apiClient.get<ParseBuildupMawbResponse>(`/edi/export-buildup-mawb/${buildupNumber}`),
+  sendEmailFhl: (param: any) => apiClient.post('/edi/send-email-fhl', param),
 };
 
 export default ediClient;

@@ -33,3 +33,6 @@ class HELPER:
 
 
 STR_DATE = HELPER.str_date()
+BASE_DIR = Path(__file__).resolve().parent.parent
+PDF_DIR = BASE_DIR / "storage" / "public" / "pdf"
+EMAIL_TEMPLATE_DIR = BASE_DIR / "templates" / "email-template"

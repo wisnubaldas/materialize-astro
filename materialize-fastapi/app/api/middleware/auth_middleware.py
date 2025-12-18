@@ -7,7 +7,9 @@ from starlette.requests import Request
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
-EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json"]
+EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json", "/favicon.ico"]
+
+EXCLUDED_PATH_PREFIXES = ("/assets", "/pdf")
 
 
 def decode_token(token: str):
@@ -20,7 +22,7 @@ def decode_token(token: str):
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next):  # noqa: PLR0911
         # Lewatkan semua OPTIONS request (preflight CORS)
         if request.method == "OPTIONS":
             return await call_next(request)
@@ -31,6 +33,8 @@ class JWTMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
         if path == "/sse" or path.startswith("/sse/"):
+            return await call_next(request)
+        if any(path.startswith(p) for p in EXCLUDED_PATH_PREFIXES):
             return await call_next(request)
 
         # Ambil token dari header Authorization

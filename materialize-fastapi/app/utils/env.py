@@ -65,6 +65,20 @@ class ENV(BaseSettings):
     LOG_SERVICE_NAME: str | None = None
     LOG_SERVICE_VERSION: int | None = None
 
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str
+    MAIL_TLS: bool = True
+    MAIL_SSL: bool = False
+    MAIL_FROM_NAME: str
+
+    ELMAIL_USER: str
+    ELMAIL_PASSWORD: str
+    ELMAIL_SERVER: str
+    ELMAIL_PORT: int
+
     class Config:
         env_file = ".env"  # otomatis baca file .env
         env_file_encoding = "utf-8"

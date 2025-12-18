@@ -12,7 +12,9 @@ from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
+from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.edi_service import EdiService
 
@@ -78,5 +80,23 @@ def export_buildup_mawb(
 ):
     try:
         return service.fetch_data_buildup_mawb(buildup_number)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post(
+    "/send-email-fhl",
+    summary="Kirim email fhl",
+    response_model=ResponseSchema,
+)
+async def send_email_fhl(params: FhlRequestBody):
+    try:
+        await EdiService.send_email_fhl(email=params.email, fhl=params.fhl)
+        return {
+            "status": 200,
+            "message": "Email FHL berhasil dikirim",
+            # Kembalikan objek tunggal DI SINI
+            "data": None,
+        }
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -8,11 +8,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import HTTPBearer
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
 from app.utils.env import ENV
+from app.utils.helper import EMAIL_TEMPLATE_DIR, PDF_DIR
 from app.utils.logging_config import setup_logging
 
 # Set timezone environment variable
@@ -45,8 +47,9 @@ app = FastAPI(
     redoc_url="/redoc" if ENV.APP_DEBUG else None,
     openapi_url="/openapi.json" if ENV.APP_DEBUG else None,
 )
-# error handler
-
+# public path
+app.mount("/pdf", StaticFiles(directory=PDF_DIR), name="pdf")
+app.mount("/assets", StaticFiles(directory=EMAIL_TEMPLATE_DIR), name="assets")
 # Setup Skema OpenAPI dengan JWT Auth
 bearer_scheme = HTTPBearer()
 

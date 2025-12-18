@@ -37,6 +37,9 @@ xhtml2pdf = "^0.2.16"
 pycairo = { version = ">=1.25.0,<1.29.0", allow-prereleases = true }
 jsonlines = "^4.0.0"
 pyjwt = "^2.10.1"
+fastapi-mail = "^1.5.8"
+elasticemail = "^4.1.4"
+aiosmtplib = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
