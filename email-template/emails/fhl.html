@@ -1,6 +1,6 @@
 ---
-bodyClass: flex items-center justify-center h-screen bg-slate-50
-preheader: Transactional email template
+bodyClass: bg-slate-50 overflow-x-hidden
+preheader: FHL Message
 title: "FHL email"
 ---
 <x-main>
@@ -44,9 +44,19 @@ title: "FHL email"
                 </p>
               </td>
             </tr>
+            <tr>
+              <td align="center" class="text-xs text-gray-400 pt-8">
+                © 2025 PT. Mitra Adira Utama<br />
+                Email ini dikirim secara otomatis, mohon tidak membalas.<br />
+                <a href="[[unsubscribe]]" class="underline text-blue-500">
+                  Unsubscribe
+                </a>
+              </td>
+            </tr>
           </table>
         </td>
       </tr>
     </table>
   </div>
+  <x-divider />
 </x-main>

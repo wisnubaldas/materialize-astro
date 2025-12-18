@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.deps.edi_deps import (
     get_buildup_mawb_service,
@@ -89,14 +89,20 @@ def export_buildup_mawb(
     summary="Kirim email fhl",
     response_model=ResponseSchema,
 )
-async def send_email_fhl(params: FhlRequestBody):
-    try:
-        await EdiService.send_email_fhl(email=params.email, fhl=params.fhl)
-        return {
-            "status": 200,
-            "message": "Email FHL berhasil dikirim",
-            # Kembalikan objek tunggal DI SINI
-            "data": None,
-        }
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+async def send_email_fhl(params: FhlRequestBody, background_tasks: BackgroundTasks):
+    background_tasks.add_task(EdiService.send_email_fhl, email=params.email, fhl=params.fhl)
+    return {
+        "status": 200,
+        "message": "Email FHL sedang dikirim",
+        "data": None,
+    }
+    # try:
+    #     await EdiService.send_email_fhl(email=params.email, fhl=params.fhl)
+    #     return {
+    #         "status": 200,
+    #         "message": "Email FHL berhasil dikirim",
+    #         # Kembalikan objek tunggal DI SINI
+    #         "data": None,
+    #     }
+    # except ValueError as exc:
+    #     raise HTTPException(status_code=400, detail=str(exc)) from exc
