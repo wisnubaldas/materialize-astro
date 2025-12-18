@@ -52,7 +52,7 @@ class EdiService:
         try:
             if "@" not in email:
                 raise ValueError("Invalid email format")
-            template = jinja_env.get_template("email-template" / "fhl.html")
+            template = jinja_env.get_template("email-template/fhl.html")
             html_str = template.render({"fhl": fhl})
             await smtp_email_service.send_email(
                 to_email=email,
