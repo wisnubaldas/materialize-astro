@@ -131,7 +131,7 @@ alembic downgrade -1
 from faker import Faker
 from sqlalchemy.orm import Session
 from app.db.mysql import SessionLocal
-from app.models.user_model import User
+from app.models.BaseDB1.user import User
 from app.utils.helpers import hash_password
 import secrets
 

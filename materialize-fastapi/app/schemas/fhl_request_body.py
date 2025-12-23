@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class FhlRequestBody(BaseModel):
-    fhl: str
+    message: str
     email: str
     data: Any
+    edi: str

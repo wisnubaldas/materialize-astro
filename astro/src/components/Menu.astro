@@ -1,5 +1,12 @@
 ---
-import { menuAdmin, menuAp2, menuEdi, menuHubnet, menuTpsOnline } from './MenuData.js';
+import {
+  menuAdmin,
+  menuAp2,
+  menuEdi,
+  menuHubnet,
+  menuTpsOnline,
+  menuWarehouse,
+} from './MenuData.js';
 
 // validasi menu yang di butuhkan
 // nanti ini bisa jadi RBAC untuk frontend
@@ -8,7 +15,14 @@ let menuData;
 if (user.user?.username === 'hubnet@mitraadira.com') {
   menuData = menuHubnet;
 } else {
-  menuData = [...menuAdmin, ...menuAp2, ...menuHubnet, ...menuEdi, ...menuTpsOnline];
+  menuData = [
+    ...menuAdmin,
+    ...menuAp2,
+    ...menuHubnet,
+    ...menuEdi,
+    ...menuTpsOnline,
+    ...menuWarehouse,
+  ];
 }
 
 const currentPath = Astro.url?.pathname ?? '/';

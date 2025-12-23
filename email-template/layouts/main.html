@@ -21,9 +21,7 @@
     .mso-break-all {word-break: break-all;}
   </style>
   <![endif]-->
-  <if condition="page.title">
-    <title>{{{ page.title }}}</title>
-  </if>
+  <title>{{ edi }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" media="screen">
@@ -41,7 +39,7 @@
 <body class="m-0 p-0 w-full [word-break:break-word] [-webkit-font-smoothing:antialiased] {{ page.bodyClass || '' }}">
   <if condition="page.preheader">
     <div class="hidden">
-      {{{ page.preheader }}}
+      {{ edi }}
       <each loop="item in Array.from(Array(150))">&#8199;&#65279;&#847; </each>
     </div>
   </if>

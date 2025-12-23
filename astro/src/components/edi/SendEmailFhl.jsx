@@ -88,10 +88,11 @@ export default function SendEmailFhl({ slug }) {
       console.log(email);
       console.log(message);
       console.log(dataAjax);
-      const response = await ediClient.sendEmailFhl({
+      const response = await ediClient.sendEmailEdi({
         email: email,
-        fhl: message,
+        message: message,
         data: dataAjax,
+        edi: 'FHL',
       });
       console.log('response nya', response);
     }

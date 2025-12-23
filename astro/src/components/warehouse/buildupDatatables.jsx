@@ -1,6 +1,6 @@
 import GridData from '@components/GridData';
 import { Icon } from '@iconify-icon/react';
-import { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
+import { WAREHOUSE_AWB_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -10,11 +10,12 @@ const numberRenderer = (value, type, fractionDigits = 0) => {
     return value ?? null;
   }
 
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
     return '';
   }
 
-  return Number(value).toLocaleString('id-ID', {
+  return numeric.toLocaleString('id-ID', {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   });
@@ -32,21 +33,34 @@ const badgeRenderer = (value, type, { trueLabel, falseLabel, trueClass, falseCla
   return `<span class="badge rounded-pill ${theme} px-2">${label}</span>`;
 };
 
+const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
+  if (type !== 'display' && type !== 'filter') {
+    return value;
+  }
+
+  if (!value) {
+    return '';
+  }
+
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.format(format) : value;
+};
+
 const createDefaultFilters = () => ({
   MasterAWB: '',
   AirlinesCode: '',
-  FlightNumber: '',
+  FlightNo: '',
   Origin: '',
   Destination: '',
+  KindOfGood: '',
   AgenCode: '',
+  ShipperCode: '',
   ConsigneeCode: '',
   DateOfFlight: '',
-  DateOfEntry: '',
-  InvoiceNumber: '',
-  EmployeeNumber: '',
+  DateEntry: '',
 });
 
-export default function FhlDatatables() {
+export default function BuildupDatatables() {
   const tableRef = useRef(null);
   const mountedRef = useRef(false);
 
@@ -109,142 +123,177 @@ export default function FhlDatatables() {
           );
         },
       },
-      { data: 'noid', title: 'ID', visible: false, searchable: false },
       {
         data: 'MasterAWB',
         title: 'Master AWB',
+        className: 'fw-semibold text-primary text-uppercase',
         responsivePriority: 2,
-        render: (value) => {
-          return `<a href="/edi/send-email/fhl@${value ?? ''}">${value ?? ''}</a>`;
+        render: (value, type) => {
+          if (type !== 'display') {
+            return value ?? '';
+          }
+          return `<span class="badge text-bg-primary">${value ?? ''}</span>`;
         },
       },
-      { data: 'AirlinesCode', title: 'Airlines' },
-      { data: 'FlightNumber', title: 'Flight' },
-      { data: 'Origin', title: 'Origin', className: 'text-center' },
-      { data: 'Destination', title: 'Destination', className: 'text-center' },
-      { data: 'DateOfFlight', title: 'Flight Date', className: 'text-nowrap' },
-      { data: 'DateOfEntry', title: 'Entry Date', className: 'text-nowrap' },
-      { data: 'TimeOfEntry', title: 'Entry Time', className: 'text-nowrap' },
-      { data: 'AgenCode', title: 'Agen' },
-      { data: 'ConsigneeCode', title: 'Consignee' },
-      { data: 'EmployeeNumber', title: 'Petugas' },
-      { data: 'InvoiceNumber', title: 'Invoice #' },
       {
-        data: 'TotalPieces',
+        data: 'AirlinesCode',
+        title: 'Airlines',
+        className: 'text-uppercase',
+        responsivePriority: 3,
+      },
+      { data: 'FlightNo', title: 'Flight', className: 'text-uppercase', responsivePriority: 4 },
+      {
+        data: 'Origin',
+        title: 'Origin',
+        className: 'text-center text-uppercase',
+        responsivePriority: 5,
+      },
+      {
+        data: 'Destination',
+        title: 'Destination',
+        className: 'text-center text-uppercase',
+        responsivePriority: 6,
+      },
+      {
+        data: 'DateOfFlight',
+        title: 'Flight Date',
+        className: 'text-nowrap',
+        render: (value, type) => dateRenderer(value, type),
+      },
+      {
+        data: 'Pieces',
         title: 'Pieces',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'TotalNetto',
-        title: 'Netto (Kg)',
+        data: 'Weight',
+        title: 'Weight (Kg)',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
       {
-        data: 'TotalVolume',
+        data: 'Volume',
         title: 'Volume (m3)',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 3),
       },
+      { data: 'KindOfGood', title: 'Kind of Goods' },
+      { data: 'AgenCode', title: 'Agen' },
+      { data: 'ShipperCode', title: 'Shipper' },
+      { data: 'ConsigneeCode', title: 'Consignee' },
       {
-        data: 'TotalCAW',
-        title: 'CAW',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 2),
+        data: 'DateEntry',
+        title: 'Entry Date',
+        className: 'text-nowrap',
+        render: (value, type) => dateRenderer(value, type),
       },
+      { data: 'TimeEntry', title: 'Entry Time', className: 'text-nowrap' },
       {
-        data: 'gateIn',
-        title: 'Gate In',
+        data: 'RCS',
+        title: 'RCS',
         className: 'text-center',
         render: (value, type) =>
           badgeRenderer(value, type, {
-            trueLabel: 'Sudah',
-            falseLabel: 'Belum',
+            trueLabel: 'RCS',
+            falseLabel: '-',
             trueClass: 'bg-label-success',
             falseClass: 'bg-label-secondary',
           }),
       },
       {
-        data: 'void',
-        title: 'Status',
+        data: 'FWB',
+        title: 'FWB',
         className: 'text-center',
         render: (value, type) =>
           badgeRenderer(value, type, {
-            trueLabel: 'Void',
-            falseLabel: 'Aktif',
-            trueClass: 'bg-label-danger',
-            falseClass: 'bg-label-primary',
+            trueLabel: 'Sent',
+            falseLabel: '-',
+            trueClass: 'bg-label-primary',
+            falseClass: 'bg-label-secondary',
+          }),
+      },
+      {
+        data: 'PDE',
+        title: 'PDE',
+        className: 'text-center',
+        render: (value, type) =>
+          badgeRenderer(value, type, {
+            trueLabel: 'Yes',
+            falseLabel: '-',
+            trueClass: 'bg-label-info',
+            falseClass: 'bg-label-secondary',
           }),
       },
       {
         data: 'created_at',
         title: 'Dibuat',
         className: 'text-nowrap',
-        render: (value, type) => {
-          if (type !== 'display' && type !== 'filter') {
-            return value;
-          }
-          if (!value) {
-            return '';
-          }
-          const parsed = dayjs(value);
-          return parsed.isValid() ? parsed.format('DD MMM YYYY HH:mm') : value;
-        },
+        render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
       },
     ],
     []
   );
 
-  const tableOptions = useMemo(
-    () => ({
-      order: [[21, 'desc']],
+  const tableOptions = useMemo(() => {
+    const findIndex = (key) => columns.findIndex((col) => col.data === key);
+    const createdAtIndex = findIndex('created_at');
+    const numberTargets = ['Pieces', 'Weight', 'Volume'].map(findIndex).filter((idx) => idx >= 0);
+    const badgeTargets = ['RCS', 'FWB', 'PDE'].map(findIndex).filter((idx) => idx >= 0);
+    const defs = [];
+
+    const controlIndex = findIndex(null);
+    if (controlIndex >= 0) {
+      defs.push({
+        targets: controlIndex,
+        className: 'dtr-control control text-center',
+        orderable: false,
+        searchable: false,
+      });
+    }
+
+    if (numberTargets.length) {
+      defs.push({ targets: numberTargets, className: 'text-end' });
+    }
+
+    if (badgeTargets.length) {
+      defs.push({ targets: badgeTargets, orderable: false });
+    }
+
+    return {
+      order: [[createdAtIndex >= 0 ? createdAtIndex : 1, 'desc']],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       autoWidth: false,
-      columnDefs: [
-        {
-          targets: 0,
-          className: 'dtr-control control text-center',
-          orderable: false,
-          searchable: false,
-        },
-        { targets: 1, visible: false, searchable: false },
-        { targets: [15, 16, 17, 18], className: 'text-end' },
-        { targets: [19, 20], orderable: false },
-      ],
-    }),
-    []
-  );
+      columnDefs: defs,
+    };
+  }, [columns]);
 
   return (
     <div className="card shadow-none border-0">
       <div className="card-body pb-0">
+        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Master AWB</h5>
+            <p className="mb-0 text-muted">Gunakan filter di bawah untuk memuat data buildup.</p>
+          </div>
+          <div className="text-muted small">Endpoint: {WAREHOUSE_AWB_DATATABLE_ENDPOINT}</div>
+        </div>
+
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
-            <div className="col-md-3">
-              <label className="form-label mb-1">Proof Number</label>
-              <input
-                type="text"
-                name="ProofNumber"
-                className="form-control"
-                placeholder="Nomor proof"
-                value={formFilters.ProofNumber}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-3">
+            <div className="col-sm-6 col-md-3">
               <label className="form-label mb-1">Master AWB</label>
               <input
                 type="text"
                 name="MasterAWB"
                 className="form-control"
-                placeholder="Nomor AWB"
+                placeholder="Nomor Master AWB"
                 value={formFilters.MasterAWB}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Airlines</label>
               <input
                 type="text"
@@ -255,30 +304,18 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
-              <label className="form-label mb-1">Flight</label>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Flight No</label>
               <input
                 type="text"
-                name="FlightNumber"
+                name="FlightNo"
                 className="form-control"
                 placeholder="GA123"
-                value={formFilters.FlightNumber}
+                value={formFilters.FlightNo}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
-              <label className="form-label mb-1">Invoice</label>
-              <input
-                type="text"
-                name="InvoiceNumber"
-                className="form-control"
-                placeholder="Invoice #"
-                value={formFilters.InvoiceNumber}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Origin</label>
               <input
                 type="text"
@@ -289,7 +326,7 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Destination</label>
               <input
                 type="text"
@@ -300,7 +337,18 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-3">
+              <label className="form-label mb-1">Kind of Goods</label>
+              <input
+                type="text"
+                name="KindOfGood"
+                className="form-control"
+                placeholder="General Cargo"
+                value={formFilters.KindOfGood}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Agen</label>
               <input
                 type="text"
@@ -311,7 +359,18 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Shipper</label>
+              <input
+                type="text"
+                name="ShipperCode"
+                className="form-control"
+                placeholder="Kode shipper"
+                value={formFilters.ShipperCode}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Consignee</label>
               <input
                 type="text"
@@ -322,18 +381,7 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
-              <label className="form-label mb-1">Petugas</label>
-              <input
-                type="text"
-                name="EmployeeNumber"
-                className="form-control"
-                placeholder="NIK"
-                value={formFilters.EmployeeNumber}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Flight Date</label>
               <input
                 type="date"
@@ -343,13 +391,13 @@ export default function FhlDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-2">
+            <div className="col-sm-6 col-md-2">
               <label className="form-label mb-1">Entry Date</label>
               <input
                 type="date"
-                name="DateOfEntry"
+                name="DateEntry"
                 className="form-control"
-                value={formFilters.DateOfEntry}
+                value={formFilters.DateEntry}
                 onChange={handleChange}
               />
             </div>
@@ -370,7 +418,7 @@ export default function FhlDatatables() {
         <GridData
           ref={tableRef}
           columns={columns}
-          ajaxEndpoint={EDI_EXPORT_CWP_ENDPOINT}
+          ajaxEndpoint={WAREHOUSE_AWB_DATATABLE_ENDPOINT}
           filters={activeFilters}
           options={tableOptions}
           className="table-bordered table-striped align-middle"

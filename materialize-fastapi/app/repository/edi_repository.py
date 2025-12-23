@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session, aliased
 
-from app.models.eks_buildupdetail_model import EksBuildUpDetail
-from app.models.eks_buildupheader import EksBuildupHeader
-from app.models.eks_hostawb import EksHostAWB
-from app.models.eks_masterwaybill import EksMasterWaybill
-from app.models.mst_customer import MstCustomer
-from app.models.weighing_detail_model import EksWeighingDetail
-from app.models.weighing_header_model import EksWeighingHeader
+from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
+from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
+from app.models.BaseDB2.eks_hostawb import EksHostAWB
+from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
+from app.models.BaseDB2.mst_customer import MstCustomer
+from app.models.BaseDB2.weighing_detail_model import EksWeighingDetail
+from app.models.BaseDB2.weighing_header_model import EksWeighingHeader
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut

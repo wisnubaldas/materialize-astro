@@ -85,24 +85,16 @@ def export_buildup_mawb(
 
 
 @router.post(
-    "/send-email-fhl",
-    summary="Kirim email fhl",
+    "/send-email-edi",
+    summary="Kirim email Electronic Data Interchange",
     response_model=ResponseSchema,
 )
-async def send_email_fhl(params: FhlRequestBody, background_tasks: BackgroundTasks):
-    background_tasks.add_task(EdiService.send_email_fhl, email=params.email, fhl=params.fhl)
+async def send_email_edi(params: FhlRequestBody, background_tasks: BackgroundTasks):
+    background_tasks.add_task(
+        EdiService.send_email_edi, email=params.email, message=params.message, edi=params.edi
+    )
     return {
         "status": 200,
-        "message": "Email FHL sedang dikirim",
+        "message": "Email EDI sedang dikirim",
         "data": None,
     }
-    # try:
-    #     await EdiService.send_email_fhl(email=params.email, fhl=params.fhl)
-    #     return {
-    #         "status": 200,
-    #         "message": "Email FHL berhasil dikirim",
-    #         # Kembalikan objek tunggal DI SINI
-    #         "data": None,
-    #     }
-    # except ValueError as exc:
-    #     raise HTTPException(status_code=400, detail=str(exc)) from exc

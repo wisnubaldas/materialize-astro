@@ -5,7 +5,7 @@ import pytz
 from sqlalchemy import select, text
 
 from app.db.mysql import SessionDB1W, SessionDB2R
-from app.models.hubnet_request import HubnetRequest
+from app.models.BaseDB1.hubnet_request import HubnetRequest
 from app.services.redis_service import publish_sync
 from app.utils.helper import HELPER
 

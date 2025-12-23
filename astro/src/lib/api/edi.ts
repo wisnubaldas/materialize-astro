@@ -296,7 +296,7 @@ const ediClient = {
     apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-mawb/${mawb}`),
   parseBuildupMawb: (buildupNumber: string) =>
     apiClient.get<ParseBuildupMawbResponse>(`/edi/export-buildup-mawb/${buildupNumber}`),
-  sendEmailFhl: (param: any) => apiClient.post('/edi/send-email-fhl', param),
+  sendEmailEdi: (param: any) => apiClient.post('/edi/send-email-edi', param),
 };
 
 export default ediClient;

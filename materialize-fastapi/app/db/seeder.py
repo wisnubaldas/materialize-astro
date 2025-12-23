@@ -4,7 +4,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.db.mysql import SessionDB1W
-from app.models.user import User
+from app.models.BaseDB1.user import User
 from app.utils.auth_util import hash_password
 
 fake = Faker()

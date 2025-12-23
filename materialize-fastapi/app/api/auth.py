@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
-from app.models.user import User
+from app.models.BaseDB1.user import User
 from app.schemas.user_schema import LoginSchema, TokenSchema
 from app.utils.auth_util import create_token, set_jwt_cookie, verify_password
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
-from app.models.hubnet_request import HubnetRequest
+from app.models.BaseDB1.hubnet_request import HubnetRequest
 
 
 class HubnetRequestRepository:

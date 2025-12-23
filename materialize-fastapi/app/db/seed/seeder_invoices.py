@@ -6,7 +6,7 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.db.mysql import SessionDB1W  # koneksi DB-mu
-from app.models.inv_ap2 import InvAp2  # pastikan path sesuai
+from app.models.BaseDB1.inv_ap2 import InvAp2  # pastikan path sesuai
 
 fake = Faker()
 

@@ -9,8 +9,8 @@ from requests.auth import HTTPBasicAuth
 from sqlalchemy import select
 
 from app.db.mysql import SessionDB1R, SessionDB1W
-from app.models.hubnet_request import HubnetRequest
-from app.models.hubnet_response import HubnetResponse
+from app.models.BaseDB1.hubnet_request import HubnetRequest
+from app.models.BaseDB1.hubnet_response import HubnetResponse
 from app.schemas.hubnet_request_schema import HubnetRequestGet
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV

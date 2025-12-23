@@ -1,3 +1,5 @@
+import logging
+
 from app.repository.edi_repository import EdiRepository
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -9,6 +11,8 @@ from app.schemas.weighing_detail_schema import WeighingDetailOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.utils.jinja import jinja_env
 from app.utils.mail_config import smtp_email_service
+
+logger = logging.getLogger("edi")
 
 
 class EdiService:
@@ -48,17 +52,24 @@ class EdiService:
         return self.repository.get_buildup_mawb(buildup_number)
 
     @staticmethod
-    async def send_email_fhl(email: str, fhl: str):
+    async def send_email_edi(email: str, message: str, edi: str):
         try:
             if "@" not in email:
+                logger.warning("Invalid email format for EDI send: %s", email)
                 raise ValueError("Invalid email format")
             template = jinja_env.get_template("email-template/fhl.html")
-            html_str = template.render({"fhl": fhl})
+            html_str = template.render({"emssage": message, "edi": edi})
+
+            logger.info("Sending EDI email to %s for %s", email, edi)
             await smtp_email_service.send_email(
                 to_email=email,
-                subject="FHL Messages",
+                subject="EDI Messages " + edi,
                 html_body=html_str,
             )
-            # print(html_str)
+            logger.info("EDI email sent to %s for %s", email, edi)
         except ValueError as e:
-            raise ValueError("Duplicate or invalid data") from e
+            logger.warning("Sending EDI email failed due to input validation: %s", e)
+            raise ValueError("Sending email error") from e
+        except Exception:
+            logger.exception("Sending EDI email failed to %s for %s", email, edi)
+            raise

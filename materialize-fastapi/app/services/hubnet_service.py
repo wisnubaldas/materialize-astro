@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.db.mysql import SessionDB1R, SessionDB2R
-from app.models.hubnet_request import HubnetRequest
+from app.models.BaseDB1.hubnet_request import HubnetRequest
 from app.repository.hubnet_request_repository import HubnetRequestRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema

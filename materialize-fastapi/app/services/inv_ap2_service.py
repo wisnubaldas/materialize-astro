@@ -19,10 +19,10 @@ from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
 from app.db.mysql import SessionDB1W, SessionDB2R
-from app.models.ap2_fail_inv import AP2FAILINV
-from app.models.inv_ap2 import InvAp2
-from app.models.respons_inv_ap2 import ResponsInvAp2
-from app.models.void_inv_ap2 import VoidInvAp2
+from app.models.BaseDB1.ap2_fail_inv import AP2FAILINV
+from app.models.BaseDB1.inv_ap2 import InvAp2
+from app.models.BaseDB1.respons_inv_ap2 import ResponsInvAp2
+from app.models.BaseDB1.void_inv_ap2 import VoidInvAp2
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.ap2_send_inv_schema import AP2SendInv
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse

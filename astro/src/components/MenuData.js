@@ -163,5 +163,17 @@ const menuEdi = [
     ],
   },
 ];
-
-export { menuAdmin, menuAp2, menuEdi, menuHubnet, menuTpsOnline };
+const menuWarehouse = [
+  {
+    name: 'Warehouse',
+    url: 'javascript:void(0)',
+    icon: 'ri ri-home-office-fill',
+    subItems: [
+      {
+        name: 'Buildup',
+        url: '/warehouse/buildup',
+      },
+    ],
+  },
+];
+export { menuAdmin, menuAp2, menuEdi, menuHubnet, menuTpsOnline, menuWarehouse };
