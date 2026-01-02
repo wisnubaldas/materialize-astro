@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>FedEx Air Cargo Manifest</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            color: #111111;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .logo {
+            width: 20%;
+        }
+
+        .logo img {
+            width: 90px;
+            height: auto;
+        }
+
+        .title {
+            width: 50%;
+            text-align: center;
+        }
+
+        .title-main {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .title-sub {
+            font-size: 8pt;
+        }
+
+        .flight-box {
+            width: 30%;
+            font-size: 8pt;
+        }
+
+        .flight-box .label {
+            font-weight: bold;
+        }
+
+        .meta-table {
+            margin-top: 6px;
+            margin-bottom: 8px;
+        }
+
+        .meta-table td {
+            padding: 2px 0;
+            font-size: 8pt;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .manifest-table {
+            margin-top: 6px;
+        }
+
+        .manifest-table th {
+            font-size: 7pt;
+            text-align: left;
+            border-bottom: 1px solid #000000;
+            padding: 4px 3px;
+            line-height: 1.2;
+            white-space: normal;
+        }
+
+        .manifest-table td {
+            padding: 3px 3px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .col-no {
+            width: 4%;
+            text-align: right;
+        }
+
+        .col-uld {
+            width: 28%;
+        }
+
+        .col-pieces {
+            width: 12%;
+            text-align: right;
+        }
+
+        .col-goods {
+            width: 14%;
+        }
+
+        .col-weight {
+            width: 10%;
+            text-align: right;
+        }
+
+        .col-dest {
+            width: 6%;
+            text-align: center;
+        }
+
+        .col-official {
+            width: 16%;
+        }
+
+        .col-remark {
+            width: 10%;
+        }
+
+        .uld-line {
+            font-weight: bold;
+        }
+
+        .mawb-line {
+            padding-left: 10px;
+        }
+
+        .total-row td {
+            border-top: 1px solid #000000;
+            font-weight: bold;
+        }
+
+        .grand-total {
+            margin-top: 8px;
+        }
+
+        .grand-total td {
+            font-weight: bold;
+            padding-top: 6px;
+        }
+
+        .grand-page {
+            text-align: right;
+            font-weight: normal;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+
+<body>
+    {% for flight in flights %}
+    <table class="header-table" width="100%">
+        <tr>
+            <td class="logo">
+                <img src="{{ logo_uri }}" alt="FedEx" />
+            </td>
+            <td class="title">
+                <div class="title-main">AIR CARGO MANIFEST</div>
+                <div class="title-sub">I.C.A.O ANNEX 9, APPENDIX 3</div>
+            </td>
+            <td class="flight-box">
+                <div>
+                    <span class="label">FLIGHT NR/DATE</span> :
+                    {{ flight.airline_code }}{{ flight.flight_number }} / {{ flight.flight_date }}
+                </div>
+                <div>
+                    <span class="label">POINT OF UNLOADING</span> : {{ flight.point_of_unloading }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="meta-table">
+        <tr>
+            <td class="meta-left">
+                <div>
+                    <span class="label">OWNER OF OPERATOR</span> :
+                    {{ "FEDEX" if flight.airline_code == "FX" else (flight.airline_code or "-") }}
+                </div>
+                <div>
+                    <span class="label">MARKS OF NAT AND REGS</span> :
+                    {{ flight.aircraft_registration or "-" }}
+                </div>
+                <div>
+                    <span class="label">POINT OF LOADING</span> : {{ flight.point_of_loading }}
+                </div>
+            </td>
+            <td class="meta-right"></td>
+        </tr>
+    </table>
+
+    <table class="manifest-table">
+        <thead>
+            <tr>
+                <th class="col-no">NO</th>
+                <th class="col-uld">ULD NUMBER / MAWB #</th>
+                <th class="col-pieces">NUMBER OF<br />PIECES</th>
+                <th class="col-goods">NATURE<br />OF GOODS</th>
+                <th class="col-weight">WEIGHT</th>
+                <th class="col-dest">DEST</th>
+                <th class="col-official">FOR OFFICIAL<br />USE</th>
+                <th class="col-remark">REMARK</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if flight.ulds %}
+            {% for uld in flight.ulds %}
+            {% set uld_no = loop.index %}
+            {% if uld.mawbs %}
+            {% set totals = namespace(pieces=0, weight=0) %}
+            {% for mawb in uld.mawbs %}
+            {% set totals.pieces = totals.pieces + (mawb.pieces or 0) %}
+            {% set totals.weight = totals.weight + (mawb.weight_kg | float) %}
+            <tr>
+                <td class="col-no">{% if loop.index0 == 0 %}{{ uld_no }}{% endif %}</td>
+                <td class="col-uld">
+                    {% if loop.index0 == 0 %}
+                    <div class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner }}</div>
+                    {% endif %}
+                    <div class="mawb-line">{{ mawb.mawb_number or "-" }}</div>
+                </td>
+                <td class="col-pieces">{{ mawb.pieces }}</td>
+                <td class="col-goods">{{ mawb.nature_of_goods or "-" }}</td>
+                <td class="col-weight">{{ mawb.weight_kg }}</td>
+                <td class="col-dest">{{ uld.destination }}</td>
+                <td class="col-official">{{ mawb.route or "-" }}</td>
+                <td class="col-remark">{{ uld.remarks or mawb.transit_flag or "-" }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td></td>
+                <td class="col-uld">TOTAL</td>
+                <td class="col-pieces">{{ totals.pieces }}</td>
+                <td></td>
+                <td class="col-weight">{{ "%.2f"|format(totals.weight) }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td class="col-no">{{ uld_no }}</td>
+                <td class="col-uld">
+                    <div class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner or "-" }}</div>
+                </td>
+                <td class="col-pieces">-</td>
+                <td class="col-goods">-</td>
+                <td class="col-weight">-</td>
+                <td class="col-dest">{{ uld.destination }}</td>
+                <td class="col-official">-</td>
+                <td class="col-remark">{{ uld.remarks or "-" }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="8">Tidak ada data ULD.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table class="grand-total">
+        <tr>
+            <td style="width: 50%;">GRAND TOTAL</td>
+            <td style="width: 10%; text-align: right;">{{ flight.total_pieces }}</td>
+            <td style="width: 10%; text-align: right;">{{ flight.total_weight_kg }}</td>
+            <td class="grand-page" style="width: 30%;">Page {{ loop.index }} of {{ total_flights }}</td>
+        </tr>
+    </table>
+
+    {% if not loop.last %}
+    <div class="page-break"></div>
+    {% endif %}
+    {% endfor %}
+</body>
+
+</html>

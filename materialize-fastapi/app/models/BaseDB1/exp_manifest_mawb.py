@@ -1,4 +1,4 @@
-from sqlalchemy import DECIMAL, TIMESTAMP, BigInteger, Boolean, Column, ForeignKey, String
+from sqlalchemy import DECIMAL, TIMESTAMP, BigInteger, Boolean, Column, ForeignKey, Index, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -7,6 +7,7 @@ from app.db.mysql import BaseDB1
 
 class ExpManifestMawb(BaseDB1):
     __tablename__ = "exp_manifest_mawb"
+    __table_args__ = (Index("uk_mawb", "mawb_prefix", "mawb_number"),)
 
     id = Column(BigInteger, primary_key=True)
     uld_id = Column(BigInteger, ForeignKey("exp_manifest_uld.id"))

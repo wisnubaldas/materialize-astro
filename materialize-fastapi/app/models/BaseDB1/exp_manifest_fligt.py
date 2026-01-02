@@ -1,4 +1,4 @@
-from sqlalchemy import DECIMAL, TIMESTAMP, BigInteger, Column, Date, String, Text
+from sqlalchemy import DECIMAL, TIMESTAMP, BigInteger, Column, Date, Index, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -7,6 +7,7 @@ from app.db.mysql import BaseDB1
 
 class ExpManifestFligt(BaseDB1):
     __tablename__ = "exp_manifest_fligt"
+    __table_args__ = (Index("uk_flight", "flight_number", "flight_date"),)
 
     id = Column(BigInteger, primary_key=True)
 

@@ -1,9 +1,9 @@
-import BuildupDatatables from '@components/warehouse/buildupDatatables';
-
+import MakeBuildUp from './makeBuildUp';
 export default function Buildup() {
   return (
     <>
-      <BuildupDatatables />
+      <MakeBuildUp />
+      {/* <BuildupDatatables /> */}
     </>
   );
 }

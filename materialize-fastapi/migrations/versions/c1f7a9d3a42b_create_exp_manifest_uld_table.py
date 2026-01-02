@@ -42,8 +42,13 @@ def upgrade() -> None:
             sa.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
-        sa.UniqueConstraint("flight_id", "uld_type", "uld_number", name="uk_uld"),
         mysql_engine="InnoDB",
+    )
+    op.create_index(
+        "uk_uld",
+        "exp_manifest_uld",
+        ["flight_id", "uld_type", "uld_number"],
+        unique=False,
     )
 
 

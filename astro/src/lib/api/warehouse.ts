@@ -82,10 +82,13 @@ export interface MasterWaybill {
 }
 
 export const WAREHOUSE_AWB_DATATABLE_ENDPOINT = '/warehouse/awb-data-for-buildup';
+export const WAREHOUSE_FEDEX_MANIFEST_UPLOAD_ENDPOINT = '/warehouse/upload-fedex-manifest';
 
 const warehouseClient = {
   awbDataForBuildup: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<MasterWaybill>>(WAREHOUSE_AWB_DATATABLE_ENDPOINT, params),
+  uploadFedexManifest: (formData: FormData) =>
+    apiClient.post(WAREHOUSE_FEDEX_MANIFEST_UPLOAD_ENDPOINT, formData),
 };
 
 export default warehouseClient;

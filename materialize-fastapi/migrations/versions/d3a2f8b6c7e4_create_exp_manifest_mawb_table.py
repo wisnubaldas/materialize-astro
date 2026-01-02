@@ -40,8 +40,13 @@ def upgrade() -> None:
             sa.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
-        sa.UniqueConstraint("mawb_prefix", "mawb_number", name="uk_mawb"),
         mysql_engine="InnoDB",
+    )
+    op.create_index(
+        "uk_mawb",
+        "exp_manifest_mawb",
+        ["mawb_prefix", "mawb_number"],
+        unique=False,
     )
 
 
