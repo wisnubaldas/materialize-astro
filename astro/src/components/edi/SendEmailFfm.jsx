@@ -1,6 +1,7 @@
 import ediClient from '@lib/api/edi';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import Swal from 'sweetalert2';
 
 const normalizeText = (value) => {
   if (!value) return '';
@@ -80,8 +81,30 @@ export default function SendEmailFfm({ slug }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [dataAjax, setDataAjax] = useState('');
 
   const formattedTitle = useMemo(() => `FFM Message (${slug ?? ''})`, [slug]);
+  const clickSendMail = async (e) => {
+    e.preventDefault();
+    const { value: email } = await Swal.fire({
+      title: 'Email Send',
+      theme: 'bootstrap-5',
+      input: 'email',
+      inputPlaceholder: 'Email tijuan ',
+    });
+    if (email) {
+      console.log(email);
+      console.log(message);
+      console.log(dataAjax);
+      const response = await ediClient.sendEmailEdi({
+        email: email,
+        message: message,
+        data: dataAjax,
+        edi: 'FFM',
+      });
+      console.log('response nya', response);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -91,6 +114,7 @@ export default function SendEmailFfm({ slug }) {
       try {
         const data = await ediClient.parseBuildupMawb(slug);
         if (!active) return;
+        setDataAjax(data);
         setMessage(formatFfmMessage(data, slug));
       } catch (err) {
         if (!active) return;
@@ -115,26 +139,80 @@ export default function SendEmailFfm({ slug }) {
   }, [slug]);
 
   return (
-    <div className="card">
-      <div className="card-header d-flex align-items-center justify-content-between">
-        <h6 className="card-title mb-0 text-uppercase">{formattedTitle}</h6>
-        {!loading && !error ? (
-          <small className="text-muted">
-            Generated at {dayjs().format('DD MMM YYYY HH:mm')}
-          </small>
-        ) : null}
+    <>
+      <div className="col-md-12 col-xl-12">
+        <div className="card">
+          <div className="card-header px-0 pt-0">
+            <div className="nav-align-top">
+              <ul className="nav nav-tabs" role="tablist">
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    className="nav-link active"
+                    role="tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#navs-tab-home"
+                    aria-controls="navs-tab-home"
+                    aria-selected="true"
+                  >
+                    Data Breakdown
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    className="nav-link"
+                    role="tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#navs-tab-profile"
+                    aria-controls="navs-tab-profile"
+                    aria-selected="false"
+                  >
+                    Cargo-IMP
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    className="nav-link disabled"
+                    data-bs-toggle="tab"
+                    role="tab"
+                    aria-selected="false"
+                  >
+                    Cargo-XML
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="tab-content p-0">
+              <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
+                <h5 className="card-title">Special title treatment</h5>
+                <div>{JSON.stringify(dataAjax)}</div>
+              </div>
+              <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
+                <h5 className="card-title">{formattedTitle} </h5>
+                {loading ? (
+                  <div className="text-muted">Memuat data...</div>
+                ) : error ? (
+                  <div className="alert alert-danger mb-0">{error}</div>
+                ) : (
+                  <pre className="bg-light p-3 rounded small" style={{ whiteSpace: 'pre-wrap' }}>
+                    {message}
+                  </pre>
+                )}
+                <a href="/edi/ffm" className="btn btn-primary me-2" onClick={clickSendMail}>
+                  <span className="icon-base ri ri-mail-send-line icon-16px me-1"></span> Send Email
+                </a>
+                <a href="/edi/ffm" className="btn btn-secondary me-2">
+                  <span className="icon-base ri ri-arrow-go-back-fill icon-16px me-1"></span> Back
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="card-body">
-        {loading ? (
-          <div className="text-muted">Memuat data...</div>
-        ) : error ? (
-          <div className="alert alert-danger mb-0">{error}</div>
-        ) : (
-          <pre className="bg-light p-3 rounded small" style={{ whiteSpace: 'pre-wrap' }}>
-            {message}
-          </pre>
-        )}
-      </div>
-    </div>
+    </>
   );
 }

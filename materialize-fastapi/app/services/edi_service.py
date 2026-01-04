@@ -58,7 +58,7 @@ class EdiService:
                 logger.warning("Invalid email format for EDI send: %s", email)
                 raise ValueError("Invalid email format")
             template = jinja_env.get_template("email-template/fhl.html")
-            html_str = template.render({"emssage": message, "edi": edi})
+            html_str = template.render({"message": message, "edi": edi})
 
             logger.info("Sending EDI email to %s for %s", email, edi)
             await smtp_email_service.send_email(
