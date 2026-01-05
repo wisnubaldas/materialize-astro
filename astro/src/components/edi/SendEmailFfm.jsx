@@ -82,6 +82,8 @@ export default function SendEmailFfm({ slug }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [dataAjax, setDataAjax] = useState('');
+  const masterData = dataAjax?.buildup ?? dataAjax?.master ?? null;
+  const detailData = Array.isArray(dataAjax?.details) ? dataAjax.details : [];
 
   const formattedTitle = useMemo(() => `FFM Message (${slug ?? ''})`, [slug]);
   const clickSendMail = async (e) => {
@@ -188,8 +190,41 @@ export default function SendEmailFfm({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h5 className="card-title">Special title treatment</h5>
-                <div>{JSON.stringify(dataAjax)}</div>
+                <h4 className="lh-1">Master Data</h4>
+                <div className="row">
+                  {masterData
+                    ? Object.entries(masterData).map(([key, value]) => (
+                        <div key={key} className="col-md-4">
+                          <strong className="fs-big text-primary">{key}:</strong> {String(value)}
+                        </div>
+                      ))
+                    : 'Loading header...'}
+                </div>
+                <h4 className="lh-1 pt-4">Detail Data</h4>
+                {detailData.length ? (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-striped ">
+                      <thead>
+                        <tr>
+                          {Object.keys(detailData[0]).map((key) => (
+                            <th key={key}>{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailData.map((row, i) => (
+                          <tr key={row.noid ?? i}>
+                            {Object.values(row).map((value, idx) => (
+                              <td key={idx}>{String(value ?? '-')}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  'Loading details...'
+                )}
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
                 <h5 className="card-title">{formattedTitle} </h5>

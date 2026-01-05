@@ -82,12 +82,13 @@ export default function SendEmailFhl({ slug }) {
       input: 'email',
       inputPlaceholder: 'Email tijuan ',
     });
+
     if (email) {
       //   kirim email fhlnya disini
       //   Swal.fire(`Entered email: ${email}`);
-      console.log(email);
-      console.log(message);
-      console.log(dataAjax);
+      //   console.log(email);
+      //   console.log(message);
+      //   console.log(dataAjax);
       const response = await ediClient.sendEmailEdi({
         email: email,
         message: message,
@@ -177,8 +178,41 @@ export default function SendEmailFhl({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h5 className="card-title">Special title treatment</h5>
-                <div>{JSON.stringify(dataAjax)}</div>
+                <h4 className="lh-1">Master Data</h4>
+                <div className="row">
+                  {dataAjax.header
+                    ? Object.entries(dataAjax.header).map(([key, value]) => (
+                        <div key={key} className="col-md-4">
+                          <strong className="fs-big text-primary">{key}:</strong> {String(value)}
+                        </div>
+                      ))
+                    : 'Loading header...'}
+                </div>
+                <h4 className="lh-1 pt-4">Detail Data</h4>
+                {dataAjax.details ? (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-striped ">
+                      <thead>
+                        <tr>
+                          {Object.keys(dataAjax.details[0]).map((key) => (
+                            <th key={key}>{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dataAjax.details.map((row, i) => (
+                          <tr key={row.noid ?? i}>
+                            {Object.values(row).map((value, idx) => (
+                              <td key={idx}>{String(value ?? '-')}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  'Loading details...'
+                )}
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
                 <h5 className="card-title">{formattedTitle} </h5>
