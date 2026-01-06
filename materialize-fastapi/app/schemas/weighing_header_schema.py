@@ -31,14 +31,9 @@ class WeighingHeaderBase(BaseModel):
     Directmaster: bool = False
     EmployeeNumber: str | None = None
     InvoiceNumber: str | None = None
-    PrintNumber: bool = False
-    report: bool = False
     RCS: bool = False
     FHL: bool = False
     FWB: bool = False
-    void: bool = False
-    gateIn: bool = False  # noqa: N815
-    token: str | None = None
 
 
 class WeighingHeaderCreate(WeighingHeaderBase):

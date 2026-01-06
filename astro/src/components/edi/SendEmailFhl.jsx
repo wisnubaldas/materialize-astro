@@ -20,6 +20,11 @@ const formatWeight = (value) => {
   return Number.isInteger(rounded) ? String(rounded) : String(rounded);
 };
 
+const toNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
 const formatFhlMessage = (payload, fallbackMawb) => {
   const header = payload?.header;
   const details = Array.isArray(payload?.details) ? payload.details : [];
@@ -27,14 +32,6 @@ const formatFhlMessage = (payload, fallbackMawb) => {
   const mawb = formatMawb(header?.MasterAWB ?? fallbackMawb);
   const origin = (header?.Origin ?? '').trim().toUpperCase() || 'XXX';
   const destination = (header?.Destination ?? '').trim().toUpperCase() || 'XXX';
-  const totalPieces = header?.TotalPieces ?? 0;
-  const totalNetto = header?.TotalNetto ?? 0;
-
-  const lines = [];
-  lines.push('FHL/5');
-  lines.push(
-    `MBI/${mawb}/${origin}${destination}/T${totalPieces || 0}K${formatWeight(totalNetto)}`
-  );
 
   const houses = details.length
     ? details
@@ -47,21 +44,47 @@ const formatFhlMessage = (payload, fallbackMawb) => {
         },
       ];
 
-  houses.forEach((item) => {
+  const normalizedHouses = houses.map((item) => {
     const hawb = item['HostAWB'] ?? item['ProofNumber'] ?? header?.MasterAWB ?? fallbackMawb ?? '';
-    const pieces = item['Pieces'] ?? item['pieces'] ?? 0;
-    const weight =
-      item['GrossWeight'] ?? item['NettoWeight'] ?? item['Netto'] ?? header?.TotalNetto ?? 0;
+    const pieces = toNumber(item['Pieces'] ?? item['pieces'] ?? 0);
+    const weight = toNumber(item['GrossWeight'] ?? item['NettoWeight'] ?? item['Netto'] ?? 0);
     const nature = String(
       item['KindOfNature'] ?? item['KindOfCode'] ?? header?.KindOfGood ?? 'GENERAL CARGO'
     ).trim();
-
-    lines.push(
-      `HBS/${hawb}/${origin}${destination}/${pieces || 0}/K${formatWeight(weight)}//${nature}`
-    );
     const remarks = item['Remarks'];
-    if (remarks) {
-      lines.push(`TXT/${remarks}`);
+
+    return {
+      hawb,
+      pieces,
+      weight,
+      nature,
+      remarks,
+    };
+  });
+
+  const totals = normalizedHouses.reduce(
+    (acc, item) => {
+      acc.pieces += item.pieces;
+      acc.weight += item.weight;
+      return acc;
+    },
+    { pieces: 0, weight: 0 }
+  );
+
+  const lines = [];
+  lines.push('FHL/5');
+  lines.push(
+    `MBI/${mawb}/${origin}${destination}/T${totals.pieces || 0}K${formatWeight(totals.weight)}`
+  );
+
+  normalizedHouses.forEach((item) => {
+    lines.push(
+      `HBS/${item.hawb}/${origin}${destination}/${item.pieces || 0}/K${formatWeight(
+        item.weight
+      )}//${item.nature}`
+    );
+    if (item.remarks) {
+      lines.push(`TXT/${item.remarks}`);
     }
   });
 

@@ -151,11 +151,13 @@ class EdiRepository:
     ) -> DataTablesResponse[EksMasterWaybillOut]:
         return self.masterwaybill_datatable_service.get_datatable(db=self.db, params=params)
 
+    # query tarik data fhl di table weighing
     def get_weighing_by_awb(
         self, awb: str
     ) -> tuple[EksWeighingHeader | None, list[EksWeighingDetail]]:
         header = (
             self.db.query(EksWeighingHeader)
+            .join(MstCustomer, MstCustomer.CustomerCode == EksWeighingHeader.ShipperCode)
             .filter(EksWeighingHeader.MasterAWB == awb)
             .order_by(EksWeighingHeader.created_at.desc())
             .first()
@@ -206,7 +208,9 @@ class EdiRepository:
 
         rows = (
             self.db.query(EksBuildupHeader, EksBuildUpDetail, EksMasterWaybill, EksHostAWB)
-            .join(EksBuildUpDetail, EksBuildupHeader.buildup_number == EksBuildUpDetail.BuildUpNumber)
+            .join(
+                EksBuildUpDetail, EksBuildupHeader.buildup_number == EksBuildUpDetail.BuildUpNumber
+            )
             .join(EksMasterWaybill, EksBuildUpDetail.MasterAWB == EksMasterWaybill.MasterAWB)
             .join(EksHostAWB, EksBuildUpDetail.MasterAWB == EksHostAWB.MasterAWB)
             .filter(EksBuildupHeader.buildup_number == buildup_number)
