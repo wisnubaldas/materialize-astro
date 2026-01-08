@@ -7,6 +7,8 @@ from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.fhl_schema import FhlResponse
+from app.schemas.fwb_schema import FwbResponse
+from app.schemas.mst_customer_schema import CustomerOut
 from app.schemas.weighing_detail_schema import WeighingDetailOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.utils.jinja import jinja_env
@@ -44,6 +46,13 @@ class EdiService:
         header_schema = WeighingHeaderOut.model_validate(header) if header else None
         detail_schema = [WeighingDetailOut.model_validate(item) for item in details]
         return FhlResponse(header=header_schema, details=detail_schema)
+
+    def parse_fwb(self, awb: str) -> FwbResponse:
+        header, details, agent = self.repository.get_weighing_by_awb_for_fwb(awb)
+        header_schema = WeighingHeaderOut.model_validate(header) if header else None
+        detail_schema = [WeighingDetailOut.model_validate(item) for item in details]
+        agent_schema = CustomerOut.model_validate(agent) if agent else None
+        return FwbResponse(header=header_schema, details=detail_schema, agen=agent_schema)
 
     def parse_awb_mawb(self, mawb: str) -> AwbMawbResponse | None:
         return self.repository.get_awb_mawb(mawb)

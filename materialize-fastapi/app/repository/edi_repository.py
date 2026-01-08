@@ -267,6 +267,56 @@ class EdiRepository:
 
         return header, details
 
+    def get_weighing_by_awb_for_fwb(
+        self, awb: str
+    ) -> tuple[EksWeighingHeader | None, list[EksWeighingDetail], MstCustomer | None]:
+        shipper_customer = aliased(MstCustomer)
+        consignee_customer = aliased(MstCustomer)
+        agent_customer = aliased(MstCustomer)
+
+        rows = (
+            self.db.query(
+                EksWeighingHeader,
+                EksWeighingDetail,
+                shipper_customer,
+                consignee_customer,
+                agent_customer,
+            )
+            .outerjoin(
+                EksWeighingDetail,
+                EksWeighingDetail.ProofNumber == EksWeighingHeader.ProofNumber,
+            )
+            .outerjoin(
+                shipper_customer, shipper_customer.CustomerCode == EksWeighingHeader.ShipperCode
+            )
+            .outerjoin(
+                consignee_customer,
+                consignee_customer.CustomerCode == EksWeighingHeader.ConsigneeCode,
+            )
+            .outerjoin(agent_customer, agent_customer.CustomerCode == EksWeighingHeader.AgenCode)
+            .filter(EksWeighingHeader.MasterAWB == awb)
+            .order_by(EksWeighingHeader.ProofNumber.desc(), EksWeighingDetail.noid.asc())
+            .all()
+        )
+
+        if not rows:
+            return None, [], None
+
+        header = rows[0][0]
+        selected_proof = header.ProofNumber
+        details = [
+            row[1]
+            for row in rows
+            if row[1] is not None and row[0].ProofNumber == selected_proof
+        ]
+
+        header.shipper = rows[0][2]
+        header.consignee = rows[0][3]
+
+        agent = rows[0][4] or rows[0][2]
+
+        return header, details, agent
+
     def get_awb_mawb(self, mawb: str) -> AwbMawbResponse | None:
         agen_customer = aliased(MstCustomer)
         shipper_customer = aliased(MstCustomer)

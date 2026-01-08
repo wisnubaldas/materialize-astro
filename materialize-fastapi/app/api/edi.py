@@ -14,6 +14,7 @@ from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
+from app.schemas.fwb_schema import FwbResponse
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.edi_service import EdiService
@@ -57,6 +58,11 @@ def export_awb_mawb(
 @router.get("/parse-fhl/{awb}")
 def parse_fhl(awb: str, service: EdiService = Depends(get_weighing_header_service)) -> FhlResponse:
     return service.parse_fhl(awb)
+
+
+@router.get("/parse-fwb/{awb}")
+def parse_fwb(awb: str, service: EdiService = Depends(get_weighing_header_service)) -> FwbResponse:
+    return service.parse_fwb(awb)
 
 
 @router.get(

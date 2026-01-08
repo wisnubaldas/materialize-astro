@@ -181,6 +181,12 @@ export interface ParseFhlResponse {
   details: WeighingDetail[];
 }
 
+export interface ParseFwbResponse {
+  header: WeighingHeader | null;
+  details: WeighingDetail[];
+  agen?: CustomerInfo | null;
+}
+
 export interface CustomerInfo {
   CustomerCode: string;
   CompanyName?: string | null;
@@ -292,6 +298,7 @@ const ediClient = {
   exportCWP: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<WeighingHeader>>(EDI_EXPORT_CWP_ENDPOINT, params),
   parseFhl: (awb: string) => apiClient.get<ParseFhlResponse>(`/edi/parse-fhl/${awb}`),
+  parseFwb: (awb: string) => apiClient.get<ParseFwbResponse>(`/edi/parse-fwb/${awb}`),
   exportAwbMawb: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<MasterWaybill>>(EDI_EXPORT_AWB_MAWB, params),
   parseAwbMawb: (mawb: string) =>
