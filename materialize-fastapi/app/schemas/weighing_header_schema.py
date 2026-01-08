@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.mst_customer_schema import CustomerOut
+
 
 class WeighingHeaderBase(BaseModel):
     ProofNumber: str = Field(default="")
@@ -47,5 +49,7 @@ class WeighingHeaderUpdate(WeighingHeaderBase):
 class WeighingHeaderOut(WeighingHeaderBase):
     noid: int
     created_at: datetime
+    shipper: CustomerOut | None = None
+    consignee: CustomerOut | None = None
 
     model_config = {"from_attributes": True}

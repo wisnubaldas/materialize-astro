@@ -297,6 +297,7 @@ export default function SendEmailFwb({ slug }) {
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
                 <h4 className="lh-1">Master Data</h4>
+                {JSON.stringify(masterData)}
                 <div className="row">
                   {masterData
                     ? Object.entries(masterData).map(([key, value]) => (

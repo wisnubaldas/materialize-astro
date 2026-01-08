@@ -147,6 +147,8 @@ export interface WeighingHeader {
   gateIn?: boolean | number | null;
   token?: string | null;
   created_at?: string | null;
+  shipper?: CustomerInfo | null;
+  consignee?: CustomerInfo | null;
 }
 export const EDI_EXPORT_CWP_ENDPOINT = '/edi/export-cwp';
 export interface WeighingDetail {

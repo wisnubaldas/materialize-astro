@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 T = TypeVar("T")
 
@@ -17,8 +17,19 @@ class CustomFilters(BaseModel):
 
 
 class ColumnSearch(BaseModel):
-    value: str | None = ""
+    value: str = ""
     regex: bool | None = False
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_value(cls, value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float, bool)):
+            return str(value)
+        return ""
 
 
 class ColumnOrder(BaseModel):
@@ -26,18 +37,49 @@ class ColumnOrder(BaseModel):
     dir: str
     name: str | None = None
 
+    @field_validator("dir", mode="before")
+    @classmethod
+    def normalize_dir(cls, value):
+        if value is None:
+            return "asc"
+        if isinstance(value, str):
+            return value
+        return str(value)
+
 
 class Column(BaseModel):
-    data: str | None = ""
-    name: str | None = ""
+    data: str = ""
+    name: str = ""
     searchable: bool | None = True
     orderable: bool | None = True
     search: ColumnSearch
 
+    @field_validator("data", "name", mode="before")
+    @classmethod
+    def normalize_text_fields(cls, value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float, bool)):
+            return str(value)
+        return ""
+
 
 class GlobalSearch(BaseModel):
-    value: str | None = ""
+    value: str = ""
     regex: bool | None = False
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_value(cls, value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float, bool)):
+            return str(value)
+        return ""
 
 
 class DataTablesParams(BaseModel):

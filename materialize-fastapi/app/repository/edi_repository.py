@@ -1,4 +1,6 @@
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
 from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
@@ -144,7 +146,75 @@ class EdiRepository:
         return self.buildup_detail_datatable_service.get_datatable(db=self.db, params=params)
 
     def weighing_datatable(self, params: DataTablesParams) -> DataTablesResponse[WeighingHeaderOut]:
-        return self.weighing_datatable_service.get_datatable(db=self.db, params=params)
+        params = self.weighing_datatable_service.apply_custom_filters(params)
+
+        base_query = self.db.query(EksWeighingHeader)
+
+        custom_filter_conditions = []
+        if params.filters:
+            filters = params.filters
+            for filter_name in self.weighing_datatable_service.custom_filters:
+                filter_value = getattr(filters, filter_name, None)
+                if not filter_value:
+                    continue
+                model_column = getattr(EksWeighingHeader, filter_name, None)
+                if model_column is None:
+                    continue
+                custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
+
+        global_search_conditions = []
+        if params.search.value and self.weighing_datatable_service.search_columns:
+            search_value = f"%{params.search.value}%"
+            global_search_conditions = [
+                getattr(EksWeighingHeader, col_name).like(search_value)
+                for col_name in self.weighing_datatable_service.search_columns
+                if hasattr(EksWeighingHeader, col_name)
+            ]
+
+        combined_filters = []
+        if custom_filter_conditions:
+            combined_filters.append(and_(*custom_filter_conditions))
+        if global_search_conditions:
+            combined_filters.append(or_(*global_search_conditions))
+
+        if combined_filters:
+            base_query = base_query.filter(and_(*combined_filters))
+
+        total_records = self.db.query(func.count(func.distinct(EksWeighingHeader.MasterAWB))).scalar()
+        filtered_records = base_query.with_entities(
+            func.count(func.distinct(EksWeighingHeader.MasterAWB))
+        ).scalar()
+
+        subquery = (
+            base_query.with_entities(func.max(EksWeighingHeader.noid).label("noid"))
+            .group_by(EksWeighingHeader.MasterAWB)
+            .subquery()
+        )
+
+        query = self.db.query(EksWeighingHeader).join(
+            subquery, EksWeighingHeader.noid == subquery.c.noid
+        )
+
+        for order in params.order:
+            col_idx = order.column
+            col_name = params.columns[col_idx].data
+            direction = order.dir
+
+            if hasattr(EksWeighingHeader, col_name):
+                col: InstrumentedAttribute = getattr(EksWeighingHeader, col_name)
+                if direction == "desc":
+                    query = query.order_by(col.desc())
+                else:
+                    query = query.order_by(col.asc())
+
+        results = query.offset(params.start).limit(params.length).all()
+
+        return DataTablesResponse(
+            draw=params.draw,
+            recordsTotal=total_records or 0,
+            recordsFiltered=filtered_records or 0,
+            data=[WeighingHeaderOut.model_validate(item) for item in results],
+        )
 
     def masterwaybill_datatable(
         self, params: DataTablesParams
@@ -155,19 +225,46 @@ class EdiRepository:
     def get_weighing_by_awb(
         self, awb: str
     ) -> tuple[EksWeighingHeader | None, list[EksWeighingDetail]]:
-        header = (
-            self.db.query(EksWeighingHeader)
-            .join(MstCustomer, MstCustomer.CustomerCode == EksWeighingHeader.ShipperCode)
+        shipper_customer = aliased(MstCustomer)
+        consignee_customer = aliased(MstCustomer)
+
+        rows = (
+            self.db.query(
+                EksWeighingHeader,
+                EksWeighingDetail,
+                shipper_customer,
+                consignee_customer,
+            )
+            .outerjoin(
+                EksWeighingDetail,
+                EksWeighingDetail.ProofNumber == EksWeighingHeader.ProofNumber,
+            )
+            .outerjoin(
+                shipper_customer, shipper_customer.CustomerCode == EksWeighingHeader.ShipperCode
+            )
+            .outerjoin(
+                consignee_customer,
+                consignee_customer.CustomerCode == EksWeighingHeader.ConsigneeCode,
+            )
             .filter(EksWeighingHeader.MasterAWB == awb)
-            .order_by(EksWeighingHeader.created_at.desc())
-            .first()
-        )
-        details = (
-            self.db.query(EksWeighingDetail)
-            .filter(EksWeighingDetail.MasterAWB == awb)
-            .order_by(EksWeighingDetail.created_at.desc())
+            .order_by(EksWeighingHeader.ProofNumber.desc(), EksWeighingDetail.noid.asc())
             .all()
         )
+
+        if not rows:
+            return None, []
+
+        header = rows[0][0]
+        selected_proof = header.ProofNumber
+        details = [
+            row[1]
+            for row in rows
+            if row[1] is not None and row[0].ProofNumber == selected_proof
+        ]
+
+        header.shipper = rows[0][2]
+        header.consignee = rows[0][3]
+
         return header, details
 
     def get_awb_mawb(self, mawb: str) -> AwbMawbResponse | None:

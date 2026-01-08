@@ -1,102 +1,17 @@
+import formatFhlMessage from '@components/edi/fhlGenerator';
+import Spinner from '@components/parsial/Spinner';
 import ediClient from '@lib/api/edi';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
-
-const formatMawb = (mawb) => {
-  if (!mawb) return '';
-  if (mawb.includes('-')) return mawb;
-  if (mawb.length >= 11) {
-    const prefix = mawb.slice(0, 3);
-    const serial = mawb.slice(3);
-    return `${prefix}-${serial}`;
-  }
-  return mawb;
-};
-
-const formatWeight = (value) => {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return '0';
-  const rounded = Math.round(num * 10) / 10;
-  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
-};
-
-const toNumber = (value) => {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
-};
-
-const formatFhlMessage = (payload, fallbackMawb) => {
-  const header = payload?.header;
-  const details = Array.isArray(payload?.details) ? payload.details : [];
-
-  const mawb = formatMawb(header?.MasterAWB ?? fallbackMawb);
-  const origin = (header?.Origin ?? '').trim().toUpperCase() || 'XXX';
-  const destination = (header?.Destination ?? '').trim().toUpperCase() || 'XXX';
-
-  const houses = details.length
-    ? details
-    : [
-        {
-          HostAWB: header?.MasterAWB ?? fallbackMawb,
-          Pieces: header?.TotalPieces ?? 0,
-          NettoWeight: header?.TotalNetto ?? 0,
-          KindOfNature: 'GENERAL CARGO',
-        },
-      ];
-
-  const normalizedHouses = houses.map((item) => {
-    const hawb = item['HostAWB'] ?? item['ProofNumber'] ?? header?.MasterAWB ?? fallbackMawb ?? '';
-    const pieces = toNumber(item['Pieces'] ?? item['pieces'] ?? 0);
-    const weight = toNumber(item['GrossWeight'] ?? item['NettoWeight'] ?? item['Netto'] ?? 0);
-    const nature = String(
-      item['KindOfNature'] ?? item['KindOfCode'] ?? header?.KindOfGood ?? 'GENERAL CARGO'
-    ).trim();
-    const remarks = item['Remarks'];
-
-    return {
-      hawb,
-      pieces,
-      weight,
-      nature,
-      remarks,
-    };
-  });
-
-  const totals = normalizedHouses.reduce(
-    (acc, item) => {
-      acc.pieces += item.pieces;
-      acc.weight += item.weight;
-      return acc;
-    },
-    { pieces: 0, weight: 0 }
-  );
-
-  const lines = [];
-  lines.push('FHL/5');
-  lines.push(
-    `MBI/${mawb}/${origin}${destination}/T${totals.pieces || 0}K${formatWeight(totals.weight)}`
-  );
-
-  normalizedHouses.forEach((item) => {
-    lines.push(
-      `HBS/${item.hawb}/${origin}${destination}/${item.pieces || 0}/K${formatWeight(
-        item.weight
-      )}//${item.nature}`
-    );
-    if (item.remarks) {
-      lines.push(`TXT/${item.remarks}`);
-    }
-  });
-
-  return lines.filter(Boolean).join('\n') || 'Tidak ada data FHL';
-};
 
 export default function SendEmailFhl({ slug }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [dataAjax, setDataAjax] = useState('');
+  const [dataAjax, setDataAjax] = useState(null);
   const formattedTitle = useMemo(() => `FHL Message (${slug ?? ''})`, [slug]);
+  const masterData = dataAjax?.master ?? null;
+  const hostData = Array.isArray(dataAjax?.host_awbs) ? dataAjax.host_awbs : [];
   const clickSendMail = async (e) => {
     e.preventDefault();
     const { value: email } = await Swal.fire({
@@ -127,9 +42,11 @@ export default function SendEmailFhl({ slug }) {
       setLoading(true);
       setError('');
       try {
-        const data = await ediClient.parseFhl(slug);
+        const data = await ediClient.parseAwbMawb(slug);
         if (!active) return;
+        // set data ajaxnya untuk ditampilkan di tab pertama
         setDataAjax(data);
+        // bikn format fhl messagenya
         setMessage(formatFhlMessage(data, slug));
       } catch (err) {
         if (!active) return;
@@ -203,27 +120,31 @@ export default function SendEmailFhl({ slug }) {
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
                 <h4 className="lh-1">Master Data</h4>
                 <div className="row">
-                  {dataAjax.header
-                    ? Object.entries(dataAjax.header).map(([key, value]) => (
+                  {masterData ? (
+                    Object.entries(masterData)
+                      .filter(([key]) => key !== 'shipper' && key !== 'consignee')
+                      .map(([key, value]) => (
                         <div key={key} className="col-md-4">
                           <strong className="fs-big text-primary">{key}:</strong> {String(value)}
                         </div>
                       ))
-                    : 'Loading header...'}
+                  ) : (
+                    <Spinner />
+                  )}
                 </div>
-                <h4 className="lh-1 pt-4">Detail Data</h4>
-                {dataAjax.details ? (
+                <h4 className="lh-1 pt-4">Host Data</h4>
+                {hostData.length ? (
                   <div className="table-responsive">
                     <table className="table table-sm table-striped ">
                       <thead>
                         <tr>
-                          {Object.keys(dataAjax.details[0]).map((key) => (
+                          {Object.keys(hostData[0]).map((key) => (
                             <th key={key}>{key}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {dataAjax.details.map((row, i) => (
+                        {hostData.map((row, i) => (
                           <tr key={row.noid ?? i}>
                             {Object.values(row).map((value, idx) => (
                               <td key={idx}>{String(value ?? '-')}</td>
@@ -233,8 +154,10 @@ export default function SendEmailFhl({ slug }) {
                       </tbody>
                     </table>
                   </div>
+                ) : dataAjax ? (
+                  <div className="text-muted">Tidak ada data host.</div>
                 ) : (
-                  'Loading details...'
+                  <Spinner />
                 )}
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
