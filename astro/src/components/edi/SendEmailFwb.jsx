@@ -12,7 +12,19 @@ export default function SendEmailFwb({ slug }) {
 
   const [sendData, setSendData] = useState(null);
   const headerData = sendData?.header ?? null;
-  const detailData = Array.isArray(sendData?.details) ? sendData.details : [];
+  const agentData = sendData?.agen ?? null;
+  const shipperData = headerData?.shipper ?? null;
+  const consigneeData = headerData?.consignee ?? null;
+  const agentEditableFields = ['CompanyName', 'CustomerCode'];
+  const partyEditableFields = [
+    'CompanyName',
+    'Address1',
+    'Address2',
+    'City',
+    'CountryCode',
+    'PostCode',
+    'NPWPNumber',
+  ];
   const clickSendMail = async (e) => {
     e.preventDefault();
     const { value: email } = await Swal.fire({
@@ -41,11 +53,11 @@ export default function SendEmailFwb({ slug }) {
     const load = async () => {
       setLoading(true);
       setError('');
+      setMessage('');
       try {
         const data = await ediClient.parseFwb(slug);
         setSendData(data);
         if (!active) return;
-        setMessage(formatFwbMessage(data, slug));
       } catch (err) {
         if (!active) return;
         setError(err?.message ?? 'Gagal memuat data FWB');
@@ -66,6 +78,50 @@ export default function SendEmailFwb({ slug }) {
       active = false;
     };
   }, [slug]);
+
+  useEffect(() => {
+    if (!sendData || !slug) return;
+    setMessage(formatFwbMessage(sendData, slug));
+  }, [sendData, slug]);
+
+  const updateAgentField = (key, value) => {
+    setSendData((prev) => {
+      if (!prev) return prev;
+      const nextAgent = { ...(prev.agen ?? {}), [key]: value };
+      return { ...prev, agen: nextAgent };
+    });
+  };
+
+  const updateHeaderPartyField = (partyKey, key, value) => {
+    setSendData((prev) => {
+      if (!prev) return prev;
+      const header = { ...(prev.header ?? {}) };
+      const party = { ...(header[partyKey] ?? {}), [key]: value };
+      header[partyKey] = party;
+      return { ...prev, header };
+    });
+  };
+
+  const renderEditableFields = (data, onChange, emptyText, allowedKeys) => {
+    if (!data) return emptyText;
+    const entries = allowedKeys?.length
+      ? allowedKeys
+          .filter((key) => Object.prototype.hasOwnProperty.call(data, key))
+          .map((key) => [key, data[key]])
+      : Object.entries(data);
+    if (!entries.length) return emptyText;
+    return entries.map(([key, value]) => (
+      <div key={key} className="col-md-4 mb-2">
+        <label className="form-label text-primary">{key}</label>
+        <input
+          type="text"
+          className="form-control"
+          value={value ?? ''}
+          onChange={(e) => onChange(key, e.target.value)}
+        />
+      </div>
+    ));
+  };
   return (
     <>
       <div className="col-md-12 col-xl-12">
@@ -116,8 +172,7 @@ export default function SendEmailFwb({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h4 className="lh-1">Header Data</h4>
-                {JSON.stringify(headerData)}
+                <h4 className="lh-1">Data AWB</h4>
                 <div className="row">
                   {headerData
                     ? Object.entries(headerData)
@@ -129,31 +184,81 @@ export default function SendEmailFwb({ slug }) {
                         ))
                     : 'Loading header...'}
                 </div>
-                <h4 className="lh-1 pt-4">Detail Data</h4>
-                {detailData.length ? (
-                  <div className="table-responsive">
-                    <table className="table table-sm table-striped ">
-                      <thead>
-                        <tr>
-                          {Object.keys(detailData[0]).map((key) => (
-                            <th key={key}>{key}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailData.map((row, i) => (
-                          <tr key={row.noid ?? i}>
-                            {Object.values(row).map((value, idx) => (
-                              <td key={idx}>{String(value ?? '-')}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="nav-align-top mt-4">
+                  <ul className="nav nav-tabs" role="tablist">
+                    <li className="nav-item">
+                      <button
+                        type="button"
+                        className="nav-link active"
+                        role="tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#awb-tab-agent"
+                        aria-controls="awb-tab-agent"
+                        aria-selected="true"
+                      >
+                        Agen
+                      </button>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        type="button"
+                        className="nav-link"
+                        role="tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#awb-tab-shipper"
+                        aria-controls="awb-tab-shipper"
+                        aria-selected="false"
+                      >
+                        Shipper
+                      </button>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        type="button"
+                        className="nav-link"
+                        role="tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#awb-tab-consignee"
+                        aria-controls="awb-tab-consignee"
+                        aria-selected="false"
+                      >
+                        Consignee
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                <div className="tab-content p-0 pt-3">
+                  <div className="tab-pane fade show active" id="awb-tab-agent" role="tabpanel">
+                    <div className="row">
+                      {renderEditableFields(
+                        agentData,
+                        updateAgentField,
+                        'Tidak ada data agen.',
+                        agentEditableFields,
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  'Loading details...'
-                )}
+                  <div className="tab-pane fade" id="awb-tab-shipper" role="tabpanel">
+                    <div className="row">
+                      {renderEditableFields(
+                        shipperData,
+                        (key, value) => updateHeaderPartyField('shipper', key, value),
+                        'Tidak ada data shipper.',
+                        partyEditableFields,
+                      )}
+                    </div>
+                  </div>
+                  <div className="tab-pane fade" id="awb-tab-consignee" role="tabpanel">
+                    <div className="row">
+                      {renderEditableFields(
+                        consigneeData,
+                        (key, value) => updateHeaderPartyField('consignee', key, value),
+                        'Tidak ada data consignee.',
+                        partyEditableFields,
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
                 <h5 className="card-title">{formattedTitle} </h5>

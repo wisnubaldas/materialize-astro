@@ -270,50 +270,88 @@ class EdiRepository:
     def get_weighing_by_awb_for_fwb(
         self, awb: str
     ) -> tuple[EksWeighingHeader | None, list[EksWeighingDetail], MstCustomer | None]:
-        shipper_customer = aliased(MstCustomer)
-        consignee_customer = aliased(MstCustomer)
-        agent_customer = aliased(MstCustomer)
-
-        rows = (
-            self.db.query(
-                EksWeighingHeader,
-                EksWeighingDetail,
-                shipper_customer,
-                consignee_customer,
-                agent_customer,
-            )
-            .outerjoin(
-                EksWeighingDetail,
-                EksWeighingDetail.ProofNumber == EksWeighingHeader.ProofNumber,
-            )
-            .outerjoin(
-                shipper_customer, shipper_customer.CustomerCode == EksWeighingHeader.ShipperCode
-            )
-            .outerjoin(
-                consignee_customer,
-                consignee_customer.CustomerCode == EksWeighingHeader.ConsigneeCode,
-            )
-            .outerjoin(agent_customer, agent_customer.CustomerCode == EksWeighingHeader.AgenCode)
+        header = (
+            self.db.query(EksWeighingHeader)
             .filter(EksWeighingHeader.MasterAWB == awb)
-            .order_by(EksWeighingHeader.ProofNumber.desc(), EksWeighingDetail.noid.asc())
+            .order_by(EksWeighingHeader.noid.desc())
+            .first()
+        )
+
+        details = (
+            self.db.query(EksWeighingDetail)
+            .filter(EksWeighingDetail.MasterAWB == awb)
+            .order_by(EksWeighingDetail.noid.asc())
             .all()
         )
 
-        if not rows:
+        primary_detail = details[0] if details else None
+        host_awb = None
+        if primary_detail and primary_detail.HostAWB:
+            host_awb = (
+                self.db.query(EksHostAWB)
+                .filter(EksHostAWB.HostAWB == primary_detail.HostAWB)
+                .first()
+            )
+        if not host_awb:
+            host_awb = (
+                self.db.query(EksHostAWB)
+                .filter(EksHostAWB.MasterAWB == awb)
+                .order_by(EksHostAWB.noid.asc())
+                .first()
+            )
+
+        if not header and not details:
             return None, [], None
 
-        header = rows[0][0]
-        selected_proof = header.ProofNumber
-        details = [
-            row[1]
-            for row in rows
-            if row[1] is not None and row[0].ProofNumber == selected_proof
-        ]
+        shipper_code = (header.ShipperCode if header else None) or (
+            host_awb.ShipperCode if host_awb else None
+        )
+        consignee_code = (header.ConsigneeCode if header else None) or (
+            host_awb.ConsigneeCode if host_awb else None
+        )
+        agent_code = (header.AgenCode if header else None) or (
+            host_awb.AgenCode if host_awb else None
+        )
 
-        header.shipper = rows[0][2]
-        header.consignee = rows[0][3]
+        customer_codes = {code for code in [shipper_code, consignee_code, agent_code] if code}
+        customers = {}
+        if customer_codes:
+            customers = {
+                item.CustomerCode: item
+                for item in self.db.query(MstCustomer)
+                .filter(MstCustomer.CustomerCode.in_(customer_codes))
+                .all()
+            }
 
-        agent = rows[0][4] or rows[0][2]
+        shipper_customer = customers.get(shipper_code)
+        consignee_customer = customers.get(consignee_code)
+        agent_customer = customers.get(agent_code)
+
+        if not shipper_customer and host_awb:
+            shipper_customer = MstCustomer(
+                CustomerCode=shipper_code or "",
+                CompanyName=host_awb.shippername,
+                Address1=host_awb.shipperaddress,
+                City=host_awb.shippercity,
+                CountryCode=host_awb.shippercountry,
+                PostCode=host_awb.shipperpostal,
+                NPWPNumber=host_awb.shipperTaxNo,
+            )
+
+        if not consignee_customer and host_awb:
+            consignee_customer = MstCustomer(
+                CustomerCode=consignee_code or "",
+                CompanyName=host_awb.Consigneename,
+                Address1=host_awb.Consigneeaddress,
+                City=host_awb.Consigneecity,
+                CountryCode=host_awb.Consigneecountry,
+            )
+
+        if header:
+            header.shipper = shipper_customer
+            header.consignee = consignee_customer
+
+        agent = agent_customer or shipper_customer
 
         return header, details, agent
 

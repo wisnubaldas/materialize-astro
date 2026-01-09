@@ -71,7 +71,9 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const primaryHost = hosts[0] ?? details[0] ?? {};
   const origin = toUpper(master?.Origin || header?.Origin || 'XXX');
   const destination = toUpper(master?.Destination || header?.Destination || 'XXX');
-  const formattedMawb = formatMawb(master?.MasterAWB || header?.MasterAWB || fallbackMawb);
+  const masterAwb =
+    master?.MasterAWB || header?.MasterAWB || details[0]?.MasterAWB || fallbackMawb;
+  const formattedMawb = formatMawb(masterAwb);
 
   const totalPieces =
     master?.Pieces ??
@@ -144,8 +146,9 @@ const formatFwbMessage = (payload, fallbackMawb) => {
 
   const lines = [];
 
+  lines.push('FWB/17');
   const headerParts = [
-    `FWB/17 ${formattedMawb}${origin}${destination}`,
+    `${formattedMawb}${origin}${destination}`,
     `T${totalPieces || 0}`,
     `K${formatNumber(totalWeight, 1)}`,
   ];

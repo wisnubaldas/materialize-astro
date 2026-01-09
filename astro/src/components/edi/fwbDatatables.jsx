@@ -1,63 +1,16 @@
 import GridData from '@components/GridData';
 import { Icon } from '@iconify-icon/react';
-import { EDI_EXPORT_AWB_MAWB } from '@lib/api/edi';
-import dayjs from 'dayjs';
+import { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-
-const numberRenderer = (value, type, fractionDigits = 0) => {
-  if (type !== 'display' && type !== 'filter') {
-    return value ?? null;
-  }
-
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return '';
-  }
-
-  return numeric.toLocaleString('id-ID', {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  });
-};
-
-const badgeRenderer = (value, type, { trueLabel, falseLabel, trueClass, falseClass }) => {
-  if (type !== 'display') {
-    return value;
-  }
-
-  const isTrue = value === true || value === 1 || value === '1' || value === 'true';
-  const label = isTrue ? trueLabel : falseLabel;
-  const theme = isTrue ? trueClass : falseClass;
-
-  return `<span class="badge rounded-pill ${theme} px-2">${label}</span>`;
-};
-
-const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
-  if (type !== 'display' && type !== 'filter') {
-    return value;
-  }
-
-  if (!value) {
-    return '';
-  }
-
-  const parsed = dayjs(value);
-  return parsed.isValid() ? parsed.format(format) : value;
-};
 
 const createDefaultFilters = () => ({
   MasterAWB: '',
   AirlinesCode: '',
-  FlightNo: '',
+  FlightNumber: '',
   Origin: '',
   Destination: '',
-  KindOfGood: '',
-  AgenCode: '',
-  ShipperCode: '',
-  ConsigneeCode: '',
   DateOfFlight: '',
-  DateEntry: '',
 });
 
 export default function FwbDatatables() {
@@ -126,173 +79,61 @@ export default function FwbDatatables() {
       {
         data: 'MasterAWB',
         title: 'Master AWB',
-        className: 'fw-semibold text-primary text-uppercase',
         responsivePriority: 2,
-        render: (_value, type) => {
-          return `<a href="/edi/send-email/fwb@${_value}">
-          <span class="badge text-bg-primary">${_value}</span>
-          </a>`;
+        render: (value, type, row) => {
+          const masterAwb = value ?? row?.MasterAWB ?? '';
+
+          if (type !== 'display') {
+            return masterAwb;
+          }
+
+          return `<div><a href="/edi/send-email/fwb@${masterAwb}">${masterAwb}</a></div>`;
         },
       },
-      {
-        data: 'AirlinesCode',
-        title: 'Airlines',
-        className: 'text-uppercase',
-        responsivePriority: 3,
-      },
-      { data: 'FlightNo', title: 'Flight', className: 'text-uppercase', responsivePriority: 4 },
-      {
-        data: 'Origin',
-        title: 'Origin',
-        className: 'text-center text-uppercase',
-        responsivePriority: 5,
-      },
-      {
-        data: 'Destination',
-        title: 'Destination',
-        className: 'text-center text-uppercase',
-        responsivePriority: 6,
-      },
-      {
-        data: 'DateOfFlight',
-        title: 'Flight Date',
-        className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type),
-      },
-      {
-        data: 'Pieces',
-        title: 'Pieces',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type),
-      },
-      {
-        data: 'Weight',
-        title: 'Weight (Kg)',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 2),
-      },
-      {
-        data: 'Volume',
-        title: 'Volume (m3)',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 3),
-      },
-      { data: 'KindOfGood', title: 'Kind of Goods' },
-      { data: 'AgenCode', title: 'Agen' },
-      { data: 'ShipperCode', title: 'Shipper' },
-      { data: 'ConsigneeCode', title: 'Consignee' },
-      {
-        data: 'DateEntry',
-        title: 'Entry Date',
-        className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type),
-      },
-      { data: 'TimeEntry', title: 'Entry Time', className: 'text-nowrap' },
-      {
-        data: 'RCS',
-        title: 'RCS',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'RCS',
-            falseLabel: '-',
-            trueClass: 'bg-label-success',
-            falseClass: 'bg-label-secondary',
-          }),
-      },
-      {
-        data: 'FWB',
-        title: 'FWB',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'Sent',
-            falseLabel: '-',
-            trueClass: 'bg-label-primary',
-            falseClass: 'bg-label-secondary',
-          }),
-      },
-      {
-        data: 'PDE',
-        title: 'PDE',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'Yes',
-            falseLabel: '-',
-            trueClass: 'bg-label-info',
-            falseClass: 'bg-label-secondary',
-          }),
-      },
-      {
-        data: 'created_at',
-        title: 'Dibuat',
-        className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
-      },
+      { data: 'AirlinesCode', title: 'Airlines' },
+      { data: 'FlightNumber', title: 'Flight' },
+      { data: 'Origin', title: 'Origin', className: 'text-center' },
+      { data: 'Destination', title: 'Destination', className: 'text-center' },
+      { data: 'DateOfFlight', title: 'Flight Date', className: 'text-nowrap' },
     ],
     []
   );
 
-  const tableOptions = useMemo(() => {
-    const findIndex = (key) => columns.findIndex((col) => col.data === key);
-    const createdAtIndex = findIndex('created_at');
-    const numberTargets = ['Pieces', 'Weight', 'Volume'].map(findIndex).filter((idx) => idx >= 0);
-    const badgeTargets = ['RCS', 'FWB', 'PDE'].map(findIndex).filter((idx) => idx >= 0);
-    const defs = [];
-
-    const controlIndex = findIndex(null);
-    if (controlIndex >= 0) {
-      defs.push({
-        targets: controlIndex,
-        className: 'dtr-control control text-center',
-        orderable: false,
-        searchable: false,
-      });
-    }
-
-    if (numberTargets.length) {
-      defs.push({ targets: numberTargets, className: 'text-end' });
-    }
-
-    if (badgeTargets.length) {
-      defs.push({ targets: badgeTargets, orderable: false });
-    }
-
-    return {
-      order: [[createdAtIndex >= 0 ? createdAtIndex : 1, 'desc']],
+  const tableOptions = useMemo(
+    () => ({
+      order: [[6, 'desc']],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       autoWidth: false,
-      columnDefs: defs,
-    };
-  }, [columns]);
+      columnDefs: [
+        {
+          targets: 0,
+          className: 'dtr-control control text-center',
+          orderable: false,
+          searchable: false,
+        },
+      ],
+    }),
+    []
+  );
 
   return (
     <div className="card shadow-none border-0">
       <div className="card-body pb-0">
-        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
-          <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Data Master AWB/MAWB</h5>
-            <p className="mb-0 text-muted">Gunakan filter di bawah untuk memuat daftar FWB.</p>
-          </div>
-          <div className="text-muted small">Endpoint: {EDI_EXPORT_AWB_MAWB}</div>
-        </div>
-
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
-            <div className="col-sm-6 col-md-3">
+            <div className="col-md-3">
               <label className="form-label mb-1">Master AWB</label>
               <input
                 type="text"
                 name="MasterAWB"
                 className="form-control"
-                placeholder="Nomor Master AWB"
+                placeholder="Nomor AWB"
                 value={formFilters.MasterAWB}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-md-2">
               <label className="form-label mb-1">Airlines</label>
               <input
                 type="text"
@@ -303,18 +144,18 @@ export default function FwbDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Flight No</label>
+            <div className="col-md-2">
+              <label className="form-label mb-1">Flight</label>
               <input
                 type="text"
-                name="FlightNo"
+                name="FlightNumber"
                 className="form-control"
                 placeholder="GA123"
-                value={formFilters.FlightNo}
+                value={formFilters.FlightNumber}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-md-2">
               <label className="form-label mb-1">Origin</label>
               <input
                 type="text"
@@ -325,7 +166,7 @@ export default function FwbDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-md-2">
               <label className="form-label mb-1">Destination</label>
               <input
                 type="text"
@@ -336,67 +177,13 @@ export default function FwbDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Kind of Goods</label>
-              <input
-                type="text"
-                name="KindOfGood"
-                className="form-control"
-                placeholder="General Cargo"
-                value={formFilters.KindOfGood}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Agen</label>
-              <input
-                type="text"
-                name="AgenCode"
-                className="form-control"
-                placeholder="Kode agen"
-                value={formFilters.AgenCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Shipper</label>
-              <input
-                type="text"
-                name="ShipperCode"
-                className="form-control"
-                placeholder="Kode shipper"
-                value={formFilters.ShipperCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Consignee</label>
-              <input
-                type="text"
-                name="ConsigneeCode"
-                className="form-control"
-                placeholder="Kode consignee"
-                value={formFilters.ConsigneeCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-md-2">
               <label className="form-label mb-1">Flight Date</label>
               <input
                 type="date"
                 name="DateOfFlight"
                 className="form-control"
                 value={formFilters.DateOfFlight}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Entry Date</label>
-              <input
-                type="date"
-                name="DateEntry"
-                className="form-control"
-                value={formFilters.DateEntry}
                 onChange={handleChange}
               />
             </div>
@@ -417,7 +204,7 @@ export default function FwbDatatables() {
         <GridData
           ref={tableRef}
           columns={columns}
-          ajaxEndpoint={EDI_EXPORT_AWB_MAWB}
+          ajaxEndpoint={EDI_EXPORT_CWP_ENDPOINT}
           filters={activeFilters}
           options={tableOptions}
           className="table-bordered table-striped align-middle"
