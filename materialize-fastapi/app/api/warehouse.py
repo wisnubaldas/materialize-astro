@@ -1,31 +1,103 @@
 import logging
 
-from fastapi import APIRouter, Depends, File, UploadFile
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy.orm import Session, selectinload
 
-from app.deps.warehouse_deps import get_warehouse_service
-from app.db.mysql import get_db1_w
+from app.db.mysql import get_db1_r, get_db1_w
+from app.models.BaseDB1.exp_manifest_uld import ExpManifestUld
+from app.models.BaseDB1.exp_manifest_fligt import ExpManifestFligt
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.services.warehouse_manifest_service import FedexManifestService
-from app.services.warehouse_service import WarehouseService
+from app.schemas.exp_manifest_flight_detail_schema import (
+    ExpManifestFlightDetailResponse,
+    ExpManifestFlightDetailRow,
+)
+from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
+from app.services.datatables_service import DataTablesService
+from app.services.warehouse_manifest_service import AirlineManifestUploadService
 
 router = APIRouter(prefix="/warehouse", tags=["Warehouse"])
 logger = logging.getLogger("warehouse")
 
+manifest_flight_datatable_service = DataTablesService(
+    model=ExpManifestFligt,
+    schema=ExpManifestFlightOut,
+    search_columns=[
+        "airline_code",
+        "flight_number",
+        "flight_date",
+        "point_of_loading",
+        "point_of_unloading",
+        "source_document",
+    ],
+    custom_filters=[
+        "airline_code",
+        "flight_number",
+        "flight_date",
+        "point_of_loading",
+        "point_of_unloading",
+    ],
+)
 
 @router.post(
-    "/awb-data-for-buildup",
-    summary="Master AWB data list",
-    response_model=DataTablesResponse[EksMasterWaybillOut],
+    "/manifest-flight",
+    summary="Data manifest flight",
+    response_model=DataTablesResponse[ExpManifestFlightOut],
 )
-def awb_data_for_buildup(
-    params: DataTablesParams,
-    service: WarehouseService = Depends(get_warehouse_service),
-):
-    return service.masterwaybill_datatable(params)
+def manifest_flight_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    return manifest_flight_datatable_service.get_datatable(db=db, params=params)
 
+
+@router.get(
+    "/manifest-flight/{flight_id}",
+    summary="Detail manifest flight",
+    response_model=ExpManifestFlightDetailResponse,
+)
+def manifest_flight_detail(flight_id: int, db: Session = Depends(get_db1_r)):
+    flight = (
+        db.query(ExpManifestFligt)
+        .options(selectinload(ExpManifestFligt.ulds).selectinload(ExpManifestUld.mawbs))
+        .filter(ExpManifestFligt.id == flight_id)
+        .first()
+    )
+    if not flight:
+        raise HTTPException(status_code=404, detail="Manifest flight tidak ditemukan")
+
+    rows: list[ExpManifestFlightDetailRow] = []
+    for uld in flight.ulds:
+        if uld.mawbs:
+            for mawb in uld.mawbs:
+                rows.append(
+                    ExpManifestFlightDetailRow(
+                        uld_type=uld.uld_type,
+                        uld_number=uld.uld_number,
+                        uld_owner=uld.uld_owner,
+                        destination=uld.destination,
+                        remarks=uld.remarks,
+                        mawb_prefix=mawb.mawb_prefix,
+                        mawb_number=mawb.mawb_number,
+                        pieces=mawb.pieces,
+                        weight_kg=float(mawb.weight_kg) if mawb.weight_kg is not None else None,
+                        nature_of_goods=mawb.nature_of_goods,
+                        route=mawb.route,
+                        transit_flag=mawb.transit_flag,
+                    )
+                )
+        else:
+            rows.append(
+                ExpManifestFlightDetailRow(
+                    uld_type=uld.uld_type,
+                    uld_number=uld.uld_number,
+                    uld_owner=uld.uld_owner,
+                    destination=uld.destination,
+                    remarks=uld.remarks,
+                )
+            )
+
+    return ExpManifestFlightDetailResponse(
+        flight=ExpManifestFlightOut.model_validate(flight),
+        details=rows,
+    )
 
 @router.post("/upload-fedex-manifest", summary="Upload manifest Fedex via Excel")
 def upload_fedex_manifest(file: UploadFile = File(...), db: Session = Depends(get_db1_w)):
-    return FedexManifestService.upload_manifest(file=file, db=db)
+    return AirlineManifestUploadService.upload_manifest(file=file, db=db)

@@ -1,6 +1,7 @@
 import GridData from '@components/GridData';
 import { Icon } from '@iconify-icon/react';
-import { EDI_EXPORT_BUILDUP_ENDPOINT } from '@lib/api/edi';
+import { API_BASE_URL } from '@lib/api/client';
+import { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -31,13 +32,39 @@ const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   return parsed.isValid() ? parsed.format(format) : value;
 };
 
+const buildPublicUrl = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  if (typeof value === 'string' && /^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  const base = API_BASE_URL?.replace(/\/+$/, '') ?? '';
+  const path = String(value).replace(/^\/+/, '');
+  return base ? `${base}/${path}` : `/${path}`;
+};
+
+const linkRenderer = (value, type, label = 'View') => {
+  if (type !== 'display') {
+    return value ?? '';
+  }
+
+  const url = buildPublicUrl(value);
+  if (!url) {
+    return '';
+  }
+
+  return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+};
+
 const createDefaultFilters = () => ({
-  buildup_number: '',
-  airlines_code: '',
+  airline_code: '',
   flight_number: '',
-  destination_code: '',
-  date_of_flight: '',
-  employee_number: '',
+  flight_date: '',
+  point_of_loading: '',
+  point_of_unloading: '',
 });
 
 export default function FfmDatatables() {
@@ -100,41 +127,40 @@ export default function FfmDatatables() {
         },
       },
       {
-        data: 'buildup_number',
-        title: 'Buildup #',
-        className: 'fw-semibold text-primary text-uppercase cursor-pointer',
-        responsivePriority: 2,
-        render: (_value) => {
-          return `<a href="/edi/send-email/ffm@${_value ?? ''}">${_value ?? ''}</a>`;
-        },
-      },
-      {
-        data: 'airlines_code',
-        title: 'Airlines',
+        data: 'airline_code',
+        title: 'Airline',
         className: 'text-uppercase',
-        responsivePriority: 3,
+        responsivePriority: 2,
       },
       {
         data: 'flight_number',
         title: 'Flight',
         className: 'text-uppercase',
-        responsivePriority: 4,
+        responsivePriority: 3,
       },
-      { data: 'destination_code', title: 'Destination', className: 'text-center text-uppercase' },
       {
-        data: 'date_of_flight',
+        data: 'id',
+        title: 'Detail',
+        className: 'text-center',
+        orderable: false,
+        searchable: false,
+        render: (value, type) => {
+          if (type !== 'display') {
+            return value ?? '';
+          }
+          const linkValue = value ?? '';
+          return `<a class="btn btn-sm btn-primary" href="/edi/send-email/ffm@${linkValue}">Detail</a>`;
+        },
+      },
+      {
+        data: 'flight_date',
         title: 'Flight Date',
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type),
       },
-      { data: 'etd', title: 'ETD' },
-      { data: 'time_departure', title: 'Departure' },
-      {
-        data: 'total_master_awb',
-        title: 'Total MAWB',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type),
-      },
+      { data: 'point_of_loading', title: 'Origin', className: 'text-uppercase' },
+      { data: 'point_of_unloading', title: 'Destination', className: 'text-uppercase' },
+      { data: 'aircraft_registration', title: 'Aircraft', className: 'text-uppercase' },
       {
         data: 'total_pieces',
         title: 'Pieces',
@@ -142,19 +168,23 @@ export default function FfmDatatables() {
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'total_netto',
-        title: 'Netto (Kg)',
+        data: 'total_weight_kg',
+        title: 'Weight (Kg)',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
       {
-        data: 'total_volume',
-        title: 'Volume (m3)',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 3),
+        data: 'source_document',
+        title: 'Source Excel',
+        className: 'text-nowrap',
+        render: (value, type) => linkRenderer(value, type, 'Excel'),
       },
-      { data: 'operator_name', title: 'Operator' },
-      { data: 'employee_number', title: 'Petugas' },
+      {
+        data: 'raw_text',
+        title: 'PDF',
+        className: 'text-nowrap',
+        render: (value, type) => linkRenderer(value, type, 'PDF'),
+      },
       {
         data: 'created_at',
         title: 'Dibuat',
@@ -168,12 +198,13 @@ export default function FfmDatatables() {
   const tableOptions = useMemo(() => {
     const findIndex = (key) => columns.findIndex((col) => col.data === key);
     const createdIdx = findIndex('created_at');
-    const numberTargets = ['total_master_awb', 'total_pieces', 'total_netto', 'total_volume']
+    const numberTargets = ['total_pieces', 'total_weight_kg']
       .map(findIndex)
       .filter((idx) => idx >= 0);
 
     const defs = [];
     const controlIndex = findIndex(null);
+    const detailIndex = findIndex('id');
     if (controlIndex >= 0) {
       defs.push({
         targets: controlIndex,
@@ -181,6 +212,10 @@ export default function FfmDatatables() {
         orderable: false,
         searchable: false,
       });
+    }
+
+    if (detailIndex >= 0) {
+      defs.push({ targets: detailIndex, orderable: false, searchable: false });
     }
 
     if (numberTargets.length) {
@@ -201,35 +236,26 @@ export default function FfmDatatables() {
       <div className="card-body pb-0">
         <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
           <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Data Buildup Export</h5>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Manifest Flight (FFM)</h5>
             <p className="mb-0 text-muted">
-              Filter berdasarkan nomor buildup, flight, tujuan, atau tanggal.
+              Filter berdasarkan flight, origin, destination, atau tanggal.
             </p>
           </div>
-          <div className="text-muted small">Endpoint: {EDI_EXPORT_BUILDUP_ENDPOINT}</div>
+          <div className="text-muted small">
+            Endpoint: {WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
+          </div>
         </div>
 
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
             <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Buildup #</label>
+              <label className="form-label mb-1">Airline</label>
               <input
                 type="text"
-                name="buildup_number"
+                name="airline_code"
                 className="form-control"
-                placeholder="No buildup"
-                value={formFilters.buildup_number}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Airlines</label>
-              <input
-                type="text"
-                name="airlines_code"
-                className="form-control"
-                placeholder="GA"
-                value={formFilters.airlines_code}
+                placeholder="FX"
+                value={formFilters.airline_code}
                 onChange={handleChange}
               />
             </div>
@@ -239,19 +265,8 @@ export default function FfmDatatables() {
                 type="text"
                 name="flight_number"
                 className="form-control"
-                placeholder="GA123"
+                placeholder="FX123"
                 value={formFilters.flight_number}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Destination</label>
-              <input
-                type="text"
-                name="destination_code"
-                className="form-control"
-                placeholder="SIN"
-                value={formFilters.destination_code}
                 onChange={handleChange}
               />
             </div>
@@ -259,20 +274,31 @@ export default function FfmDatatables() {
               <label className="form-label mb-1">Flight Date</label>
               <input
                 type="date"
-                name="date_of_flight"
+                name="flight_date"
                 className="form-control"
-                value={formFilters.date_of_flight}
+                value={formFilters.flight_date}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-1">
-              <label className="form-label mb-1">Petugas</label>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Origin</label>
               <input
                 type="text"
-                name="employee_number"
+                name="point_of_loading"
                 className="form-control"
-                placeholder="NIK"
-                value={formFilters.employee_number}
+                placeholder="CGK"
+                value={formFilters.point_of_loading}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Destination</label>
+              <input
+                type="text"
+                name="point_of_unloading"
+                className="form-control"
+                placeholder="SIN"
+                value={formFilters.point_of_unloading}
                 onChange={handleChange}
               />
             </div>
@@ -293,7 +319,7 @@ export default function FfmDatatables() {
         <GridData
           ref={tableRef}
           columns={columns}
-          ajaxEndpoint={EDI_EXPORT_BUILDUP_ENDPOINT}
+          ajaxEndpoint={WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
           filters={activeFilters}
           options={tableOptions}
           className="table-bordered table-striped align-middle"

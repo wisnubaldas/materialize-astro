@@ -1,91 +1,107 @@
+import GridData from '@components/GridData';
+import formatFfmMessage from '@components/edi/ffmGenerator';
 import ediClient from '@lib/api/edi';
-import dayjs from 'dayjs';
+import warehouseClient from '@lib/api/warehouse';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
-const normalizeText = (value) => {
-  if (!value) return '';
-  return String(value).replace(/\s+/g, ' ').trim();
-};
-
-const toUpper = (value) => normalizeText(value).toUpperCase();
-
-const formatMawb = (mawb) => {
-  const clean = normalizeText(mawb).replace(/[^a-zA-Z0-9]/g, '');
-  if (!clean) return '';
-  if (clean.includes('-')) return clean.toUpperCase();
-  const prefix = clean.slice(0, 3);
-  const serial = clean.slice(3, 11);
-  return [prefix, serial].filter(Boolean).join('-').toUpperCase();
-};
-
-const formatNumber = (value, fractionDigits = 0) => {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return '0';
-  return num.toFixed(fractionDigits).replace(/\.?0+$/, '');
-};
-
-const selectFirst = (...values) => {
-  for (const val of values) {
-    if (val !== null && val !== undefined && val !== '') {
-      return val;
-    }
-  }
-  return '';
-};
-
-const formatFfmMessage = (payload, fallbackBuildup) => {
-  const header = payload?.buildup;
-  const master = payload?.master;
-  const details = Array.isArray(payload?.details) ? payload.details : [];
-
-  if (!header || !master || !details.length) {
-    throw new Error('data buildup atau awb, mawb tidak lengkap');
+const numberRenderer = (value, type, fractionDigits = 0) => {
+  if (type !== 'display' && type !== 'filter') {
+    return value ?? null;
   }
 
-  const origin = toUpper(selectFirst(master.Origin, header.destination_code, 'XXX'));
-  const destination = toUpper(selectFirst(master.Destination, header.destination_code, 'XXX'));
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return '';
+  }
 
-  const carrier = toUpper(selectFirst(header.airlines_code, master.AirlinesCode, 'XX'));
-  const flightNo = toUpper(selectFirst(header.flight_number, master.FlightNo, '0000'));
-  const flightDateRaw = selectFirst(header.date_of_flight, master.DateOfFlight);
-  const flightDate =
-    flightDateRaw && dayjs(flightDateRaw).isValid()
-      ? dayjs(flightDateRaw).format('DDMMM').toUpperCase()
-      : '01JAN';
-
-  const lines = [];
-  lines.push('FFM/8');
-  lines.push(`1/${carrier}${flightNo}/${flightDate}/${origin}`);
-  lines.push(destination);
-
-  details.forEach((item) => {
-    const mawb = formatMawb(selectFirst(item.MasterAWB, master.MasterAWB, fallbackBuildup));
-    const pieces = formatNumber(selectFirst(item.Pieces, item.PartPieces, master.Pieces, 0));
-    const weight = formatNumber(selectFirst(item.Netto, item.PartNetto, master.Weight, 0), 1);
-    const volumeVal = selectFirst(item.Volume, master.Volume);
-    const volume = volumeVal ? `MC${formatNumber(volumeVal, 2)}` : '';
-    const goods = toUpper(selectFirst(item.KindOfGood, master.KindOfGood, 'GENERAL CARGO'));
-    const flightSegment = `${mawb}${origin}${destination}`;
-    const segment = [flightSegment, `T${pieces}K${weight}`, volume, goods]
-      .filter(Boolean)
-      .join('/');
-    lines.push(segment);
+  return numeric.toLocaleString('id-ID', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   });
+};
 
-  lines.push('LAST');
-  return lines.filter(Boolean).join('\n');
+const badgeRenderer = (value, type, { trueLabel, falseLabel, trueClass, falseClass }) => {
+  if (type !== 'display') {
+    return value;
+  }
+
+  const isTrue = value === true || value === 1 || value === '1' || value === 'true';
+  const label = isTrue ? trueLabel : falseLabel;
+  const theme = isTrue ? trueClass : falseClass;
+
+  return `<span class="badge rounded-pill ${theme} px-2">${label}</span>`;
 };
 
 export default function SendEmailFfm({ slug }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [dataAjax, setDataAjax] = useState('');
-  const masterData = dataAjax?.buildup ?? dataAjax?.master ?? null;
+  const [dataAjax, setDataAjax] = useState(null);
+  const flightData = dataAjax?.flight ?? null;
   const detailData = Array.isArray(dataAjax?.details) ? dataAjax.details : [];
 
-  const formattedTitle = useMemo(() => `FFM Message (${slug ?? ''})`, [slug]);
+  const formattedTitle = useMemo(() => {
+    const titleRef = flightData?.flight_number ?? slug ?? '';
+    return `FFM Message (${titleRef})`;
+  }, [flightData?.flight_number, slug]);
+  const detailColumns = useMemo(
+    () => [
+      { data: 'uld_type', title: 'ULD Type', className: 'text-uppercase' },
+      { data: 'uld_number', title: 'ULD Number', className: 'text-uppercase' },
+      { data: 'uld_owner', title: 'Owner', className: 'text-uppercase' },
+      { data: 'destination', title: 'Destination', className: 'text-uppercase text-center' },
+      {
+        data: 'mawb_number',
+        title: 'MAWB',
+        className: 'text-uppercase',
+        render: (value, type, row) => {
+          if (type !== 'display') {
+            return value ?? '';
+          }
+          const prefix = row?.mawb_prefix ? `${row.mawb_prefix}-` : '';
+          return `${prefix}${value ?? ''}`;
+        },
+      },
+      {
+        data: 'pieces',
+        title: 'Pieces',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type),
+      },
+      {
+        data: 'weight_kg',
+        title: 'Weight (Kg)',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type, 2),
+      },
+      { data: 'nature_of_goods', title: 'Nature of Goods' },
+      { data: 'route', title: 'Route', className: 'text-uppercase' },
+      {
+        data: 'transit_flag',
+        title: 'Transit',
+        className: 'text-center',
+        render: (value, type) =>
+          badgeRenderer(value, type, {
+            trueLabel: 'Transit',
+            falseLabel: 'Direct',
+            trueClass: 'bg-label-warning',
+            falseClass: 'bg-label-success',
+          }),
+      },
+    ],
+    []
+  );
+  const detailTableOptions = useMemo(
+    () => ({
+      paging: true,
+      searching: true,
+      pageLength: 10,
+      lengthMenu: [10, 25, 50, 100],
+      autoWidth: false,
+    }),
+    []
+  );
   const clickSendMail = async (e) => {
     e.preventDefault();
     const { value: email } = await Swal.fire({
@@ -114,7 +130,7 @@ export default function SendEmailFfm({ slug }) {
       setLoading(true);
       setError('');
       try {
-        const data = await ediClient.parseBuildupMawb(slug);
+        const data = await warehouseClient.manifestFlightDetail(slug);
         if (!active) return;
         setDataAjax(data);
         setMessage(formatFfmMessage(data, slug));
@@ -132,7 +148,7 @@ export default function SendEmailFfm({ slug }) {
       load();
     } else {
       setLoading(false);
-      setError('Slug buildup tidak valid');
+      setError('Flight ID tidak valid');
     }
 
     return () => {
@@ -157,7 +173,7 @@ export default function SendEmailFfm({ slug }) {
                     aria-controls="navs-tab-home"
                     aria-selected="true"
                   >
-                    Data Breakdown
+                    Data FFM
                   </button>
                 </li>
                 <li className="nav-item">
@@ -190,40 +206,19 @@ export default function SendEmailFfm({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h4 className="lh-1">Master Data</h4>
-                <div className="row">
-                  {masterData
-                    ? Object.entries(masterData).map(([key, value]) => (
-                        <div key={key} className="col-md-4">
-                          <strong className="fs-big text-primary">{key}:</strong> {String(value)}
-                        </div>
-                      ))
-                    : 'Loading header...'}
-                </div>
-                <h4 className="lh-1 pt-4">Detail Data</h4>
                 {detailData.length ? (
-                  <div className="table-responsive">
-                    <table className="table table-sm table-striped ">
-                      <thead>
-                        <tr>
-                          {Object.keys(detailData[0]).map((key) => (
-                            <th key={key}>{key}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailData.map((row, i) => (
-                          <tr key={row.noid ?? i}>
-                            {Object.values(row).map((value, idx) => (
-                              <td key={idx}>{String(value ?? '-')}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <GridData
+                    columns={detailColumns}
+                    data={detailData}
+                    options={detailTableOptions}
+                    className="table-bordered table-striped align-middle"
+                  />
+                ) : loading ? (
+                  <div className="text-muted">Memuat data...</div>
+                ) : error ? (
+                  <div className="alert alert-danger mb-0">{error}</div>
                 ) : (
-                  'Loading details...'
+                  <div className="text-muted">Tidak ada detail FFM.</div>
                 )}
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">

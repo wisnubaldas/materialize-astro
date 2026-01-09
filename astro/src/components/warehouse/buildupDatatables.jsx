@@ -1,6 +1,7 @@
 import GridData from '@components/GridData';
 import { Icon } from '@iconify-icon/react';
-import { WAREHOUSE_AWB_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
+import { API_BASE_URL } from '@lib/api/client';
+import { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -46,18 +47,39 @@ const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   return parsed.isValid() ? parsed.format(format) : value;
 };
 
+const buildPublicUrl = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  if (typeof value === 'string' && /^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  const base = API_BASE_URL?.replace(/\/+$/, '') ?? '';
+  const path = String(value).replace(/^\/+/, '');
+  return base ? `${base}/${path}` : `/${path}`;
+};
+
+const linkRenderer = (value, type, label = 'View') => {
+  if (type !== 'display') {
+    return value ?? '';
+  }
+
+  const url = buildPublicUrl(value);
+  if (!url) {
+    return '';
+  }
+
+  return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+};
+
 const createDefaultFilters = () => ({
-  MasterAWB: '',
-  AirlinesCode: '',
-  FlightNo: '',
-  Origin: '',
-  Destination: '',
-  KindOfGood: '',
-  AgenCode: '',
-  ShipperCode: '',
-  ConsigneeCode: '',
-  DateOfFlight: '',
-  DateEntry: '',
+  airline_code: '',
+  flight_number: '',
+  flight_date: '',
+  point_of_loading: '',
+  point_of_unloading: '',
 });
 
 export default function BuildupDatatables() {
@@ -80,6 +102,22 @@ export default function BuildupDatatables() {
 
     api.reload(true);
   }, [activeFilters]);
+
+  useEffect(() => {
+    const handleUploadSuccess = () => {
+      tableRef.current?.reload?.(true);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('manifest-uploaded', handleUploadSuccess);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('manifest-uploaded', handleUploadSuccess);
+      }
+    };
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -124,106 +162,49 @@ export default function BuildupDatatables() {
         },
       },
       {
-        data: 'MasterAWB',
-        title: 'Master AWB',
-        className: 'fw-semibold text-primary text-uppercase',
+        data: 'airline_code',
+        title: 'Airline',
+        className: 'text-uppercase',
         responsivePriority: 2,
-        render: (value, type) => {
-          if (type !== 'display') {
-            return value ?? '';
-          }
-          return `<span class="badge text-bg-primary">${value ?? ''}</span>`;
-        },
       },
       {
-        data: 'AirlinesCode',
-        title: 'Airlines',
+        data: 'flight_number',
+        title: 'Flight',
         className: 'text-uppercase',
         responsivePriority: 3,
       },
-      { data: 'FlightNo', title: 'Flight', className: 'text-uppercase', responsivePriority: 4 },
       {
-        data: 'Origin',
-        title: 'Origin',
-        className: 'text-center text-uppercase',
-        responsivePriority: 5,
-      },
-      {
-        data: 'Destination',
-        title: 'Destination',
-        className: 'text-center text-uppercase',
-        responsivePriority: 6,
-      },
-      {
-        data: 'DateOfFlight',
+        data: 'flight_date',
         title: 'Flight Date',
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type),
       },
+      { data: 'point_of_loading', title: 'Origin', className: 'text-uppercase' },
+      { data: 'point_of_unloading', title: 'Destination', className: 'text-uppercase' },
+      { data: 'aircraft_registration', title: 'Aircraft', className: 'text-uppercase' },
       {
-        data: 'Pieces',
+        data: 'total_pieces',
         title: 'Pieces',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'Weight',
+        data: 'total_weight_kg',
         title: 'Weight (Kg)',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
       {
-        data: 'Volume',
-        title: 'Volume (m3)',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 3),
-      },
-      { data: 'KindOfGood', title: 'Kind of Goods' },
-      { data: 'AgenCode', title: 'Agen' },
-      { data: 'ShipperCode', title: 'Shipper' },
-      { data: 'ConsigneeCode', title: 'Consignee' },
-      {
-        data: 'DateEntry',
-        title: 'Entry Date',
+        data: 'source_document',
+        title: 'Source Excel',
         className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type),
-      },
-      { data: 'TimeEntry', title: 'Entry Time', className: 'text-nowrap' },
-      {
-        data: 'RCS',
-        title: 'RCS',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'RCS',
-            falseLabel: '-',
-            trueClass: 'bg-label-success',
-            falseClass: 'bg-label-secondary',
-          }),
+        render: (value, type) => linkRenderer(value, type, 'Excel'),
       },
       {
-        data: 'FWB',
-        title: 'FWB',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'Sent',
-            falseLabel: '-',
-            trueClass: 'bg-label-primary',
-            falseClass: 'bg-label-secondary',
-          }),
-      },
-      {
-        data: 'PDE',
-        title: 'PDE',
-        className: 'text-center',
-        render: (value, type) =>
-          badgeRenderer(value, type, {
-            trueLabel: 'Yes',
-            falseLabel: '-',
-            trueClass: 'bg-label-info',
-            falseClass: 'bg-label-secondary',
-          }),
+        data: 'raw_text',
+        title: 'PDF',
+        className: 'text-nowrap',
+        render: (value, type) => linkRenderer(value, type, 'PDF'),
       },
       {
         data: 'created_at',
@@ -238,8 +219,9 @@ export default function BuildupDatatables() {
   const tableOptions = useMemo(() => {
     const findIndex = (key) => columns.findIndex((col) => col.data === key);
     const createdAtIndex = findIndex('created_at');
-    const numberTargets = ['Pieces', 'Weight', 'Volume'].map(findIndex).filter((idx) => idx >= 0);
-    const badgeTargets = ['RCS', 'FWB', 'PDE'].map(findIndex).filter((idx) => idx >= 0);
+    const numberTargets = ['total_pieces', 'total_weight_kg']
+      .map(findIndex)
+      .filter((idx) => idx >= 0);
     const defs = [];
 
     const controlIndex = findIndex(null);
@@ -256,10 +238,6 @@ export default function BuildupDatatables() {
       defs.push({ targets: numberTargets, className: 'text-end' });
     }
 
-    if (badgeTargets.length) {
-      defs.push({ targets: badgeTargets, orderable: false });
-    }
-
     return {
       order: [[createdAtIndex >= 0 ? createdAtIndex : 1, 'desc']],
       pageLength: 10,
@@ -274,110 +252,37 @@ export default function BuildupDatatables() {
       <div className="card-body pb-0">
         <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
           <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Data Master AWB</h5>
-            <p className="mb-0 text-muted">Gunakan filter di bawah untuk memuat data buildup.</p>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Manifest Flight</h5>
+            <p className="mb-0 text-muted">
+              Gunakan filter di bawah untuk memuat data manifest flight.
+            </p>
           </div>
-          <div className="text-muted small">Endpoint: {WAREHOUSE_AWB_DATATABLE_ENDPOINT}</div>
+          <div className="text-muted small">
+            Endpoint: {WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
+          </div>
         </div>
 
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
             <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Master AWB</label>
+              <label className="form-label mb-1">Airline</label>
               <input
                 type="text"
-                name="MasterAWB"
+                name="airline_code"
                 className="form-control"
-                placeholder="Nomor Master AWB"
-                value={formFilters.MasterAWB}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Airlines</label>
-              <input
-                type="text"
-                name="AirlinesCode"
-                className="form-control"
-                placeholder="GA"
-                value={formFilters.AirlinesCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Flight No</label>
-              <input
-                type="text"
-                name="FlightNo"
-                className="form-control"
-                placeholder="GA123"
-                value={formFilters.FlightNo}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Origin</label>
-              <input
-                type="text"
-                name="Origin"
-                className="form-control"
-                placeholder="CGK"
-                value={formFilters.Origin}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Destination</label>
-              <input
-                type="text"
-                name="Destination"
-                className="form-control"
-                placeholder="SIN"
-                value={formFilters.Destination}
+                placeholder="FX"
+                value={formFilters.airline_code}
                 onChange={handleChange}
               />
             </div>
             <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Kind of Goods</label>
+              <label className="form-label mb-1">Flight Number</label>
               <input
                 type="text"
-                name="KindOfGood"
+                name="flight_number"
                 className="form-control"
-                placeholder="General Cargo"
-                value={formFilters.KindOfGood}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Agen</label>
-              <input
-                type="text"
-                name="AgenCode"
-                className="form-control"
-                placeholder="Kode agen"
-                value={formFilters.AgenCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Shipper</label>
-              <input
-                type="text"
-                name="ShipperCode"
-                className="form-control"
-                placeholder="Kode shipper"
-                value={formFilters.ShipperCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Consignee</label>
-              <input
-                type="text"
-                name="ConsigneeCode"
-                className="form-control"
-                placeholder="Kode consignee"
-                value={formFilters.ConsigneeCode}
+                placeholder="FX123"
+                value={formFilters.flight_number}
                 onChange={handleChange}
               />
             </div>
@@ -385,19 +290,31 @@ export default function BuildupDatatables() {
               <label className="form-label mb-1">Flight Date</label>
               <input
                 type="date"
-                name="DateOfFlight"
+                name="flight_date"
                 className="form-control"
-                value={formFilters.DateOfFlight}
+                value={formFilters.flight_date}
                 onChange={handleChange}
               />
             </div>
             <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Entry Date</label>
+              <label className="form-label mb-1">Origin</label>
               <input
-                type="date"
-                name="DateEntry"
+                type="text"
+                name="point_of_loading"
                 className="form-control"
-                value={formFilters.DateEntry}
+                placeholder="CGK"
+                value={formFilters.point_of_loading}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Destination</label>
+              <input
+                type="text"
+                name="point_of_unloading"
+                className="form-control"
+                placeholder="SIN"
+                value={formFilters.point_of_unloading}
                 onChange={handleChange}
               />
             </div>
@@ -418,7 +335,7 @@ export default function BuildupDatatables() {
         <GridData
           ref={tableRef}
           columns={columns}
-          ajaxEndpoint={WAREHOUSE_AWB_DATATABLE_ENDPOINT}
+          ajaxEndpoint={WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
           filters={activeFilters}
           options={tableOptions}
           className="table-bordered table-striped align-middle"

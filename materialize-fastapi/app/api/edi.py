@@ -1,26 +1,38 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from app.db.mysql import get_db1_r
 from app.deps.edi_deps import (
     get_buildup_mawb_service,
     get_buildup_service,
     get_masterwaybill_service,
     get_weighing_header_service,
 )
+from app.models.BaseDB1.exp_manifest_mawb import ExpManifestMawb
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
+from app.services.datatables_service import DataTablesService
 from app.services.edi_service import EdiService
 
 router = APIRouter(prefix="/edi", tags=["Kirim Electronic data interchange"])
 logger = logging.getLogger("edi")
+
+manifest_mawb_datatable_service = DataTablesService(
+    model=ExpManifestMawb,
+    schema=ExpManifestMawbOut,
+    search_columns=["mawb_number", "nature_of_goods", "route"],
+    custom_filters=["mawb_number", "nature_of_goods", "route"],
+)
 
 
 @router.post(
@@ -52,6 +64,15 @@ def export_awb_mawb(
     params: DataTablesParams, service: EdiService = Depends(get_masterwaybill_service)
 ):
     return service.masterwaybill_datatables(params)
+
+
+@router.post(
+    "/manifest-mawb",
+    summary="grid data manifest MAWB",
+    response_model=DataTablesResponse[ExpManifestMawbOut],
+)
+def manifest_mawb_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    return manifest_mawb_datatable_service.get_datatable(db=db, params=params)
 
 
 ############### bikin format data IATA ######################

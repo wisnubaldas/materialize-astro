@@ -59,6 +59,11 @@ export default function MakeBuildUp() {
       setFeedback({ variant: 'success', message: successMessage });
       setSelectedFile(null);
       setInputKey((prev) => prev + 1);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('manifest-uploaded', { detail: { response } })
+        );
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Gagal mengunggah file. Silakan coba kembali.';

@@ -9,7 +9,7 @@ from app.utils.env import ENV
 # Daftar path yang tidak dicek token-nya
 EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json", "/favicon.ico"]
 
-EXCLUDED_PATH_PREFIXES = ("/assets", "/pdf")
+EXCLUDED_PATH_PREFIXES = ("/assets", "/pdf", "/excel")
 
 
 def decode_token(token: str):

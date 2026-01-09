@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -59,6 +60,7 @@ MAWB_HEADERS = [
 ]
 
 ALLOWED_EXTENSIONS = (".xlsx", ".xlsm")
+EXCEL_DIR = PDF_DIR.parent / "excel"
 
 
 def _normalize_headers(raw_headers: tuple) -> list[str | None]:
@@ -184,7 +186,21 @@ def _format_decimal(value: Decimal) -> str:
         return str(value)
 
 
-class FedexManifestService:
+def _sanitize_filename(filename: str, default_stem: str = "manifest") -> str:
+    safe_name = Path(filename or "").name
+    stem = Path(safe_name).stem
+    suffix = Path(safe_name).suffix.lower()
+    if suffix not in ALLOWED_EXTENSIONS:
+        suffix = ".xlsx"
+
+    cleaned_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem).strip("._-")
+    if not cleaned_stem:
+        cleaned_stem = default_stem
+
+    return f"{cleaned_stem}{suffix}"
+
+
+class AirlineManifestUploadService:
     @staticmethod
     def upload_manifest(file: UploadFile, db: Session) -> dict:
         filename = file.filename or ""
@@ -194,6 +210,23 @@ class FedexManifestService:
             )
 
         contents = file.file.read()
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        safe_name = _sanitize_filename(filename, default_stem="manifest")
+        stem = Path(safe_name).stem
+        suffix = Path(safe_name).suffix
+        max_stem_len = 43 - (len(timestamp) + 1 + len(suffix))
+        if max_stem_len < 1:
+            max_stem_len = 1
+        stored_name = f"{stem[:max_stem_len]}_{timestamp}{suffix}"
+        excel_path = EXCEL_DIR / stored_name
+        EXCEL_DIR.mkdir(parents=True, exist_ok=True)
+        try:
+            excel_path.write_bytes(contents)
+        except OSError as exc:
+            logger.exception("Gagal menyimpan file Excel manifest.")
+            raise HTTPException(status_code=500, detail="Gagal menyimpan file Excel manifest.") from exc
+
+        source_document_link = f"/excel/{stored_name}"
         wb = load_workbook(filename=BytesIO(contents), data_only=True)
 
         if "flight_manifest" not in wb.sheetnames:
@@ -238,9 +271,7 @@ class FedexManifestService:
 
             total_pieces = _to_int(values.get("total_pieces"), "total_pieces", idx)
             total_weight = _to_decimal(values.get("total_weight_kg"), "total_weight_kg", idx)
-            source_document = (
-                _normalize_identifier(values.get("source_document")) or "FEDEX_MANIFEST"
-            )
+            source_document = source_document_link
 
             flight_obj = ExpManifestFligt(
                 airline_code=airline_code,
@@ -463,7 +494,7 @@ class FedexManifestService:
             payload["mawb_count"] = sum(len(uld["mawbs"]) for uld in payload["ulds"])
             flights_payload.append(payload)
 
-        pdf_bytes = FedexManifestService._generate_pdf(flights_payload)
+        pdf_bytes = AirlineManifestUploadService._generate_pdf(flights_payload)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         flight_tag = flights_payload[0].get("flight_number") if flights_payload else "manifest"
         flight_tag = "".join(ch for ch in str(flight_tag) if ch.isalnum() or ch in ("-", "_"))
@@ -471,11 +502,14 @@ class FedexManifestService:
             flight_tag = "manifest"
         pdf_filename = f"fedex_manifest_{flight_tag}_{timestamp}.pdf"
         pdf_path = Path(PDF_DIR) / pdf_filename
+        pdf_url = f"/pdf/{pdf_filename}"
 
         try:
             PDF_DIR.mkdir(parents=True, exist_ok=True)
             pdf_path.write_bytes(pdf_bytes)
 
+            for entry in flight_entries.values():
+                entry["obj"].raw_text = pdf_url
             for entry in flight_entries.values():
                 db.add(entry["obj"])
             for entry in uld_entries.values():
@@ -522,7 +556,7 @@ class FedexManifestService:
             "mawb_inserted_count": inserted_mawb_count,
             "mawb_skipped_duplicate_count": skipped_duplicate_count,
             "mawb_skipped_existing_count": skipped_existing_count,
-            "pdf_url": f"/pdf/{pdf_filename}",
+            "pdf_url": pdf_url,
             "pdf_filename": pdf_filename,
         }
 
