@@ -118,21 +118,7 @@ export default function SendEmailFhl({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h4 className="lh-1">Master Data</h4>
-                <div className="row">
-                  {masterData ? (
-                    Object.entries(masterData)
-                      .filter(([key]) => key !== 'shipper' && key !== 'consignee')
-                      .map(([key, value]) => (
-                        <div key={key} className="col-md-4">
-                          <strong className="fs-big text-primary">{key}:</strong> {String(value)}
-                        </div>
-                      ))
-                  ) : (
-                    <Spinner />
-                  )}
-                </div>
-                <h4 className="lh-1 pt-4">Host Data</h4>
+                <h4 className="lh-1 pt-4">CWP Data Grid</h4>
                 {hostData.length ? (
                   <div className="table-responsive">
                     <table className="table table-sm table-striped ">

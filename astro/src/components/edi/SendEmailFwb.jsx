@@ -172,18 +172,6 @@ export default function SendEmailFwb({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h4 className="lh-1">Data AWB</h4>
-                <div className="row">
-                  {headerData
-                    ? Object.entries(headerData)
-                        .filter(([key]) => key !== 'shipper' && key !== 'consignee')
-                        .map(([key, value]) => (
-                          <div key={key} className="col-md-4">
-                            <strong className="fs-big text-primary">{key}:</strong> {String(value)}
-                          </div>
-                        ))
-                    : 'Loading header...'}
-                </div>
                 <div className="nav-align-top mt-4">
                   <ul className="nav nav-tabs" role="tablist">
                     <li className="nav-item">
@@ -234,7 +222,7 @@ export default function SendEmailFwb({ slug }) {
                         agentData,
                         updateAgentField,
                         'Tidak ada data agen.',
-                        agentEditableFields,
+                        agentEditableFields
                       )}
                     </div>
                   </div>
@@ -244,7 +232,7 @@ export default function SendEmailFwb({ slug }) {
                         shipperData,
                         (key, value) => updateHeaderPartyField('shipper', key, value),
                         'Tidak ada data shipper.',
-                        partyEditableFields,
+                        partyEditableFields
                       )}
                     </div>
                   </div>
@@ -254,7 +242,7 @@ export default function SendEmailFwb({ slug }) {
                         consigneeData,
                         (key, value) => updateHeaderPartyField('consignee', key, value),
                         'Tidak ada data consignee.',
-                        partyEditableFields,
+                        partyEditableFields
                       )}
                     </div>
                   </div>
