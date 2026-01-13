@@ -16,6 +16,7 @@ class ExpManifestMawb(BaseDB1):
     mawb_number = Column(String(20), nullable=False)
 
     pieces = Column(BigInteger, nullable=False)
+    total_pieces = Column(BigInteger, nullable=False)
     weight_kg = Column(DECIMAL(10, 2), nullable=False)
 
     nature_of_goods = Column(String(100))

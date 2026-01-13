@@ -6,7 +6,7 @@
     <title>FedEx Air Cargo Manifest</title>
     <style>
         @page {
-            size: A4 landscape;
+            size: A4 portrait;
             margin: 10mm;
         }
 
@@ -18,11 +18,6 @@
             padding: 0;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
 
         .header-table td {
             vertical-align: top;
@@ -60,74 +55,46 @@
             font-weight: bold;
         }
 
-        .meta-table {
-            margin-top: 6px;
-            margin-bottom: 8px;
-        }
-
-        .meta-table td {
-            padding: 2px 0;
-            font-size: 8pt;
-        }
 
         .label {
             font-weight: bold;
         }
 
-        .manifest-table {
-            margin-top: 6px;
-        }
-
-        .manifest-table th {
-            font-size: 7pt;
-            text-align: left;
-            border-bottom: 1px solid #000000;
-            padding: 4px 3px;
-            line-height: 1.2;
-            white-space: normal;
-        }
-
-        .manifest-table td {
-            padding: 3px 3px;
-            vertical-align: top;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
 
         .col-no {
-            width: 4%;
-            text-align: right;
+            width: 8mm;
+            text-align: center;
         }
 
         .col-uld {
-            width: 28%;
+            width: 55mm;
         }
 
         .col-pieces {
-            width: 12%;
-            text-align: right;
+            width: 15mm;
+            text-align: center;
         }
 
         .col-goods {
-            width: 14%;
+            width: 25mm;
         }
 
         .col-weight {
-            width: 10%;
+            width: 15mm;
             text-align: right;
         }
 
         .col-dest {
-            width: 6%;
+            width: 12mm;
             text-align: center;
         }
 
         .col-official {
-            width: 16%;
+            width: 35mm;
         }
 
         .col-remark {
-            width: 10%;
+            width: 25mm;
         }
 
         .uld-line {
@@ -135,12 +102,14 @@
         }
 
         .mawb-line {
-            padding-left: 10px;
+            /* padding-left: 10px; */
         }
 
         .total-row td {
             border-top: 1px solid #000000;
             font-weight: bold;
+            padding-top: 5px;
+            padding-bottom: 3px;
         }
 
         .grand-total {
@@ -159,6 +128,11 @@
 
         .page-break {
             page-break-after: always;
+        }
+
+        .meta-table {
+            padding-top: 5px;
+            padding-bottom: 5px;
         }
     </style>
 </head>
@@ -204,18 +178,57 @@
             <td class="meta-right"></td>
         </tr>
     </table>
+    <style>
+        .manifest-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 7pt;
 
+        }
+
+        .manifest-table thead th {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .manifest-table .dash-row td {
+            border: none;
+            padding: 0;
+        }
+
+        .manifest-table .dash-line {
+            font-family: "Courier New", monospace;
+            font-size: 5pt;
+            line-height: 1;
+            white-space: nowrap;
+        }
+    </style>
+    {% set dash_count = 180 %}
     <table class="manifest-table">
         <thead>
+            <tr class="dash-row">
+                <td colspan="8">
+                    <div class="dash-line">
+                        {% for _ in range(dash_count) -%}- {%- endfor %}
+                    </div>
+                </td>
+            </tr>
             <tr>
                 <th class="col-no">NO</th>
                 <th class="col-uld">ULD NUMBER / MAWB #</th>
-                <th class="col-pieces">NUMBER OF<br />PIECES</th>
-                <th class="col-goods">NATURE<br />OF GOODS</th>
+                <th class="col-pieces">NUMBER OF PIECES</th>
+                <th class="col-goods">NATURE OF GOODS</th>
                 <th class="col-weight">WEIGHT</th>
                 <th class="col-dest">DEST</th>
-                <th class="col-official">FOR OFFICIAL<br />USE</th>
+                <th class="col-official">FOR OFFICIAL USE</th>
                 <th class="col-remark">REMARK</th>
+            </tr>
+            <tr class="dash-row">
+                <td colspan="8">
+                    <div class="dash-line">
+                        {% for _ in range(dash_count) -%}- {%- endfor %}
+                    </div>
+                </td>
             </tr>
         </thead>
         <tbody>
@@ -235,7 +248,7 @@
                     {% endif %}
                     <div class="mawb-line">{{ mawb.mawb_number or "-" }}</div>
                 </td>
-                <td class="col-pieces">{{ mawb.pieces }}</td>
+                <td class="col-pieces">{{ mawb.pieces }}/{{ mawb.total_pieces }}</td>
                 <td class="col-goods">{{ mawb.nature_of_goods or "-" }}</td>
                 <td class="col-weight">{{ mawb.weight_kg }}</td>
                 <td class="col-dest">{{ uld.destination }}</td>

@@ -17,6 +17,7 @@ from xhtml2pdf import pisa
 
 from app.models.BaseDB1.exp_manifest_fligt import ExpManifestFligt
 from app.models.BaseDB1.exp_manifest_mawb import ExpManifestMawb
+from app.models.BaseDB1.exp_manifest_summary import ExpManifestSummary
 from app.models.BaseDB1.exp_manifest_uld import ExpManifestUld
 from app.utils.helper import PDF_DIR
 
@@ -46,6 +47,21 @@ ULD_HEADERS = [
 ]
 
 MAWB_HEADERS = [
+    "flight_number",
+    "flight_date",
+    "uld_type",
+    "uld_number",
+    "mawb_prefix",
+    "mawb_number",
+    "pieces",
+    "total_pieces",
+    "weight_kg",
+    "nature_of_goods",
+    "route",
+    "transit_flag",
+]
+
+MAWB_HEADERS_LEGACY = [
     "flight_number",
     "flight_date",
     "uld_type",
@@ -179,6 +195,25 @@ def _read_headers(ws, expected: list[str], sheet_name: str) -> list[str | None]:
     return headers
 
 
+def _read_headers_any(
+    ws, expected_groups: list[list[str]], sheet_name: str
+) -> list[str | None]:
+    header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
+    if not header_row:
+        raise HTTPException(status_code=400, detail=f"Sheet {sheet_name} tidak memiliki header.")
+    headers = _normalize_headers(header_row)
+    for expected in expected_groups:
+        if headers == expected:
+            return headers
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "message": f"Header sheet {sheet_name} tidak sesuai.",
+            "error": {"header_file_upload": headers, "header_file_valid": expected_groups},
+        },
+    )
+
+
 def _format_decimal(value: Decimal) -> str:
     try:
         return f"{value:.2f}"
@@ -202,7 +237,7 @@ def _sanitize_filename(filename: str, default_stem: str = "manifest") -> str:
 
 class AirlineManifestUploadService:
     @staticmethod
-    def upload_manifest(file: UploadFile, db: Session) -> dict:
+    def upload_manifest(file: UploadFile, db: Session) -> dict:  # noqa: PLR0912, PLR0915
         filename = file.filename or ""
         if not filename.lower().endswith(ALLOWED_EXTENSIONS):
             raise HTTPException(
@@ -210,7 +245,7 @@ class AirlineManifestUploadService:
             )
 
         contents = file.file.read()
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # noqa: DTZ005
         safe_name = _sanitize_filename(filename, default_stem="manifest")
         stem = Path(safe_name).stem
         suffix = Path(safe_name).suffix
@@ -224,7 +259,9 @@ class AirlineManifestUploadService:
             excel_path.write_bytes(contents)
         except OSError as exc:
             logger.exception("Gagal menyimpan file Excel manifest.")
-            raise HTTPException(status_code=500, detail="Gagal menyimpan file Excel manifest.") from exc
+            raise HTTPException(
+                status_code=500, detail="Gagal menyimpan file Excel manifest."
+            ) from exc
 
         source_document_link = f"/excel/{stored_name}"
         wb = load_workbook(filename=BytesIO(contents), data_only=True)
@@ -242,7 +279,9 @@ class AirlineManifestUploadService:
 
         _read_headers(ws_flight, FLIGHT_HEADERS, "flight_manifest")
         _read_headers(ws_uld, ULD_HEADERS, "uld")
-        _read_headers(ws_mawb, MAWB_HEADERS, "mawb")
+        mawb_headers = _read_headers_any(
+            ws_mawb, [MAWB_HEADERS, MAWB_HEADERS_LEGACY], "mawb"
+        )
 
         flight_entries: dict[tuple[str, date], dict] = {}
         uld_entries: dict[tuple[str, date, str, str], dict] = {}
@@ -367,7 +406,9 @@ class AirlineManifestUploadService:
         for idx, row in enumerate(ws_mawb.iter_rows(min_row=2, values_only=True), start=2):
             if not _row_has_values(row):
                 continue
-            values = dict(zip(MAWB_HEADERS, list(row) + [None] * len(MAWB_HEADERS), strict=False))
+            values = dict(
+                zip(mawb_headers, list(row) + [None] * len(mawb_headers), strict=False)
+            )
 
             flight_number = _normalize_identifier(values.get("flight_number"))
             flight_date = _parse_date(values.get("flight_date"), "flight_date", idx)
@@ -390,12 +431,16 @@ class AirlineManifestUploadService:
                 )
 
             pieces = _to_int(values.get("pieces"), "pieces", idx)
+            total_pieces = _to_int(
+                values.get("total_pieces"), "total_pieces", idx, default=pieces
+            )
             weight = _to_decimal(values.get("weight_kg"), "weight_kg", idx)
             transit_flag = _to_bool(values.get("transit_flag"))
             mawb_payload = {
                 "mawb_prefix": mawb_prefix,
                 "mawb_number": mawb_number,
                 "pieces": pieces,
+                "total_pieces": total_pieces,
                 "weight_kg": _format_decimal(weight),
                 "nature_of_goods": _normalize_identifier(values.get("nature_of_goods")),
                 "route": _normalize_identifier(values.get("route")),
@@ -413,6 +458,7 @@ class AirlineManifestUploadService:
                     "key": mawb_key,
                     "uld_entry": uld_entry,
                     "pieces": pieces,
+                    "total_pieces": total_pieces,
                     "weight": weight,
                     "nature_of_goods": _normalize_identifier(values.get("nature_of_goods")),
                     "route": _normalize_identifier(values.get("route")),
@@ -447,6 +493,7 @@ class AirlineManifestUploadService:
                 mawb_prefix=mawb_key[0],
                 mawb_number=mawb_key[1],
                 pieces=candidate["pieces"],
+                total_pieces=candidate["total_pieces"],
                 weight_kg=candidate["weight"],
                 nature_of_goods=candidate["nature_of_goods"],
                 route=candidate["route"],
@@ -483,6 +530,7 @@ class AirlineManifestUploadService:
                             "mawb_prefix": "",
                             "mawb_number": "",
                             "pieces": "",
+                            "total_pieces": "",
                             "weight_kg": "",
                             "nature_of_goods": "",
                             "route": "",
@@ -514,6 +562,16 @@ class AirlineManifestUploadService:
                 db.add(entry["obj"])
             for entry in uld_entries.values():
                 db.add(entry["obj"])
+            db.flush()
+            for entry in flight_entries.values():
+                flight_obj = entry["obj"]
+                db.add(
+                    ExpManifestSummary(
+                        flight_id=flight_obj.id,
+                        total_pieces=flight_obj.total_pieces,
+                        total_weight_kg=flight_obj.total_weight_kg,
+                    )
+                )
             db.commit()
         except IntegrityError as exc:
             db.rollback()
