@@ -18,7 +18,7 @@ logger = logging.getLogger("hubnet")
 
 def run_outgoing():
     try:
-        query_file = "app/services/query/get_out_hubnet.sql"
+        query_file = "app/repository/query/get_out_hubnet.sql"
         db2 = SessionDB2R()
         query = HELPER.load_sql_query(query_file)
         param = {"date_of_flight": now_wib.strftime("%Y-%m-%d")}

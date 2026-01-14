@@ -162,7 +162,7 @@ class HbnetRequestService:
                 pass
                 # IS_INTERNATIONAL, IS_EKSPOR = 0, 0
                 # customer = HbnetRequestService.__get_hostawb(
-                #     awb=AWB_NO, qfile="app/services/query/get_imp_hostawb.sql"
+                #     awb=AWB_NO, qfile="app/repository/query/get_imp_hostawb.sql"
                 # )
                 # REMARKS = customer.get("descriptiongoods") if customer else None
                 # AGT_NAME = customer.get("AgenCode") if customer else None

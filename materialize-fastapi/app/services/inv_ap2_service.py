@@ -39,7 +39,7 @@ from app.schemas.void_invoice_schema import (
     VoidInvoiceSchemaResponse,
 )
 from app.services.datatables_service import DataTablesService
-from app.services.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
+from app.repository.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
@@ -427,9 +427,9 @@ class INVAp2Service:
 
             # Kumpulan query sumber data invoice
             query_files = [
-                "app/services/query/generate_inv_ekspor.sql",
-                "app/services/query/send_invoice_imp.sql",
-                "app/services/query/send_inv_exp_pcp.sql",
+                "app/repository/query/generate_inv_ekspor.sql",
+                "app/repository/query/send_invoice_imp.sql",
+                "app/repository/query/send_inv_exp_pcp.sql",
             ]
 
             pending_records: list[dict] = []

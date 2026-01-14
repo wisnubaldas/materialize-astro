@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
-from app.deps.edi_deps import (
+from app.dependencies.edi_deps import (
     get_buildup_mawb_service,
     get_buildup_service,
     get_masterwaybill_service,
@@ -83,7 +83,6 @@ def parse_fhl(awb: str, service: EdiService = Depends(get_weighing_header_servic
 
 @router.get("/parse-fwb/{awb}")
 def parse_fwb(awb: str, service: EdiService = Depends(get_weighing_header_service)) -> FwbResponse:
-    print("AWB:", awb)
     return service.parse_fwb(awb)
 
 

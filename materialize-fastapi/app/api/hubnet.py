@@ -4,7 +4,10 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.deps.hubnet_deps import get_data_sending_per_bulan_service, get_export_excel_service
+from app.dependencies.hubnet_deps import (
+    get_data_sending_per_bulan_service,
+    get_export_excel_service,
+)
 from app.report.hubnet_request_excel import HubnetRequestExcel
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema

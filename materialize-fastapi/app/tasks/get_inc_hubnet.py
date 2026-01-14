@@ -16,7 +16,7 @@ now_wib = datetime.now(jakarta_tz)
 
 def run_incoming():
     try:
-        query_file = "app/services/query/get_inc_hubnet.sql"
+        query_file = "app/repository/query/get_inc_hubnet.sql"
         db2 = SessionDB2R()
         query = HELPER.load_sql_query(query_file)
         param = {"date_of_arrival": now_wib.strftime("%Y-%m-%d")}
