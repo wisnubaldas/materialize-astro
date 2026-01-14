@@ -302,8 +302,7 @@ const ediClient = {
   exportAwbMawb: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<MasterWaybill>>(EDI_EXPORT_AWB_MAWB, params),
   parseAwbMawb: (mawb: string) =>
-    apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-
-        mawb/${mawb}`),
+    apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-mawb/${mawb}`),
   parseBuildupMawb: (buildupNumber: string) =>
     apiClient.get<ParseBuildupMawbResponse>(`/edi/export-buildup-mawb/${buildupNumber}`),
   sendEmailEdi: (param: any) => apiClient.post('/edi/send-email-edi', param),

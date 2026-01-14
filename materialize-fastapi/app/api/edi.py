@@ -83,6 +83,7 @@ def parse_fhl(awb: str, service: EdiService = Depends(get_weighing_header_servic
 
 @router.get("/parse-fwb/{awb}")
 def parse_fwb(awb: str, service: EdiService = Depends(get_weighing_header_service)) -> FwbResponse:
+    print("AWB:", awb)
     return service.parse_fwb(awb)
 
 

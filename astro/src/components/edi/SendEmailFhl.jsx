@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
 export default function SendEmailFhl({ slug }) {
+  console.log(slug);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
