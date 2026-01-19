@@ -1,6 +1,7 @@
 import { showToast } from '@js/utils';
 import ediClient from '@lib/api/edi';
 import { Fragment, useMemo, useState } from 'react';
+import Swal from 'sweetalert2';
 
 const dataColumns = [
   { key: 'MasterAWB', label: 'Master AWB' },
@@ -90,11 +91,9 @@ const buildFsuCargoImpMessage = (row, statuses) => {
   if (Array.isArray(statuses) && statuses.length) {
     const statusLines = statuses.map(
       (status) =>
-        `${status}/${eventTime}/${destination}/T${pieces}K${weight}${
-          party ? `/${party}` : ''
-        }`
+        `${status}/${eventTime}/${destination}/T${pieces}K${weight}${party ? `/${party}` : ''}`
     );
-    lines.push(statusLines.join('\n\n'));
+    lines.push(statusLines.join('\n'));
   }
   return lines.join('\n');
 };
@@ -126,6 +125,19 @@ export default function FsuSearch() {
   const shouldPaginate = data.length > PAGE_SIZE;
 
   const pagedData = useMemo(() => data.slice(pageStart, pageEnd), [data, pageStart, pageEnd]);
+  const fsuCargoImpSummary = useMemo(() => {
+    const messages = data.reduce((acc, row, index) => {
+      const rowKey = getRowKey(row, index);
+      const selected = selectedStatuses[rowKey] ?? {};
+      const activeStatuses = statusColumns.filter((status) => selected[status]);
+      if (!activeStatuses.length) {
+        return acc;
+      }
+      acc.push(buildFsuCargoImpMessage(row, activeStatuses));
+      return acc;
+    }, []);
+    return messages.join('\n\n').trim();
+  }, [data, selectedStatuses]);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) {
@@ -149,6 +161,38 @@ export default function FsuSearch() {
         [rowKey]: updatedRow,
       };
     });
+  };
+
+  const handleSendEmail = async () => {
+    if (!fsuCargoImpSummary) {
+      const message = 'Pilih status FSU terlebih dahulu sebelum mengirim email.';
+      showToast({ type: 'warning', title: 'FSU', message });
+      return;
+    }
+
+    const { value: email } = await Swal.fire({
+      title: 'Email Send',
+      theme: 'bootstrap-5',
+      input: 'email',
+      inputPlaceholder: 'Email tujuan',
+    });
+
+    if (!email) {
+      return;
+    }
+
+    try {
+      await ediClient.sendEmailEdi({
+        email,
+        message: fsuCargoImpSummary,
+        data: { master_awb: mawb.trim(), host_awbs: data },
+        edi: 'FSU',
+      });
+      showToast({ type: 'success', title: 'FSU', message: 'Email FSU berhasil dikirim.' });
+    } catch (err) {
+      const message = err?.message ?? 'Gagal mengirim email FSU.';
+      showToast({ type: 'danger', title: 'FSU', message });
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -218,6 +262,14 @@ export default function FsuSearch() {
                     'Cari'
                   )}
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={handleSendEmail}
+                  disabled={isLoading || !data.length || !fsuCargoImpSummary}
+                >
+                  Kirim Email
+                </button>
               </div>
             </form>
 
@@ -240,14 +292,14 @@ export default function FsuSearch() {
                   <table className="table table-sm table-striped align-middle">
                     <thead>
                       <tr>
-                        {dataColumns.map((column) => (
-                          <th key={column.key} className="text-nowrap">
-                            {column.label}
-                          </th>
-                        ))}
                         {statusColumns.map((status) => (
                           <th key={status} className="text-nowrap text-center">
                             {status}
+                          </th>
+                        ))}
+                        {dataColumns.map((column) => (
+                          <th key={column.key} className="text-nowrap">
+                            {column.label}
                           </th>
                         ))}
                       </tr>
@@ -270,11 +322,6 @@ export default function FsuSearch() {
                         return (
                           <Fragment key={rowKey}>
                             <tr>
-                              {dataColumns.map((column) => (
-                                <td key={column.key} className="text-nowrap">
-                                  {formatCellValue(row[column.key])}
-                                </td>
-                              ))}
                               {statusColumns.map((status) => (
                                 <td key={status} className="text-center">
                                   <input
@@ -285,6 +332,11 @@ export default function FsuSearch() {
                                     onChange={() => handleStatusToggle(rowKey, status)}
                                     aria-label={`${status} ${row.HostAWB ?? row.MasterAWB ?? rowIndex}`}
                                   />
+                                </td>
+                              ))}
+                              {dataColumns.map((column) => (
+                                <td key={column.key} className="text-nowrap">
+                                  {formatCellValue(row[column.key])}
                                 </td>
                               ))}
                             </tr>
