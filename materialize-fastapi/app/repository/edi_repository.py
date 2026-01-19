@@ -6,6 +6,8 @@ from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
 from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
 from app.models.BaseDB2.eks_hostawb import EksHostAWB
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
+from app.models.BaseDB2.imp_hostawb import ImpHostAWB
+from app.models.BaseDB2.imp_masterwaybill import ImpMasterWaybill
 from app.models.BaseDB2.mst_customer import MstCustomer
 from app.models.BaseDB2.weighing_detail_model import EksWeighingDetail
 from app.models.BaseDB2.weighing_header_model import EksWeighingHeader
@@ -15,6 +17,8 @@ from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_hostawb import EksHostAWBOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.imp_hostawb import ImpHostAWBOut
+from app.schemas.imp_masterwaybill import ImpMasterWaybillOut
 from app.schemas.mst_customer_schema import CustomerOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.datatables_service import DataTablesService
@@ -382,6 +386,25 @@ class EdiRepository:
             agen=CustomerOut.model_validate(agen) if agen else None,
             shipper=CustomerOut.model_validate(shipper) if shipper else None,
         )
+
+    def get_imp_masterwaybill(self, mawb: str) -> ImpMasterWaybillOut | None:
+        master = (
+            self.db.query(ImpMasterWaybill)
+            .filter(ImpMasterWaybill.MasterAWB == mawb)
+            .first()
+        )
+        if not master:
+            return None
+        return ImpMasterWaybillOut.model_validate(master)
+
+    def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
+        host_awbs = (
+            self.db.query(ImpHostAWB)
+            .filter(ImpHostAWB.MasterAWB == mawb)
+            .order_by(ImpHostAWB.noid.asc())
+            .all()
+        )
+        return [ImpHostAWBOut.model_validate(item) for item in host_awbs]
 
     def get_buildup_mawb(self, buildup_number: str):
         """

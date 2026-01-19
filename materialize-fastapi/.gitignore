@@ -144,3 +144,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 logs/
+
+# Keep storage folders, ignore generated files
+/app/storage/public/pdf/*
+!/app/storage/public/pdf/.gitkeep
+/app/storage/public/excel/*
+!/app/storage/public/excel/.gitkeep

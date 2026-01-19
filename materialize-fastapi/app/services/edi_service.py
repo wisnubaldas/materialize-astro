@@ -8,6 +8,8 @@ from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_schema import FwbResponse
+from app.schemas.imp_hostawb import ImpHostAWBOut
+from app.schemas.imp_masterwaybill import ImpMasterWaybillOut
 from app.schemas.mst_customer_schema import CustomerOut
 from app.schemas.weighing_detail_schema import WeighingDetailOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
@@ -56,6 +58,12 @@ class EdiService:
 
     def parse_awb_mawb(self, mawb: str) -> AwbMawbResponse | None:
         return self.repository.get_awb_mawb(mawb)
+
+    def get_imp_masterwaybill(self, mawb: str) -> ImpMasterWaybillOut | None:
+        return self.repository.get_imp_masterwaybill(mawb)
+
+    def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
+        return self.repository.get_imp_hostawb(mawb)
 
     def fetch_data_buildup_mawb(self, buildup_number: str):
         return self.repository.get_buildup_mawb(buildup_number)

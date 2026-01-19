@@ -160,6 +160,10 @@ const menuEdi = [
         name: 'FFM',
         url: '/edi/ffm',
       },
+      {
+        name: 'FSU',
+        url: '/edi/fsu',
+      },
     ],
   },
 ];

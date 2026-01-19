@@ -4,6 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
+from app.dependencies.discrepancy_code_deps import get_discrepancy_code_service
 from app.dependencies.edi_deps import (
     get_buildup_mawb_service,
     get_buildup_service,
@@ -19,12 +20,15 @@ from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_schema import FwbResponse
+from app.schemas.imp_hostawb import ImpHostAWBOut
+from app.schemas.mst_discrepancy_code_schema import MstDiscrepancyCodeOut
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.datatables_service import DataTablesService
+from app.services.discrepancy_code_service import DiscrepancyCodeService
 from app.services.edi_service import EdiService
 
-router = APIRouter(prefix="/edi", tags=["Kirim Electronic data interchange"])
+router = APIRouter(prefix="/edi", tags=["Send Electronic data interchange (EDI)"])
 logger = logging.getLogger("edi")
 
 manifest_mawb_datatable_service = DataTablesService(
@@ -57,7 +61,7 @@ def export_cwp(
 
 @router.post(
     "/export-awb-mawb",
-    summary="data tables awb dan mawb",
+    summary="data tables awb and mawb export",
     response_model=DataTablesResponse[EksMasterWaybillOut],
 )
 def export_awb_mawb(
@@ -68,7 +72,7 @@ def export_awb_mawb(
 
 @router.post(
     "/manifest-mawb",
-    summary="grid data manifest MAWB",
+    summary="MAWB manifest data grid table",
     response_model=DataTablesResponse[ExpManifestMawbOut],
 )
 def manifest_mawb_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
@@ -88,7 +92,7 @@ def parse_fwb(awb: str, service: EdiService = Depends(get_weighing_header_servic
 
 @router.get(
     "/parse-awb-mawb/{mawb}",
-    summary="join MAWB dengan detail AWB dan customer",
+    summary="join MAWB with AWB and customer details",
     response_model=AwbMawbResponse,
 )
 def parse_awb_mawb(mawb: str, service: EdiService = Depends(get_masterwaybill_service)):
@@ -100,7 +104,7 @@ def parse_awb_mawb(mawb: str, service: EdiService = Depends(get_masterwaybill_se
 
 @router.get(
     "/export-buildup-mawb/{buildup_number}",
-    summary="Ambil data buildup relasi ke export_mawb untuk FFM",
+    summary="Retrieve relationship Buildup data into `export_mawb` for FFM system",
 )
 def export_buildup_mawb(
     buildup_number: str, service: EdiService = Depends(get_buildup_mawb_service)
@@ -113,7 +117,7 @@ def export_buildup_mawb(
 
 @router.post(
     "/send-email-edi",
-    summary="Kirim email Electronic Data Interchange",
+    summary="Send an Electronic Data Interchange email",
     response_model=ResponseSchema,
 )
 async def send_email_edi(params: FhlRequestBody, background_tasks: BackgroundTasks):
@@ -122,6 +126,65 @@ async def send_email_edi(params: FhlRequestBody, background_tasks: BackgroundTas
     )
     return {
         "status": 200,
-        "message": "Email EDI sedang dikirim",
+        "message": "EDI email is being sent",
         "data": None,
     }
+
+
+@router.get(
+    "/discrepancy-codes",
+    summary="List all discrepancy codes",
+    response_model=list[MstDiscrepancyCodeOut],
+)
+def list_discrepancy_codes(
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service),
+):
+    return service.list_all()
+
+
+@router.get(
+    "/import-masterwaybill/{mawb}",
+    summary="data import host awb by MasterAWB",
+    response_model=list[ImpHostAWBOut],
+)
+def get_imp_masterwaybill(
+    mawb: str, service: EdiService = Depends(get_masterwaybill_service)
+):
+    result = service.get_imp_hostawb(mawb)
+    if not result:
+        raise HTTPException(status_code=404, detail="Master AWB tidak ditemukan")
+    return result
+
+
+@router.get(
+    "/import-hostawb/{mawb}",
+    summary="data import host awb by MasterAWB",
+    response_model=list[ImpHostAWBOut],
+)
+def get_imp_hostawb(mawb: str, service: EdiService = Depends(get_masterwaybill_service)):
+    result = service.get_imp_hostawb(mawb)
+    if not result:
+        raise HTTPException(status_code=404, detail="Master AWB tidak ditemukan")
+    return result
+
+
+# EDI Status Codes:
+# FSU
+# - TFD (Transferred)
+# - DIS (Discrepancy)
+# - NFD (Notified)
+# - DLV (Delivered)
+
+
+# | Code    | Arti                  |
+# | ------- | --------------------- |
+# | **RCS** | Received from Shipper |
+# | **DEP** | Departed              |
+# | **ARR** | Arrived               |
+# | **RCF** | Received from Flight  |
+# | **TFD** | Transferred           |
+# | **DIS** | Discrepancy           |
+# | **NFD** | Notified              |
+# | **DLV** | Delivered             |
+# | **AWD** | Awaiting Delivery     |
+# | **CCD** | Customs Cleared       |

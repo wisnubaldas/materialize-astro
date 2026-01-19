@@ -230,6 +230,46 @@ export interface MasterWaybill {
   created_at?: string | null;
 }
 
+export interface ImpMasterWaybill {
+  MasterAWB: string;
+  Pieces?: number | null;
+  Weight?: number | null;
+  Volume?: number | null;
+  AirlinesCode?: string | null;
+  FlightNo?: string | null;
+  Origin?: string | null;
+  Destination?: string | null;
+  DateOfFight?: string | null;
+  KindOfGood?: string | null;
+  KindOfCode?: string | null;
+  HSCode?: string | null;
+  AgenCode?: string | null;
+  ShipperCode?: string | null;
+  ConsigneeCode?: string | null;
+  bc11?: string | null;
+  tglbc11?: string | null;
+  nopos?: string | null;
+  Multihost?: string | null;
+  Parsial?: string | null;
+  DateOfOut?: string | null;
+  TimeOut?: string | null;
+  DateOfIn?: string | null;
+  TimeIn?: string | null;
+  void?: boolean | number | null;
+  token?: string | null;
+  created_at?: string | null;
+}
+
+export interface ImpHostAwb {
+  noid: number;
+  MasterAWB?: string | null;
+  HostAWB?: string | null;
+  AgenCode?: string | null;
+  shippername?: string | null;
+  Consigneename?: string | null;
+  created_at?: string | null;
+}
+
 export interface HostAwb {
   noid: number;
   MasterAWB?: string | null;
@@ -292,6 +332,7 @@ export interface ParseBuildupMawbResponse {
   host_awbs: HostAwb[];
 }
 export const EDI_EXPORT_AWB_MAWB = '/edi/export-awb-mawb';
+export const EDI_IMPORT_MASTERWAYBILL_ENDPOINT = '/edi/import-masterwaybill';
 const ediClient = {
   exportBuildUp: (params: DataTableRequest) =>
     apiClient.post<DataTableResponse<BuildupHeader>>(EDI_EXPORT_BUILDUP_ENDPOINT, params),
@@ -305,6 +346,8 @@ const ediClient = {
     apiClient.get<ParseAwbMawbResponse>(`/edi/parse-awb-mawb/${mawb}`),
   parseBuildupMawb: (buildupNumber: string) =>
     apiClient.get<ParseBuildupMawbResponse>(`/edi/export-buildup-mawb/${buildupNumber}`),
+  getImportMasterwaybill: (mawb: string) =>
+    apiClient.get<ImpHostAwb[]>(`${EDI_IMPORT_MASTERWAYBILL_ENDPOINT}/${mawb}`),
   sendEmailEdi: (param: any) => apiClient.post('/edi/send-email-edi', param),
 };
 
