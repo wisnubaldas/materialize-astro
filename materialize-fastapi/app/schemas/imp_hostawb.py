@@ -54,6 +54,9 @@ class ImpHostAWBBase(BaseModel):
     token: str | None = None
     flag_in: int | None = None
     flag_out: int | None = None
+    RCF: bool | int | None = None
+    TFD: bool | int | None = None
+    DLV: bool | int | None = None
 
 
 class ImpHostAWBOut(ImpHostAWBBase):

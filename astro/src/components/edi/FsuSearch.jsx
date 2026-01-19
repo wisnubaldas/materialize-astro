@@ -25,6 +25,25 @@ const formatCellValue = (value) => {
 const getRowKey = (row, index) =>
   row.noid ?? `${row.MasterAWB ?? 'mawb'}-${row.HostAWB ?? 'hawb'}-${index}`;
 
+const buildDefaultStatuses = (rows) =>
+  rows.reduce((acc, row, index) => {
+    const rowKey = getRowKey(row, index);
+    const defaults = {};
+    if (row?.RCF) {
+      defaults.RCF = true;
+    }
+    if (row?.TFD) {
+      defaults.TFD = true;
+    }
+    if (row?.DLV) {
+      defaults.DLV = true;
+    }
+    if (Object.keys(defaults).length) {
+      acc[rowKey] = defaults;
+    }
+    return acc;
+  }, {});
+
 const normalizeMawb = (value) => {
   if (!value) return '';
   const text = String(value);
@@ -84,7 +103,6 @@ const buildFsuCargoImpMessage = (row, statuses) => {
     .trim()
     .toUpperCase();
 
-  console.log(row);
   const lines = [];
   lines.push('FSU/15');
   lines.push(`${mawb}${origin}${destination}/T${pieces}K${weight}`);
@@ -118,6 +136,7 @@ export default function FsuSearch() {
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatuses, setSelectedStatuses] = useState({});
+  const [expandedRows, setExpandedRows] = useState({});
 
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
@@ -125,6 +144,20 @@ export default function FsuSearch() {
   const shouldPaginate = data.length > PAGE_SIZE;
 
   const pagedData = useMemo(() => data.slice(pageStart, pageEnd), [data, pageStart, pageEnd]);
+  const visiblePages = useMemo(() => {
+    const maxButtons = 5;
+    if (totalPages <= maxButtons) {
+      return Array.from({ length: totalPages }, (_, idx) => idx + 1);
+    }
+    const half = Math.floor(maxButtons / 2);
+    let start = Math.max(1, currentPage - half);
+    let end = start + maxButtons - 1;
+    if (end > totalPages) {
+      end = totalPages;
+      start = end - maxButtons + 1;
+    }
+    return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
+  }, [currentPage, totalPages]);
   const fsuCargoImpSummary = useMemo(() => {
     const messages = data.reduce((acc, row, index) => {
       const rowKey = getRowKey(row, index);
@@ -161,6 +194,13 @@ export default function FsuSearch() {
         [rowKey]: updatedRow,
       };
     });
+  };
+
+  const handleToggleDetails = (rowKey) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [rowKey]: !prev[rowKey],
+    }));
   };
 
   const handleSendEmail = async () => {
@@ -206,6 +246,7 @@ export default function FsuSearch() {
       setHasSearched(false);
       setCurrentPage(1);
       setSelectedStatuses({});
+      setExpandedRows({});
       return;
     }
 
@@ -215,15 +256,19 @@ export default function FsuSearch() {
     setHasSearched(true);
     setCurrentPage(1);
     setSelectedStatuses({});
+    setExpandedRows({});
 
     try {
       const result = await ediClient.getImportMasterwaybill(encodeURIComponent(trimmed));
-      setData(Array.isArray(result) ? result : []);
+      const hostData = Array.isArray(result) ? result : [];
+      setData(hostData);
+      setSelectedStatuses(buildDefaultStatuses(hostData));
     } catch (err) {
       const message = err?.message ?? 'Gagal mengambil data host AWB.';
       showToast({ type: 'danger', title: 'FSU', message });
       setError(message);
       setData([]);
+      setExpandedRows({});
     } finally {
       setIsLoading(false);
     }
@@ -292,6 +337,7 @@ export default function FsuSearch() {
                   <table className="table table-sm table-striped align-middle">
                     <thead>
                       <tr>
+                        <th className="text-nowrap text-center">FSU</th>
                         {statusColumns.map((status) => (
                           <th key={status} className="text-nowrap text-center">
                             {status}
@@ -311,6 +357,7 @@ export default function FsuSearch() {
                         const selected = selectedStatuses[rowKey] ?? {};
                         const activeStatuses = statusColumns.filter((status) => selected[status]);
                         const hasDetails = activeStatuses.length > 0;
+                        const isExpanded = Boolean(expandedRows[rowKey]);
                         const safeRowKey = String(rowKey).replace(/[^a-zA-Z0-9_-]/g, '');
                         const impTabId = `fsu-imp-${safeRowKey}`;
                         const xmlTabId = `fsu-xml-${safeRowKey}`;
@@ -322,6 +369,16 @@ export default function FsuSearch() {
                         return (
                           <Fragment key={rowKey}>
                             <tr>
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-secondary"
+                                  onClick={() => handleToggleDetails(rowKey)}
+                                  disabled={!hasDetails}
+                                >
+                                  {isExpanded ? 'Hide' : 'Show'}
+                                </button>
+                              </td>
                               {statusColumns.map((status) => (
                                 <td key={status} className="text-center">
                                   <input
@@ -340,9 +397,9 @@ export default function FsuSearch() {
                                 </td>
                               ))}
                             </tr>
-                            {hasDetails ? (
+                            {hasDetails && isExpanded ? (
                               <tr>
-                                <td colSpan={dataColumns.length + statusColumns.length}>
+                                <td colSpan={dataColumns.length + statusColumns.length + 1}>
                                   <div className="nav-align-top">
                                     <ul className="nav nav-tabs" role="tablist">
                                       <li className="nav-item">
@@ -421,23 +478,20 @@ export default function FsuSearch() {
                             Prev
                           </button>
                         </li>
-                        {Array.from({ length: totalPages }, (_, idx) => {
-                          const page = idx + 1;
-                          return (
-                            <li
-                              key={page}
-                              className={`page-item ${page === currentPage ? 'active' : ''}`}
+                        {visiblePages.map((page) => (
+                          <li
+                            key={page}
+                            className={`page-item ${page === currentPage ? 'active' : ''}`}
+                          >
+                            <button
+                              className="page-link"
+                              type="button"
+                              onClick={() => handlePageChange(page)}
                             >
-                              <button
-                                className="page-link"
-                                type="button"
-                                onClick={() => handlePageChange(page)}
-                              >
-                                {page}
-                              </button>
-                            </li>
-                          );
-                        })}
+                              {page}
+                            </button>
+                          </li>
+                        ))}
                         <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                           <button
                             className="page-link"

@@ -267,6 +267,9 @@ export interface ImpHostAwb {
   AgenCode?: string | null;
   shippername?: string | null;
   Consigneename?: string | null;
+  RCF?: boolean | number | null;
+  TFD?: boolean | number | null;
+  DLV?: boolean | number | null;
   created_at?: string | null;
 }
 

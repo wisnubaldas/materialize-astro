@@ -1,4 +1,4 @@
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, bindparam, func, or_, text
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -6,6 +6,7 @@ from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
 from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
 from app.models.BaseDB2.eks_hostawb import EksHostAWB
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
+from app.models.BaseDB2.imp_breakdowndetail import ImpBreakdownDetail
 from app.models.BaseDB2.imp_hostawb import ImpHostAWB
 from app.models.BaseDB2.imp_masterwaybill import ImpMasterWaybill
 from app.models.BaseDB2.mst_customer import MstCustomer
@@ -184,7 +185,9 @@ class EdiRepository:
         if combined_filters:
             base_query = base_query.filter(and_(*combined_filters))
 
-        total_records = self.db.query(func.count(func.distinct(EksWeighingHeader.MasterAWB))).scalar()
+        total_records = self.db.query(
+            func.count(func.distinct(EksWeighingHeader.MasterAWB))
+        ).scalar()
         filtered_records = base_query.with_entities(
             func.count(func.distinct(EksWeighingHeader.MasterAWB))
         ).scalar()
@@ -261,9 +264,7 @@ class EdiRepository:
         header = rows[0][0]
         selected_proof = header.ProofNumber
         details = [
-            row[1]
-            for row in rows
-            if row[1] is not None and row[0].ProofNumber == selected_proof
+            row[1] for row in rows if row[1] is not None and row[0].ProofNumber == selected_proof
         ]
 
         header.shipper = rows[0][2]
@@ -388,22 +389,52 @@ class EdiRepository:
         )
 
     def get_imp_masterwaybill(self, mawb: str) -> ImpMasterWaybillOut | None:
-        master = (
-            self.db.query(ImpMasterWaybill)
-            .filter(ImpMasterWaybill.MasterAWB == mawb)
-            .first()
-        )
+        master = self.db.query(ImpMasterWaybill).filter(ImpMasterWaybill.MasterAWB == mawb).first()
         if not master:
             return None
         return ImpMasterWaybillOut.model_validate(master)
 
     def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
+        has_breakdown = (
+            self.db.query(ImpBreakdownDetail.noid)
+            .filter(ImpBreakdownDetail.MasterAWB == mawb)
+            .first()
+            is not None
+        )
+        has_obdetail = (
+            self.db.execute(
+                text("SELECT 1 FROM imp_obdetail WHERE MasterAWB = :mawb LIMIT 1"),
+                {"mawb": mawb},
+            ).first()
+            is not None
+        )
         host_awbs = (
             self.db.query(ImpHostAWB)
             .filter(ImpHostAWB.MasterAWB == mawb)
-            .order_by(ImpHostAWB.noid.asc())
+            .order_by(ImpHostAWB.created_at.asc())
             .all()
         )
+        delivered_hosts = set()
+        host_awb_codes = [item.HostAWB for item in host_awbs if item.HostAWB]
+        if host_awb_codes:
+            rows = self.db.execute(
+                text(
+                    "SELECT DISTINCT HostMawb FROM imp_deliorderdetail "
+                    "WHERE HostMawb IN :host_awbs"
+                ).bindparams(bindparam("host_awbs", expanding=True)),
+                {"host_awbs": host_awb_codes},
+            ).all()
+            delivered_hosts = {row[0] for row in rows if row and row[0]}
+        if has_breakdown:
+            for item in host_awbs:
+                item.RCF = True
+        if has_obdetail:
+            for item in host_awbs:
+                item.TFD = True
+        if delivered_hosts:
+            for item in host_awbs:
+                if item.HostAWB in delivered_hosts:
+                    item.DLV = True
         return [ImpHostAWBOut.model_validate(item) for item in host_awbs]
 
     def get_buildup_mawb(self, buildup_number: str):
