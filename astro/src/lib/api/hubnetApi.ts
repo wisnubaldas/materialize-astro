@@ -1,14 +1,10 @@
 import { apiClient } from './client';
-interface paggingDataTerkirim {
-  flt_date?: string;
-  page?: number;
-  per_page?: number;
-}
+import type { PaggingDataTerkirim } from './types/hubnet';
 export const hubnetApi = {
   // Return the resolved payload so callers can consume the dashboard data.
   sendingPerbulan: (bulan:string) => apiClient.get(`/hubnet/sending-per-bulan/${bulan}`),
   // Forward params as query string (?page=1&per_page=10...)
-  getDataTerkirim: (params: paggingDataTerkirim) =>
+  getDataTerkirim: (params: PaggingDataTerkirim) =>
     apiClient.get('/hubnet/get-data-terkirim/', { params: params as Record<string, any> }),
   postDataTable: () => {
     return '/hubnet/data-terkirim';

@@ -25,6 +25,36 @@ There's nothing special about `src/components/`, but that's where we like to put
 
 Any static assets, like images, can be placed in the `public/` directory.
 
+## Project Structure (Current)
+
+Key folders used in this Astro app:
+
+```text
+astro/
+  public/
+  src/
+    components/
+    fonts/
+    js/
+    layouts/
+    lib/
+      api/
+        client.ts
+        edi.ts
+        hubnetApi.ts
+        sse.ts
+        warehouse.ts
+        types/
+          client.ts
+          datatable.ts
+          edi.ts
+          hubnet.ts
+          warehouse.ts
+    pages/
+    scss/
+    vendor/
+```
+
 ## 🧞 Commands
 
 All commands are run from the root of the project, from a terminal:

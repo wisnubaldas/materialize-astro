@@ -1,6 +1,7 @@
 import formatFhlMessage from '@components/edi/fhlGenerator';
 import Spinner from '@components/parsial/Spinner';
 import ediClient from '@lib/api/edi';
+import { showToast } from '@js/utils';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
@@ -28,13 +29,19 @@ export default function SendEmailFhl({ slug }) {
       //   console.log(email);
       //   console.log(message);
       //   console.log(dataAjax);
-      const response = await ediClient.sendEmailEdi({
-        email: email,
-        message: message,
-        data: dataAjax,
-        edi: 'FHL',
-      });
-      console.log('response nya', response);
+      try {
+        const response = await ediClient.sendEmailEdi({
+          email: email,
+          message: message,
+          data: dataAjax,
+          edi: 'FHL',
+        });
+        showToast({ type: 'success', title: 'FHL', message: 'Email FHL berhasil dikirim.' });
+        console.log('response nya', response);
+      } catch (err) {
+        const toastMessage = err?.message ?? 'Gagal mengirim email FHL.';
+        showToast({ type: 'danger', title: 'FHL', message: toastMessage });
+      }
     }
   };
   useEffect(() => {

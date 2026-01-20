@@ -2,6 +2,7 @@ import GridData from '@components/GridData';
 import formatFfmMessage from '@components/edi/ffmGenerator';
 import ediClient from '@lib/api/edi';
 import warehouseClient from '@lib/api/warehouse';
+import { showToast } from '@js/utils';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
@@ -114,13 +115,19 @@ export default function SendEmailFfm({ slug }) {
       console.log(email);
       console.log(message);
       console.log(dataAjax);
-      const response = await ediClient.sendEmailEdi({
-        email: email,
-        message: message,
-        data: dataAjax,
-        edi: 'FFM',
-      });
-      console.log('response nya', response);
+      try {
+        const response = await ediClient.sendEmailEdi({
+          email: email,
+          message: message,
+          data: dataAjax,
+          edi: 'FFM',
+        });
+        showToast({ type: 'success', title: 'FFM', message: 'Email FFM berhasil dikirim.' });
+        console.log('response nya', response);
+      } catch (err) {
+        const toastMessage = err?.message ?? 'Gagal mengirim email FFM.';
+        showToast({ type: 'danger', title: 'FFM', message: toastMessage });
+      }
     }
   };
 

@@ -1,4 +1,5 @@
 import ediClient from '@lib/api/edi';
+import { showToast } from '@js/utils';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import formatFwbMessage from './fwbGenerator';
@@ -38,13 +39,19 @@ export default function SendEmailFwb({ slug }) {
       //   Swal.fire(`Entered email: ${email}`);
       console.log(email);
       console.log(message);
-      const response = await ediClient.sendEmailEdi({
-        email: email,
-        message: message,
-        data: sendData,
-        edi: 'FWB',
-      });
-      console.log('response nya', response);
+      try {
+        const response = await ediClient.sendEmailEdi({
+          email: email,
+          message: message,
+          data: sendData,
+          edi: 'FWB',
+        });
+        showToast({ type: 'success', title: 'FWB', message: 'Email FWB berhasil dikirim.' });
+        console.log('response nya', response);
+      } catch (err) {
+        const toastMessage = err?.message ?? 'Gagal mengirim email FWB.';
+        showToast({ type: 'danger', title: 'FWB', message: toastMessage });
+      }
     }
   };
 

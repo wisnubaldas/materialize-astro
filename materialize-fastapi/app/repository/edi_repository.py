@@ -396,9 +396,7 @@ class EdiRepository:
 
     def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
         has_breakdown = (
-            self.db.query(ImpBreakdownDetail.noid)
-            .filter(ImpBreakdownDetail.MasterAWB == mawb)
-            .first()
+            self.db.query(ImpBreakdownDetail).filter(ImpBreakdownDetail.MasterAWB == mawb).first()
             is not None
         )
         has_obdetail = (
@@ -428,6 +426,8 @@ class EdiRepository:
         if has_breakdown:
             for item in host_awbs:
                 item.RCF = True
+                item.DateEntry = has_breakdown.DateOfBreakdown  # "2025-01-01"
+                item.TimeEntry = has_breakdown.TimeOfBreakdown  # "08:56:01"
         if has_obdetail:
             for item in host_awbs:
                 item.TFD = True

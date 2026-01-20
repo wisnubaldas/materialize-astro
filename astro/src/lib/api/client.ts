@@ -1,4 +1,5 @@
 import { getAccessToken } from '@js/auth.js';
+import type { ApiRequestOptions, QueryParamValue, SseRequestOptions } from './types/client';
 
 // ==== Konfigurasi dasar =====
 
@@ -16,22 +17,6 @@ const API_BASE_URL = rawBackendBaseUrl.replace(/\/+$/, '');
 
 // Tipe utilitas untuk method dan query.
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-
-type QueryParamValue = string | number | boolean | null | undefined;
-
-// Konfigurasi tambahan yang boleh dipassing di setiap request.
-export interface ApiRequestOptions extends Omit<RequestInit, 'method' | 'body'> {
-  params?: Record<string, QueryParamValue>;
-  raw?: boolean;
-  token?: string | null;
-  body?: unknown;
-}
-
-export interface SseRequestOptions {
-  params?: Record<string, QueryParamValue>;
-  withCredentials?: boolean;
-  signal?: AbortSignal;
-}
 
 // ==== Helper pemeriksaan tipe body ====
 const isFormData = (value: unknown): value is FormData =>
@@ -253,3 +238,4 @@ export const apiClient = {
 
 // Ekspos base URL agar bisa dipakai di tempat lain bila perlu.
 export { API_BASE_URL };
+export type { ApiRequestOptions, SseRequestOptions } from './types/client';
