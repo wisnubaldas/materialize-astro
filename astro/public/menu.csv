@@ -1,0 +1,36 @@
+menu_group,level,name,url,icon,parent
+1,1,Landing Page,/,ri ri-home-smile-line,
+1,1,Setting,/setting,ri ri-settings-3-line,
+1,2,User Management,/setting/user-management,,Setting
+1,2,Role Management,/setting/role-management,,Setting
+1,2,Airlines Management,/setting/airlines-management,,Setting
+1,2,Logging,/hub-net/logging,,Setting
+3,1,Angkasapura,javascript:void(0),ri ri-flight-takeoff-line,
+3,2,Data Invoice,/angkasapura/data-invoice,,Angkasapura
+3,2,Void Invoice,/angkasapura/void-invoice,,Angkasapura
+3,2,Send Invoice,javascript:void(0),,Angkasapura
+3,2,Status Response,javascript:void(0),,Angkasapura
+2,1,HUB NET,javascript:void(0),ri ri-bus-2-fill,
+2,2,Dashboard,/hub-net/dashboard,,HUB NET
+2,2,Data Tracking,/hub-net/data-tracking,,HUB NET
+2,2,Upload Excel Export,/hub-net/upload-excel-sending-export,,HUB NET
+2,2,Upload Excel Outgoing,/hub-net/upload-excel-outgoing,,HUB NET
+2,2,Report Data Sending,/hub-net/report,,HUB NET
+4,1,TPS,javascript:void(0),ri ri-community-fill,
+4,2,Master,javascript:void(0),,TPS
+4,3,Master Airlines,javascript:void(0),,Master
+4,3,Master Flight,javascript:void(0),,Master
+4,2,TPS Online,javascript:void(0),,TPS
+4,3,Gate In,javascript:void(0),,TPS Online
+4,3,Gate Out,javascript:void(0),,TPS Online
+4,3,Unmanifest,javascript:void(0),,TPS Online
+4,2,PLP Online,javascript:void(0),,TPS
+4,2,Document,javascript:void(0),,TPS
+4,2,Report,javascript:void(0),,TPS
+5,1,EDI,javascript:void(0),ri ri-barcode-line,
+5,2,FHL,/edi/fhl,,EDI
+5,2,FWB,/edi/fwb,,EDI
+5,2,FFM,/edi/ffm,,EDI
+5,2,FSU,/edi/fsu,,EDI
+5,1,Warehouse,javascript:void(0),ri ri-home-office-fill,
+5,2,Buildup,/warehouse/buildup,,Warehouse

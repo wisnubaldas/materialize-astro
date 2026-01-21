@@ -1,0 +1,14 @@
+---
+import UserManagement from '@components/setting/UserManagement.jsx';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout title="Setting | User Management" description="User and password management">
+  <div class="row-auto">
+    <div class="row g-6">
+      <div class="col-12">
+        <UserManagement client:only />
+      </div>
+    </div>
+  </div>
+</AdminLayout>

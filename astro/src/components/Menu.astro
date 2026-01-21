@@ -1,28 +1,15 @@
 ---
-import {
-  menuAdmin,
-  menuAp2,
-  menuEdi,
-  menuHubnet,
-  menuTpsOnline,
-  menuWarehouse,
-} from './MenuData.js';
+import { AUTH_COOKIE_NAME } from '@lib/auth/config';
+import { filterMenuByName, getMenuData } from './MenuData.js';
 
-// validasi menu yang di butuhkan
-// nanti ini bisa jadi RBAC untuk frontend
 const user = Astro.locals as any;
-let menuData;
+const token = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
+const menuSource = await getMenuData({ token });
+let menuData = menuSource;
+
 if (user.user?.username === 'hubnet@mitraadira.com') {
-  menuData = menuHubnet;
-} else {
-  menuData = [
-    ...menuAdmin,
-    ...menuAp2,
-    ...menuHubnet,
-    ...menuEdi,
-    ...menuTpsOnline,
-    ...menuWarehouse,
-  ];
+  const filtered = filterMenuByName(menuSource, 'hub');
+  menuData = filtered.length > 0 ? filtered : menuSource;
 }
 
 const currentPath = Astro.url?.pathname ?? '/';

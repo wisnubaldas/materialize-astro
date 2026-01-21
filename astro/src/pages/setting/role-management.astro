@@ -1,0 +1,14 @@
+---
+import RoleManagement from '@components/setting/RoleManagement.jsx';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout title="Setting | Role Management" description="Role and menu permissions">
+  <div class="row-auto">
+    <div class="row g-6">
+      <div class="col-12">
+        <RoleManagement client:only />
+      </div>
+    </div>
+  </div>
+</AdminLayout>
