@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginSchema(BaseModel):
@@ -9,3 +9,10 @@ class LoginSchema(BaseModel):
 class TokenSchema(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserProfileSchema(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    roles: list[str] = Field(default_factory=list)

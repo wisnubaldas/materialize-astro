@@ -1,8 +1,10 @@
 ---
-import Menu from '@components/Menu.astro';
-import Nav from '@components/Nav.astro';
+import Menu from '@components/Menu.jsx';
+import { filterMenuByName, getMenuData } from '@components/MenuData.js';
+import Nav from '@components/Nav.jsx';
 import { ToasterProvider } from '@components/ToasterProvider.jsx';
 import VendorLoader from '@components/VendorLoader.jsx';
+import { AUTH_COOKIE_NAME } from '@lib/auth/config';
 import { ensureAuthenticated } from '@lib/auth/server-guard';
 import '@scss/core.scss';
 import favicon from '@vendor/favicon.ico?url';
@@ -14,6 +16,20 @@ const { title = 'MAU APP', description = 'Frontend SSR project powered by Astro 
   Astro.props;
 
 ensureAuthenticated(Astro);
+
+const user = Astro.locals as any;
+console.log(user);
+const username = user.user?.username ?? '';
+const token = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
+const menuSource = await getMenuData({ token });
+let menuData = menuSource;
+
+if (user.user?.username === 'hubnet@mitraadira.com') {
+  const filtered = filterMenuByName(menuSource, 'hub');
+  menuData = filtered.length > 0 ? filtered : menuSource;
+}
+
+const currentPath = Astro.url?.pathname ?? '/';
 ---
 
 <!doctype html>
@@ -49,7 +65,7 @@ ensureAuthenticated(Astro);
     <ToasterProvider client:load>
       <div class="layout-wrapper layout-content-navbar">
         <div class="layout-container">
-          <Menu />
+          <Menu menuData={menuData} currentPath={currentPath} />
           <VendorLoader client:load />
 
           <div class="menu-mobile-toggler d-xl-none rounded-1">
@@ -63,7 +79,7 @@ ensureAuthenticated(Astro);
           </div>
 
           <div class="layout-page">
-            <Nav />
+            <Nav client:load username={username} />
             <div style="min-height: 600px;">
               <slot />
             </div>

@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPBearer
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
+from app.models.BaseDB1.role import Role
 from app.models.BaseDB1.user import User
-from app.schemas.user_schema import LoginSchema, TokenSchema
+from app.models.BaseDB1.user_role import UserRole
+from app.schemas.user_schema import LoginSchema, TokenSchema, UserProfileSchema
 from app.utils.auth_util import create_token, set_jwt_cookie, verify_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -23,6 +26,37 @@ def login(payload: LoginSchema, response: Response, db: Session = Depends(get_db
     token = create_token(user.email)  # type: ignore
     set_jwt_cookie(response, token)
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserProfileSchema)
+def get_profile(request: Request, db: Session = Depends(get_db1_r)):
+    subject = request.scope.get("user", {}).get("username")
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    user = (
+        db.query(User)
+        .filter(or_(User.email == subject, User.username == subject))
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User tidak ditemukan")
+
+    roles = (
+        db.query(Role.role_name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user.id)
+        .order_by(Role.role_name.asc())
+        .all()
+    )
+    role_names = [item.role_name for item in roles]
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "roles": role_names,
+    }
 
 
 # @router.get("/verify")

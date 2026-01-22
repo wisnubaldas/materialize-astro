@@ -23,7 +23,9 @@ export type UserPasswordPayload = {
 export type Role = {
   id: number;
   role_name: string;
+  active?: boolean;
   created_at?: string;
+  updated_at?: string;
 };
 
 export type RoleCreatePayload = {

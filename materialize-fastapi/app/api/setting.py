@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
 from app.models.BaseDB1.menu import Menu
+from app.models.BaseDB1.role import Role
 from app.models.BaseDB1.user import User
 from app.models.BaseDB1.user_role import UserRole
 from app.schemas.setting_schema import (
@@ -14,6 +15,7 @@ from app.schemas.setting_schema import (
     RoleCreate,
     RoleOut,
     RoleUpdate,
+    UserRolesUpdate,
     UserCreate,
     UserOut,
     UserPasswordUpdate,
@@ -147,14 +149,64 @@ def delete_user(user_id: int, db: Session = Depends(get_db1_w)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
+    db.query(UserRole).filter(UserRole.user_id == user_id).delete()
     db.delete(user)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.get("/users/{user_id}/roles", response_model=list[RoleOut], summary="List user roles")
+def list_user_roles(user_id: int, db: Session = Depends(get_db1_r)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    return (
+        db.query(Role)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user_id)
+        .order_by(Role.role_name.asc())
+        .all()
+    )
+
+
+@router.put(
+    "/users/{user_id}/roles",
+    response_model=list[RoleOut],
+    summary="Update user roles",
+)
+def update_user_roles(
+    user_id: int,
+    payload: UserRolesUpdate,
+    db: Session = Depends(get_db1_w),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    role_ids = list({int(role_id) for role_id in payload.role_ids if role_id is not None})
+    if role_ids:
+        roles_count = db.query(Role).filter(Role.id.in_(role_ids)).count()
+        if roles_count != len(role_ids):
+            raise HTTPException(status_code=404, detail="Role tidak ditemukan")
+
+    db.query(UserRole).filter(UserRole.user_id == user_id).delete()
+    for role_id in role_ids:
+        db.add(UserRole(user_id=user_id, role_id=role_id))
+
+    db.commit()
+
+    if not role_ids:
+        return []
+
+    return (
+        db.query(Role).filter(Role.id.in_(role_ids)).order_by(Role.role_name.asc()).all()
+    )
+
+
 @router.get("/roles", response_model=list[RoleOut], summary="List roles")
 def list_roles(db: Session = Depends(get_db1_r)):
-    return db.query(UserRole).order_by(UserRole.id.asc()).all()
+    return db.query(Role).order_by(Role.id.asc()).all()
 
 
 @router.post(
@@ -165,11 +217,11 @@ def list_roles(db: Session = Depends(get_db1_r)):
 )
 def create_role(payload: RoleCreate, db: Session = Depends(get_db1_w)):
     role_name = payload.role_name.strip()
-    existing = db.query(UserRole).filter(UserRole.role_name == role_name).first()
+    existing = db.query(Role).filter(Role.role_name == role_name).first()
     if existing:
         raise HTTPException(status_code=409, detail="Role sudah digunakan")
 
-    role = UserRole(role_name=role_name)
+    role = Role(role_name=role_name)
     db.add(role)
     db.commit()
     db.refresh(role)
@@ -178,7 +230,7 @@ def create_role(payload: RoleCreate, db: Session = Depends(get_db1_w)):
 
 @router.put("/roles/{role_id}", response_model=RoleOut, summary="Update role")
 def update_role(role_id: int, payload: RoleUpdate, db: Session = Depends(get_db1_w)):
-    role = db.query(UserRole).filter(UserRole.id == role_id).first()
+    role = db.query(Role).filter(Role.id == role_id).first()
     if not role:
         raise HTTPException(status_code=404, detail="Role tidak ditemukan")
 
@@ -187,8 +239,7 @@ def update_role(role_id: int, payload: RoleUpdate, db: Session = Depends(get_db1
         role_name = data["role_name"].strip()
         if role_name != role.role_name:
             existing = (
-                db.query(UserRole)
-                .filter(UserRole.role_name == role_name, UserRole.id != role_id)
+                db.query(Role).filter(Role.role_name == role_name, Role.id != role_id)
                 .first()
             )
             if existing:
@@ -204,11 +255,12 @@ def update_role(role_id: int, payload: RoleUpdate, db: Session = Depends(get_db1
     "/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete role"
 )
 def delete_role(role_id: int, db: Session = Depends(get_db1_w)):
-    role = db.query(UserRole).filter(UserRole.id == role_id).first()
+    role = db.query(Role).filter(Role.id == role_id).first()
     if not role:
         raise HTTPException(status_code=404, detail="Role tidak ditemukan")
 
     db.query(Menu).filter(Menu.role_id == role_id).update({Menu.role_id: None})
+    db.query(UserRole).filter(UserRole.role_id == role_id).delete()
     db.delete(role)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -248,7 +300,7 @@ def list_menu_tree(
 )
 def create_menu(payload: MenuCreate, db: Session = Depends(get_db1_w)):
     if payload.role_id is not None:
-        role = db.query(UserRole).filter(UserRole.id == payload.role_id).first()
+        role = db.query(Role).filter(Role.id == payload.role_id).first()
         if not role:
             raise HTTPException(status_code=404, detail="Role tidak ditemukan")
 
@@ -280,7 +332,7 @@ def update_menu(menu_id: int, payload: MenuUpdate, db: Session = Depends(get_db1
     if "role_id" in data:
         role_id = data["role_id"]
         if role_id is not None:
-            role = db.query(UserRole).filter(UserRole.id == role_id).first()
+            role = db.query(Role).filter(Role.id == role_id).first()
             if not role:
                 raise HTTPException(status_code=404, detail="Role tidak ditemukan")
         menu.role_id = role_id

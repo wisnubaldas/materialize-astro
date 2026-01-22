@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, TIMESTAMP
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.db.mysql import BaseDB1
 
@@ -12,3 +14,7 @@ class User(BaseDB1):
     password = Column(String(255), nullable=False)
     token = Column(String(255), nullable=True)
     refresh_token = Column(String(255), nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+    user_roles = relationship("UserRole", back_populates="user")

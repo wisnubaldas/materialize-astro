@@ -44,9 +44,15 @@ class RoleUpdate(BaseModel):
 
 class RoleOut(RoleBase):
     id: int
+    active: bool | None = None
     created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class UserRolesUpdate(BaseModel):
+    role_ids: list[int] = Field(default_factory=list)
 
 
 class MenuBase(BaseModel):

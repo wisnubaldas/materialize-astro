@@ -13,7 +13,7 @@ class Menu(BaseDB1):
     icon = Column(String(100), nullable=False)
     parent = Column(Integer, nullable=False, default=0, index=True)
     url = Column(Text, nullable=False)
-    role_id = Column(Integer, ForeignKey("user_roles.id"), index=True, nullable=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), index=True, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
-    role = relationship("UserRole", back_populates="menus")
+    role = relationship("Role", back_populates="menus")

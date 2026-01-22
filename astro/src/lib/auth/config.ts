@@ -12,7 +12,10 @@ export const AUTH_COOKIE_NAME = 'access_token';
 
 export const AUTH_ENDPOINTS = {
   login: `${AUTH_API_BASE_URL}/auth/login`,
+  me: `${AUTH_API_BASE_URL}/auth/me`,
 } as const;
+
+export { AUTH_API_BASE_URL };
 
 export const AUTH_COOKIE_MAX_AGE = {
   default: 60 * 60 * 2, // 2 hours

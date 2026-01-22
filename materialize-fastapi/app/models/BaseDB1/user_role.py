@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP
+from sqlalchemy import Column, ForeignKey, Integer, TIMESTAMP, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -7,9 +7,19 @@ from app.db.mysql import BaseDB1
 
 class UserRole(BaseDB1):
     __tablename__ = "user_roles"
+    __table_args__ = (UniqueConstraint("user_id", "roles_id", name="uq_user_role"),)
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    role_name = Column(String(100), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    role_id = Column(
+        "roles_id",
+        Integer,
+        ForeignKey("roles.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
     created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
-    menus = relationship("Menu", back_populates="role")
+    user = relationship("User", back_populates="user_roles")
+    role = relationship("Role", back_populates="user_roles")
