@@ -5,10 +5,37 @@ const clearStorageAndCookies = () => {
   localStorage.clear();
   sessionStorage.clear();
 
-  document.cookie.split(';').forEach((cookie) => {
-    document.cookie = cookie
-      .replace(/^ +/, '')
-      .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
+  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+  const hostname = window.location.hostname;
+  const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+  const canUseDomain = hostname !== 'localhost' && !isIpHost;
+  const domainCandidates = new Set();
+
+  if (canUseDomain) {
+    const parts = hostname.split('.');
+    for (let i = 0; i <= parts.length - 2; i += 1) {
+      const candidate = parts.slice(i).join('.');
+      if (candidate.includes('.')) {
+        domainCandidates.add(candidate);
+      }
+    }
+  }
+
+  const expireCookie = (name, domain) => {
+    const domainFlag = domain ? `; Domain=${domain}` : '';
+    document.cookie = `${name}=; Path=/; Max-Age=0${domainFlag}${secureFlag}`;
+  };
+
+  const cookies = document.cookie
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .filter(Boolean);
+
+  const names = new Set(cookies.map((cookie) => cookie.split('=')[0]));
+
+  names.forEach((name) => {
+    expireCookie(name);
+    domainCandidates.forEach((domain) => expireCookie(name, domain));
   });
 };
 
