@@ -7,7 +7,7 @@ from starlette.requests import Request
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
-EXCLUDED_PATHS = ["/", "/auth/login", "/login", "/docs", "/openapi.json", "/favicon.ico"]
+EXCLUDED_PATHS = ["/", "/auth/login", "/auth/logout", "/login", "/docs", "/openapi.json", "/favicon.ico"]
 
 EXCLUDED_PATH_PREFIXES = ("/assets", "/pdf", "/excel")
 
