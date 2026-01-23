@@ -116,8 +116,18 @@ async function login(payload) {
 /**
  * Logout dari aplikasi.
  */
-function logout() {
+async function logout() {
   clearAuthCookie();
+  try {
+    await fetch(AUTH_ENDPOINTS.logout, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch (error) {
+    console.warn('[auth] logout gagal:', error);
+  } finally {
+    clearAuthCookie();
+  }
 }
 
 export { AUTH_ERRORS, clearAuthCookie, getAccessToken, login, logout, sha256 };

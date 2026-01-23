@@ -13,6 +13,7 @@ export const AUTH_COOKIE_NAME = 'access_token';
 export const AUTH_ENDPOINTS = {
   login: `${AUTH_API_BASE_URL}/auth/login`,
   me: `${AUTH_API_BASE_URL}/auth/me`,
+  logout: `${AUTH_API_BASE_URL}/auth/logout`,
 } as const;
 
 export { AUTH_API_BASE_URL };

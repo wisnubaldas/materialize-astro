@@ -1,4 +1,5 @@
 import React from 'react';
+import { logout } from '../js/auth.js';
 
 const clearStorageAndCookies = () => {
   localStorage.clear();
@@ -13,10 +14,11 @@ const clearStorageAndCookies = () => {
 
 const Nav = ({ username = '' }) => {
   const displayName = typeof username === 'string' ? username.trim() || 'User' : 'User';
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
     clearStorageAndCookies();
-    window.location.href = '/auth/login';
+    await logout();
+    window.location.replace('/auth/login');
   };
 
   return (

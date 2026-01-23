@@ -37,10 +37,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def set_jwt_cookie(response: Response, token: str):
-    """
-    Set cookie JWT secara aman dengan environment-aware.
-    """
+def _resolve_auth_cookie_settings():
     env_domain = (ENV.AUTH_COOKIE_DOMAIN or "").strip() if ENV.AUTH_COOKIE_DOMAIN else None
     domain = env_domain if env_domain else (".mitraadira.com" if ENV.APP_ENV == "production" else None)
 
@@ -48,23 +45,48 @@ def set_jwt_cookie(response: Response, token: str):
     default_same_site = "none" if ENV.APP_ENV == "production" else "lax"
     same_site = raw_same_site if raw_same_site in {"lax", "strict", "none"} else default_same_site
 
-    # default secure flag
     if ENV.AUTH_COOKIE_SECURE is None:
         secure = ENV.APP_ENV == "production"
     else:
         secure = bool(ENV.AUTH_COOKIE_SECURE)
 
-    # SameSite=None mensyaratkan Secure=True
     if same_site == "none":
         secure = True
 
+    return {
+        "domain": domain,
+        "same_site": same_site,
+        "secure": secure,
+    }
+
+
+def set_jwt_cookie(response: Response, token: str):
+    """
+    Set cookie JWT secara aman dengan environment-aware.
+    """
+    settings = _resolve_auth_cookie_settings()
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
-        secure=secure,
-        samesite=same_site,  # type: ignore[arg-type]
-        domain=domain,  # type: ignore[arg-type]
+        secure=settings["secure"],
+        samesite=settings["same_site"],  # type: ignore[arg-type]
+        domain=settings["domain"],  # type: ignore[arg-type]
         max_age=60 * 60 * 24,  # 1 hari
+        path="/",
+    )
+
+
+def clear_jwt_cookie(response: Response):
+    settings = _resolve_auth_cookie_settings()
+    response.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        secure=settings["secure"],
+        samesite=settings["same_site"],  # type: ignore[arg-type]
+        domain=settings["domain"],  # type: ignore[arg-type]
+        max_age=0,
+        expires=0,
         path="/",
     )

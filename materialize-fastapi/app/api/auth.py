@@ -8,7 +8,7 @@ from app.models.BaseDB1.role import Role
 from app.models.BaseDB1.user import User
 from app.models.BaseDB1.user_role import UserRole
 from app.schemas.user_schema import LoginSchema, TokenSchema, UserProfileSchema
-from app.utils.auth_util import create_token, set_jwt_cookie, verify_password
+from app.utils.auth_util import clear_jwt_cookie, create_token, set_jwt_cookie, verify_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
@@ -57,6 +57,13 @@ def get_profile(request: Request, db: Session = Depends(get_db1_r)):
         "email": user.email,
         "roles": role_names,
     }
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout():
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    clear_jwt_cookie(response)
+    return response
 
 
 # @router.get("/verify")
