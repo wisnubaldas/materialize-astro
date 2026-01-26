@@ -395,10 +395,12 @@ class EdiRepository:
         return ImpMasterWaybillOut.model_validate(master)
 
     def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
-        has_breakdown = (
-            self.db.query(ImpBreakdownDetail).filter(ImpBreakdownDetail.MasterAWB == mawb).first()
-            is not None
+        breakdown = (
+            self.db.query(ImpBreakdownDetail)
+            .filter(ImpBreakdownDetail.MasterAWB == mawb)
+            .first()
         )
+        has_breakdown = breakdown is not None
         has_obdetail = (
             self.db.execute(
                 text("SELECT 1 FROM imp_obdetail WHERE MasterAWB = :mawb LIMIT 1"),
@@ -426,8 +428,8 @@ class EdiRepository:
         if has_breakdown:
             for item in host_awbs:
                 item.RCF = True
-                item.DateEntry = has_breakdown.DateOfBreakdown  # "2025-01-01"
-                item.TimeEntry = has_breakdown.TimeOfBreakdown  # "08:56:01"
+                item.DateEntry = breakdown.DateOfBreakdown  # "2025-01-01"
+                item.TimeEntry = breakdown.TimeOfBreakdown  # "08:56:01"
         if has_obdetail:
             for item in host_awbs:
                 item.TFD = True
