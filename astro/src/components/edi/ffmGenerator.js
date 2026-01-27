@@ -7,6 +7,14 @@ const normalizeText = (value) => {
 
 const toUpper = (value) => normalizeText(value).toUpperCase();
 
+const sanitizeSegmentText = (value) => {
+  if (!value) return '';
+  return normalizeText(value)
+    .replace(/^ADR\//i, '')
+    .replace(/^[\/\\]+/, '')
+    .trim();
+};
+
 const formatMawb = (mawb) => {
   const clean = normalizeText(mawb).replace(/[^a-zA-Z0-9]/g, '');
   if (!clean) return '';
@@ -90,7 +98,7 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
         ]
           .filter(Boolean)
           .join('');
-        const remarks = toUpper(normalizeText(item?.remarks));
+        const remarks = toUpper(sanitizeSegmentText(item?.remarks));
         const uldLine = remarks ? `ULD/${uldId}/${remarks}` : `ULD/${uldId}`;
         lines.push(uldLine);
         currentUldKey = uldKey;
@@ -124,7 +132,7 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
       const volumeVal = selectFirst(item?.volume, item?.Volume);
       const volume = volumeVal ? `MC${formatNumber(volumeVal, 2)}` : '';
       const goods = toUpper(
-        selectFirst(item?.nature_of_goods, item?.KindOfGood, 'GENERAL CARGO')
+        sanitizeSegmentText(selectFirst(item?.nature_of_goods, item?.KindOfGood, 'GENERAL CARGO'))
       );
       const flightSegment = `${mawb}${segmentOrigin}${segmentDestination}`;
       const segment = [flightSegment, `T${pieces}K${weight}`, volume, goods]
@@ -163,7 +171,9 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
     const weight = formatNumber(selectFirst(item.Netto, item.PartNetto, master.Weight, 0), 1);
     const volumeVal = selectFirst(item.Volume, master.Volume);
     const volume = volumeVal ? `MC${formatNumber(volumeVal, 2)}` : '';
-    const goods = toUpper(selectFirst(item.KindOfGood, master.KindOfGood, 'GENERAL CARGO'));
+    const goods = toUpper(
+      sanitizeSegmentText(selectFirst(item.KindOfGood, master.KindOfGood, 'GENERAL CARGO'))
+    );
     const flightSegment = `${mawb}${origin}${destination}`;
     const segment = [flightSegment, `T${pieces}K${weight}`, volume, goods]
       .filter(Boolean)

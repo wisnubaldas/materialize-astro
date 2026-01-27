@@ -7,6 +7,100 @@ const normalizeText = (value) => {
 
 const toUpper = (value) => normalizeText(value).toUpperCase();
 
+const ADDRESS_LINE_LIMIT = 35;
+
+const normalizeAddressLine = (value) => {
+  if (!value) return '';
+  const cleaned = toUpper(value)
+    .replace(/\s*-\s*/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned
+    .replace(/^ADR\//, '')
+    .replace(/^\/+/, '')
+    .replace(/^\\+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const stripAdminTokens = (value) =>
+  value
+    .replace(/\b(KEC|KEL)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const splitByLength = (text, limit) => {
+  if (!text) return ['', ''];
+  if (text.length <= limit) return [text, ''];
+
+  const words = text.split(' ');
+  let line = '';
+  let index = 0;
+
+  for (; index < words.length; index += 1) {
+    const next = line ? `${line} ${words[index]}` : words[index];
+    if (next.length > limit) break;
+    line = next;
+  }
+
+  if (!line) {
+    return [text.slice(0, limit), text.slice(limit).trim()];
+  }
+
+  return [line, words.slice(index).join(' ').trim()];
+};
+
+const buildAddressLines = (address1, address2, fallbackParts = []) => {
+  const rawLines = [address1, address2].filter(Boolean).map(normalizeAddressLine).filter(Boolean);
+  if (!rawLines.length) {
+    const fallbackLine = fallbackParts
+      .filter(Boolean)
+      .map(normalizeAddressLine)
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    if (!fallbackLine) return [];
+    rawLines.push(fallbackLine);
+  }
+
+  let line1 = rawLines[0];
+  let line2 = rawLines.slice(1).join(' ').trim();
+
+  const commaSplit = line1
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (commaSplit.length > 1) {
+    line1 = commaSplit[0];
+    line2 = [commaSplit.slice(1).join(' '), line2].filter(Boolean).join(' ').trim();
+  }
+
+  if (!line2) {
+    const [first, rest] = splitByLength(line1, ADDRESS_LINE_LIMIT);
+    line1 = first;
+    line2 = rest;
+  } else if (line1.length > ADDRESS_LINE_LIMIT) {
+    const [first, rest] = splitByLength(line1, ADDRESS_LINE_LIMIT);
+    line1 = first;
+    line2 = [rest, line2].filter(Boolean).join(' ').trim();
+  }
+
+  if (line2 && line2.length > ADDRESS_LINE_LIMIT) {
+    line2 = stripAdminTokens(line2);
+  }
+
+  if (line2 && line2.length > ADDRESS_LINE_LIMIT) {
+    const [second] = splitByLength(line2, ADDRESS_LINE_LIMIT);
+    line2 = second;
+  }
+
+  if (line2) {
+    line2 = normalizeAddressLine(line2);
+  }
+
+  return [line1, line2].filter(Boolean);
+};
+
 const formatMawb = (mawb) => {
   const clean = normalizeText(mawb).replace(/[^a-zA-Z0-9]/g, '');
   if (!clean) return '';
@@ -41,9 +135,16 @@ const buildPartySegments = (prefix, info, fallbackCode) => {
     lines.push(`${prefix}NAM/${name}`);
   }
 
-  const addressParts = [info?.address1, info?.address2].map(toUpper).filter(Boolean);
-  if (addressParts.length) {
-    lines.push(`ADR/${addressParts.join(' ')}`);
+  const addressLines = buildAddressLines(info?.address1, info?.address2, [
+    info?.city,
+    info?.country,
+    info?.postal,
+  ]);
+  if (addressLines.length) {
+    lines.push(`ADR/${addressLines[0]}`);
+    if (addressLines[1]) {
+      lines.push(`/${addressLines[1]}`);
+    }
   }
 
   const city = toUpper(info?.city);

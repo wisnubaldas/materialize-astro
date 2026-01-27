@@ -40,6 +40,7 @@ pyjwt = "^2.10.1"
 fastapi-mail = "^1.5.8"
 elasticemail = "^4.1.4"
 aiosmtplib = "^5.0.0"
+pycountry = "^24.6.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"

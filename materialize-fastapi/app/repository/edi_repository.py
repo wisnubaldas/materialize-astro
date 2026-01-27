@@ -1,3 +1,6 @@
+import re
+
+import pycountry
 from sqlalchemy import and_, bindparam, func, or_, text
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -23,6 +26,154 @@ from app.schemas.imp_masterwaybill import ImpMasterWaybillOut
 from app.schemas.mst_customer_schema import CustomerOut
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.datatables_service import DataTablesService
+
+_CUSTOMER_FIELDS = (
+    "CustomerCode",
+    "CompanyName",
+    "PICName",
+    "Address1",
+    "Address2",
+    "City",
+    "PostCode",
+    "CountryCode",
+    "MobileNumber",
+    "FaxNumber",
+    "Phonenumber",
+    "EmailAddress",
+    "NPWPNumber",
+    "ContactIdentifier",
+    "ContactNumber",
+    "EmployeeNumber",
+    "flag_faktur",
+    "Dom_member",
+    "int_member",
+    "DateEntry",
+    "TimeEntry",
+    "void",
+)
+
+_COUNTRY_SPLIT_RE = re.compile(r"[,/;|()]+")
+
+
+def _clean_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _country_code_from_token(token: str) -> str | None:
+    text = _clean_text(token)
+    if not text:
+        return None
+    upper = text.upper()
+    if len(upper) == 2:
+        if pycountry.countries.get(alpha_2=upper):
+            return upper
+        return None
+    if len(upper) == 3:
+        match = pycountry.countries.get(alpha_3=upper)
+        return match.alpha_2 if match else None
+    try:
+        return pycountry.countries.lookup(text).alpha_2
+    except LookupError:
+        return None
+
+
+def _normalize_country_code(*values: str | None) -> str | None:
+    for value in values:
+        text = _clean_text(value)
+        if not text:
+            continue
+        for part in _COUNTRY_SPLIT_RE.split(text):
+            code = _country_code_from_token(part)
+            if code:
+                return code
+        code = _country_code_from_token(text)
+        if code:
+            return code
+    return None
+
+
+def _merge_customer_data(
+    base: dict[str, object],
+    fallback: dict[str, object],
+    *,
+    customer_code: str | None = None,
+) -> dict[str, object]:
+    if customer_code and not _clean_text(base.get("CustomerCode")):
+        base["CustomerCode"] = customer_code
+
+    for field in _CUSTOMER_FIELDS:
+        if not _clean_text(base.get(field)) and _clean_text(fallback.get(field)):
+            base[field] = fallback[field]
+
+    if not _clean_text(base.get("Address1")) and _clean_text(base.get("Address2")):
+        base["Address1"] = base["Address2"]
+        base["Address2"] = None
+
+    country_code = _normalize_country_code(
+        base.get("CountryCode"),
+        fallback.get("CountryCode"),
+        base.get("Address1"),
+        base.get("Address2"),
+        base.get("City"),
+        fallback.get("Address1"),
+        fallback.get("Address2"),
+        fallback.get("City"),
+    )
+    if country_code:
+        base["CountryCode"] = country_code
+
+    return base
+
+
+def _customer_to_dict(customer: MstCustomer | None) -> dict[str, object]:
+    if not customer:
+        return {}
+    return {field: getattr(customer, field, None) for field in _CUSTOMER_FIELDS}
+
+
+def _shipper_fallback_from_hosts(host_awbs: list[EksHostAWB]) -> dict[str, object]:
+    fallback: dict[str, object] = {}
+    for host in host_awbs:
+        if not host:
+            continue
+        if not _clean_text(fallback.get("CompanyName")) and _clean_text(host.shippername):
+            fallback["CompanyName"] = host.shippername
+        if not _clean_text(fallback.get("Address1")) and _clean_text(host.shipperaddress):
+            fallback["Address1"] = host.shipperaddress
+        if not _clean_text(fallback.get("City")) and _clean_text(host.shippercity):
+            fallback["City"] = host.shippercity
+        if not _clean_text(fallback.get("CountryCode")) and _clean_text(host.shippercountry):
+            fallback["CountryCode"] = host.shippercountry
+        if not _clean_text(fallback.get("PostCode")) and _clean_text(host.shipperpostal):
+            fallback["PostCode"] = host.shipperpostal
+        if not _clean_text(fallback.get("NPWPNumber")) and _clean_text(host.shipperTaxNo):
+            fallback["NPWPNumber"] = host.shipperTaxNo
+    return fallback
+
+
+def _consignee_fallback_from_hosts(host_awbs: list[EksHostAWB]) -> dict[str, object]:
+    fallback: dict[str, object] = {}
+    for host in host_awbs:
+        if not host:
+            continue
+        if not _clean_text(fallback.get("CompanyName")) and _clean_text(host.Consigneename):
+            fallback["CompanyName"] = host.Consigneename
+        if not _clean_text(fallback.get("Address1")) and _clean_text(host.Consigneeaddress):
+            fallback["Address1"] = host.Consigneeaddress
+        if not _clean_text(fallback.get("City")) and _clean_text(host.Consigneecity):
+            fallback["City"] = host.Consigneecity
+        if not _clean_text(fallback.get("CountryCode")) and _clean_text(host.Consigneecountry):
+            fallback["CountryCode"] = host.Consigneecountry
+    return fallback
+
+
+def _dict_to_customer(data: dict[str, object]) -> MstCustomer | None:
+    if not data:
+        return None
+    return MstCustomer(**{field: data.get(field) for field in _CUSTOMER_FIELDS})
 
 
 class EdiRepository:
@@ -267,8 +418,19 @@ class EdiRepository:
             row[1] for row in rows if row[1] is not None and row[0].ProofNumber == selected_proof
         ]
 
-        header.shipper = rows[0][2]
-        header.consignee = rows[0][3]
+        shipper_data = _merge_customer_data(
+            _customer_to_dict(rows[0][2]),
+            {},
+            customer_code=header.ShipperCode if header else None,
+        )
+        consignee_data = _merge_customer_data(
+            _customer_to_dict(rows[0][3]),
+            {},
+            customer_code=header.ConsigneeCode if header else None,
+        )
+
+        header.shipper = _dict_to_customer(shipper_data)
+        header.consignee = _dict_to_customer(consignee_data)
 
         return header, details
 
@@ -332,25 +494,31 @@ class EdiRepository:
         consignee_customer = customers.get(consignee_code)
         agent_customer = customers.get(agent_code)
 
-        if not shipper_customer and host_awb:
-            shipper_customer = MstCustomer(
-                CustomerCode=shipper_code or "",
-                CompanyName=host_awb.shippername,
-                Address1=host_awb.shipperaddress,
-                City=host_awb.shippercity,
-                CountryCode=host_awb.shippercountry,
-                PostCode=host_awb.shipperpostal,
-                NPWPNumber=host_awb.shipperTaxNo,
-            )
+        shipper_fallback = _shipper_fallback_from_hosts([host_awb] if host_awb else [])
+        consignee_fallback = _consignee_fallback_from_hosts([host_awb] if host_awb else [])
 
-        if not consignee_customer and host_awb:
-            consignee_customer = MstCustomer(
-                CustomerCode=consignee_code or "",
-                CompanyName=host_awb.Consigneename,
-                Address1=host_awb.Consigneeaddress,
-                City=host_awb.Consigneecity,
-                CountryCode=host_awb.Consigneecountry,
-            )
+        shipper_data = _merge_customer_data(
+            _customer_to_dict(shipper_customer),
+            shipper_fallback,
+            customer_code=shipper_code,
+        )
+        consignee_data = _merge_customer_data(
+            _customer_to_dict(consignee_customer),
+            consignee_fallback,
+            customer_code=consignee_code,
+        )
+        agent_fallback = (
+            shipper_fallback if shipper_code and agent_code == shipper_code else {}
+        )
+        agent_data = _merge_customer_data(
+            _customer_to_dict(agent_customer),
+            agent_fallback,
+            customer_code=agent_code,
+        )
+
+        shipper_customer = _dict_to_customer(shipper_data)
+        consignee_customer = _dict_to_customer(consignee_data)
+        agent_customer = _dict_to_customer(agent_data)
 
         if header:
             header.shipper = shipper_customer
@@ -377,15 +545,29 @@ class EdiRepository:
             return None
 
         master = rows[0][0]
+        host_awbs = [row[1] for row in rows]
         agen = rows[0][2]
         shipper = rows[0][3]
-        host_awbs = [row[1] for row in rows]
+
+        shipper_fallback = _shipper_fallback_from_hosts(host_awbs)
+        shipper_data = _merge_customer_data(
+            _customer_to_dict(shipper),
+            shipper_fallback,
+            customer_code=master.ShipperCode if master else None,
+        )
+
+        agen_fallback = shipper_fallback if master and master.AgenCode == master.ShipperCode else {}
+        agen_data = _merge_customer_data(
+            _customer_to_dict(agen),
+            agen_fallback,
+            customer_code=master.AgenCode if master else None,
+        )
 
         return AwbMawbResponse(
             master=EksMasterWaybillOut.model_validate(master),
             host_awbs=[EksHostAWBOut.model_validate(item) for item in host_awbs],
-            agen=CustomerOut.model_validate(agen) if agen else None,
-            shipper=CustomerOut.model_validate(shipper) if shipper else None,
+            agen=CustomerOut.model_validate(agen_data) if agen_data else None,
+            shipper=CustomerOut.model_validate(shipper_data) if shipper_data else None,
         )
 
     def get_imp_masterwaybill(self, mawb: str) -> ImpMasterWaybillOut | None:

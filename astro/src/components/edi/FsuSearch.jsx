@@ -22,6 +22,17 @@ const formatCellValue = (value) => {
   return String(value);
 };
 
+const sanitizeSegmentText = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value)
+    .replace(/^ADR\//i, '')
+    .replace(/^[\/\\]+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 const getRowKey = (row, index) =>
   row.noid ?? `${row.MasterAWB ?? 'mawb'}-${row.HostAWB ?? 'hawb'}-${index}`;
 
@@ -99,9 +110,7 @@ const buildFsuCargoImpMessage = (row, statuses) => {
   const flightDate = String(row?.DateOfFlight ?? '').trim();
   const fallbackDate = String(row?.DateEntry ?? '').trim();
   const eventTime = formatFsuDateTime(flightDate || fallbackDate, row?.TimeEntry);
-  const party = String(row?.Consigneename ?? row?.shippername ?? '')
-    .trim()
-    .toUpperCase();
+  const party = sanitizeSegmentText(row?.Consigneename ?? row?.shippername ?? '').toUpperCase();
 
   const lines = [];
   lines.push('FSU/15');
