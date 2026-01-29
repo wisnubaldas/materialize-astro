@@ -1,7 +1,7 @@
 import formatFhlMessage from '@components/edi/fhlGenerator';
 import Spinner from '@components/parsial/Spinner';
-import ediClient from '@lib/api/edi';
 import { showToast } from '@js/utils';
+import ediClient from '@lib/api/edi';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
@@ -126,7 +126,7 @@ export default function SendEmailFhl({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <h4 className="lh-1 pt-4">CWP Data Grid</h4>
+                <h4 className="lh-1 pt-4">FHL Data Grid</h4>
                 {hostData.length ? (
                   <div className="table-responsive">
                     <table className="table table-sm table-striped ">

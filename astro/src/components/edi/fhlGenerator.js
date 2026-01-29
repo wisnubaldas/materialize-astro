@@ -326,16 +326,44 @@ const formatFhlMessage = (payload, fallbackMawb) => {
   const lines = [];
   lines.push('FHL/5');
   lines.push(
-    `MBI/${mawb}/${origin}${destination}/T${totals.pieces || 0}K${formatWeight(totals.weight)}`
+    `MBI/${mawb}${origin}${destination}/T${totals.pieces || 0}K${formatWeight(totals.weight)}`
   );
 
   normalizedHouses.forEach((item) => {
+    const hbsNature = normalizeText(item.nature);
+    const txtLines = item.txtLines.slice();
+    let hbsText = hbsNature;
+    let hbsRemainder = '';
+    if (hbsNature.length > 15) {
+      const [first, rest] = splitByLength(hbsNature, 15);
+      hbsText = first;
+      hbsRemainder = rest;
+    }
+    const hbsKey = toUpper(hbsNature);
+    const uniqueTxtLines = [];
+    const seenTxt = new Set();
+    txtLines.forEach((text) => {
+      const cleaned = normalizeText(text);
+      if (!cleaned) return;
+      const key = toUpper(cleaned);
+      if (seenTxt.has(key)) return;
+      if (key === hbsKey) return;
+      seenTxt.add(key);
+      uniqueTxtLines.push(cleaned);
+    });
+    if (hbsRemainder) {
+      const remainderKey = toUpper(hbsRemainder);
+      if (!seenTxt.has(remainderKey)) {
+        seenTxt.add(remainderKey);
+        uniqueTxtLines.unshift(hbsRemainder);
+      }
+    }
     lines.push(
       `HBS/${item.hawb}/${origin}${destination}/${item.pieces || 0}/K${formatWeight(
         item.weight
-      )}//${item.nature}`
+      )}//${hbsText}`
     );
-    item.txtLines.forEach((text) => {
+    uniqueTxtLines.forEach((text) => {
       lines.push(`TXT/${text}`);
     });
     if (includeParties) {
