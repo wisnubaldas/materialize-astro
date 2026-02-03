@@ -6,12 +6,21 @@ import AdminLayout from '@layouts/BaseLayout.astro';
 
 const { slug = '' } = Astro.params;
 const [tipe = '', mawb = ''] = (slug || '').split('@');
+const normalizedType = String(tipe || '').toLowerCase();
+const menuPathByType: Record<string, string> = {
+  fhl: '/edi/fhl',
+  fwb: '/edi/fwb',
+  ffm: '/edi/ffm',
+  fsu: '/edi/fsu',
+};
+const activeMenuPath = menuPathByType[normalizedType] ?? Astro.url?.pathname ?? '/';
 ---
 
 <AdminLayout
   title="EDI | AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
   ,
   description="AIRLINE FLIGHT MANIFEST (FFM) MESSAGE"
+  currentPathOverride={activeMenuPath}
 >
   <div class="row">
     <div class="col-12">

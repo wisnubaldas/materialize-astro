@@ -11,9 +11,13 @@ import favicon from '@vendor/favicon.ico?url';
 interface Props {
   title: string;
   description: string;
+  currentPathOverride?: string;
 }
-const { title = 'MAU APP', description = 'Frontend SSR project powered by Astro and React.' } =
-  Astro.props;
+const {
+  title = 'MAU APP',
+  description = 'Frontend SSR project powered by Astro and React.',
+  currentPathOverride,
+} = Astro.props;
 
 ensureAuthenticated(Astro);
 
@@ -29,7 +33,7 @@ if (user.user?.username === 'hubnet@mitraadira.com') {
   menuData = filtered.length > 0 ? filtered : menuSource;
 }
 
-const currentPath = Astro.url?.pathname ?? '/';
+const currentPath = currentPathOverride || Astro.url?.pathname || '/';
 ---
 
 <!doctype html>
