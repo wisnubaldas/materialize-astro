@@ -1,0 +1,141 @@
+"""expand fwb fields to match FWB tables
+
+Revision ID: c2f1a3b4d5e6
+Revises: b1f2c3d4e5f6
+Create Date: 2026-02-03
+
+"""
+
+from typing import Sequence, Union
+
+import sqlalchemy as sa
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision: str = "c2f1a3b4d5e6"
+down_revision: Union[str, None] = "b1f2c3d4e5f6"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.add_column("fwb", sa.Column("message_type", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("message_version", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("awb_prefix", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("awb_number", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("shipment_description_code", sa.String(length=5), nullable=True))
+    op.add_column("fwb", sa.Column("total_pieces", sa.Integer(), nullable=True))
+    op.add_column("fwb", sa.Column("weight_unit", sa.String(length=5), nullable=True))
+    op.add_column("fwb", sa.Column("gross_weight", sa.Numeric(10, 2), nullable=True))
+    op.add_column("fwb", sa.Column("routing_list", sa.Text(), nullable=True))
+    op.add_column("fwb", sa.Column("first_carrier", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("onward_carrier", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("flight_number", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("flight_carrier", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_city", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_state", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_country", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_postcode", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_contact", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("consignee_city", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("consignee_state", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("consignee_country", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("consignee_postcode", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("consignee_contact", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("agent_iata_code", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("agent_account", sa.String(length=50), nullable=True))
+    op.add_column("fwb", sa.Column("agent_name", sa.String(length=200), nullable=True))
+    op.add_column("fwb", sa.Column("agent_city", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("currency", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("charge_code", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("weight_charge_pp_cc", sa.String(length=5), nullable=True))
+    op.add_column("fwb", sa.Column("other_charge_pp_cc", sa.String(length=5), nullable=True))
+    op.add_column("fwb", sa.Column("declared_value_carriage", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("declared_value_customs", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("insurance_value", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("rate_line_no", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("rate", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("dimensions", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("slac", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("hs_code", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("country_of_origin", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("other_charge_code", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("entitlement", sa.String(length=10), nullable=True))
+    op.add_column("fwb", sa.Column("amount", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("prepaid_weight_charge", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("prepaid_other_charge", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("total_prepaid", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("collect_charge", sa.Numeric(12, 2), nullable=True))
+    op.add_column("fwb", sa.Column("shipper_certification", sa.String(length=200), nullable=True))
+    op.add_column("fwb", sa.Column("issue_date", sa.Date(), nullable=True))
+    op.add_column("fwb", sa.Column("issue_place", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("issued_by", sa.String(length=100), nullable=True))
+    op.add_column("fwb", sa.Column("special_handling_code", sa.String(length=20), nullable=True))
+    op.add_column("fwb", sa.Column("ssr", sa.Text(), nullable=True))
+    op.add_column("fwb", sa.Column("osi", sa.Text(), nullable=True))
+    op.add_column("fwb", sa.Column("oci", sa.Text(), nullable=True))
+
+    op.execute(
+        "UPDATE fwb SET flight_number = flight_no WHERE flight_number IS NULL AND flight_no IS NOT NULL"
+    )
+    op.execute("UPDATE fwb SET routing_list = routing WHERE routing_list IS NULL AND routing IS NOT NULL")
+    op.execute("UPDATE fwb SET total_pieces = pieces WHERE total_pieces IS NULL AND pieces IS NOT NULL")
+    op.execute("UPDATE fwb SET gross_weight = weight WHERE gross_weight IS NULL AND weight IS NOT NULL")
+
+
+def downgrade() -> None:
+    op.drop_column("fwb", "oci")
+    op.drop_column("fwb", "osi")
+    op.drop_column("fwb", "ssr")
+    op.drop_column("fwb", "special_handling_code")
+    op.drop_column("fwb", "issued_by")
+    op.drop_column("fwb", "issue_place")
+    op.drop_column("fwb", "issue_date")
+    op.drop_column("fwb", "shipper_certification")
+    op.drop_column("fwb", "collect_charge")
+    op.drop_column("fwb", "total_prepaid")
+    op.drop_column("fwb", "prepaid_other_charge")
+    op.drop_column("fwb", "prepaid_weight_charge")
+    op.drop_column("fwb", "amount")
+    op.drop_column("fwb", "entitlement")
+    op.drop_column("fwb", "other_charge_code")
+    op.drop_column("fwb", "country_of_origin")
+    op.drop_column("fwb", "hs_code")
+    op.drop_column("fwb", "slac")
+    op.drop_column("fwb", "dimensions")
+    op.drop_column("fwb", "rate")
+    op.drop_column("fwb", "rate_line_no")
+    op.drop_column("fwb", "insurance_value")
+    op.drop_column("fwb", "declared_value_customs")
+    op.drop_column("fwb", "declared_value_carriage")
+    op.drop_column("fwb", "other_charge_pp_cc")
+    op.drop_column("fwb", "weight_charge_pp_cc")
+    op.drop_column("fwb", "charge_code")
+    op.drop_column("fwb", "currency")
+    op.drop_column("fwb", "agent_city")
+    op.drop_column("fwb", "agent_name")
+    op.drop_column("fwb", "agent_account")
+    op.drop_column("fwb", "agent_iata_code")
+    op.drop_column("fwb", "consignee_contact")
+    op.drop_column("fwb", "consignee_postcode")
+    op.drop_column("fwb", "consignee_country")
+    op.drop_column("fwb", "consignee_state")
+    op.drop_column("fwb", "consignee_city")
+    op.drop_column("fwb", "shipper_contact")
+    op.drop_column("fwb", "shipper_postcode")
+    op.drop_column("fwb", "shipper_country")
+    op.drop_column("fwb", "shipper_state")
+    op.drop_column("fwb", "shipper_city")
+    op.drop_column("fwb", "flight_carrier")
+    op.drop_column("fwb", "flight_number")
+    op.drop_column("fwb", "onward_carrier")
+    op.drop_column("fwb", "first_carrier")
+    op.drop_column("fwb", "routing_list")
+    op.drop_column("fwb", "gross_weight")
+    op.drop_column("fwb", "weight_unit")
+    op.drop_column("fwb", "total_pieces")
+    op.drop_column("fwb", "shipment_description_code")
+    op.drop_column("fwb", "awb_number")
+    op.drop_column("fwb", "awb_prefix")
+    op.drop_column("fwb", "message_version")
+    op.drop_column("fwb", "message_type")

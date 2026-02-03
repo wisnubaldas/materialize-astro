@@ -3,3 +3,10 @@
 // .card {
 //    background-color: #fd0000;
 //  }
+
+.form-control.readonly {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-secondary-color);
+  opacity: 1;
+}

@@ -122,6 +122,14 @@ const sumBy = (items, getter) =>
     return Number.isFinite(val) ? acc + val : acc;
   }, 0);
 
+const toNumberOr = (value, fallback) => {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
 const getPieces = (item) => item?.Quantity ?? item?.Pieces ?? 0;
 
 const getWeight = (item) => item?.Weight ?? item?.NettoWeight ?? item?.GrossWeight ?? 0;
@@ -165,100 +173,161 @@ const buildPartySegments = (prefix, info, fallbackCode) => {
 };
 
 const formatFwbMessage = (payload, fallbackMawb) => {
+  const fwb = payload?.fwb ?? {};
   const header = payload?.header ?? null;
   const details = Array.isArray(payload?.details) ? payload.details : [];
   const master = payload?.master ?? header ?? {};
   const hosts = Array.isArray(payload?.host_awbs) ? payload.host_awbs : details;
   const primaryHost = hosts[0] ?? details[0] ?? {};
-  const origin = toUpper(master?.Origin || header?.Origin || 'XXX');
-  const destination = toUpper(master?.Destination || header?.Destination || 'XXX');
+  const origin = toUpper(fwb?.origin || master?.Origin || header?.Origin || 'XXX');
+  const destination = toUpper(fwb?.destination || master?.Destination || header?.Destination || 'XXX');
+  const awbPrefix = normalizeText(fwb?.awb_prefix || '');
+  const awbNumber = normalizeText(fwb?.awb_number || '');
+  const fwbAwb =
+    awbPrefix || awbNumber
+      ? [awbPrefix, awbNumber].filter(Boolean).join(awbPrefix && awbNumber ? '-' : '')
+      : '';
   const masterAwb =
-    master?.MasterAWB || header?.MasterAWB || details[0]?.MasterAWB || fallbackMawb;
+    fwbAwb ||
+    master?.MasterAWB ||
+    header?.MasterAWB ||
+    details[0]?.MasterAWB ||
+    fallbackMawb;
   const formattedMawb = formatMawb(masterAwb);
 
-  const totalPieces =
+  const baseTotalPieces =
     master?.Pieces ??
     header?.TotalPieces ??
     (hosts.length ? sumBy(hosts, getPieces) : getPieces(primaryHost)) ??
     0;
-  const totalWeight =
+  const baseTotalWeight =
     master?.Weight ??
     header?.TotalNetto ??
     (hosts.length ? sumBy(hosts, getWeight) : getWeight(primaryHost)) ??
     0;
-  const totalVolume =
+  const baseTotalVolume =
     master?.Volume ??
     header?.TotalVolume ??
     (hosts.length ? sumBy(hosts, getVolume) : getVolume(primaryHost)) ??
     0;
 
+  const totalPieces = toNumberOr(fwb?.total_pieces, baseTotalPieces);
+  const totalWeight = toNumberOr(fwb?.gross_weight, baseTotalWeight);
+  const totalVolume = toNumberOr(fwb?.volume, baseTotalVolume);
+
   const goods = toUpper(
-    master?.KindOfGood ||
+    fwb?.goods_description ||
+      master?.KindOfGood ||
       primaryHost?.descriptiongoods ||
       primaryHost?.KindOfNature ||
       'GENERAL CARGO'
   );
-  const rateClass = toUpper(master?.KindOfCode || primaryHost?.kd_kemasan || primaryHost?.KindOfCode || '');
+  const rateClass = toUpper(
+    fwb?.rate_class || master?.KindOfCode || primaryHost?.kd_kemasan || primaryHost?.KindOfCode || ''
+  );
 
   const flightNumber = toUpper(
-    master?.FlightNo || header?.FlightNumber || primaryHost?.FlightNo || primaryHost?.FlightNumber || ''
+    fwb?.flight_number ||
+      master?.FlightNo ||
+      header?.FlightNumber ||
+      primaryHost?.FlightNo ||
+      primaryHost?.FlightNumber ||
+      ''
   );
   const carrier = toUpper(
-    master?.AirlinesCode || header?.AirlinesCode || primaryHost?.airlinescode || primaryHost?.AirlinesCode || ''
+    fwb?.flight_carrier ||
+      master?.AirlinesCode ||
+      header?.AirlinesCode ||
+      primaryHost?.airlinescode ||
+      primaryHost?.AirlinesCode ||
+      ''
   );
   const flightDesignator = `${carrier}${flightNumber}`;
-  const flightDateRaw = master?.DateOfFlight || header?.DateOfFlight || primaryHost?.DateOfFlight || '';
+  const flightDateRaw =
+    fwb?.flight_date || master?.DateOfFlight || header?.DateOfFlight || primaryHost?.DateOfFlight || '';
   const flightDate =
     flightDateRaw && dayjs(flightDateRaw).isValid()
       ? dayjs(flightDateRaw).format('DDMMM').toUpperCase()
       : '';
 
-  const slac = primaryHost?.Quantity ?? primaryHost?.Pieces ?? totalPieces;
+  const slac = toNumberOr(
+    fwb?.slac,
+    primaryHost?.Quantity ?? primaryHost?.Pieces ?? totalPieces
+  );
 
   const shipperCustomer = header?.shipper ?? payload?.shipper;
   const consigneeCustomer = header?.consignee ?? payload?.consignee;
 
   const shipperInfo = {
-    name: primaryHost?.shippername || shipperCustomer?.CompanyName,
-    address1: primaryHost?.shipperaddress || shipperCustomer?.Address1,
+    name: fwb?.shipper_name || primaryHost?.shippername || shipperCustomer?.CompanyName,
+    address1: fwb?.shipper_address || primaryHost?.shipperaddress || shipperCustomer?.Address1,
     address2: shipperCustomer?.Address2,
-    city: primaryHost?.shippercity || shipperCustomer?.City,
-    country: primaryHost?.shippercountry || shipperCustomer?.CountryCode,
-    postal: primaryHost?.shipperpostal || shipperCustomer?.PostCode,
+    city: fwb?.shipper_city || primaryHost?.shippercity || shipperCustomer?.City,
+    country: fwb?.shipper_country || primaryHost?.shippercountry || shipperCustomer?.CountryCode,
+    postal: fwb?.shipper_postcode || primaryHost?.shipperpostal || shipperCustomer?.PostCode,
     tax: primaryHost?.shipperTaxNo || shipperCustomer?.NPWPNumber,
   };
 
   const consigneeInfo = {
-    name: primaryHost?.Consigneename || consigneeCustomer?.CompanyName || master?.ConsigneeCode,
-    address1: primaryHost?.Consigneeaddress || consigneeCustomer?.Address1,
+    name:
+      fwb?.consignee_name ||
+      primaryHost?.Consigneename ||
+      consigneeCustomer?.CompanyName ||
+      master?.ConsigneeCode,
+    address1:
+      fwb?.consignee_address || primaryHost?.Consigneeaddress || consigneeCustomer?.Address1,
     address2: consigneeCustomer?.Address2,
-    city: primaryHost?.Consigneecity || consigneeCustomer?.City,
-    country: primaryHost?.Consigneecountry || consigneeCustomer?.CountryCode,
-    postal: consigneeCustomer?.PostCode,
+    city: fwb?.consignee_city || primaryHost?.Consigneecity || consigneeCustomer?.City,
+    country: fwb?.consignee_country || primaryHost?.Consigneecountry || consigneeCustomer?.CountryCode,
+    postal: fwb?.consignee_postcode || consigneeCustomer?.PostCode,
     tax: consigneeCustomer?.NPWPNumber,
   };
 
-  const agentName = toUpper(payload?.agen?.CompanyName || 'AGENT');
-  const agentCode = payload?.agen?.CustomerCode || master?.AgenCode || header?.AgenCode || '';
+  const agentName = toUpper(fwb?.agent_name || payload?.agen?.CompanyName || 'AGENT');
+  const agentCode =
+    fwb?.agent_account || payload?.agen?.CustomerCode || master?.AgenCode || header?.AgenCode || '';
+  const agentCity = toUpper(fwb?.agent_city || origin);
 
-  const issueDateRaw = master?.DateEntry || header?.DateOfEntry || '';
+  const issueDateRaw = fwb?.issue_date || master?.DateEntry || header?.DateOfEntry || '';
   const issueDate =
     issueDateRaw && dayjs(issueDateRaw).isValid() ? dayjs(issueDateRaw) : dayjs();
 
+  const messageType = toUpper(fwb?.message_type || 'FWB');
+  const messageVersion = normalizeText(fwb?.message_version || '17');
+  const shipmentDescriptionCode = toUpper(fwb?.shipment_description_code || 'T');
+  const weightUnit = toUpper(fwb?.weight_unit || 'K');
+
+  const cvdCurrency = toUpper(fwb?.currency || 'USD');
+  const cvdChargeCode = toUpper(fwb?.charge_code || '');
+  const cvdWeightCharge = toUpper(fwb?.weight_charge_pp_cc || 'PP');
+  const declaredValueCarriage = toUpper(fwb?.declared_value_carriage || 'NVD');
+  const declaredValueCustoms = toUpper(fwb?.declared_value_customs || 'NCV');
+  const insuranceValue = toUpper(fwb?.insurance_value || 'XXX');
+
+  const prepaidWeight = toNumberOr(fwb?.prepaid_weight_charge, 0);
+  const prepaidOther = toNumberOr(fwb?.prepaid_other_charge, 0);
+  const totalPrepaid = toNumberOr(fwb?.total_prepaid, 0);
+  const collectCharge = toNumberOr(fwb?.collect_charge, 0);
+  const rateLineNo = normalizeText(fwb?.rate_line_no || '1');
+  const ratePieces = toNumberOr(fwb?.pieces, slac || totalPieces || 0);
+  const rateWeight = toNumberOr(fwb?.weight, totalWeight);
+
   const lines = [];
 
-  lines.push('FWB/17');
+  lines.push(`${messageType}/${messageVersion}`);
   const headerParts = [
     `${formattedMawb}${origin}${destination}`,
-    `T${totalPieces || 0}`,
-    `K${formatNumber(totalWeight, 1)}`,
+    `${shipmentDescriptionCode}${totalPieces || 0}`,
+    `${weightUnit}${formatNumber(totalWeight, 1)}`,
   ];
   if (totalVolume) {
     headerParts.push(`MC${formatNumber(totalVolume, 3)}`);
   }
   lines.push(headerParts.join('/'));
 
-  if (destination) {
+  if (fwb?.routing_list) {
+    lines.push(`RTG/${toUpper(fwb.routing_list)}`);
+  } else if (destination) {
     lines.push(`RTG/${destination}II`);
   }
 
@@ -270,16 +339,18 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   lines.push(...buildPartySegments('CNE', consigneeInfo, master?.ConsigneeCode));
 
   if (agentCode || agentName) {
-    lines.push(`AGT//${agentCode || '0000000'}/${agentName}/${origin}`);
+    lines.push(`AGT//${agentCode || '0000000'}/${agentName}/${agentCity || origin}`);
   }
 
-  lines.push('CVD/USD//PP/NVD/NCV/XXX');
+  lines.push(
+    `CVD/${cvdCurrency}/${cvdChargeCode}/${cvdWeightCharge}/${declaredValueCarriage}/${declaredValueCustoms}/${insuranceValue}`
+  );
 
   const rateParts = [
     'RTD',
-    '1',
-    `P${slac || totalPieces || 0}`,
-    `K${formatNumber(totalWeight, 1)}`,
+    rateLineNo || '1',
+    `P${ratePieces}`,
+    `K${formatNumber(rateWeight, 1)}`,
   ];
 
   if (rateClass) {
@@ -297,13 +368,24 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   }
 
   lines.push(rateParts.join('/'));
-  lines.push('PPD/WT0/OC0/CT0');
-
-  if (shipperInfo?.name) {
-    lines.push(`CER/${toUpper(shipperInfo.name)}`);
+  lines.push(
+    `PPD/WT${formatNumber(prepaidWeight, 1)}/OC${formatNumber(
+      prepaidOther,
+      1
+    )}/CT${formatNumber(totalPrepaid, 1)}`
+  );
+  if (collectCharge) {
+    lines.push(`COL/CT${formatNumber(collectCharge, 1)}`);
   }
 
-  lines.push(`ISU/${issueDate.format('DDMMMYY').toUpperCase()}/${origin}/${agentName}`);
+  const certificationName = toUpper(fwb?.shipper_certification || shipperInfo?.name || '');
+  if (certificationName) {
+    lines.push(`CER/${certificationName}`);
+  }
+
+  const issuePlace = toUpper(fwb?.issue_place || origin);
+  const issuedBy = toUpper(fwb?.issued_by || agentName);
+  lines.push(`ISU/${issueDate.format('DDMMMYY').toUpperCase()}/${issuePlace}/${issuedBy}`);
   lines.push(`REF///MAWB/${formattedMawb}`);
 
   return lines.filter(Boolean).join('\n');

@@ -364,7 +364,7 @@ const formatFhlMessage = (payload, fallbackMawb) => {
       )}//${hbsText}`
     );
     uniqueTxtLines.forEach((text) => {
-      lines.push(`TXT/${text}`);
+      lines.push(`TXT/${text.slice(0, Math.min(40, text.length))}`);
     });
     if (includeParties) {
       lines.push(...buildPartyBlock('SHP', item.shipper, item.shipperCode));
