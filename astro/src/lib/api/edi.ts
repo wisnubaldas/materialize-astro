@@ -8,6 +8,7 @@ import type {
   ParseAwbMawbResponse,
   ParseBuildupMawbResponse,
   ParseFhlResponse,
+  FwbRecord,
   ParseFwbResponse,
   WeighingHeader,
 } from './types/edi';
@@ -32,7 +33,9 @@ const ediClient = {
     apiClient.get<ParseBuildupMawbResponse>(`/edi/export-buildup-mawb/${buildupNumber}`),
   getImportMasterwaybill: (mawb: string) =>
     apiClient.get<ImpHostAwb[]>(`${EDI_IMPORT_MASTERWAYBILL_ENDPOINT}/${mawb}`),
+  getFwbByMawb: (mawb: string) => apiClient.get<FwbRecord>(`/edi/fwb/${mawb}`),
   sendEmailEdi: (param: any) => apiClient.post('/edi/send-email-edi', param),
+  sendEmailFwb: (param: any) => apiClient.post('/edi/send-email-fwb', param),
 };
 
 export default ediClient;
@@ -53,6 +56,7 @@ export type {
   ParseAwbMawbResponse,
   ParseBuildupMawbResponse,
   ParseFhlResponse,
+  FwbRecord,
   ParseFwbResponse,
   WeighingDetail,
   WeighingHeader,

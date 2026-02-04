@@ -1,14 +1,40 @@
 import dayjs from 'dayjs';
 
+/**
+ * FWB Generator (Cargo-IMP)
+ * Tujuan: membentuk pesan FWB dari payload parsing (header/details/master/host)
+ * dengan fallback yang konsisten, normalisasi teks, dan aturan format segment.
+ *
+ * Struktur output:
+ * - Header FWB (message type/version, AWB, origin/destination, weight/volume)
+ * - Routing & flight
+ * - Party segments (SHP, CNE, AGT)
+ * - Charges & rate details
+ * - Payment (PPD/COL) dan certification/issue
+ */
+
+/**
+ * Normalisasi teks umum: hilangkan spasi berlebih dan trim.
+ */
 const normalizeText = (value) => {
   if (!value) return '';
   return String(value).replace(/\s+/g, ' ').trim();
 };
 
+/**
+ * Normalisasi + uppercase untuk field yang wajib uppercase di Cargo-IMP.
+ */
 const toUpper = (value) => normalizeText(value).toUpperCase();
 
+/**
+ * Batas maksimum 1 baris alamat (sesuai standar segment ADR).
+ */
 const ADDRESS_LINE_LIMIT = 35;
 
+/**
+ * Normalisasi address line: uppercase, hapus prefiks ADR/ atau karakter prefix lainnya,
+ * rapikan spasi dan tanda hubung.
+ */
 const normalizeAddressLine = (value) => {
   if (!value) return '';
   const cleaned = toUpper(value)
@@ -23,12 +49,19 @@ const normalizeAddressLine = (value) => {
     .trim();
 };
 
+/**
+ * Buang token administratif yang sering membuat alamat terlalu panjang.
+ */
 const stripAdminTokens = (value) =>
   value
     .replace(/\b(KEC|KEL)\b/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
+/**
+ * Memecah teks menjadi 2 baris dengan batas panjang.
+ * Jika kata tunggal lebih panjang dari limit, akan dipotong.
+ */
 const splitByLength = (text, limit) => {
   if (!text) return ['', ''];
   if (text.length <= limit) return [text, ''];
@@ -50,6 +83,9 @@ const splitByLength = (text, limit) => {
   return [line, words.slice(index).join(' ').trim()];
 };
 
+/**
+ * Menyusun 1-2 baris alamat sesuai limit, menggunakan fallback city/country/postal jika perlu.
+ */
 const buildAddressLines = (address1, address2, fallbackParts = []) => {
   const rawLines = [address1, address2].filter(Boolean).map(normalizeAddressLine).filter(Boolean);
   if (!rawLines.length) {
@@ -101,6 +137,9 @@ const buildAddressLines = (address1, address2, fallbackParts = []) => {
   return [line1, line2].filter(Boolean);
 };
 
+/**
+ * Format MAWB menjadi 3 digit prefix + '-' + serial (contoh: 123-45678901).
+ */
 const formatMawb = (mawb) => {
   const clean = normalizeText(mawb).replace(/[^a-zA-Z0-9]/g, '');
   if (!clean) return '';
@@ -110,18 +149,27 @@ const formatMawb = (mawb) => {
   return [prefix, serial].filter(Boolean).join('-').toUpperCase();
 };
 
+/**
+ * Format number dengan fixed fraction, dan buang trailing zero.
+ */
 const formatNumber = (value, fractionDigits = 0) => {
   const num = Number(value);
   if (!Number.isFinite(num)) return '0';
   return num.toFixed(fractionDigits).replace(/\.?0+$/, '');
 };
 
+/**
+ * Menjumlahkan daftar item menggunakan fungsi getter.
+ */
 const sumBy = (items, getter) =>
   (Array.isArray(items) ? items : []).reduce((acc, item) => {
     const val = Number(getter(item));
     return Number.isFinite(val) ? acc + val : acc;
   }, 0);
 
+/**
+ * Konversi ke number dengan fallback jika kosong / NaN.
+ */
 const toNumberOr = (value, fallback) => {
   if (value === null || value === undefined || value === '') {
     return fallback;
@@ -136,6 +184,14 @@ const getWeight = (item) => item?.Weight ?? item?.NettoWeight ?? item?.GrossWeig
 
 const getVolume = (item) => item?.Volume ?? item?.VolumeCargo ?? 0;
 
+/**
+ * Membentuk segment party (SHP/CNE) dari data pihak terkait.
+ * Output contoh:
+ * - SHPNAM/...
+ * - ADR/...
+ * - LOC/...
+ * - ZIP/...
+ */
 const buildPartySegments = (prefix, info, fallbackCode) => {
   const lines = [];
   const name = toUpper(info?.name || fallbackCode || '');
@@ -172,6 +228,10 @@ const buildPartySegments = (prefix, info, fallbackCode) => {
   return lines;
 };
 
+/**
+ * Builder utama pesan FWB. Menggunakan payload parsing (header/details/master/host),
+ * dengan fallback ke data yang tersedia + override dari payload.fwb.
+ */
 const formatFwbMessage = (payload, fallbackMawb) => {
   const fwb = payload?.fwb ?? {};
   const header = payload?.header ?? null;

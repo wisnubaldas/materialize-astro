@@ -3,7 +3,6 @@ import { showToast } from '@js/utils';
 import ediClient from '@lib/api/edi';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
-import Swal from 'sweetalert2';
 import formatFwbMessage from './fwbGenerator';
 
 const splitAwb = (awb) => {
@@ -138,6 +137,10 @@ export default function SendEmailFwb({ slug }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [fwbDbData, setFwbDbData] = useState(null);
+  const [fwbDbError, setFwbDbError] = useState('');
+  const [fwbDbLoading, setFwbDbLoading] = useState(false);
 
   const formattedTitle = useMemo(() => `FWB Message (${slug ?? ''})`, [slug]);
 
@@ -146,32 +149,32 @@ export default function SendEmailFwb({ slug }) {
     if (!sendData) return null;
     return sendData.fwb ?? buildFwbDefaults(sendData, slug);
   }, [sendData, slug]);
-  const clickSendMail = async (e) => {
-    e.preventDefault();
-    const { value: email } = await Swal.fire({
-      title: 'Email Send',
-      theme: 'bootstrap-5',
-      input: 'email',
-      inputPlaceholder: 'Email tijuan ',
-    });
-    if (email) {
-      //   kirim email fhlnya disini
-      //   Swal.fire(`Entered email: ${email}`);
-      //   console.log(email);
-      //   console.log(message);
-      try {
-        const response = await ediClient.sendEmailEdi({
-          email: email,
-          message: message,
-          data: sendData,
-          edi: 'FWB',
-        });
-        showToast({ type: 'success', title: 'FWB', message: 'Email FWB berhasil dikirim.' });
-        console.log('response nya', response);
-      } catch (err) {
-        const toastMessage = err?.message ?? 'Gagal mengirim email FWB.';
-        showToast({ type: 'danger', title: 'FWB', message: toastMessage });
-      }
+  const handleSendEmail = async ({ emails }) => {
+    const recipients = Array.isArray(emails) ? emails : [];
+    if (!recipients.length) {
+      showToast({ type: 'danger', title: 'FWB', message: 'Alamat email wajib diisi.' });
+      return;
+    }
+    if (!sendData || !message) {
+      showToast({ type: 'danger', title: 'FWB', message: 'Data FWB belum siap dikirim.' });
+      return;
+    }
+
+    try {
+      setSending(true);
+      const response = await ediClient.sendEmailFwb({
+        emails: recipients,
+        message: message,
+        data: sendData,
+        edi: 'FWB',
+      });
+      showToast({ type: 'success', title: 'FWB', message: 'Email FWB berhasil dikirim.' });
+      console.log('response nya', response);
+    } catch (err) {
+      const toastMessage = err?.message ?? 'Gagal mengirim email FWB.';
+      showToast({ type: 'danger', title: 'FWB', message: toastMessage });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -202,6 +205,32 @@ export default function SendEmailFwb({ slug }) {
       setError('Slug AWB tidak valid');
     }
 
+    return () => {
+      active = false;
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    let active = true;
+    const loadFwbDb = async () => {
+      if (!slug) return;
+      setFwbDbLoading(true);
+      setFwbDbError('');
+      try {
+        const data = await ediClient.getFwbByMawb(slug);
+        if (!active) return;
+        setFwbDbData(data);
+      } catch (err) {
+        if (!active) return;
+        setFwbDbError(err?.message ?? 'Gagal memuat data FWB dari database');
+        setFwbDbData(null);
+      } finally {
+        if (active) {
+          setFwbDbLoading(false);
+        }
+      }
+    };
+    loadFwbDb();
     return () => {
       active = false;
     };
@@ -257,6 +286,19 @@ export default function SendEmailFwb({ slug }) {
                 <li className="nav-item">
                   <button
                     type="button"
+                    className="nav-link"
+                    role="tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#navs-tab-fwb-db"
+                    aria-controls="navs-tab-fwb-db"
+                    aria-selected="false"
+                  >
+                    FWB DB
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    type="button"
                     className="nav-link disabled"
                     data-bs-toggle="tab"
                     role="tab"
@@ -271,7 +313,13 @@ export default function SendEmailFwb({ slug }) {
           <div className="card-body">
             <div className="tab-content p-0">
               <div className="tab-pane fade show active" id="navs-tab-home" role="tabpanel">
-                <FwbForm fwbData={fwbData} onFwbChange={updateFwbField} />
+                <FwbForm
+                  fwbData={fwbData}
+                  onFwbChange={updateFwbField}
+                  onSubmit={handleSendEmail}
+                  isLoading={loading}
+                  isSending={sending}
+                />
               </div>
               <div className="tab-pane fade" id="navs-tab-profile" role="tabpanel">
                 <h5 className="card-title">{formattedTitle} </h5>
@@ -284,12 +332,29 @@ export default function SendEmailFwb({ slug }) {
                     {message}
                   </pre>
                 )}
-                <a href="#" className="btn btn-primary me-2" onClick={clickSendMail}>
-                  <span className="icon-base ri ri-mail-send-line icon-16px me-1"></span> Send Email
-                </a>
-                <a href="/edi/fwb" className="btn btn-secondary me-2">
-                  <span className="icon-base ri ri-arrow-go-back-fill icon-16px me-1"></span> Back
-                </a>
+              </div>
+              <div className="tab-pane fade" id="navs-tab-fwb-db" role="tabpanel">
+                <h5 className="card-title">Data FWB (Database)</h5>
+                {fwbDbLoading ? (
+                  <div className="text-muted">Memuat data FWB...</div>
+                ) : fwbDbError ? (
+                  <div className="alert alert-danger mb-0">{fwbDbError}</div>
+                ) : fwbDbData ? (
+                  <div className="table-responsive">
+                    <table className="table table-sm table-striped">
+                      <tbody>
+                        {Object.entries(fwbDbData).map(([key, value]) => (
+                          <tr key={key}>
+                            <th className="text-nowrap">{key}</th>
+                            <td>{value === null || value === undefined ? '-' : String(value)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-muted">Belum ada data FWB tersimpan.</div>
+                )}
               </div>
             </div>
           </div>

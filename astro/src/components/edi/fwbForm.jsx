@@ -1,5 +1,5 @@
 import '@libs/bs-stepper/bs-stepper.scss';
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 const fwbSections = [
   {
@@ -188,11 +188,13 @@ const renderField = (field, data, onChange) => {
         <textarea
           id={id}
           className={`form-control${isReadOnly ? ' readonly' : ''}`}
-          rows={2}
+          rows={field.rows ?? 2}
           value={value}
+          placeholder={field.placeholder}
           readOnly={isReadOnly}
           onChange={(event) => onChange(field.key, event.target.value)}
         />
+        {field.helper ? <div className="form-text text-muted">{field.helper}</div> : null}
       </div>
     );
   }
@@ -208,15 +210,33 @@ const renderField = (field, data, onChange) => {
         step={field.step}
         className={`form-control${isReadOnly ? ' readonly' : ''}`}
         value={value}
+        placeholder={field.placeholder}
         readOnly={isReadOnly}
         onChange={(event) => onChange(field.key, event.target.value)}
       />
+      {field.helper ? <div className="form-text text-muted">{field.helper}</div> : null}
     </div>
   );
 };
 
-export default function FwbForm({ fwbData, onFwbChange }) {
+const parseEmails = (value) =>
+  String(value || '')
+    .split(/[\n,;]+/)
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+export default function FwbForm({
+  fwbData,
+  onFwbChange,
+  onSubmit,
+  isLoading = false,
+  isSending = false,
+}) {
   const initializedRef = useRef(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const initStepper = (StepperCtor) => {
     if (initializedRef.current || typeof window === 'undefined') {
@@ -235,8 +255,6 @@ export default function FwbForm({ fwbData, onFwbChange }) {
     const wizardModernVerticalBtnPrevList = [].slice.call(
       wizardModernVertical.querySelectorAll('.btn-prev')
     );
-    const wizardModernVerticalBtnSubmit = wizardModernVertical.querySelector('.btn-submit');
-
     const modernVerticalStepper = new StepperCtor(wizardModernVertical, {
       linear: false,
     });
@@ -253,11 +271,6 @@ export default function FwbForm({ fwbData, onFwbChange }) {
         event.preventDefault();
         modernVerticalStepper.previous();
       });
-    });
-
-    wizardModernVerticalBtnSubmit?.addEventListener('click', (event) => {
-      event.preventDefault();
-      alert('Submitted..!!');
     });
 
     initializedRef.current = true;
@@ -287,19 +300,59 @@ export default function FwbForm({ fwbData, onFwbChange }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Form submitted!');
+    if (isLoading || isSending) return;
+    const recipients = parseEmails(emailInput);
+    if (!recipients.length) {
+      setEmailError('Alamat email wajib diisi.');
+      return;
+    }
+    const invalid = recipients.filter((email) => !isValidEmail(email));
+    if (invalid.length) {
+      setEmailError(`Format email tidak valid: ${invalid.join(', ')}`);
+      return;
+    }
+    setEmailError('');
+    onSubmit?.({ emails: recipients });
   };
 
   const data = fwbData ?? {};
+  const emailData = { email_recipients: emailInput };
   const handleChange = (key, value) => {
     onFwbChange?.(key, value);
   };
+  const handleEmailChange = (key, value) => {
+    if (key !== 'email_recipients') return;
+    setEmailInput(value);
+    if (emailError) {
+      setEmailError('');
+    }
+  };
+
+  const emailSection = {
+    id: 'email-recipients',
+    title: 'Alamat Email Tujuan',
+    subtitle: 'Pisahkan dengan koma atau baris baru',
+    source: 'email',
+    fields: [
+      {
+        key: 'email_recipients',
+        label: 'Email Tujuan',
+        type: 'textarea',
+        colClass: 'col-12',
+        required: true,
+        rows: 3,
+        placeholder: 'contoh: admin@example.com, operasi@example.com',
+        helper: 'Pisahkan email dengan koma atau tekan Enter untuk baris baru.',
+      },
+    ],
+  };
+  const sections = [...fwbSections, emailSection];
 
   return (
     <div className="col-md-12">
       <div className="bs-stepper vertical wizard-modern wizard-modern-vertical">
         <div className="bs-stepper-header gap-lg-2">
-          {fwbSections.map((section, index) => (
+          {sections.map((section, index) => (
             <Fragment key={section.id}>
               <div className="step" data-target={`#${section.id}-step`}>
                 <button type="button" className="step-trigger">
@@ -315,20 +368,29 @@ export default function FwbForm({ fwbData, onFwbChange }) {
                   </span>
                 </button>
               </div>
-              {index < fwbSections.length - 1 ? <div className="line"></div> : null}
+              {index < sections.length - 1 ? <div className="line"></div> : null}
             </Fragment>
           ))}
         </div>
         <div className="bs-stepper-content">
           <form onSubmit={handleSubmit}>
-            {fwbSections.map((section, index) => (
+            {sections.map((section, index) => {
+              const sectionData = section.source === 'email' ? emailData : data;
+              const sectionChange = section.source === 'email' ? handleEmailChange : handleChange;
+
+              return (
               <div id={`${section.id}-step`} key={section.id} className="content">
                 <div className="content-header mb-3">
                   <h6 className="mb-0">{section.title}</h6>
                   <small>{section.subtitle}</small>
                 </div>
                 <div className="row g-3">
-                  {section.fields.map((field) => renderField(field, data, handleChange))}
+                  {section.fields.map((field) => renderField(field, sectionData, sectionChange))}
+                  {section.id === 'email-recipients' && emailError ? (
+                    <div className="col-12">
+                      <div className="alert alert-danger py-2 mb-0">{emailError}</div>
+                    </div>
+                  ) : null}
                   <div className="col-12 d-flex justify-content-between">
                     <button
                       type="button"
@@ -338,9 +400,13 @@ export default function FwbForm({ fwbData, onFwbChange }) {
                       <i className="icon-base ri ri-arrow-left-line icon-sm scaleX-n1-rtl me-sm-1 me-0"></i>
                       <span className="align-middle d-sm-inline-block d-none">Previous</span>
                     </button>
-                    {index === fwbSections.length - 1 ? (
-                      <button type="button" className="btn btn-primary btn-submit">
-                        Submit
+                    {index === sections.length - 1 ? (
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-submit"
+                        disabled={isSending || isLoading}
+                      >
+                        {isSending ? 'Mengirim...' : 'Kirim Email'}
                       </button>
                     ) : (
                       <button type="button" className="btn btn-primary btn-next">
@@ -351,7 +417,7 @@ export default function FwbForm({ fwbData, onFwbChange }) {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </form>
         </div>
       </div>

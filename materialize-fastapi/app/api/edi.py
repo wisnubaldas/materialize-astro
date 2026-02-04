@@ -1,17 +1,16 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy.orm import Session
-
-from app.db.mysql import get_db1_r
 from app.dependencies.discrepancy_code_deps import get_discrepancy_code_service
 from app.dependencies.edi_deps import (
     get_buildup_mawb_service,
     get_buildup_service,
+    get_fwb_service_r,
+    get_fwb_service_w,
+    get_manifest_mawb_service,
     get_masterwaybill_service,
     get_weighing_header_service,
 )
-from app.models.BaseDB1.exp_manifest_mawb import ExpManifestMawb
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
@@ -19,25 +18,18 @@ from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
+from app.schemas.fwb_email_request_body import FwbEmailRequestBody
 from app.schemas.fwb_schema import FwbResponse
+from app.schemas.fwb_table_schema import FwbTableOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
 from app.schemas.mst_discrepancy_code_schema import MstDiscrepancyCodeOut
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
-from app.services.datatables_service import DataTablesService
 from app.services.discrepancy_code_service import DiscrepancyCodeService
 from app.services.edi_service import EdiService
 
 router = APIRouter(prefix="/edi", tags=["Send Electronic data interchange (EDI)"])
 logger = logging.getLogger("edi")
-
-manifest_mawb_datatable_service = DataTablesService(
-    model=ExpManifestMawb,
-    schema=ExpManifestMawbOut,
-    search_columns=["mawb_number", "nature_of_goods", "route"],
-    custom_filters=["mawb_number", "nature_of_goods", "route"],
-)
-
 
 @router.post(
     "/export-buildup",
@@ -75,8 +67,11 @@ def export_awb_mawb(
     summary="MAWB manifest data grid table",
     response_model=DataTablesResponse[ExpManifestMawbOut],
 )
-def manifest_mawb_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
-    return manifest_mawb_datatable_service.get_datatable(db=db, params=params)
+def manifest_mawb_datatables(
+    params: DataTablesParams, service: EdiService = Depends(get_manifest_mawb_service)
+):
+    """Datatable for exp_manifest_mawb using DB1 repository."""
+    return service.manifest_mawb_datatables(params)
 
 
 ############### bikin format data IATA ######################
@@ -88,6 +83,19 @@ def parse_fhl(awb: str, service: EdiService = Depends(get_weighing_header_servic
 @router.get("/parse-fwb/{awb}")
 def parse_fwb(awb: str, service: EdiService = Depends(get_weighing_header_service)) -> FwbResponse:
     return service.parse_fwb(awb)
+
+
+@router.get(
+    "/fwb/{mawb}",
+    summary="Retrieve saved FWB data by MAWB",
+    response_model=FwbTableOut,
+)
+def get_fwb_by_mawb(mawb: str, service: EdiService = Depends(get_fwb_service_r)):
+    """Expose persisted FWB data from DB1 for a given MAWB."""
+    record = service.get_saved_fwb(mawb)
+    if record is None:
+        raise HTTPException(status_code=404, detail="FWB data tidak ditemukan")
+    return record
 
 
 @router.get(
@@ -127,6 +135,40 @@ async def send_email_edi(params: FhlRequestBody, background_tasks: BackgroundTas
     return {
         "status": 200,
         "message": "EDI email is being sent",
+        "data": None,
+    }
+
+
+@router.post(
+    "/send-email-fwb",
+    summary="Send FWB EDI email",
+    response_model=ResponseSchema,
+)
+async def send_email_fwb(
+    params: FwbEmailRequestBody,
+    background_tasks: BackgroundTasks,
+    service: EdiService = Depends(get_fwb_service_w),
+):
+    """Send FWB email and persist the payload for audit/debug."""
+    if not params.emails:
+        raise HTTPException(status_code=400, detail="Email tujuan wajib diisi")
+
+    logger.info("FWB parsing payload received: %s", params.data)
+    payload = params.data if isinstance(params.data, dict) else {}
+    try:
+        service.save_fwb_from_payload(payload, params.message)
+    except Exception:
+        logger.exception("Failed to save FWB data")
+        raise HTTPException(status_code=500, detail="Gagal menyimpan data FWB")
+
+    for email in params.emails:
+        background_tasks.add_task(
+            EdiService.send_email_edi, email=email, message=params.message, edi=params.edi
+        )
+
+    return {
+        "status": 200,
+        "message": "FWB email is being sent",
         "data": None,
     }
 
