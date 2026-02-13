@@ -16,7 +16,14 @@ fuck = Faker()
 payload = {"user_id": fuck.uuid4(), "exp": datetime.now(timezone.utc) + timedelta(seconds=20)}
 
 
-datas = []
+datas = [
+    {
+        "username": "wisnubaldas",
+        "email": "wisnubaldas@gmail.com",
+        "password": hash_password("password123"),
+        "token": jwt.encode(payload, ENV.SECRET_KEY, algorithm="HS256"),
+    }
+]
 for i in range(10):
     datas.append(
         {

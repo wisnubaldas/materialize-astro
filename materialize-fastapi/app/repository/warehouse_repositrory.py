@@ -45,3 +45,15 @@ class WarehouseRepository:
         self, params: DataTablesParams
     ) -> DataTablesResponse[EksMasterWaybillOut]:
         return self.masterwaybill_datatable_service.get_datatable(db=self.db, params=params)
+
+    def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[EksMasterWaybill]:
+        """Fetch Master AWB records in bulk based on a list of MasterAWB values."""
+        if not master_awbs:
+            return []
+
+        unique_awbs = list(dict.fromkeys(master_awbs))
+        return (
+            self.db.query(EksMasterWaybill)
+            .filter(EksMasterWaybill.MasterAWB.in_(unique_awbs))
+            .all()
+        )

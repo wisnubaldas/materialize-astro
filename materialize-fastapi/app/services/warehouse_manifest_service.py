@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -237,14 +238,77 @@ def _sanitize_filename(filename: str, default_stem: str = "manifest") -> str:
 
 class AirlineManifestUploadService:
     @staticmethod
-    def upload_manifest(file: UploadFile, db: Session) -> dict:  # noqa: PLR0912, PLR0915
-        filename = file.filename or ""
-        if not filename.lower().endswith(ALLOWED_EXTENSIONS):
+    def _build_workbook_from_payload(payload_json: str) -> tuple[bytes, str]:
+        try:
+            payload = json.loads(payload_json)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail="Format payload_json tidak valid.") from exc
+
+        if not isinstance(payload, dict):
+            raise HTTPException(status_code=400, detail="payload_json harus berupa object.")
+
+        flight_rows = payload.get("flight_manifest", [])
+        uld_rows = payload.get("uld", [])
+        mawb_rows = payload.get("mawb", [])
+        if not isinstance(flight_rows, list) or not isinstance(uld_rows, list) or not isinstance(
+            mawb_rows, list
+        ):
             raise HTTPException(
-                status_code=400, detail="Format file tidak valid, gunakan Excel (.xlsx / .xlsm)."
+                status_code=400,
+                detail="payload_json harus memiliki array: flight_manifest, uld, dan mawb.",
             )
 
-        contents = file.file.read()
+        from openpyxl import Workbook
+
+        wb = Workbook()
+        ws_flight = wb.active
+        ws_flight.title = "flight_manifest"
+        ws_uld = wb.create_sheet("uld")
+        ws_mawb = wb.create_sheet("mawb")
+
+        ws_flight.append(FLIGHT_HEADERS)
+        ws_uld.append(ULD_HEADERS)
+        ws_mawb.append(MAWB_HEADERS)
+
+        def _append_rows(ws, headers: list[str], rows: list):
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                ws.append([row.get(header) for header in headers])
+
+        _append_rows(ws_flight, FLIGHT_HEADERS, flight_rows)
+        _append_rows(ws_uld, ULD_HEADERS, uld_rows)
+        _append_rows(ws_mawb, MAWB_HEADERS, mawb_rows)
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue(), "manifest_form.xlsx"
+
+    @staticmethod
+    def upload_manifest(
+        file: UploadFile | None, db: Session, payload_json: str | None = None
+    ) -> dict:  # noqa: PLR0912, PLR0915
+        filename = ""
+        contents = b""
+        if file is not None:
+            filename = file.filename or ""
+            if not filename.lower().endswith(ALLOWED_EXTENSIONS):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Format file tidak valid, gunakan Excel (.xlsx / .xlsm).",
+                )
+            contents = file.file.read()
+        elif payload_json:
+            contents, filename = AirlineManifestUploadService._build_workbook_from_payload(
+                payload_json
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="File Excel atau payload_json wajib diisi.",
+            )
+
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # noqa: DTZ005
         safe_name = _sanitize_filename(filename, default_stem="manifest")
         stem = Path(safe_name).stem

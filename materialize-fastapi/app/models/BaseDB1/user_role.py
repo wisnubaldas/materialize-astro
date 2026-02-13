@@ -6,6 +6,10 @@ from app.db.mysql import BaseDB1
 
 
 class UserRole(BaseDB1):
+    """Join table user <-> role (RBAC).
+
+    Satu user bisa punya banyak role; kombinasi user_id+roles_id unik.
+    """
     __tablename__ = "user_roles"
     __table_args__ = (UniqueConstraint("user_id", "roles_id", name="uq_user_role"),)
 

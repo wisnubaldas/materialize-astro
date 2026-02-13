@@ -3,6 +3,14 @@ import type {
   BuildupHeader,
   DataTableRequest,
   DataTableResponse,
+  DiscrepancyCode,
+  DiscrepancyCodeCreatePayload,
+  DiscrepancyCodeFilters,
+  DiscrepancyCodeUpdatePayload,
+  FsuMessage,
+  FsuMessageCreatePayload,
+  FsuMessageFilters,
+  FsuMessageUpdatePayload,
   ImpHostAwb,
   MasterWaybill,
   ParseAwbMawbResponse,
@@ -17,6 +25,10 @@ export const EDI_EXPORT_BUILDUP_ENDPOINT = '/edi/export-buildup';
 export const EDI_EXPORT_CWP_ENDPOINT = '/edi/export-cwp';
 export const EDI_EXPORT_AWB_MAWB = '/edi/export-awb-mawb';
 export const EDI_IMPORT_MASTERWAYBILL_ENDPOINT = '/edi/import-masterwaybill';
+export const EDI_DISCREPANCY_CODE_DATATABLE_ENDPOINT = '/edi/discrepancy-codes/datatables';
+export const EDI_DISCREPANCY_CODE_ENDPOINT = '/edi/discrepancy-codes';
+export const EDI_FSU_MESSAGE_DATATABLE_ENDPOINT = '/edi/fsu-messages/datatables';
+export const EDI_FSU_MESSAGE_ENDPOINT = '/edi/fsu-messages';
 
 const ediClient = {
   exportBuildUp: (params: DataTableRequest) =>
@@ -36,13 +48,39 @@ const ediClient = {
   getFwbByMawb: (mawb: string) => apiClient.get<FwbRecord>(`/edi/fwb/${mawb}`),
   sendEmailEdi: (param: any) => apiClient.post('/edi/send-email-edi', param),
   sendEmailFwb: (param: any) => apiClient.post('/edi/send-email-fwb', param),
+  listDiscrepancyCodes: () => apiClient.get<DiscrepancyCode[]>(EDI_DISCREPANCY_CODE_ENDPOINT),
+  getDiscrepancyCode: (id: number | string) =>
+    apiClient.get<DiscrepancyCode>(`${EDI_DISCREPANCY_CODE_ENDPOINT}/${id}`),
+  createDiscrepancyCode: (payload: DiscrepancyCodeCreatePayload) =>
+    apiClient.post<DiscrepancyCode>(EDI_DISCREPANCY_CODE_ENDPOINT, payload),
+  updateDiscrepancyCode: (id: number | string, payload: DiscrepancyCodeUpdatePayload) =>
+    apiClient.put<DiscrepancyCode>(`${EDI_DISCREPANCY_CODE_ENDPOINT}/${id}`, payload),
+  deleteDiscrepancyCode: (id: number | string) =>
+    apiClient.delete(`${EDI_DISCREPANCY_CODE_ENDPOINT}/${id}`),
+  listFsuMessages: () => apiClient.get<FsuMessage[]>(EDI_FSU_MESSAGE_ENDPOINT),
+  getFsuMessage: (id: number | string) =>
+    apiClient.get<FsuMessage>(`${EDI_FSU_MESSAGE_ENDPOINT}/${id}`),
+  createFsuMessage: (payload: FsuMessageCreatePayload) =>
+    apiClient.post<FsuMessage>(EDI_FSU_MESSAGE_ENDPOINT, payload),
+  updateFsuMessage: (id: number | string, payload: FsuMessageUpdatePayload) =>
+    apiClient.put<FsuMessage>(`${EDI_FSU_MESSAGE_ENDPOINT}/${id}`, payload),
+  deleteFsuMessage: (id: number | string) =>
+    apiClient.delete(`${EDI_FSU_MESSAGE_ENDPOINT}/${id}`),
 };
 
 export default ediClient;
 export type {
   BuildupHeader,
   CustomerInfo,
+  DiscrepancyCode,
+  DiscrepancyCodeCreatePayload,
+  DiscrepancyCodeFilters,
+  DiscrepancyCodeUpdatePayload,
   DataTableColumn,
+  FsuMessage,
+  FsuMessageCreatePayload,
+  FsuMessageFilters,
+  FsuMessageUpdatePayload,
   DataTableFilters,
   DataTableOrder,
   DataTableRequest,

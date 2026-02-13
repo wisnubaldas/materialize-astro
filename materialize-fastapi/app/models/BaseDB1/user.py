@@ -6,6 +6,7 @@ from app.db.mysql import BaseDB1
 
 
 class User(BaseDB1):
+    """User aplikasi; role relasi disimpan di user_roles (RBAC)."""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)

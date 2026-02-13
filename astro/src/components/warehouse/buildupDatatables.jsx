@@ -258,7 +258,7 @@ export default function BuildupDatatables() {
             </p>
           </div>
           <div className="text-muted small">
-            Endpoint: {WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
+            Menampilkan data yang sudah di build up dari file manifest excel.
           </div>
         </div>
 

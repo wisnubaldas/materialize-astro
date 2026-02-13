@@ -49,6 +49,7 @@ const getIconDescriptor = (icon) => {
 };
 
 const Menu = ({ menuData = [], currentPath = '/' }) => {
+  // menuData sudah RBAC-filtered dari backend; komponen ini fokus render + active state.
   const renderMenuLevel = (items, depth = 0) => {
     const safeItems = Array.isArray(items) ? items : [];
 

@@ -3,8 +3,8 @@ version: "3.9"
 services:
   backend:
     build:
-      context: .
-      dockerfile: DockerfileBackend
+      context: ..
+      dockerfile: docker-asset/DockerfileBackend
     container_name: fastapi-backend
     ports:
       - "8000:8000"
@@ -17,8 +17,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: DockerfileFrontend
+      context: ..
+      dockerfile: docker-asset/DockerfileFrontend
     container_name: astro-frontend
     ports:
       - "4321:4321"

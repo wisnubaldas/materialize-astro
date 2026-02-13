@@ -1,0 +1,12 @@
+---
+import FsuMessage from '@components/edi/fsu-message';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout title="EDI | Master FSU Message" description="Master data FSU message">
+  <div class="row">
+    <div class="col-md-12 col-xl-12">
+      <FsuMessage client:only />
+    </div>
+  </div>
+</AdminLayout>

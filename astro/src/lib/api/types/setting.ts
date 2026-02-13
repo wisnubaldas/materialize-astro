@@ -20,6 +20,10 @@ export type UserPasswordPayload = {
   new_password: string;
 };
 
+export type UserRolesUpdatePayload = {
+  role_ids: number[];
+};
+
 export type Role = {
   id: number;
   role_name: string;

@@ -15,4 +15,5 @@ class UserProfileSchema(BaseModel):
     id: int
     username: str
     email: EmailStr
+    # Daftar role untuk kebutuhan RBAC di frontend (menu & akses fitur).
     roles: list[str] = Field(default_factory=list)

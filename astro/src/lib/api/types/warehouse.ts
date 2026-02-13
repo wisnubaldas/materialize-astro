@@ -53,3 +53,46 @@ export interface ManifestFlightDetailResponse {
   flight: ManifestFlight;
   details: ManifestFlightDetailRow[];
 }
+
+export interface MasterWaybill {
+  MasterAWB: string;
+  Pieces?: number | null;
+  Weight?: number | null;
+  Volume?: number | null;
+  AirlinesCode?: string | null;
+  FlightNo?: string | null;
+  Origin?: string | null;
+  Destination?: string | null;
+  DateOfFlight?: string | null;
+  KindOfGood?: string | null;
+  KindOfCode?: string | null;
+  PENnumber?: string | null;
+  KTKR?: string | null;
+  DateOfPen?: string | null;
+  HSCode?: string | null;
+  AgenCode?: string | null;
+  ShipperCode?: string | null;
+  ConsigneeCode?: string | null;
+  bc11?: string | null;
+  tglbc11?: string | null;
+  nopos?: string | null;
+  Multihost?: string | null;
+  Parsial?: string | null;
+  DateOfOut?: string | null;
+  TimeOut?: string | null;
+  DateOfIn?: string | null;
+  TimeIn?: string | null;
+  RCS?: boolean | number | null;
+  FWB?: boolean | number | null;
+  PDE?: boolean | number | null;
+  Status?: boolean | number | null;
+  DateEntry?: string | null;
+  TimeEntry?: string | null;
+  void?: boolean | number | null;
+  token?: string | null;
+  created_at?: string | null;
+}
+
+export interface MasterWaybillBulkRequest {
+  MasterAWB: string[];
+}

@@ -1,0 +1,12 @@
+---
+import DiscrepancyCode from '@components/edi/discrepancy-code';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout title="EDI | Master Discrepancy Code" description="Master data discrepancy code">
+  <div class="row">
+    <div class="col-md-12 col-xl-12">
+      <DiscrepancyCode client:only />
+    </div>
+  </div>
+</AdminLayout>

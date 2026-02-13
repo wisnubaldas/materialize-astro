@@ -6,12 +6,12 @@ Panduan ringkas untuk menyiapkan, mengelola, dan mempelajari proyek **materializ
 ## <iconify-icon icon="devicon:portainer" width="24" height="24" /> Deploy di Portainer
 
 1. Pastikan file berikut sudah dipush ke repository GitLab:
-   - `backend/Dockerfile`
-   - `frontend/Dockerfile`
-   - `docker-compose.yml`
+   - `docker-asset/DockerfileBackend`
+   - `docker-asset/DockerfileFrontend`
+   - `docker-asset/docker-compose.yml`
 2. Buka **Portainer** → **Stacks** → **Add stack**.
 3. Pilih opsi **Git repository** dan masukkan URL repository GitLab.
-4. Isi path ke `docker-compose.yml` dengan benar (`/docker-compose.yml`).
+4. Isi path ke `docker-asset/docker-compose.yml` dengan benar (`/docker-asset/docker-compose.yml`).
 5. Klik **Deploy the stack**.
 
 

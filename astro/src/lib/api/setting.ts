@@ -10,6 +10,7 @@ import type {
   User,
   UserCreatePayload,
   UserPasswordPayload,
+  UserRolesUpdatePayload,
   UserUpdatePayload,
 } from './types/setting';
 
@@ -27,6 +28,9 @@ const settingClient = {
   deleteUser: (id: number | string) => apiClient.delete(`${USERS_ENDPOINT}/${id}`),
   updateUserPassword: (id: number | string, payload: UserPasswordPayload) =>
     apiClient.patch(`${USERS_ENDPOINT}/${id}/password`, payload),
+  listUserRoles: (id: number | string) => apiClient.get<Role[]>(`${USERS_ENDPOINT}/${id}/roles`),
+  updateUserRoles: (id: number | string, payload: UserRolesUpdatePayload) =>
+    apiClient.put<Role[]>(`${USERS_ENDPOINT}/${id}/roles`, payload),
 
   listRoles: () => apiClient.get<Role[]>(ROLES_ENDPOINT),
   createRole: (payload: RoleCreatePayload) => apiClient.post<Role>(ROLES_ENDPOINT, payload),
@@ -56,5 +60,6 @@ export type {
   User,
   UserCreatePayload,
   UserPasswordPayload,
+  UserRolesUpdatePayload,
   UserUpdatePayload,
 } from './types/setting';

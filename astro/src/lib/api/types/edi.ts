@@ -31,6 +31,48 @@ export type DataTableRequest = BaseDataTableRequest<DataTableFilters>;
 export type DataTableResponse<T> = BaseDataTableResponse<T>;
 export type { DataTableColumn, DataTableOrder, DataTableSearch };
 
+export interface DiscrepancyCodeFilters {
+  code?: string | null;
+  category?: string | null;
+  name?: string | null;
+  severity?: string | null;
+}
+
+export interface FsuMessageFilters {
+  code?: string | null;
+  remark?: string | null;
+}
+
+export interface DiscrepancyCode {
+  id: number;
+  code: string;
+  category: string;
+  name: string;
+  description?: string | null;
+  severity: string;
+  hold_delivery: boolean;
+  require_photo: boolean;
+  require_remark: boolean;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface FsuMessage {
+  id: number;
+  code: string;
+  remark: string;
+  status: boolean;
+}
+
+export type DiscrepancyCodeCreatePayload = Omit<
+  DiscrepancyCode,
+  'id' | 'created_at' | 'updated_at'
+>;
+export type DiscrepancyCodeUpdatePayload = Partial<DiscrepancyCodeCreatePayload>;
+export type FsuMessageCreatePayload = Omit<FsuMessage, 'id'>;
+export type FsuMessageUpdatePayload = Partial<FsuMessageCreatePayload>;
+
 export interface EksBuildUpDetail {
   noid: number;
   BuildUpNumber?: string | null;

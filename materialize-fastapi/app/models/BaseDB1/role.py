@@ -6,6 +6,12 @@ from app.db.mysql import BaseDB1
 
 
 class Role(BaseDB1):
+    """RBAC role master.
+
+    Digunakan untuk:
+    - Mengelompokkan akses menu (menu.role_id).
+    - Mengikat user ke role via tabel user_roles.
+    """
     __tablename__ = "roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

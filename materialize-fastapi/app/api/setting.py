@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -7,6 +7,7 @@ from app.models.BaseDB1.menu import Menu
 from app.models.BaseDB1.role import Role
 from app.models.BaseDB1.user import User
 from app.models.BaseDB1.user_role import UserRole
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.setting_schema import (
     MenuCreate,
     MenuOut,
@@ -15,21 +16,35 @@ from app.schemas.setting_schema import (
     RoleCreate,
     RoleOut,
     RoleUpdate,
-    UserRolesUpdate,
     UserCreate,
     UserOut,
     UserPasswordUpdate,
+    UserRolesUpdate,
     UserUpdate,
 )
+from app.services.datatables_service import DataTablesService
 from app.utils.auth_util import hash_password, verify_password
 
 router = APIRouter(prefix="/setting", tags=["Setting"])
+
+user_datatable_service = DataTablesService(
+    model=User,
+    schema=UserOut,
+    search_columns=["username", "email"],
+)
+
+menu_datatable_service = DataTablesService(
+    model=Menu,
+    schema=MenuOut,
+    search_columns=["name", "url", "icon"],
+)
 
 
 def build_menu_tree(menus: list[Menu]) -> list[dict]:
     items: dict[int, dict] = {}
     roots: list[dict] = []
 
+    # Bentuk map menu -> children agar mudah membangun tree sidebar.
     for menu in menus:
         items[menu.id] = {
             "id": menu.id,
@@ -58,6 +73,15 @@ def list_users(db: Session = Depends(get_db1_r)):
     return db.query(User).order_by(User.id.desc()).all()
 
 
+@router.post(
+    "/users/datatables",
+    response_model=DataTablesResponse[UserOut],
+    summary="List users (datatables)",
+)
+def list_users_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    return user_datatable_service.get_datatable(db=db, params=params)
+
+
 @router.get("/users/{user_id}", response_model=UserOut, summary="Detail user")
 def get_user(user_id: int, db: Session = Depends(get_db1_r)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -75,11 +99,7 @@ def get_user(user_id: int, db: Session = Depends(get_db1_r)):
 def create_user(payload: UserCreate, db: Session = Depends(get_db1_w)):
     username = payload.username.strip()
     email = payload.email.strip().lower()
-    existing = (
-        db.query(User)
-        .filter(or_(User.username == username, User.email == email))
-        .first()
-    )
+    existing = db.query(User).filter(or_(User.username == username, User.email == email)).first()
     if existing:
         raise HTTPException(status_code=409, detail="Username atau email sudah digunakan")
 
@@ -100,11 +120,7 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db1
     if "username" in data:
         username = data["username"].strip()
         if username != user.username:
-            exists = (
-                db.query(User)
-                .filter(User.username == username, User.id != user_id)
-                .first()
-            )
+            exists = db.query(User).filter(User.username == username, User.id != user_id).first()
             if exists:
                 raise HTTPException(status_code=409, detail="Username sudah digunakan")
         user.username = username
@@ -112,11 +128,7 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db1
     if "email" in data:
         email = data["email"].strip().lower()
         if email != user.email:
-            exists = (
-                db.query(User)
-                .filter(User.email == email, User.id != user_id)
-                .first()
-            )
+            exists = db.query(User).filter(User.email == email, User.id != user_id).first()
             if exists:
                 raise HTTPException(status_code=409, detail="Email sudah digunakan")
         user.email = email
@@ -190,6 +202,7 @@ def update_user_roles(
         if roles_count != len(role_ids):
             raise HTTPException(status_code=404, detail="Role tidak ditemukan")
 
+    # RBAC: strategi update role = replace all (hapus lama, insert baru).
     db.query(UserRole).filter(UserRole.user_id == user_id).delete()
     for role_id in role_ids:
         db.add(UserRole(user_id=user_id, role_id=role_id))
@@ -199,9 +212,7 @@ def update_user_roles(
     if not role_ids:
         return []
 
-    return (
-        db.query(Role).filter(Role.id.in_(role_ids)).order_by(Role.role_name.asc()).all()
-    )
+    return db.query(Role).filter(Role.id.in_(role_ids)).order_by(Role.role_name.asc()).all()
 
 
 @router.get("/roles", response_model=list[RoleOut], summary="List roles")
@@ -239,8 +250,7 @@ def update_role(role_id: int, payload: RoleUpdate, db: Session = Depends(get_db1
         role_name = data["role_name"].strip()
         if role_name != role.role_name:
             existing = (
-                db.query(Role).filter(Role.role_name == role_name, Role.id != role_id)
-                .first()
+                db.query(Role).filter(Role.role_name == role_name, Role.id != role_id).first()
             )
             if existing:
                 raise HTTPException(status_code=409, detail="Role sudah digunakan")
@@ -251,9 +261,7 @@ def update_role(role_id: int, payload: RoleUpdate, db: Session = Depends(get_db1
     return role
 
 
-@router.delete(
-    "/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete role"
-)
+@router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete role")
 def delete_role(role_id: int, db: Session = Depends(get_db1_w)):
     role = db.query(Role).filter(Role.id == role_id).first()
     if not role:
@@ -280,6 +288,15 @@ def list_menus(
     return query.order_by(Menu.parent.asc(), Menu.id.asc()).all()
 
 
+@router.post(
+    "/menus/datatables",
+    response_model=DataTablesResponse[MenuOut],
+    summary="List menus (datatables)",
+)
+def list_menus_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    return menu_datatable_service.get_datatable(db=db, params=params)
+
+
 @router.get("/menus/tree", response_model=list[MenuTreeOut], summary="List menus (tree)")
 def list_menu_tree(
     role_id: int | None = Query(default=None),
@@ -288,6 +305,45 @@ def list_menu_tree(
     query = db.query(Menu)
     if role_id is not None:
         query = query.filter(or_(Menu.role_id == role_id, Menu.role_id.is_(None)))
+    menus = query.order_by(Menu.parent.asc(), Menu.id.asc()).all()
+    return build_menu_tree(menus)
+
+
+@router.get(
+    "/menus/tree/me",
+    response_model=list[MenuTreeOut],
+    summary="List menus (tree) for current user",
+)
+def list_menu_tree_for_user(request: Request, db: Session = Depends(get_db1_r)):
+    subject = request.scope.get("user", {}).get("username")
+    if not subject:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user = db.query(User).filter(or_(User.email == subject, User.username == subject)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    roles = (
+        db.query(Role.id, Role.role_name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user.id)
+        .all()
+    )
+    role_ids = [role_id for role_id, _ in roles]
+    role_names = {role_name for _, role_name in roles}
+
+    # RBAC: admin dapat melihat semua menu tanpa filter role.
+    if "admin" in {name.lower() for name in role_names}:
+        menus = db.query(Menu).order_by(Menu.parent.asc(), Menu.id.asc()).all()
+        return build_menu_tree(menus)
+
+    query = db.query(Menu)
+    # RBAC: menu role_id NULL dianggap public dan tetap ditampilkan.
+    if role_ids:
+        query = query.filter(or_(Menu.role_id.in_(role_ids), Menu.role_id.is_(None)))
+    else:
+        query = query.filter(Menu.role_id.is_(None))
+
     menus = query.order_by(Menu.parent.asc(), Menu.id.asc()).all()
     return build_menu_tree(menus)
 
@@ -359,9 +415,7 @@ def update_menu(menu_id: int, payload: MenuUpdate, db: Session = Depends(get_db1
     return menu
 
 
-@router.delete(
-    "/menus/{menu_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete menu"
-)
+@router.delete("/menus/{menu_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete menu")
 def delete_menu(menu_id: int, db: Session = Depends(get_db1_w)):
     menu = db.query(Menu).filter(Menu.id == menu_id).first()
     if not menu:

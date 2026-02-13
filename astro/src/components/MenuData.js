@@ -1,6 +1,8 @@
 import { apiClient } from '@lib/api/client';
 
+// RBAC: backend mengembalikan menu tree yang sudah difilter role.
 const MENU_TREE_ENDPOINT = '/setting/menus/tree';
+const MENU_TREE_ME_ENDPOINT = '/setting/menus/tree/me';
 
 const normalizeMenuItems = (items = []) =>
   items.map((item) => ({
@@ -10,8 +12,12 @@ const normalizeMenuItems = (items = []) =>
 
 const getMenuData = async ({ token, roleId } = {}) => {
   try {
-    const params = roleId === undefined || roleId === null ? undefined : { role_id: roleId };
-    const data = await apiClient.get(MENU_TREE_ENDPOINT, {
+    // roleId dipakai untuk preview role tertentu (mis. admin/setting).
+    // Jika tidak ada roleId, backend memakai user token untuk filter RBAC.
+    const hasRoleFilter = roleId !== undefined && roleId !== null;
+    const endpoint = hasRoleFilter ? MENU_TREE_ENDPOINT : MENU_TREE_ME_ENDPOINT;
+    const params = hasRoleFilter ? { role_id: roleId } : undefined;
+    const data = await apiClient.get(endpoint, {
       params,
       token,
     });

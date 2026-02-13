@@ -1,8 +1,9 @@
+import GridData from '@components/GridData';
 import InputField from '@components/parsial/InputField';
 import Spinner from '@components/parsial/Spinner';
 import settingClient from '@lib/api/setting';
 import { showToast } from '@js/utils';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 
 const emptyCreateForm = {
@@ -13,28 +14,36 @@ const emptyCreateForm = {
 };
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [createErrors, setCreateErrors] = useState({});
   const [createLoading, setCreateLoading] = useState(false);
+  const tableRef = useRef(null);
 
-  const loadUsers = async () => {
+  const USERS_DATATABLE_ENDPOINT = '/setting/users/datatables';
+
+  const reloadTable = useCallback((resetPaging = false) => {
+    tableRef.current?.reload?.(resetPaging);
+  }, []);
+
+  const loadRoles = async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await settingClient.listUsers();
-      setUsers(Array.isArray(data) ? data : []);
+      const data = await settingClient.listRoles();
+      setRoles(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err?.message ?? 'Gagal memuat data user.');
+      setRoles([]);
+      setError(err?.message ?? 'Gagal memuat data role.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadUsers();
+    loadRoles();
   }, []);
 
   const handleCreateChange = (e) => {
@@ -69,7 +78,7 @@ export default function UserManagement() {
       });
       showToast({ type: 'success', title: 'User', message: 'User berhasil dibuat.' });
       setCreateForm(emptyCreateForm);
-      await loadUsers();
+      reloadTable(true);
     } catch (err) {
       showToast({
         type: 'danger',
@@ -154,7 +163,7 @@ export default function UserManagement() {
 
     if (result.isConfirmed) {
       showToast({ type: 'success', title: 'User', message: 'User berhasil diperbarui.' });
-      await loadUsers();
+      reloadTable(false);
     }
   };
 
@@ -242,6 +251,88 @@ export default function UserManagement() {
     }
   };
 
+  const ensureRolesLoaded = async () => {
+    if (roles.length > 0) {
+      return roles;
+    }
+    const data = await settingClient.listRoles();
+    const resolved = Array.isArray(data) ? data : [];
+    setRoles(resolved);
+    return resolved;
+  };
+
+  // RBAC: atur relasi user <-> role di backend (tabel user_roles).
+  const openRoleModal = async (user) => {
+    try {
+      const [rolesData, userRoles] = await Promise.all([
+        ensureRolesLoaded(),
+        settingClient.listUserRoles(user.id),
+      ]);
+
+      const selectedIds = new Set(
+        Array.isArray(userRoles) ? userRoles.map((role) => role.id) : []
+      );
+
+      const rolesHtml =
+        rolesData.length > 0
+          ? rolesData
+              .map(
+                (role) => `
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="role-${escapeHtml(role.id)}"
+                  name="role_ids"
+                  value="${escapeHtml(role.id)}"
+                  ${selectedIds.has(role.id) ? 'checked' : ''}
+                />
+                <label class="form-check-label" for="role-${escapeHtml(role.id)}">
+                  ${escapeHtml(role.role_name)}
+                </label>
+              </div>
+            `
+              )
+              .join('')
+          : '<div class="text-muted">Belum ada role. Buat role terlebih dahulu.</div>';
+
+      const result = await Swal.fire({
+        title: `Atur Role`,
+        html: `<div class="text-start">${rolesHtml}</div>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+          const popup = Swal.getPopup();
+          const checked = Array.from(
+            popup?.querySelectorAll('input[name="role_ids"]:checked') ?? []
+          ).map((input) => Number(input.value));
+
+          try {
+            await settingClient.updateUserRoles(user.id, { role_ids: checked });
+            return true;
+          } catch (err) {
+            Swal.showValidationMessage(err?.message ?? 'Gagal memperbarui role user.');
+            return undefined;
+          }
+        },
+        allowOutsideClick: () => !Swal.isLoading(),
+      });
+
+      if (result.isConfirmed) {
+        showToast({ type: 'success', title: 'User', message: 'Role user diperbarui.' });
+      }
+    } catch (err) {
+      showToast({
+        type: 'danger',
+        title: 'User',
+        message: err?.message ?? 'Gagal memuat data role.',
+      });
+    }
+  };
+
   const handleDelete = async (user) => {
     const result = await Swal.fire({
       title: 'Hapus user?',
@@ -256,7 +347,7 @@ export default function UserManagement() {
     try {
       await settingClient.deleteUser(user.id);
       showToast({ type: 'success', title: 'User', message: 'User berhasil dihapus.' });
-      await loadUsers();
+      reloadTable(false);
     } catch (err) {
       showToast({
         type: 'danger',
@@ -265,6 +356,103 @@ export default function UserManagement() {
       });
     }
   };
+
+  const columns = useMemo(
+    () => [
+      { data: 'id', title: 'ID', className: 'text-nowrap' },
+      { data: 'username', title: 'Username' },
+      { data: 'email', title: 'Email' },
+      {
+        data: null,
+        title: 'Aksi',
+        orderable: false,
+        searchable: false,
+        className: 'text-end text-nowrap',
+        render: (_value, type) => {
+          if (type !== 'display') {
+            return '';
+          }
+          return `
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-warning" data-action="edit">
+                Edit
+              </button>
+              <button type="button" class="btn btn-outline-secondary" data-action="role">
+                Role
+              </button>
+              <button type="button" class="btn btn-outline-info" data-action="password">
+                Password
+              </button>
+              <button type="button" class="btn btn-outline-danger" data-action="delete">
+                Hapus
+              </button>
+            </div>
+          `;
+        },
+      },
+    ],
+    []
+  );
+
+  const tableOptions = useMemo(
+    () => ({
+      order: [[0, 'asc']],
+      pageLength: 10,
+      lengthMenu: [10, 25, 50, 100],
+      autoWidth: false,
+    }),
+    []
+  );
+
+  useEffect(() => {
+    const api = tableRef.current?.dt?.();
+    if (!api?.table) {
+      return undefined;
+    }
+
+    const tableNode = api.table().node();
+    if (!tableNode) {
+      return undefined;
+    }
+
+    const resolveRowData = (rowElement) => {
+      if (!rowElement) {
+        return null;
+      }
+      const isChild = rowElement.classList?.contains('child');
+      const parentRow = isChild ? rowElement.previousSibling : rowElement;
+      return parentRow ? api.row(parentRow).data() : null;
+    };
+
+    const handleClick = (event) => {
+      const button = event.target?.closest?.('button[data-action]');
+      if (!button) {
+        return;
+      }
+
+      const action = button.getAttribute('data-action');
+      const row = button.closest('tr');
+      const rowData = resolveRowData(row);
+      if (!rowData) {
+        return;
+      }
+
+      if (action === 'edit') {
+        openEditModal(rowData);
+      } else if (action === 'role') {
+        openRoleModal(rowData);
+      } else if (action === 'password') {
+        openPasswordModal(rowData);
+      } else if (action === 'delete') {
+        handleDelete(rowData);
+      }
+    };
+
+    tableNode.addEventListener('click', handleClick);
+    return () => {
+      tableNode.removeEventListener('click', handleClick);
+    };
+  }, [handleDelete, openEditModal, openPasswordModal, openRoleModal]);
 
   return (
     <div className="row g-6">
@@ -333,60 +521,16 @@ export default function UserManagement() {
         <div className="card shadow-none border border-secondary">
           <div className="card-body">
             <h5 className="card-title text-secondary">Daftar User</h5>
-            {loading ? (
-              <Spinner />
-            ) : error ? (
-              <div className="alert alert-danger mb-0">{error}</div>
-            ) : users.length === 0 ? (
-              <div className="text-muted">Belum ada user.</div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th className="text-end">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td>{user.id}</td>
-                        <td>{user.username}</td>
-                        <td>{user.email}</td>
-                        <td className="text-end">
-                          <div className="btn-group btn-group-sm">
-                            <button
-                              type="button"
-                              className="btn btn-outline-warning"
-                              onClick={() => openEditModal(user)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-info"
-                              onClick={() => openPasswordModal(user)}
-                            >
-                              Password
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger"
-                              onClick={() => handleDelete(user)}
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            {loading ? <Spinner /> : null}
+            {error ? <div className="alert alert-danger mb-3">{error}</div> : null}
+            <GridData
+              ref={tableRef}
+              columns={columns}
+              ajaxEndpoint={USERS_DATATABLE_ENDPOINT}
+              filters={{}}
+              options={tableOptions}
+              className="table-bordered table-striped align-middle"
+            />
           </div>
         </div>
       </div>

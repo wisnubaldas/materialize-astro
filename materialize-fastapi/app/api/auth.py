@@ -42,6 +42,7 @@ def get_profile(request: Request, db: Session = Depends(get_db1_r)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User tidak ditemukan")
 
+    # RBAC: ambil daftar role user untuk kebutuhan frontend (menu & izin).
     roles = (
         db.query(Role.role_name)
         .join(UserRole, UserRole.role_id == Role.id)

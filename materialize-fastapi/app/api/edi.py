@@ -1,8 +1,11 @@
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 
-from app.dependencies.discrepancy_code_deps import get_discrepancy_code_service
+from app.dependencies.discrepancy_code_deps import (
+    get_discrepancy_code_service_r,
+    get_discrepancy_code_service_w,
+)
 from app.dependencies.edi_deps import (
     get_buildup_mawb_service,
     get_buildup_service,
@@ -12,22 +15,33 @@ from app.dependencies.edi_deps import (
     get_masterwaybill_service,
     get_weighing_header_service,
 )
+from app.dependencies.fsu_message_deps import get_fsu_message_service_r, get_fsu_message_service_w
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
+from app.schemas.fsu_message_schema import (
+    FsuMessageCreate,
+    FsuMessageOut,
+    FsuMessageUpdate,
+)
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_email_request_body import FwbEmailRequestBody
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.fwb_table_schema import FwbTableOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
-from app.schemas.mst_discrepancy_code_schema import MstDiscrepancyCodeOut
+from app.schemas.mst_discrepancy_code_schema import (
+    MstDiscrepancyCodeCreate,
+    MstDiscrepancyCodeOut,
+    MstDiscrepancyCodeUpdate,
+)
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.discrepancy_code_service import DiscrepancyCodeService
 from app.services.edi_service import EdiService
+from app.services.fsu_message_service import FsuMessageService
 
 router = APIRouter(prefix="/edi", tags=["Send Electronic data interchange (EDI)"])
 logger = logging.getLogger("edi")
@@ -180,9 +194,226 @@ async def send_email_fwb(
     response_model=list[MstDiscrepancyCodeOut],
 )
 def list_discrepancy_codes(
-    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service),
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_r),
 ):
     return service.list_all()
+
+
+@router.post(
+    "/discrepancy-codes/datatables",
+    summary="Datatable discrepancy codes",
+    response_model=DataTablesResponse[MstDiscrepancyCodeOut],
+)
+def datatable_discrepancy_codes(
+    params: DataTablesParams,
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_r),
+):
+    return service.datatable(params)
+
+
+@router.get(
+    "/discrepancy-codes/{code_id}",
+    summary="Detail discrepancy code",
+    response_model=MstDiscrepancyCodeOut,
+)
+def get_discrepancy_code(
+    code_id: int,
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_r),
+):
+    record = service.get_by_id(code_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Discrepancy code tidak ditemukan")
+    return record
+
+
+@router.post(
+    "/discrepancy-codes",
+    summary="Create discrepancy code",
+    response_model=MstDiscrepancyCodeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_discrepancy_code(
+    payload: MstDiscrepancyCodeCreate,
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_w),
+):
+    code = payload.code.strip()
+    if service.get_by_code(code):
+        raise HTTPException(status_code=409, detail="Kode discrepancy sudah digunakan")
+
+    data = payload.model_dump()
+    data["code"] = code
+    data["category"] = data["category"].strip()
+    data["name"] = data["name"].strip()
+    if data.get("description") is not None:
+        data["description"] = data["description"].strip() or None
+
+    if not data["code"]:
+        raise HTTPException(status_code=400, detail="Kode discrepancy wajib diisi")
+    if not data["category"]:
+        raise HTTPException(status_code=400, detail="Kategori wajib diisi")
+    if not data["name"]:
+        raise HTTPException(status_code=400, detail="Nama wajib diisi")
+
+    return service.create(MstDiscrepancyCodeCreate(**data))
+
+
+@router.put(
+    "/discrepancy-codes/{code_id}",
+    summary="Update discrepancy code",
+    response_model=MstDiscrepancyCodeOut,
+)
+def update_discrepancy_code(
+    code_id: int,
+    payload: MstDiscrepancyCodeUpdate,
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_w),
+):
+    record = service.get_by_id(code_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Discrepancy code tidak ditemukan")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "code" in data:
+        code = data["code"].strip()
+        if code != record.code and service.get_by_code(code):
+            raise HTTPException(status_code=409, detail="Kode discrepancy sudah digunakan")
+        data["code"] = code
+        if not data["code"]:
+            raise HTTPException(status_code=400, detail="Kode discrepancy wajib diisi")
+    if "category" in data:
+        data["category"] = data["category"].strip()
+        if not data["category"]:
+            raise HTTPException(status_code=400, detail="Kategori wajib diisi")
+    if "name" in data:
+        data["name"] = data["name"].strip()
+        if not data["name"]:
+            raise HTTPException(status_code=400, detail="Nama wajib diisi")
+    if "description" in data:
+        data["description"] = data["description"].strip() if data["description"] else None
+
+    return service.update(record, MstDiscrepancyCodeUpdate(**data))
+
+
+@router.delete(
+    "/discrepancy-codes/{code_id}",
+    summary="Delete discrepancy code",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_discrepancy_code(
+    code_id: int,
+    service: DiscrepancyCodeService = Depends(get_discrepancy_code_service_w),
+):
+    record = service.get_by_id(code_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Discrepancy code tidak ditemukan")
+    service.delete(record)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/fsu-messages/datatables",
+    summary="Datatable FSU messages",
+    response_model=DataTablesResponse[FsuMessageOut],
+)
+def datatable_fsu_messages(
+    params: DataTablesParams,
+    service: FsuMessageService = Depends(get_fsu_message_service_r),
+):
+    return service.datatable(params)
+
+
+@router.get(
+    "/fsu-messages",
+    summary="List FSU messages",
+    response_model=list[FsuMessageOut],
+)
+def list_fsu_messages(
+    service: FsuMessageService = Depends(get_fsu_message_service_r),
+):
+    return service.list_all()
+
+
+@router.get(
+    "/fsu-messages/{message_id}",
+    summary="Detail FSU message",
+    response_model=FsuMessageOut,
+)
+def get_fsu_message(
+    message_id: int,
+    service: FsuMessageService = Depends(get_fsu_message_service_r),
+):
+    record = service.get_by_id(message_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="FSU message tidak ditemukan")
+    return record
+
+
+@router.post(
+    "/fsu-messages",
+    summary="Create FSU message",
+    response_model=FsuMessageOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_fsu_message(
+    payload: FsuMessageCreate,
+    service: FsuMessageService = Depends(get_fsu_message_service_w),
+):
+    code = payload.code.strip()
+    if service.get_by_code(code):
+        raise HTTPException(status_code=409, detail="Kode FSU sudah digunakan")
+    data = payload.model_dump()
+    data["code"] = code
+    data["remark"] = data["remark"].strip()
+    if not data["code"]:
+        raise HTTPException(status_code=400, detail="Kode FSU wajib diisi")
+    if not data["remark"]:
+        raise HTTPException(status_code=400, detail="Remark wajib diisi")
+    return service.create(FsuMessageCreate(**data))
+
+
+@router.put(
+    "/fsu-messages/{message_id}",
+    summary="Update FSU message",
+    response_model=FsuMessageOut,
+)
+def update_fsu_message(
+    message_id: int,
+    payload: FsuMessageUpdate,
+    service: FsuMessageService = Depends(get_fsu_message_service_w),
+):
+    record = service.get_by_id(message_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="FSU message tidak ditemukan")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "code" in data:
+        code = data["code"].strip()
+        if code != record.code and service.get_by_code(code):
+            raise HTTPException(status_code=409, detail="Kode FSU sudah digunakan")
+        data["code"] = code
+        if not data["code"]:
+            raise HTTPException(status_code=400, detail="Kode FSU wajib diisi")
+    if "remark" in data:
+        data["remark"] = data["remark"].strip()
+        if not data["remark"]:
+            raise HTTPException(status_code=400, detail="Remark wajib diisi")
+
+    return service.update(record, FsuMessageUpdate(**data))
+
+
+@router.delete(
+    "/fsu-messages/{message_id}",
+    summary="Delete FSU message",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_fsu_message(
+    message_id: int,
+    service: FsuMessageService = Depends(get_fsu_message_service_w),
+):
+    record = service.get_by_id(message_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="FSU message tidak ditemukan")
+    service.delete(record)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

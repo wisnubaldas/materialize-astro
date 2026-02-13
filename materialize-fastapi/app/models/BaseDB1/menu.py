@@ -6,6 +6,12 @@ from app.db.mysql import BaseDB1
 
 
 class Menu(BaseDB1):
+    """Menu navigation yang dipakai UI + RBAC.
+
+    Catatan RBAC:
+    - role_id NULL berarti menu "public" (bisa dilihat semua role).
+    - role_id terisi berarti menu hanya muncul untuk role tersebut.
+    """
     __tablename__ = "menus"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
