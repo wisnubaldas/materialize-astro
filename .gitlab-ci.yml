@@ -1,7 +1,7 @@
 production:
   script:
     - echo "🚀 Deploying to Production"
-    - ssh -o StrictHostKeyChecking=no root@$server -p 23022 $script
+    - ssh -o StrictHostKeyChecking=no root@$server -p 23022 "bash /home/wisnu/mau-app/deploy-production.sh"
   only:
     - production
 
