@@ -15,6 +15,7 @@ FRONTEND_DIR="$APP_DIR/astro"
 BACKEND_DIR="$APP_DIR/materialize-fastapi"
 BRANCH="master"
 LOG_FILE="$APP_DIR/deploy-logs/development-$(date +'%Y%m%d_%H%M%S').log"
+POETRY_REQUIRED_VERSION="2.1.4"
 
 mkdir -p "$APP_DIR/deploy-logs"
 
@@ -56,20 +57,29 @@ fi
 
     if ! command -v poetry &> /dev/null; then
       echo "⚠️ Poetry not found. Installing local version..."
-      pip install --user "poetry==2.2.1"
+      pip install --user "poetry==${POETRY_REQUIRED_VERSION}"
       export PATH="$HOME/.local/bin:$PATH"
     fi
 
     POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
     echo "ℹ️ Poetry version: $POETRY_VERSION"
+    if [ "$(printf '%s\n' "$POETRY_REQUIRED_VERSION" "$POETRY_VERSION" | sort -V | head -n1)" != "$POETRY_REQUIRED_VERSION" ]; then
+      echo "⚠️ Poetry terlalu lama. Upgrading ke $POETRY_REQUIRED_VERSION..."
+      pip install --user --upgrade "poetry==${POETRY_REQUIRED_VERSION}"
+      export PATH="$HOME/.local/bin:$PATH"
+      POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
+      echo "ℹ️ Poetry version after upgrade: $POETRY_VERSION"
+    fi
 
-    # Fix for pycairo build issue
+    # Ensure build deps for pycairo/xhtml2pdf are available.
     echo "🧩 Ensuring system deps for pycairo..."
     if command -v apt-get &>/dev/null; then
       sudo apt-get update -y
-      sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+      sudo apt-get install -y libcairo2-dev pkg-config python3-dev build-essential
     fi
-    pip install "pycairo==1.25.0" --no-use-pep517 --no-cache-dir || true
+
+    # Keep env local to project so runtime scripts are predictable.
+    poetry config virtualenvs.in-project true --local
 
     if ! poetry check --lock >/dev/null 2>&1; then
       echo "⚠️  Lock file out of sync with pyproject.toml, regenerating..."
@@ -77,6 +87,7 @@ fi
     fi
 
     poetry install --no-root --sync
+    poetry run python -c "import cairo; print(cairo.version)"
     echo "✅ Backend dependencies installed."
   else
     echo "⚠️  Backend directory not found: $BACKEND_DIR"
