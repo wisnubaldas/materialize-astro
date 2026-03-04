@@ -269,7 +269,10 @@ class HbnetRequestService:
                     "flight_date": flt_date,
                 },
             )
-            return response.json()
+            response_data = response.json()
+            return HbnetRequestService.__remove_fields_from_payload(
+                response_data, {"IS_INTERNATIONAL", "IS_EKSPOR"}
+            )
         except requests.exceptions.RequestException as e:
             response_status = getattr(e.response, "status_code", None)
             status_code = response_status or 502
@@ -292,6 +295,21 @@ class HbnetRequestService:
                     "error": error_detail,
                 },
             ) from e
+
+    @staticmethod
+    def __remove_fields_from_payload(payload: object, fields_to_remove: set[str]) -> object:
+        if isinstance(payload, dict):
+            return {
+                key: HbnetRequestService.__remove_fields_from_payload(value, fields_to_remove)
+                for key, value in payload.items()
+                if key not in fields_to_remove
+            }
+        if isinstance(payload, list):
+            return [
+                HbnetRequestService.__remove_fields_from_payload(item, fields_to_remove)
+                for item in payload
+            ]
+        return payload
 
     # hapus data terkerim di hubnet API
     @staticmethod

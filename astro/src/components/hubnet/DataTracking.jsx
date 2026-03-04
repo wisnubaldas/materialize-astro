@@ -30,30 +30,22 @@ export default function DataTracking() {
       title: 'Destination',
     },
     {
-      data: 'IS_INTERNATIONAL',
-      title: '#',
+      data: 'KATEGORI_CARGO',
+      title: 'Kategori',
       render: {
-        display: (data, type, row) => {
-          const fe = row.IS_EKSPOR;
-          const fi = row.IS_INTERNATIONAL;
-
-          if (fe === '1' && fi === '1')
+        display: (data) => {
+          const kategori = String(data ?? '').toUpperCase();
+          if (kategori === 'EKSPORT')
             return `<span class="badge bg-label-primary">EKSPORT</span>`;
-          if (fe === '0' && fi === '1')
+          if (kategori === 'IMPORT')
             return `<span class="badge bg-label-secondary">IMPORT</span>`;
-          if (fe === '1' && fi === '0')
+          if (kategori === 'OUTGOING')
             return `<span class="badge bg-label-warning">OUTGOING</span>`;
-          if (fe === '0' && fi === '0') return `<span class="badge bg-label-info">INCOMING</span>`;
+          if (kategori === 'INCOMING') return `<span class="badge bg-label-info">INCOMING</span>`;
+          return `<span class="badge bg-label-dark">${kategori || '-'}</span>`;
         },
-        filter: (data, type, row) => {
-          const fe = row.IS_EKSPOR;
-          const fi = row.IS_INTERNATIONAL;
-
-          if (fe === '1' && fi === '1') return 'EKSPORT';
-          if (fe === '0' && fi === '1') return 'IMPORT';
-          if (fe === '1' && fi === '0') return 'OUTGOING';
-          if (fe === '0' && fi === '0') return 'INCOMING';
-          return '';
+        filter: (data) => {
+          return String(data ?? '').toUpperCase();
         },
       },
     },

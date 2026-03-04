@@ -163,8 +163,6 @@ export default function DataTerkirim() {
                           <th>K</th>
                           <th>CH_WEIGHT</th>
                           <th>REF ID</th>
-                          <th>IS_INTERNATIONAL</th>
-                          <th>IS_EKSPOR</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -179,16 +177,6 @@ export default function DataTerkirim() {
                             <td>{item.K}</td>
                             <td>{item.CH_WEIGHT}</td>
                             <td>{item.ref_id ?? '-'}</td>
-                            <td>
-                              <span className="badge bg-label-info">
-                                {item.IS_INTERNATIONAL === 1 ? 'INTERNATIONAL' : 'DOMESTIK'}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="badge bg-label-primary">
-                                {item.IS_EKSPOR === 1 ? 'EKSPORT' : 'IMPORT'}
-                              </span>
-                            </td>
                           </tr>
                         ))}
                       </tbody>

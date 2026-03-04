@@ -1,5 +1,9 @@
 import React from 'react';
 
+const preventNavigation = (event) => {
+  event.preventDefault();
+};
+
 const LoginCard = () => (
   <div className="card p-md-7 p-1">
     <div className="app-brand justify-content-center mt-5">
@@ -124,7 +128,7 @@ const LoginCard = () => (
               Remember Me
             </label>
           </div>
-          <a href="javascript:void(0);" className="float-end mb-1 mt-2">
+          <a href="#" className="float-end mb-1 mt-2" onClick={preventNavigation}>
             <span>Forgot Password?</span>
           </a>
         </div>
@@ -137,7 +141,7 @@ const LoginCard = () => (
 
       <p className="text-center mb-5">
         <span>New on our platform?</span>
-        <a href="javascript:void(0);">
+        <a href="#" onClick={preventNavigation}>
           <span>Create an account</span>
         </a>
       </p>
@@ -147,19 +151,23 @@ const LoginCard = () => (
       </div>
 
       <div className="d-flex justify-content-center gap-2">
-        <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-facebook">
+        <a href="#" className="btn btn-icon rounded-circle btn-text-facebook" onClick={preventNavigation}>
           <i className="icon-base ri ri-facebook-fill icon-18px"></i>
         </a>
 
-        <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-twitter">
+        <a href="#" className="btn btn-icon rounded-circle btn-text-twitter" onClick={preventNavigation}>
           <i className="icon-base ri ri-twitter-fill icon-18px"></i>
         </a>
 
-        <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-github">
+        <a href="#" className="btn btn-icon rounded-circle btn-text-github" onClick={preventNavigation}>
           <i className="icon-base ri ri-github-fill icon-18px"></i>
         </a>
 
-        <a href="javascript:;" className="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
+        <a
+          href="#"
+          className="btn btn-icon btn-lg rounded-pill btn-text-google-plus"
+          onClick={preventNavigation}
+        >
           <i className="icon-base ri ri-google-fill icon-18px"></i>
         </a>
       </div>

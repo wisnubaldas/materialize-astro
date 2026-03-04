@@ -1,11 +1,18 @@
 const getWindow = () => (typeof window !== 'undefined' ? window : null);
 
-const loadDependencies = async () => {
+const getLoaderOptions = (win) => ({
+  loadLayoutScripts: true,
+  ...(win?.__MAU_VENDOR_LOADER_OPTIONS__ ?? {}),
+});
+
+const loadDependencies = async (loadLayoutScripts = true) => {
   await import('./vendor-bundle.js');
   // helpers must be available before config/menu/customizer run
   await import('./helpers.js');
-  await import('./config.js');
-  await Promise.all([import('./template-customizer.js'), import('./menu.js')]);
+  if (loadLayoutScripts) {
+    await import('./config.js');
+    await Promise.all([import('./template-customizer.js'), import('./menu.js')]);
+  }
 };
 
 const bindMenuToggles = (win, helpers) => {
@@ -67,7 +74,8 @@ const bootstrap = async () => {
     return;
   }
 
-  await loadDependencies();
+  const { loadLayoutScripts } = getLoaderOptions(win);
+  await loadDependencies(loadLayoutScripts);
 
   const waves = win.Waves;
   if (waves && typeof waves.init === 'function') {
@@ -76,7 +84,9 @@ const bootstrap = async () => {
 
   const start = () => {
     try {
-      initMenu(win);
+      if (loadLayoutScripts) {
+        initMenu(win);
+      }
     } catch (error) {
       console.error('[vendor-loader] initMenu failed', error);
     }
