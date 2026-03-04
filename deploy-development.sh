@@ -15,7 +15,7 @@ FRONTEND_DIR="$APP_DIR/astro"
 BACKEND_DIR="$APP_DIR/materialize-fastapi"
 BRANCH="master"
 LOG_FILE="$APP_DIR/deploy-logs/development-$(date +'%Y%m%d_%H%M%S').log"
-POETRY_REQUIRED_VERSION="2.1.4"
+POETRY_REQUIRED_VERSION="1.8.4"
 
 mkdir -p "$APP_DIR/deploy-logs"
 
@@ -58,7 +58,8 @@ fi
 
     if ! command -v poetry &> /dev/null; then
       echo "⚠️ Poetry not found. Installing local version..."
-      pip install --user "poetry==${POETRY_REQUIRED_VERSION}"
+      python3 -m pip install --user "poetry==${POETRY_REQUIRED_VERSION}" || \
+      python3 -m pip install --user "poetry>=1.8,<1.9"
       export PATH="$HOME/.local/bin:$PATH"
     fi
 
@@ -66,10 +67,13 @@ fi
     echo "ℹ️ Poetry version: $POETRY_VERSION"
     if [ "$(printf '%s\n' "$POETRY_REQUIRED_VERSION" "$POETRY_VERSION" | sort -V | head -n1)" != "$POETRY_REQUIRED_VERSION" ]; then
       echo "⚠️ Poetry terlalu lama. Upgrading ke $POETRY_REQUIRED_VERSION..."
-      pip install --user --upgrade "poetry==${POETRY_REQUIRED_VERSION}"
-      export PATH="$HOME/.local/bin:$PATH"
-      POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
-      echo "ℹ️ Poetry version after upgrade: $POETRY_VERSION"
+      if python3 -m pip install --user --upgrade "poetry==${POETRY_REQUIRED_VERSION}"; then
+        export PATH="$HOME/.local/bin:$PATH"
+        POETRY_VERSION=$(poetry --version | awk '{print $3}' | tr -d '()')
+        echo "ℹ️ Poetry version after upgrade: $POETRY_VERSION"
+      else
+        echo "⚠️ Gagal upgrade Poetry ke ${POETRY_REQUIRED_VERSION}, lanjut dengan versi saat ini."
+      fi
     fi
 
     # Ensure build deps for pycairo/xhtml2pdf are available.
@@ -110,8 +114,20 @@ if [ -d "$BACKEND_DIR" ]; then
   if command -v supervisorctl &> /dev/null; then
     sudo supervisorctl reread || true
     sudo supervisorctl update || true
-    sudo supervisorctl restart materialize-fastapi
-    sudo supervisorctl restart scheduler-fastapi
+    if ! sudo supervisorctl restart materialize-fastapi; then
+      echo "❌ Gagal restart materialize-fastapi."
+      sudo supervisorctl status materialize-fastapi || true
+      if [ -f "/var/log/materialize-fastapi/error.log" ]; then
+        echo "----- /var/log/materialize-fastapi/error.log (tail) -----"
+        sudo tail -n 120 /var/log/materialize-fastapi/error.log || true
+      fi
+      exit 1
+    fi
+    if ! sudo supervisorctl restart scheduler-fastapi; then
+      echo "❌ Gagal restart scheduler-fastapi."
+      sudo supervisorctl status scheduler-fastapi || true
+      exit 1
+    fi
     echo "✅ Backend restarted via Supervisor."
   else
     echo "⚠️ supervisorctl not found. Please install/configure Supervisor."
