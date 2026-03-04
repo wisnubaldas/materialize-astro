@@ -25,6 +25,7 @@ trap 'echo "❌ Deployment failed at $(date). See log: $LOG_FILE"' ERR
 {
 echo "=============================================="
 echo "🚧  DEVELOPMENT DEPLOYMENT STARTED: $(date)"
+echo "Script path: $(readlink -f "$0")"
 echo "Branch: $BRANCH"
 echo "Working directory: $APP_DIR"
 echo "=============================================="
