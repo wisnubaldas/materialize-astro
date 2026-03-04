@@ -92,7 +92,28 @@ fi
     fi
 
     poetry install --no-root --sync
-    poetry run python -c "import cairo; print(cairo.version)"
+    ENV_PATH=$(poetry env info -p 2>/dev/null || true)
+    if [ -z "$ENV_PATH" ]; then
+      echo "❌ Poetry environment tidak ditemukan."
+      poetry env list || true
+      exit 1
+    fi
+    echo "ℹ️ Poetry env path: $ENV_PATH"
+
+    # Pastikan runtime selalu punya .venv path yang konsisten untuk supervisor.
+    if [ "$ENV_PATH" != "$BACKEND_DIR/.venv" ]; then
+      ln -sfn "$ENV_PATH" "$BACKEND_DIR/.venv"
+    fi
+
+    if [ ! -x "$BACKEND_DIR/.venv/bin/gunicorn" ]; then
+      echo "❌ gunicorn tidak ditemukan di $BACKEND_DIR/.venv/bin/gunicorn"
+      ls -la "$BACKEND_DIR/.venv/bin" || true
+      exit 1
+    fi
+
+    "$BACKEND_DIR/.venv/bin/python" --version
+    "$BACKEND_DIR/.venv/bin/python" -c "import cairo; print(cairo.version)"
+    "$BACKEND_DIR/.venv/bin/gunicorn" --version
     echo "✅ Backend dependencies installed."
   else
     echo "⚠️  Backend directory not found: $BACKEND_DIR"
@@ -105,18 +126,49 @@ if [ -d "$BACKEND_DIR" ]; then
 
   chmod 775 "$BACKEND_DIR/run-prod.sh"
 
-  if [ ! -d "/var/log/materialize-fastapi" ]; then
-    echo "🪶 Creating log directory: /var/log/materialize-fastapi"
-    sudo mkdir -p /var/log/materialize-fastapi || true
-    sudo chown wisnu:wisnu /var/log/materialize-fastapi || true
-  fi
-
   if command -v supervisorctl &> /dev/null; then
+    SUPER_CONF=$(sudo sh -c "grep -Rsl '\\[program:materialize-fastapi\\]' /etc/supervisor* /etc/supervisord* 2>/dev/null | head -n 1")
+    if [ -n "$SUPER_CONF" ]; then
+      echo "ℹ️ Supervisor config: $SUPER_CONF"
+      sudo sed -n '/\[program:materialize-fastapi\]/,/^\[/p' "$SUPER_CONF" | head -n 40 || true
+
+      SUPER_USER=$(sudo awk '
+        /^\[program:materialize-fastapi\]/{in_prog=1; next}
+        /^\[/{if (in_prog) exit}
+        in_prog && /^[[:space:]]*user[[:space:]]*=/ {
+          sub(/^[^=]*=[[:space:]]*/, "", $0)
+          gsub(/[[:space:]]+$/, "", $0)
+          print
+          exit
+        }
+      ' "$SUPER_CONF")
+      if [ -z "$SUPER_USER" ]; then
+        SUPER_USER="wisnu"
+      fi
+      SUPER_GROUP=$(id -gn "$SUPER_USER" 2>/dev/null || echo "$SUPER_USER")
+      echo "ℹ️ Supervisor run user: $SUPER_USER:$SUPER_GROUP"
+    else
+      echo "⚠️ Config [program:materialize-fastapi] tidak ditemukan di /etc/supervisor*"
+      SUPER_USER="wisnu"
+      SUPER_GROUP="wisnu"
+    fi
+
+    echo "🪶 Ensuring log directory: /var/log/materialize-fastapi"
+    sudo mkdir -p /var/log/materialize-fastapi || true
+    sudo touch /var/log/materialize-fastapi/access.log /var/log/materialize-fastapi/error.log || true
+    sudo chown -R "$SUPER_USER:$SUPER_GROUP" /var/log/materialize-fastapi || true
+    sudo chmod 775 /var/log/materialize-fastapi || true
+    sudo chmod 664 /var/log/materialize-fastapi/access.log /var/log/materialize-fastapi/error.log || true
+
     sudo supervisorctl reread || true
     sudo supervisorctl update || true
     if ! sudo supervisorctl restart materialize-fastapi; then
       echo "❌ Gagal restart materialize-fastapi."
       sudo supervisorctl status materialize-fastapi || true
+      echo "----- supervisor stderr tail (materialize-fastapi) -----"
+      sudo supervisorctl tail -100 materialize-fastapi stderr || true
+      echo "----- supervisor stdout tail (materialize-fastapi) -----"
+      sudo supervisorctl tail -100 materialize-fastapi stdout || true
       if [ -f "/var/log/materialize-fastapi/error.log" ]; then
         echo "----- /var/log/materialize-fastapi/error.log (tail) -----"
         sudo tail -n 120 /var/log/materialize-fastapi/error.log || true
