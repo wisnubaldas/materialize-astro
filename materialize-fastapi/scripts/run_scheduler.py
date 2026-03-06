@@ -4,8 +4,8 @@ import asyncio
 import signal
 from contextlib import suppress
 
+from app.job.scheduler import start_scheduler, stop_scheduler
 from app.utils.logging_config import setup_logging
-from app.utils.scheduler import start_scheduler, stop_scheduler
 from app.utils.startup_banner import print_startup_banner
 
 

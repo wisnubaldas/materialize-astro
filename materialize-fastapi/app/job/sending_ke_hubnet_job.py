@@ -55,11 +55,50 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
 
     # Bentuk payload sesuai contoh (list of objects)
     payload = []
+    send_time = datetime.now()  # noqa: DTZ005
 
     def _fmt_dt(val):
         if isinstance(val, datetime):
             return val.strftime("%Y-%m-%d %H:%M")
         return str(val) if val is not None else None
+
+    def _fmt_flt_date(val):  # noqa: PLR0911
+        fallback_hhmm = send_time.strftime("%H:%M")
+        fallback_full = send_time.strftime("%Y-%m-%d %H:%M")
+
+        if isinstance(val, datetime):
+            return val.strftime("%Y-%m-%d %H:%M")
+
+        if val is None:
+            return fallback_full
+
+        raw = str(val).strip()
+        if not raw:
+            return fallback_full
+
+        normalized = raw.replace("T", " ").rstrip("Z")
+
+        if ":" in normalized:
+            for fmt in (
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M",
+                "%Y/%m/%d %H:%M:%S",
+                "%Y/%m/%d %H:%M",
+            ):
+                try:
+                    return datetime.strptime(normalized, fmt).strftime("%Y-%m-%d %H:%M")  # noqa: DTZ007
+                except ValueError:
+                    continue
+            return normalized
+
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d"):
+            try:
+                date_part = datetime.strptime(normalized, fmt).strftime("%Y-%m-%d")  # noqa: DTZ007
+                return f"{date_part} {fallback_hhmm}"
+            except ValueError:
+                continue
+
+        return f"{normalized} {fallback_hhmm}"
 
     for row in rows:
         # Validasi ringan via schema (akan raise jika field wajib tidak valid)
@@ -67,7 +106,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
         data_dikirim = {
             "AWB_NO": row.AWB_NO,
             "FLT_NUMBER": row.FLT_NUMBER,
-            "FLT_DATE": _fmt_dt(row.FLT_DATE),
+            "FLT_DATE": _fmt_flt_date(row.FLT_DATE),
             "ORI": row.ORI,
             "DEST": _fmt_dt(row.DEST),
             "FLT_NUMBER1": _fmt_dt(row.FLT_NUMBER1),

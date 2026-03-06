@@ -1,11 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.services.inv_ap2_service import INVAp2Service
-from app.tasks.get_imp_breakdown_hubnet_job import run_breakdown
-from app.tasks.get_inc_hubnet import run_incoming
+from app.job.get_imp_breakdown_hubnet_job import run_breakdown
+from app.job.get_inc_hubnet import run_incoming
 
-# from app.tasks.get_out_hubnet import run_outgoings
-from app.tasks.sending_ke_hubnet_job import run_sending_ke_hubnet
+# from app.job.get_out_hubnet import run_outgoings
+from app.job.sending_ke_hubnet_job import run_sending_ke_hubnet
 from app.utils.env import ENV
 
 scheduler = AsyncIOScheduler()
