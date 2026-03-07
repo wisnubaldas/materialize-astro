@@ -57,4 +57,5 @@ LEFT JOIN fare_directory AS d2
    AND d2.ItemCode = 'WFEE'
    AND a.DateOfTransaction BETWEEN d2.Datefrom AND d2.DateUntil
 WHERE a.PaymentCode != 'F'
-  AND a.DateOfTransaction = :hari;
+  AND a.DateOfTransaction = :hari
+  AND a.AgreementCode <> 'TRANS';

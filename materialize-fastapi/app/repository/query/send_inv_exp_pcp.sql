@@ -48,4 +48,5 @@ INNER JOIN eks_weighingdetail AS e ON d.ProofNumber = e.ProofNumber
 INNER JOIN mst_customer AS f ON a.CustomerCode = f.CustomerCode
 WHERE a.PaymentCode != 'F'
   AND a.type_inv IN ('PPOS','ATA','BARC','CIMP','CFHL','CFWB','BTT')
-  AND a.DateOfTransaction = :hari;
+  AND a.DateOfTransaction = :hari
+  AND a.AgreementCode <> 'TRANS';
