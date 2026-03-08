@@ -13,12 +13,45 @@ if [ ! -x "$GUNICORN_BIN" ]; then
   exit 1
 fi
 
+HOST="${GUNICORN_HOST:-127.0.0.1}"
+PORT="${GUNICORN_PORT:-8000}"
+TIMEOUT="${GUNICORN_TIMEOUT:-120}"
+GRACEFUL_TIMEOUT="${GUNICORN_GRACEFUL_TIMEOUT:-30}"
+KEEP_ALIVE="${GUNICORN_KEEP_ALIVE:-15}"
+MAX_REQUESTS="${GUNICORN_MAX_REQUESTS:-1000}"
+MAX_REQUESTS_JITTER="${GUNICORN_MAX_REQUESTS_JITTER:-100}"
+LOG_LEVEL="${GUNICORN_LOG_LEVEL:-info}"
+
+if [ -n "${GUNICORN_WORKERS:-}" ]; then
+  WORKERS="${GUNICORN_WORKERS}"
+else
+  CPU_COUNT="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
+  case "$CPU_COUNT" in
+    ''|*[!0-9]*)
+      CPU_COUNT=2
+      ;;
+  esac
+
+  if [ "$CPU_COUNT" -le 2 ]; then
+    WORKERS=2
+  else
+    WORKERS="$CPU_COUNT"
+  fi
+
+  if [ "$WORKERS" -gt 4 ]; then
+    WORKERS=4
+  fi
+fi
+
 exec "$GUNICORN_BIN" app.main:app \
   -k uvicorn.workers.UvicornWorker \
-  --workers 1 \
-  --threads 2 \
-  --timeout 60 \
-  --keep-alive 5 \
-  --bind 0.0.0.0:8000 \
+  --bind "${HOST}:${PORT}" \
+  --workers "${WORKERS}" \
+  --timeout "${TIMEOUT}" \
+  --graceful-timeout "${GRACEFUL_TIMEOUT}" \
+  --keep-alive "${KEEP_ALIVE}" \
+  --max-requests "${MAX_REQUESTS}" \
+  --max-requests-jitter "${MAX_REQUESTS_JITTER}" \
+  --log-level "${LOG_LEVEL}" \
   --access-logfile - \
   --error-logfile -
