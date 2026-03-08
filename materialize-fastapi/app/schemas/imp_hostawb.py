@@ -1,3 +1,5 @@
+# ruff: noqa: N815
+
 from datetime import datetime
 
 from pydantic import BaseModel

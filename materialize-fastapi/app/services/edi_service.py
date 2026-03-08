@@ -49,21 +49,20 @@ def _parse_date(value: Any) -> date | None:
 
 def _parse_datetime(value: Any) -> datetime | None:
     """Parse ISO-like datetime values into datetime objects."""
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value
-    if isinstance(value, date):
-        return datetime.combine(value, datetime.min.time())
-    if isinstance(value, str):
-        try:
-            return datetime.fromisoformat(value)
-        except ValueError:
-            try:
-                return datetime.fromisoformat(value[:10])
-            except ValueError:
-                return None
-    return None
+    parsed: datetime | None = None
+    if value:
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, date):
+            parsed = datetime.combine(value, datetime.min.time())
+        elif isinstance(value, str):
+            for candidate in (value, value[:10]):
+                try:
+                    parsed = datetime.fromisoformat(candidate)
+                    break
+                except ValueError:
+                    continue
+    return parsed
 
 
 def _extract_mawb(payload: Any) -> str | None:

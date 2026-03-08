@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 # ----------------------------
@@ -93,7 +93,7 @@ def _line(*parts: str) -> str:
     return "".join(parts)
 
 
-def _format_party_block(tag: str, party: Party) -> list[str]:
+def _format_party_block(tag: str, party: Party) -> list[str]:  # noqa: PLR0912
     """
     Format SHP/CNE block.
     Example:
@@ -165,10 +165,10 @@ def _format_hbs(h: House) -> list[str]:
 
     # TXT can repeat multiple lines
     if h.txt_lines:
-        for t in h.txt_lines:
-            t = _clean(t)
-            if t:
-                lines.append(f"TXT/{t}")
+        for txt_line in h.txt_lines:
+            clean_txt = _clean(txt_line)
+            if clean_txt:
+                lines.append(f"TXT/{clean_txt}")
 
     return lines
 
@@ -291,7 +291,7 @@ def split_houses(
     for ch in chunks:
         current: list[House] = []
         for h in ch:
-            trial = current + [h]
+            trial = [*current, h]
             msg = build_fhl_message(
                 req, trial, include_default_parties_at_top=include_default_parties_at_top
             )
@@ -331,15 +331,16 @@ def write_fhl_files(
       FHL_001.txt, FHL_002.txt, ...
     Returns list of file paths.
     """
-    os.makedirs(out_dir, exist_ok=True)  # noqa: PTH103
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
     paths: list[str] = []
     pad = max(3, len(str(len(messages))))
     for i, msg in enumerate(messages, start=1):
         fn = f"{base_name}_{str(i).zfill(pad)}.txt"
-        path = os.path.join(out_dir, fn)  # noqa: PTH118
-        with open(path, "w", encoding="utf-8") as f:
+        path = out_path / fn
+        with path.open("w", encoding="utf-8") as f:
             f.write(msg)
-        paths.append(path)
+        paths.append(str(path))
     return paths
 
 

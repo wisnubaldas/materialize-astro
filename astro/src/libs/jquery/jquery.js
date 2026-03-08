@@ -2,13 +2,11 @@
 import jQuery from 'jquery';
 if (typeof window !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () {
-    console.log(window.location.href);
     const $ = jQuery;
 
     // pastikan hanya 1x assign global
     if (!window.jQuery) window.jQuery = jQuery;
     if (!window.$) window.$ = $;
-    alert($);
   });
 }
 

@@ -1,0 +1,15 @@
+---
+import AdminLayout from '@layouts/BaseLayout.astro';
+import ResponseInvoiceGrid from '@components/angkasapura/ResponseInvoiceGrid.jsx';
+---
+
+<AdminLayout
+  title="Response Invoice"
+  description="Halaman grid response invoice Angkasapura dari tabel respons_inv_ap2"
+>
+  <div class="row m-4" style="min-height: 500px;">
+    <div class="container-xxl grow container-p-y">
+      <ResponseInvoiceGrid client:only />
+    </div>
+  </div>
+</AdminLayout>

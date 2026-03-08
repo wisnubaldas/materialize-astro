@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, TIMESTAMP, UniqueConstraint
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 

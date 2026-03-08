@@ -21,13 +21,13 @@ from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
+from app.schemas.fhl_request_body import FhlRequestBody
+from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fsu_message_schema import (
     FsuMessageCreate,
     FsuMessageOut,
     FsuMessageUpdate,
 )
-from app.schemas.fhl_request_body import FhlRequestBody
-from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_email_request_body import FwbEmailRequestBody
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.fwb_table_schema import FwbTableOut
@@ -172,9 +172,9 @@ async def send_email_fwb(
     payload = params.data if isinstance(params.data, dict) else {}
     try:
         service.save_fwb_from_payload(payload, params.message)
-    except Exception:
+    except Exception as err:
         logger.exception("Failed to save FWB data")
-        raise HTTPException(status_code=500, detail="Gagal menyimpan data FWB")
+        raise HTTPException(status_code=500, detail="Gagal menyimpan data FWB") from err
 
     for email in params.emails:
         background_tasks.add_task(

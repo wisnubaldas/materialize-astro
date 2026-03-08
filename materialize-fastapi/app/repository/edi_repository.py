@@ -1,7 +1,8 @@
 import logging
 import re
 import time
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 import pycountry
 from sqlalchemy import and_, bindparam, func, or_, text

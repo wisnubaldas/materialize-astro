@@ -31,7 +31,7 @@ class DataTablesService:
         self.search_columns = search_columns if search_columns is not None else []
         self.custom_filters = custom_filters if custom_filters is not None else []
 
-    def get_datatable(
+    def get_datatable(  # noqa: PLR0912, PLR0915
         self, db: Session, params: DataTablesParams
     ) -> DataTablesResponse[SchemaType]:
         params = self.apply_custom_filters(params)
@@ -58,14 +58,14 @@ class DataTablesService:
             if tanggal_awal and tanggal_akhir:
                 # range: >= TANGGAL_AWAL & <= TANGGAL_AKHIR
                 custom_filter_conditions.append(
-                    and_(self.model.TANGGAL >= tanggal_awal, self.model.TANGGAL <= tanggal_akhir)
+                    and_(tanggal_awal <= self.model.TANGGAL, tanggal_akhir >= self.model.TANGGAL)
                 )
             elif tanggal_awal:
                 # hanya dari tanggal_awal ke atas
-                custom_filter_conditions.append(self.model.TANGGAL >= tanggal_awal)
+                custom_filter_conditions.append(tanggal_awal <= self.model.TANGGAL)
             elif tanggal_akhir:
                 # hanya sampai tanggal_akhir
-                custom_filter_conditions.append(self.model.TANGGAL <= tanggal_akhir)
+                custom_filter_conditions.append(tanggal_akhir >= self.model.TANGGAL)
 
             # 🎯 filter lain
             for filter_name in self.custom_filters:
@@ -131,8 +131,8 @@ class DataTablesService:
         # Buat response DataTables
         dt_response = DataTablesResponse(
             draw=params.draw,
-            recordsTotal=total_records,
-            recordsFiltered=filtered_records,
+            records_total=total_records,
+            records_filtered=filtered_records,
             data=[self.schema.model_validate(r) for r in results],
         )
         return dt_response

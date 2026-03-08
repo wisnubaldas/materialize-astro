@@ -31,11 +31,12 @@ class RequestLoggingMiddleware:
             await self.app(scope, receive, send_wrapper)
         finally:
             duration_ms = int((time.perf_counter() - start) * 1000)
-            status = status_code_holder["code"] or 0
+            status_code = status_code_holder["code"] or 0
             self.logger.info(
-                "%s %s %s %dms",
+                "%s %s %s %d %dms",
                 client,
                 method,
                 path,
+                status_code,
                 duration_ms,
             )

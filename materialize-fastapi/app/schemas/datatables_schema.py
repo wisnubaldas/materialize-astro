@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 T = TypeVar("T")
 
@@ -96,9 +96,11 @@ class DataTablesParams(BaseModel):
 # Output: Response DataTables
 class DataTablesResponse(BaseModel, Generic[T]):
     draw: int
-    recordsTotal: int
-    recordsFiltered: int
+    records_total: int = Field(alias="recordsTotal")
+    records_filtered: int = Field(alias="recordsFiltered")
     data: list[T]
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 # from typing import List, Optional, Generic, TypeVar

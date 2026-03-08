@@ -1,3 +1,5 @@
+# ruff: noqa: N815
+
 from sqlalchemy import DECIMAL, TIMESTAMP, BigInteger, Boolean, Column, Integer, String
 from sqlalchemy.sql import func
 

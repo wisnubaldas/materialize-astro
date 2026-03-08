@@ -32,6 +32,16 @@ def get_data_response_inv(params: DataTablesParams, db: Session = Depends(get_db
     return INVAp2Service.get_response_inv(db=db, params=params)
 
 
+@router.post(
+    "/response-invoice/datatables",
+    response_model=DataTablesResponse[ResponsInvAp2Get],
+    summary="Datatable response invoice AP2",
+)
+def response_invoice_datatables(params: DataTablesParams, db: Session = Depends(get_db1_r)):
+    """Serve datatable data from table `respons_inv_ap2` with custom filters."""
+    return INVAp2Service.get_response_inv(db=db, params=params)
+
+
 @router.post("/data-inv-yang-tidak-lengkap", response_model=DataTablesResponse[FailInvGet])
 def data_inv_yang_tidak_lengkap(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     """Surface incomplete invoice rows coming from `INVAp2Service.get_fail_inv`."""

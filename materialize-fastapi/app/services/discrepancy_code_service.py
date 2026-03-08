@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.BaseDB1.mst_discrepancy_code import MstDiscrepancyCode
 from app.repository.discrepancy_code_repository import DiscrepancyCodeRepository
@@ -38,7 +38,7 @@ class DiscrepancyCodeService:
             return record
         for key, value in data.items():
             setattr(record, key, value)
-        record.updated_at = datetime.utcnow()
+        record.updated_at = datetime.now(timezone.utc)
         return self.repository.save(record)
 
     def delete(self, record: MstDiscrepancyCode) -> None:

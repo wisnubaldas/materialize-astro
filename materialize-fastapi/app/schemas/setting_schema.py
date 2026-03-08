@@ -83,6 +83,6 @@ class MenuOut(MenuBase):
 
 
 class MenuTreeOut(MenuOut):
-    subItems: list["MenuTreeOut"] = Field(default_factory=list)
+    sub_items: list[MenuTreeOut] = Field(default_factory=list, alias="subItems")
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}

@@ -23,6 +23,7 @@ from app.models.BaseDB1.ap2_fail_inv import AP2FAILINV
 from app.models.BaseDB1.inv_ap2 import InvAp2
 from app.models.BaseDB1.respons_inv_ap2 import ResponsInvAp2
 from app.models.BaseDB1.void_inv_ap2 import VoidInvAp2
+from app.repository.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.ap2_send_inv_schema import AP2SendInv
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -39,7 +40,6 @@ from app.schemas.void_invoice_schema import (
     VoidInvoiceSchemaResponse,
 )
 from app.services.datatables_service import DataTablesService
-from app.repository.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
@@ -71,10 +71,11 @@ inv_ap2_response_inv = DataTablesService(
     schema=ResponsInvAp2Get,
     search_columns=[
         "inv",
-        "response",
         "status",
+        "created_at",
+        "response",
     ],
-    custom_filters=["inv", "response", "status"],
+    custom_filters=["inv", "status", "created_at"],
 )
 
 fail_inv_ap2 = DataTablesService(

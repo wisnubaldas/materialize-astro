@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 
 from faker import Faker
 from sqlalchemy.exc import DBAPIError, OperationalError
@@ -15,6 +15,7 @@ def seed_invoices(n: int = 10):
     db: Session = SessionDB1W()
     try:
         for _ in range(n):
+            now = datetime.now(timezone.utc)
             invoice = InvAp2(
                 NO_INVOICE=fake.unique.bothify(text="BGD1.INV.##.#######"),
                 TANGGAL=fake.date_time_this_year().strftime("%Y-%m-%d %H:%M:%S"),
@@ -68,8 +69,8 @@ def seed_invoices(n: int = 10):
                 MATERAI_FEE=random.randint(0, 10000),
                 PPN_FEE=random.randint(0, 10000),
                 status=random.choice([0, 1]),
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+                created_at=now,
+                updated_at=now,
             )
             db.add(invoice)
 

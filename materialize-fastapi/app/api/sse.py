@@ -79,24 +79,6 @@ async def log_app(_request: Request, key: str):
         raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
     return StreamingResponse(__log_event_stream(), media_type="text/event-stream")
 
-
-# @router.get("/fibonacci")
-# async def stream_fibonacci(key: str):
-#     """
-#     Endpoint SSE dengan verifikasi key terenkripsi dari client Astro
-#     """
-#     print(f"🔑 Key diterima (Base64): {key}")
-#     try:
-#         payload = decrypt_key(key)
-#         # print(f"🔑 Payload dari key: {payload}")
-#         user = payload.get("user")
-#         print(f"📡 SSE Connected by: {user}")
-#     except ValueError as e:
-#         raise HTTPException(status_code=401, detail=str(e))
-
-#     return StreamingResponse(redis_to_sse("fibonacci_channel"), media_type="text/event-stream")
-
-
 # @router.get("/arithmetic")
 # async def stream_arithmetic(key: str):
 #     payload = decrypt_key(key)

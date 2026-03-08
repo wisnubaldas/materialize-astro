@@ -1,7 +1,7 @@
+import json
 import logging
 import re
-import json
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from pathlib import Path
@@ -138,7 +138,7 @@ def _parse_date(value, field: str, row_idx: int) -> date:
         raw = value.strip()
         for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d", "%d-%m-%Y", "%Y/%m/%d"):
             try:
-                return datetime.strptime(raw, fmt).date()
+                return datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc).date()
             except ValueError:
                 continue
     raise HTTPException(
@@ -286,9 +286,9 @@ class AirlineManifestUploadService:
         return buffer.getvalue(), "manifest_form.xlsx"
 
     @staticmethod
-    def upload_manifest(
+    def upload_manifest(  # noqa: PLR0912, PLR0915
         file: UploadFile | None, db: Session, payload_json: str | None = None
-    ) -> dict:  # noqa: PLR0912, PLR0915
+    ) -> dict:
         filename = ""
         contents = b""
         if file is not None:
@@ -309,7 +309,7 @@ class AirlineManifestUploadService:
                 detail="File Excel atau payload_json wajib diisi.",
             )
 
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # noqa: DTZ005
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         safe_name = _sanitize_filename(filename, default_stem="manifest")
         stem = Path(safe_name).stem
         suffix = Path(safe_name).suffix
@@ -607,7 +607,7 @@ class AirlineManifestUploadService:
             flights_payload.append(payload)
 
         pdf_bytes = AirlineManifestUploadService._generate_pdf(flights_payload)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         flight_tag = flights_payload[0].get("flight_number") if flights_payload else "manifest"
         flight_tag = "".join(ch for ch in str(flight_tag) if ch.isalnum() or ch in ("-", "_"))
         if not flight_tag:
@@ -709,7 +709,7 @@ class AirlineManifestUploadService:
             template = env.get_template("fedex_manifest.html")
             html_content = template.render(
                 flights=flights,
-                generated_at=datetime.now(),
+                generated_at=datetime.now(timezone.utc),
                 total_flights=len(flights),
                 logo_uri=logo_uri,
             )
