@@ -66,57 +66,56 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
     <!-- <link rel="stylesheet" href="/assets/css/core.css" /> -->
   </head>
   <body>
-    <ToasterProvider client:load>
-      <div class="layout-wrapper layout-content-navbar">
-        <div class="layout-container">
-          <Menu menuData={menuData} currentPath={currentPath} />
-          <VendorLoader client:load />
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <Menu menuData={menuData} currentPath={currentPath} />
+        <VendorLoader client:load />
 
-          <div class="menu-mobile-toggler d-xl-none rounded-1">
-            <a
-              href="javascript:void(0);"
-              class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1"
-            >
-              <i class="ri ri-menu-line icon-base"></i>
-              <i class="ri ri-arrow-right-s-line icon-base"></i>
-            </a>
+        <div class="menu-mobile-toggler d-xl-none rounded-1">
+          <a
+            href="javascript:void(0);"
+            class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1"
+          >
+            <i class="ri ri-menu-line icon-base"></i>
+            <i class="ri ri-arrow-right-s-line icon-base"></i>
+          </a>
+        </div>
+
+        <div class="layout-page">
+          <Nav client:load username={username} />
+          <div style="min-height: 600px;">
+            <slot />
           </div>
-
-          <div class="layout-page">
-            <Nav client:load username={username} />
-            <div style="min-height: 600px;">
-              <slot />
-            </div>
-            <footer class="content-footer footer bg-footer-theme bg-dark text-white">
-              <div class="container-xxl">
-                <div
-                  class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column"
-                >
-                  <div class="mb-2 mb-md-0">
-                    &#169; 2025, made with ❤️ by
-                    <a href="javascript::void(0)" class="footer-link fw-medium"> Wisnu Baldas </a>
-                  </div>
-                  <div class="d-none d-lg-inline-block">
-                    <a
-                      href="https://demos.pixinvent.com/materialize-html-admin-template/documentation/"
-                      target="_blank"
-                      class="footer-link me-4"
-                    >
-                      Documentation
-                    </a>
-                  </div>
+          <footer class="content-footer footer bg-footer-theme bg-dark text-white">
+            <div class="container-xxl">
+              <div
+                class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column"
+              >
+                <div class="mb-2 mb-md-0">
+                  &#169; 2025, made with ❤️ by
+                  <a href="javascript::void(0)" class="footer-link fw-medium"> Wisnu Baldas </a>
+                </div>
+                <div class="d-none d-lg-inline-block">
+                  <a
+                    href="https://demos.pixinvent.com/materialize-html-admin-template/documentation/"
+                    target="_blank"
+                    class="footer-link me-4"
+                  >
+                    Documentation
+                  </a>
                 </div>
               </div>
-            </footer>
-            <div class="content-backdrop fade"></div>
-          </div>
+            </div>
+          </footer>
+          <div class="content-backdrop fade"></div>
         </div>
-        <!-- Overlay -->
-        <div class="layout-overlay layout-menu-toggle"></div>
-
-        <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-        <div class="drag-target"></div>
       </div>
-    </ToasterProvider>
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+
+      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+      <div class="drag-target"></div>
+    </div>
+    <ToasterProvider client:load />
   </body>
 </html>

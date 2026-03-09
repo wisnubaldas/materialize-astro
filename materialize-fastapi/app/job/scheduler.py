@@ -2,6 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.job.get_imp_breakdown_hubnet_job import run_breakdown
 from app.job.get_inc_hubnet import run_incoming
+from app.job.invoice_daily_counter_job import run_invoice_daily_counter_sync
 
 # from app.job.get_out_hubnet import run_outgoings
 from app.job.sending_ke_hubnet_job import run_sending_ke_hubnet
@@ -58,6 +59,16 @@ def init_scheduler():
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=False,
         misfire_grace_time=None,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        run_invoice_daily_counter_sync,
+        "interval",
+        minutes=30,
+        id="invoice_daily_counter_sync_job",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=60,
         replace_existing=True,
     )
     scheduler.add_job(

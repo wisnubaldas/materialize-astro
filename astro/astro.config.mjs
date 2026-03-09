@@ -14,6 +14,7 @@ export default defineConfig({
   }),
   vite: {
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: {
         '@components': '/src/components',
         '@layouts': '/src/layouts',
@@ -23,6 +24,18 @@ export default defineConfig({
         '@lib': '/src/lib',
         '@libs': '/src/libs',
       },
+    },
+    optimizeDeps: {
+      force: true,
+      include: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react-apexcharts',
+        'apexcharts',
+        'flatpickr',
+        'flatpickr/dist/plugins/monthSelect',
+      ],
     },
 
     css: {

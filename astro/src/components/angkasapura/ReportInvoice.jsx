@@ -1,8 +1,27 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { apiClient } from '@lib/api/client';
+import ReactApexChart from 'react-apexcharts';
+import flatpickr from 'flatpickr';
+import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect';
 import '@libs/flatpickr/flatpickr.scss';
 import '@libs/flatpickr/flatpickr-month.css';
 import { showToast } from '@js/utils';
+
+/**
+ * @typedef {Object} ReportInvoiceEntry
+ * @property {number} [month]
+ * @property {number} [day]
+ * @property {number} [total_sent]
+ */
+
+/**
+ * @typedef {Object} ReportInvoiceInitialData
+ * @property {number} year
+ * @property {number} month
+ * @property {Array<number | ReportInvoiceEntry>} monthly
+ * @property {Array<number | ReportInvoiceEntry>} daily
+ */
+
 const MONTH_LABELS = [
   'Januari',
   'Februari',
@@ -52,8 +71,10 @@ const normalizeDailySeries = (payload, dayLabels) =>
     return Number.isFinite(value) ? value : 0;
   });
 
+/**
+ * @param {{ initialData?: ReportInvoiceInitialData | null }} props
+ */
 export default function ReportInvoice({ initialData = null }) {
-  const [modules, setModules] = useState({});
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const initialMonth = useMemo(() => {
     const fallback = new Date().getMonth() + 1;
@@ -106,36 +127,6 @@ export default function ReportInvoice({ initialData = null }) {
 
   useEffect(() => {
     let isMounted = true;
-    const moduleList = {
-      ReactApexChart: import('react-apexcharts'),
-      flatpickr: import('flatpickr'),
-      monthSelectPlugin: import('flatpickr/dist/plugins/monthSelect'),
-    };
-    // load semua modul bersamaan
-    Promise.all(Object.values(moduleList))
-      .then((loadedModules) => {
-        if (isMounted) {
-          // mapping hasil import ke nama modul
-          const mapped = Object.keys(moduleList).reduce((acc, key, idx) => {
-            acc[key] = loadedModules[idx].default || loadedModules[idx];
-            return acc;
-          }, {});
-          setModules(mapped);
-        }
-      })
-      .catch((err) => console.error('❌ Failed to load modules:', err));
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // pake modul yang sudah dimuat
-  const { ReactApexChart, flatpickr, monthSelectPlugin } = modules;
-
-  // ------------------------------------------------------------
-
-  useEffect(() => {
-    let isMounted = true;
 
     if (hasInitialMonthlyData) {
       setSeriesData(normalizeMonthlySeries(initialData?.monthly));
@@ -159,16 +150,10 @@ export default function ReportInvoice({ initialData = null }) {
         }
       } catch (err) {
         if (isMounted) {
-          const message =
-            err?.message ??
-            showToast({
-              type: 'danger',
-              message: 'Gagal mengambil data laporan invoice.',
-              title: 'Search Invoice',
-            });
+          const message = err?.message || 'Gagal mengambil data laporan invoice.';
           showToast({
             type: 'danger',
-            message: message,
+            message,
             title: 'Search Invoice',
           });
           setError(message);
@@ -223,17 +208,11 @@ export default function ReportInvoice({ initialData = null }) {
         }
       } catch (err) {
         if (isMounted) {
-          const message =
-            err?.message ??
-            showToast({
-              type: 'danger',
-              message: 'Gagal mengambil data laporan invoice harian.',
-              title: 'Search Invoice',
-            });
+          const message = err?.message || 'Gagal mengambil data laporan invoice harian.';
           setErrorDaily(message);
           showToast({
             type: 'danger',
-            message: message,
+            message,
             title: 'Search Invoice',
           });
           setDailySeriesData(dayLabels.map(() => 0));
@@ -262,11 +241,7 @@ export default function ReportInvoice({ initialData = null }) {
         },
       },
       noData: {
-        text: showToast({
-          type: 'danger',
-          message: 'Belum ada data invoice untuk ditampilkan.',
-          title: 'Search Invoice',
-        }),
+        text: 'Belum ada data invoice untuk ditampilkan.',
         align: 'center',
         verticalAlign: 'middle',
         style: {
@@ -394,7 +369,7 @@ export default function ReportInvoice({ initialData = null }) {
   const inputRef = useRef(null);
   const inputRefPdf = useRef(null);
   useEffect(() => {
-    if (!flatpickr || !inputRef.current || !inputRefPdf.current) {
+    if (!inputRef.current || !inputRefPdf.current) {
       return undefined;
     }
 
@@ -411,7 +386,7 @@ export default function ReportInvoice({ initialData = null }) {
         }),
       ],
       // enableTime: true,
-      onChange: async (selectedDates, dateStr, fp) => {
+      onChange: async (_selectedDates, dateStr, fp) => {
         try {
           const response = await apiClient.get(`/angkasapura/invoice-perbulan/pdf/${dateStr}`, {
             headers: {
@@ -425,7 +400,7 @@ export default function ReportInvoice({ initialData = null }) {
           // (opsional) hapus blob dari memori setelah beberapa waktu
           setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
         } catch (error) {
-          if (error.status === 404) {
+          if (error?.status === 404) {
             showToast({
               type: 'danger',
               message: 'Data invoice tidak ditemukan untuk bulan tersebut.',
@@ -434,7 +409,6 @@ export default function ReportInvoice({ initialData = null }) {
             console.error(error);
           }
         } finally {
-          console.log('download pdf');
           fp.close();
         }
       },
@@ -450,7 +424,7 @@ export default function ReportInvoice({ initialData = null }) {
           theme: 'light', // defaults to "light"
         }),
       ],
-      onChange: async (electedDates, dateStr, fp) => {
+      onChange: async (_selectedDates, dateStr, fp) => {
         try {
           const response = await apiClient.get(`/angkasapura/invoice-perbulan/excel/${dateStr}`, {
             headers: {
@@ -459,10 +433,10 @@ export default function ReportInvoice({ initialData = null }) {
             raw: true,
           });
           const excelBlob = await response.blob();
-          const excelfUrl = URL.createObjectURL(excelBlob);
-          window.open(excelfUrl, '_blank');
+          const excelUrl = URL.createObjectURL(excelBlob);
+          window.open(excelUrl, '_blank');
           // (opsional) hapus blob dari memori setelah beberapa waktu
-          setTimeout(() => URL.revokeObjectURL(excelfUrl), 10000);
+          setTimeout(() => URL.revokeObjectURL(excelUrl), 10000);
         } catch (error) {
           console.error(error);
           showToast({
@@ -470,6 +444,8 @@ export default function ReportInvoice({ initialData = null }) {
             message: 'Data invoice tidak ditemukan untuk bulan tersebut.',
             title: 'Search Invoice',
           });
+        } finally {
+          fp.close();
         }
       },
     });
@@ -477,7 +453,7 @@ export default function ReportInvoice({ initialData = null }) {
       instance.destroy();
       instancePdf.destroy();
     };
-  }, [flatpickr]);
+  }, []);
 
   return (
     <div className="container-fluid px-0">
@@ -530,7 +506,7 @@ export default function ReportInvoice({ initialData = null }) {
                   ></div>
                   <span>Mengambil data laporan invoice...</span>
                 </div>
-              ) : ReactApexChart ? (
+              ) : (
                 <>
                   <ReactApexChart
                     options={chartOptions}
@@ -544,8 +520,6 @@ export default function ReportInvoice({ initialData = null }) {
                     </p>
                   ) : null}
                 </>
-              ) : (
-                <div className="py-5 text-center text-muted">Memuat chart...</div>
               )}
             </div>
           </div>
@@ -593,7 +567,7 @@ export default function ReportInvoice({ initialData = null }) {
                   ></div>
                   <span>Mengambil data invoice harian...</span>
                 </div>
-              ) : ReactApexChart ? (
+              ) : (
                 <>
                   <ReactApexChart
                     options={dailyChartOptions}
@@ -607,8 +581,6 @@ export default function ReportInvoice({ initialData = null }) {
                     </p>
                   ) : null}
                 </>
-              ) : (
-                <div className="py-5 text-center text-muted">Memuat chart...</div>
               )}
             </div>
           </div>

@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BlockUI } from 'ns-react-block-ui';
-import ReportInvoice from './ReportInvoice.jsx';
 import SearchInvoice from './SearchInvoice.jsx';
 import DataInvoice from './DataInvoice.jsx';
 import BlockingComponent from '../BlockingComponent.jsx';
 
-export default function InvoicePanel({ initialReportData = null }) {
+export default function InvoicePanel() {
   const [view, setView] = useState('data-inv'); // default tampilan pertama
   const [blocking, setBlocking] = useState(false);
 
@@ -54,13 +53,10 @@ export default function InvoicePanel({ initialReportData = null }) {
               Search Invoice
             </button>
 
-            <button
-              className={`btn btn-label-primary waves-effect ${view === 'report' ? 'active' : ''}`}
-              onClick={() => handleChangeView('report')}
-            >
+            <a className="btn btn-label-primary waves-effect" href="/angkasapura/report">
               <span className="menu-icon icon-base ri ri-file-close-line"></span>
               Report Invoice
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -73,7 +69,6 @@ export default function InvoicePanel({ initialReportData = null }) {
       >
         {/* Komponen tampil tergantung state */}
         {view === 'data-inv' && <DataInvoice />}
-        {view === 'report' && <ReportInvoice initialData={initialReportData} />}
         {view === 'search' && <SearchInvoice />}
       </BlockUI>
     </>

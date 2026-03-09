@@ -1,61 +1,11 @@
 ---
-import AdminLayout from '@layouts/BaseLayout.astro';
 import InvoicePanel from '@components/angkasapura/InvoicePanel.jsx';
-import { apiClient } from '@lib/api/client';
-import { AUTH_COOKIE_NAME } from '@lib/auth/config';
-
-const token = Astro.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
-const now = new Date();
-const currentYear = now.getFullYear();
-const currentMonth = now.getMonth() + 1;
-
-const monthlyFallback = Array.from({ length: 12 }, () => 0);
-const dailyFallback = Array.from({ length: new Date(currentYear, currentMonth, 0).getDate() }, () => 0);
-
-const normalizeMonthly = (payload) =>
-  monthlyFallback.map((_, index) => {
-    const entry = Array.isArray(payload)
-      ? payload.find((item) => Number(item?.month) === index + 1)
-      : null;
-    const value = Number(entry?.total_sent ?? 0);
-    return Number.isFinite(value) ? value : 0;
-  });
-
-const normalizeDaily = (payload) =>
-  dailyFallback.map((_, index) => {
-    const day = index + 1;
-    const entry = Array.isArray(payload) ? payload.find((item) => Number(item?.day) === day) : null;
-    const value = Number(entry?.total_sent ?? 0);
-    return Number.isFinite(value) ? value : 0;
-  });
-
-let initialReportData = {
-  year: currentYear,
-  month: currentMonth,
-  monthly: monthlyFallback,
-  daily: dailyFallback,
-};
-
-try {
-  const [monthlyResponse, dailyResponse] = await Promise.all([
-    apiClient.get(`/angkasapura/invoice-perbulan/${currentYear}`, { token }),
-    apiClient.get(`/angkasapura/invoice-perbulan/${currentYear}/${currentMonth}`, { token }),
-  ]);
-
-  initialReportData = {
-    year: currentYear,
-    month: currentMonth,
-    monthly: normalizeMonthly(monthlyResponse),
-    daily: normalizeDaily(dailyResponse),
-  };
-} catch (error) {
-  console.warn('[astro:ssr:data-invoice] gagal prefetch data report invoice:', error);
-}
+import AdminLayout from '@layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="Page Admin" , description="Admin dashboard page">
+<AdminLayout title="Page Admin" description="Admin dashboard page">
   <!-- Komponen controller -->
   <div class="row m-4" style="min-height: 500px;">
-    <InvoicePanel client:only initialReportData={initialReportData} />
+    <InvoicePanel client:only />
   </div>
 </AdminLayout>
