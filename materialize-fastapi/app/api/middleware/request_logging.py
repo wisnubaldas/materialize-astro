@@ -37,9 +37,15 @@ class RequestLoggingMiddleware:
             route = scope.get("route")
             if route is not None:
                 route_path = getattr(route, "path", "-")
+            full_path = path if not query_string else f"{path}?{query_string}"
 
             self.logger.info(
-                "http_request",
+                "http_request %s %s route=%s status=%s duration_ms=%s",
+                method,
+                full_path,
+                route_path,
+                status_code,
+                duration_ms,
                 extra={
                     "event": "http.request",
                     "client_ip": client,

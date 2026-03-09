@@ -53,10 +53,6 @@ export default function InvoicePanel() {
               Search Invoice
             </button>
 
-            <a className="btn btn-label-primary waves-effect" href="/angkasapura/report">
-              <span className="menu-icon icon-base ri ri-file-close-line"></span>
-              Report Invoice
-            </a>
           </div>
         </div>
       </div>

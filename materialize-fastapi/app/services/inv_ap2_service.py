@@ -21,6 +21,7 @@ from xhtml2pdf import pisa
 from app.db.mysql import SessionDB1W, SessionDB2R
 from app.models.BaseDB1.ap2_fail_inv import AP2FAILINV
 from app.models.BaseDB1.inv_ap2 import InvAp2
+from app.models.BaseDB1.invoice_daily_counter import InvoiceDailyCounter
 from app.models.BaseDB1.respons_inv_ap2 import ResponsInvAp2
 from app.models.BaseDB1.void_inv_ap2 import VoidInvAp2
 from app.repository.query.mapping_column import INVTOAP2INV, INVTOAP2INV_BASE
@@ -32,6 +33,10 @@ from app.schemas.inv_ap2_schema import (
     InvoiceDailySummary,
     InvoiceGet,
     InvoiceMonthlySummary,
+)
+from app.schemas.invoice_daily_counter_schema import (
+    InvoiceDailyCounterGet,
+    InvoiceDailyCounterMonthlySummary,
 )
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.void_invoice_schema import (
@@ -93,6 +98,20 @@ void_invoice = DataTablesService(
     schema=VoidInvoiceSchemaResponse,
     search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
     custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
+)
+invoice_daily_counter_datatable = DataTablesService(
+    model=InvoiceDailyCounter,
+    schema=InvoiceDailyCounterGet,
+    search_columns=[
+        "tanggal",
+        "jumlah_invoice",
+        "total_koli",
+        "total_berat",
+        "total_volume",
+        "total_pendapatan_tanpa_ppn",
+        "total_pendapatan_dengan_ppn",
+    ],
+    custom_filters=["tanggal"],
 )
 HEADERS = {
     "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
@@ -762,3 +781,39 @@ class INVAp2Service:
         db: Session, params: DataTablesParams
     ) -> DataTablesResponse[VoidInvoiceSchemaResponse]:
         return void_invoice.get_datatable(db=db, params=params)
+
+    @staticmethod
+    def report_invoice_daily_counter(
+        db: Session, params: DataTablesParams
+    ) -> DataTablesResponse[InvoiceDailyCounterGet]:
+        return invoice_daily_counter_datatable.get_datatable(db=db, params=params)
+
+    @staticmethod
+    def report_invoice_monthly(db: Session, tahun: int) -> list[InvoiceDailyCounterMonthlySummary]:
+        rows = (
+            db.query(
+                func.year(InvoiceDailyCounter.tanggal).label("year"),
+                func.month(InvoiceDailyCounter.tanggal).label("month"),
+                func.coalesce(func.sum(InvoiceDailyCounter.jumlah_invoice), 0).label("total_sent"),
+            )
+            .filter(func.year(InvoiceDailyCounter.tanggal) == tahun)
+            .group_by(
+                func.year(InvoiceDailyCounter.tanggal),
+                func.month(InvoiceDailyCounter.tanggal),
+            )
+            .order_by(
+                func.year(InvoiceDailyCounter.tanggal),
+                func.month(InvoiceDailyCounter.tanggal),
+            )
+            .all()
+        )
+
+        return [
+            InvoiceDailyCounterMonthlySummary(
+                year=int(row.year),
+                month=int(row.month),
+                total_sent=int(row.total_sent or 0),
+            )
+            for row in rows
+            if row.year is not None and row.month is not None
+        ]
