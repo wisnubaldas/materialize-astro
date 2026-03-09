@@ -4,7 +4,8 @@ import ReportInvoice from './ReportInvoice.jsx';
 import SearchInvoice from './SearchInvoice.jsx';
 import DataInvoice from './DataInvoice.jsx';
 import BlockingComponent from '../BlockingComponent.jsx';
-export default function InvoicePanel() {
+
+export default function InvoicePanel({ initialReportData = null }) {
   const [view, setView] = useState('data-inv'); // default tampilan pertama
   const [blocking, setBlocking] = useState(false);
 
@@ -72,7 +73,7 @@ export default function InvoicePanel() {
       >
         {/* Komponen tampil tergantung state */}
         {view === 'data-inv' && <DataInvoice />}
-        {view === 'report' && <ReportInvoice client:only />}
+        {view === 'report' && <ReportInvoice initialData={initialReportData} />}
         {view === 'search' && <SearchInvoice />}
       </BlockUI>
     </>

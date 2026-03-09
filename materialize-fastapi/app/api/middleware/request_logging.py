@@ -17,6 +17,7 @@ class RequestLoggingMiddleware:
         request = Request(scope, receive=receive)
         method = request.method
         path = request.url.path
+        query_string = request.url.query
         client = request.client.host if request.client else "-"
 
         start = time.perf_counter()
@@ -32,11 +33,21 @@ class RequestLoggingMiddleware:
         finally:
             duration_ms = int((time.perf_counter() - start) * 1000)
             status_code = status_code_holder["code"] or 0
+            route_path = "-"
+            route = scope.get("route")
+            if route is not None:
+                route_path = getattr(route, "path", "-")
+
             self.logger.info(
-                "%s %s %s %d %dms",
-                client,
-                method,
-                path,
-                status_code,
-                duration_ms,
+                "http_request",
+                extra={
+                    "event": "http.request",
+                    "client_ip": client,
+                    "method": method,
+                    "path": path,
+                    "query_string": query_string or None,
+                    "route": route_path,
+                    "status_code": status_code,
+                    "duration_ms": duration_ms,
+                },
             )

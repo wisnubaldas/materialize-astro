@@ -18,22 +18,53 @@ const MONTH_LABELS = [
   'Desember',
 ];
 
-export default function ReportInvoice() {
-  const [modules, setModules] = useState({});
-  const [seriesData, setSeriesData] = useState(() => MONTH_LABELS.map(() => 0));
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
-  const [dailySeriesData, setDailySeriesData] = useState([]);
-  const [isLoadingDaily, setIsLoadingDaily] = useState(true);
-  const [errorDaily, setErrorDaily] = useState('');
-  const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const totalInvoices = useMemo(
-    () => seriesData.reduce((accumulator, value) => accumulator + Number(value || 0), 0),
-    [seriesData]
-  );
-  const hasData = useMemo(() => seriesData.some((value) => Number(value) > 0), [seriesData]);
+const normalizeMonthlySeries = (payload) =>
+  MONTH_LABELS.map((_, index) => {
+    if (!Array.isArray(payload)) {
+      return 0;
+    }
 
+    const entry =
+      payload.find((item) =>
+        typeof item === 'number'
+          ? false
+          : Number(item?.month) === index + 1
+      ) ?? payload[index];
+    const rawValue = typeof entry === 'number' ? entry : entry?.total_sent;
+    const value = Number(rawValue ?? 0);
+    return Number.isFinite(value) ? value : 0;
+  });
+
+const normalizeDailySeries = (payload, dayLabels) =>
+  dayLabels.map((day, index) => {
+    if (!Array.isArray(payload)) {
+      return 0;
+    }
+
+    const entry =
+      payload.find((item) =>
+        typeof item === 'number'
+          ? false
+          : Number(item?.day) === day
+      ) ?? payload[index];
+    const rawValue = typeof entry === 'number' ? entry : entry?.total_sent;
+    const value = Number(rawValue ?? 0);
+    return Number.isFinite(value) ? value : 0;
+  });
+
+export default function ReportInvoice({ initialData = null }) {
+  const [modules, setModules] = useState({});
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const initialMonth = useMemo(() => {
+    const fallback = new Date().getMonth() + 1;
+    const month = Number(initialData?.month);
+    return Number.isFinite(month) && month >= 1 && month <= 12 ? month : fallback;
+  }, [initialData]);
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
+  const hasInitialMonthlyData = useMemo(
+    () => Number(initialData?.year) === currentYear && Array.isArray(initialData?.monthly),
+    [currentYear, initialData]
+  );
   const daysInSelectedMonth = useMemo(
     () => new Date(currentYear, selectedMonth, 0).getDate(),
     [currentYear, selectedMonth]
@@ -42,6 +73,28 @@ export default function ReportInvoice() {
     () => Array.from({ length: daysInSelectedMonth }, (_, index) => index + 1),
     [daysInSelectedMonth]
   );
+  const hasInitialDailyData = useMemo(
+    () =>
+      Number(initialData?.year) === currentYear &&
+      Number(initialData?.month) === selectedMonth &&
+      Array.isArray(initialData?.daily),
+    [currentYear, initialData, selectedMonth]
+  );
+  const [seriesData, setSeriesData] = useState(() =>
+    hasInitialMonthlyData ? normalizeMonthlySeries(initialData?.monthly) : MONTH_LABELS.map(() => 0)
+  );
+  const [isLoadingData, setIsLoadingData] = useState(() => !hasInitialMonthlyData);
+  const [error, setError] = useState('');
+  const [dailySeriesData, setDailySeriesData] = useState(() =>
+    hasInitialDailyData ? normalizeDailySeries(initialData?.daily, dayLabels) : dayLabels.map(() => 0)
+  );
+  const [isLoadingDaily, setIsLoadingDaily] = useState(() => !hasInitialDailyData);
+  const [errorDaily, setErrorDaily] = useState('');
+  const totalInvoices = useMemo(
+    () => seriesData.reduce((accumulator, value) => accumulator + Number(value || 0), 0),
+    [seriesData]
+  );
+  const hasData = useMemo(() => seriesData.some((value) => Number(value) > 0), [seriesData]);
   const totalInvoicesSelectedMonth = useMemo(
     () => dailySeriesData.reduce((accumulator, value) => accumulator + Number(value || 0), 0),
     [dailySeriesData]
@@ -84,23 +137,22 @@ export default function ReportInvoice() {
   useEffect(() => {
     let isMounted = true;
 
+    if (hasInitialMonthlyData) {
+      setSeriesData(normalizeMonthlySeries(initialData?.monthly));
+      setIsLoadingData(false);
+      setError('');
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const fetchMonthlyReport = async () => {
       setIsLoadingData(true);
       setError('');
 
       try {
         const response = await apiClient.get(`/angkasapura/invoice-perbulan/${currentYear}`);
-        const normalized = MONTH_LABELS.map((_, index) => {
-          if (!Array.isArray(response)) {
-            return 0;
-          }
-
-          const entry = response.find((item) => Number(item?.month) === index + 1);
-          const value = entry?.total_sent ?? 0;
-          const parsed = Number(value);
-
-          return Number.isFinite(parsed) ? parsed : 0;
-        });
+        const normalized = normalizeMonthlySeries(response);
 
         if (isMounted) {
           setSeriesData(normalized);
@@ -134,10 +186,19 @@ export default function ReportInvoice() {
     return () => {
       isMounted = false;
     };
-  }, [currentYear]);
+  }, [currentYear, hasInitialMonthlyData, initialData]);
 
   useEffect(() => {
     let isMounted = true;
+
+    if (hasInitialDailyData) {
+      setDailySeriesData(normalizeDailySeries(initialData?.daily, dayLabels));
+      setIsLoadingDaily(false);
+      setErrorDaily('');
+      return () => {
+        isMounted = false;
+      };
+    }
 
     const fetchDailyReport = async () => {
       if (!dayLabels.length) {
@@ -155,17 +216,7 @@ export default function ReportInvoice() {
         const response = await apiClient.get(
           `/angkasapura/invoice-perbulan/${currentYear}/${selectedMonth}`
         );
-        const normalized = dayLabels.map((day) => {
-          if (!Array.isArray(response)) {
-            return 0;
-          }
-
-          const entry = response.find((item) => Number(item?.day) === day);
-          const value = entry?.total_sent ?? 0;
-          const parsed = Number(value);
-
-          return Number.isFinite(parsed) ? parsed : 0;
-        });
+        const normalized = normalizeDailySeries(response, dayLabels);
 
         if (isMounted) {
           setDailySeriesData(normalized);
@@ -199,7 +250,7 @@ export default function ReportInvoice() {
     return () => {
       isMounted = false;
     };
-  }, [currentYear, selectedMonth, dayLabels]);
+  }, [currentYear, selectedMonth, dayLabels, hasInitialDailyData, initialData]);
 
   const chartOptions = useMemo(
     () => ({

@@ -18,6 +18,13 @@ const API_BASE_URL = rawBackendBaseUrl.replace(/\/+$/, '');
 // Tipe utilitas untuk method dan query.
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+const logSsrFetch = (payload: Record<string, unknown>) => {
+  if (!import.meta.env.SSR) {
+    return;
+  }
+  console.info(`[astro:ssr:fetch] ${JSON.stringify(payload)}`);
+};
+
 // ==== Helper pemeriksaan tipe body ====
 const isFormData = (value: unknown): value is FormData =>
   typeof FormData !== 'undefined' && value instanceof FormData;
@@ -172,13 +179,34 @@ export async function request<T = unknown>(
   // Pastikan body sesuai format (JSON bila object biasa).
   const body = normalizeBody(requestBody, headers);
 
+  const startedAt = Date.now();
+  let response: Response;
   // Eksekusi fetch dengan default credentials include supaya cookie ikut.
-  const response = await fetch(url, {
-    ...rest,
+  try {
+    response = await fetch(url, {
+      ...rest,
+      method,
+      headers,
+      body: body ?? undefined,
+      credentials: rest.credentials ?? 'include',
+    });
+  } catch (error) {
+    logSsrFetch({
+      method,
+      endpoint,
+      url,
+      durationMs: Date.now() - startedAt,
+      error: String(error),
+    });
+    throw error;
+  }
+
+  logSsrFetch({
     method,
-    headers,
-    body: body ?? undefined,
-    credentials: rest.credentials ?? 'include',
+    endpoint,
+    url,
+    status: response.status,
+    durationMs: Date.now() - startedAt,
   });
 
   if (!response.ok) {

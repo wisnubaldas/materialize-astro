@@ -18,61 +18,17 @@ const columns = [
   },
   { data: 'TANGGAL', title: 'Tanggal' },
   { data: 'SMU', title: 'SMU' },
-  { data: 'KDAIRLINE', title: 'Kode Airline' },
   { data: 'FLIGHT_NUMBER', title: 'Flight Number' },
-  { data: 'DOM_INT', title: 'Dom/Int' },
-  { data: 'INC_OUT', title: 'Inc/Out' },
-  { data: 'ASAL', title: 'Asal' },
-  { data: 'TUJUAN', title: 'Tujuan' },
-  { data: 'JENIS_KARGO', title: 'Jenis Kargo' },
-  { data: 'TARIF_KARGO', title: 'Tarif Kargo' },
   { data: 'KOLI', title: 'Koli' },
   { data: 'BERAT', title: 'Berat' },
   { data: 'VOLUME', title: 'Volume' },
-  { data: 'JML_HARI', title: 'Jumlah Hari' },
-  {
-    data: 'CARGO_CHG',
-    title: 'Cargo Charger',
-    render: (data, type) => {
-      return data ? formatRupiah(data) : '0';
-    },
-  },
-  {
-    data: 'KADE',
-    title: 'Biaya Cade',
-    render: (data, type) => {
-      return data ? formatRupiah(data) : '0';
-    },
-  },
   {
     data: 'TOTAL_PENDAPATAN_TANPA_PPN',
     title: 'Pendapatan Non PPN',
-    render: (data, type) => {
+    render: (data) => {
       return data ? formatRupiah(data) : '0';
     },
   },
-  {
-    data: 'TOTAL_PENDAPATAN_DENGAN_PPN',
-    title: 'Pendapatan Include PPN',
-    render: (data, type) => {
-      return data ? formatRupiah(data) : '0';
-    },
-  },
-  {
-    data: 'PJT_HANDLING_FEE',
-    title: 'Penanganan PJT',
-    render: (data, type) => {
-      return data ? formatRupiah(data) : '0';
-    },
-  },
-  {
-    data: 'RUSH_HANDLING_FEE',
-    title: 'Penanganan Rush Handling',
-    render: (data, type) => {
-      return data ? formatRupiah(data) : '0';
-    },
-  },
-
 ];
 
 // Nilai dasar untuk filter form dan payload DataTables.

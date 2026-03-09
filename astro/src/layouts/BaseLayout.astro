@@ -22,7 +22,6 @@ const {
 ensureAuthenticated(Astro);
 
 const user = Astro.locals as any;
-console.log(user);
 const username = user.user?.username ?? '';
 const token = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
 // RBAC: menu tree dipilih oleh backend berdasarkan role user dari token.

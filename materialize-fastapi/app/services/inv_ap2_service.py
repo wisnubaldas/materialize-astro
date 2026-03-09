@@ -43,7 +43,6 @@ from app.services.datatables_service import DataTablesService
 from app.services.redis_service import publish_sync
 from app.utils.env import ENV
 from app.utils.helper import HELPER
-from app.utils.logging_utils import task_name
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
 MONTH_PATTERN = re.compile(r"^\d{4}-\d{2}$")
@@ -403,9 +402,9 @@ class INVAp2Service:
 
     @staticmethod
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
-        with task_name("Datatables"):
-            logger.info("Menampilkan semua data invoice")
-            return inv_ap2_datatable_service.get_datatable(db=db, params=params)
+        # with task_name("Datatables"):
+        # logger.info("Menampilkan semua data invoice")
+        return inv_ap2_datatable_service.get_datatable(db=db, params=params)
 
     # sync data invoice untuk di send dari mysql2 ke mysql1
     @staticmethod
@@ -717,7 +716,9 @@ class INVAp2Service:
                     "status": exc.response.status_code,
                 },
             )
-            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text) from exc
+            raise HTTPException(
+                status_code=exc.response.status_code, detail=exc.response.text
+            ) from exc
         except httpx.RequestError as exc:
             logger.error(
                 "Gagal menghubungi AP2 untuk void invoice %s",
@@ -750,7 +751,9 @@ class INVAp2Service:
                 result.NO_INVOICE,
                 extra={"event": "invoice.void.persist_error", "invoice": result.NO_INVOICE},
             )
-            raise HTTPException(status_code=500, detail="Gagal menyimpan respons void invoice AP2.") from exc
+            raise HTTPException(
+                status_code=500, detail="Gagal menyimpan respons void invoice AP2."
+            ) from exc
 
         return result
 
