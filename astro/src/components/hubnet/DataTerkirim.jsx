@@ -173,8 +173,8 @@ export default function DataTerkirim() {
                             <td>{item.FLT_DATE}</td>
                             <td>{item.ORI}</td>
                             <td>{item.DEST}</td>
-                            <td>{item.T}</td>
                             <td>{item.K}</td>
+                            <td>{item.T}</td>
                             <td>{item.CH_WEIGHT}</td>
                             <td>{item.ref_id ?? '-'}</td>
                           </tr>

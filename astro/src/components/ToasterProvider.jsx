@@ -7,7 +7,7 @@ const ToastContext = createContext();
 // Hook React (opsional, hanya dipakai kalau kamu di dalam island yang sama)
 export const useToast = () => useContext(ToastContext);
 
-export function ToasterProvider({ children }) {
+export function ToasterProvider({ children = null } = {}) {
   const [toasts, setToasts] = useState([]);
 
   // 🔹 Fungsi utama untuk menambahkan toast
