@@ -1,4 +1,6 @@
 import logging
+import re
+from datetime import date, datetime
 from io import BytesIO
 
 import requests
@@ -182,7 +184,7 @@ class HbnetRequestService:
                     },
                 )
                 # tambahin jam ke FLT_DATE
-            flt_datetime = HbnetRequestService.__combine_date_with_current_time(FLT_DATE)
+            flt_datetime = HbnetRequestService.__combine_date_with_current_time(FLT_DATE, idx=idx)
             if customer is not None:
                 batch.append(
                     HubnetRequest(
@@ -342,27 +344,83 @@ class HbnetRequestService:
     @staticmethod
     def __combine_date_with_current_time(FLT_DATE, idx=0):  # noqa: N803
         try:
-            # # --- Parsing FLT_DATE ---
-            # if isinstance(FLT_DATE, datetime):
-            #     base_date = FLT_DATE
-            # else:
-            #     # coba 2 format umum
-            #     try:
-            #         base_date = datetime.strptime(str(FLT_DATE), "%d-%m-%Y")
-            #     except ValueError:
-            #         base_date = datetime.strptime(str(FLT_DATE), "%Y-%m-%d")
+            now = datetime.now()  # noqa: DTZ005
+            fallback_time = (now.hour, now.minute, now.second)
 
-            # # --- Tambahkan jam saat ini (Asia/Jakarta) ---
-            # tz = pytz.timezone("Asia/Jakarta")
-            # now = datetime.now(tz)
-            # flt_datetime = base_date.replace(
-            #     hour=now.hour, minute=now.minute, second=now.second, microsecond=0
-            # )
+            def _apply_valid_time(dt_value: datetime) -> datetime:
+                dt_value = dt_value.replace(microsecond=0)
+                if dt_value.hour == 0 and dt_value.minute == 0 and dt_value.second == 0:
+                    return dt_value.replace(
+                        hour=fallback_time[0],
+                        minute=fallback_time[1],
+                        second=fallback_time[2],
+                    )
+                return dt_value
 
-            # # pastikan timezone-aware
-            # flt_datetime = tz.localize(flt_datetime)
-            # return flt_datetime
-            return FLT_DATE
+            if FLT_DATE is None:
+                raise ValueError("FLT_DATE kosong")
+
+            if isinstance(FLT_DATE, datetime):
+                return _apply_valid_time(FLT_DATE).strftime("%Y-%m-%d %H:%M:%S")
+
+            if isinstance(FLT_DATE, date):
+                return datetime.combine(  # noqa: DTZ001
+                    FLT_DATE,
+                    datetime.min.time(),
+                ).replace(
+                    hour=fallback_time[0],
+                    minute=fallback_time[1],
+                    second=fallback_time[2],
+                    microsecond=0,
+                ).strftime("%Y-%m-%d %H:%M:%S")
+
+            raw = str(FLT_DATE).strip()
+            if not raw:
+                raise ValueError("FLT_DATE kosong")
+
+            normalized = raw.replace("T", " ").rstrip("Z").strip()
+
+            datetime_formats = (
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M",
+                "%Y/%m/%d %H:%M:%S",
+                "%Y/%m/%d %H:%M",
+                "%d-%m-%Y %H:%M:%S",
+                "%d-%m-%Y %H:%M",
+                "%d/%m/%Y %H:%M:%S",
+                "%d/%m/%Y %H:%M",
+            )
+            for fmt in datetime_formats:
+                try:
+                    parsed = datetime.strptime(normalized, fmt)  # noqa: DTZ007
+                    return _apply_valid_time(parsed).strftime("%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    continue
+
+            date_formats = ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y")
+            for fmt in date_formats:
+                try:
+                    base_date = datetime.strptime(normalized, fmt)  # noqa: DTZ007
+                    return base_date.replace(
+                        hour=fallback_time[0],
+                        minute=fallback_time[1],
+                        second=fallback_time[2],
+                        microsecond=0,
+                    ).strftime("%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    continue
+
+            date_prefix = re.match(r"^(\d{4}[-/]\d{2}[-/]\d{2})", normalized)
+            if date_prefix:
+                base_date = datetime.strptime(date_prefix.group(1).replace("/", "-"), "%Y-%m-%d")  # noqa: DTZ007
+                return base_date.replace(
+                    hour=fallback_time[0],
+                    minute=fallback_time[1],
+                    second=fallback_time[2],
+                    microsecond=0,
+                ).strftime("%Y-%m-%d %H:%M:%S")
+
+            raise ValueError(f"format tanggal tidak dikenali ({raw})")
 
         except Exception:
             logger.error(f"Baris {idx}: format tanggal tidak valid ({FLT_DATE})")

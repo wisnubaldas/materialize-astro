@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+import re
+from datetime import date, datetime
 from json import dumps
 
 import requests
@@ -66,39 +67,63 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
         fallback_hhmm = send_time.strftime("%H:%M")
         fallback_full = send_time.strftime("%Y-%m-%d %H:%M")
 
-        if isinstance(val, datetime):
-            return val.strftime("%Y-%m-%d %H:%M")
+        def _ensure_non_zero(dt_value: datetime) -> datetime:
+            dt_value = dt_value.replace(microsecond=0)
+            if dt_value.hour == 0 and dt_value.minute == 0 and dt_value.second == 0:
+                return dt_value.replace(
+                    hour=send_time.hour,
+                    minute=send_time.minute,
+                    second=send_time.second,
+                )
+            return dt_value
 
         if val is None:
             return fallback_full
+
+        if isinstance(val, datetime):
+            return _ensure_non_zero(val).strftime("%Y-%m-%d %H:%M")
+
+        if isinstance(val, date):
+            return datetime.combine(val, datetime.min.time()).replace(  # noqa: DTZ001
+                hour=send_time.hour,
+                minute=send_time.minute,
+                second=send_time.second,
+            ).strftime("%Y-%m-%d %H:%M")
 
         raw = str(val).strip()
         if not raw:
             return fallback_full
 
-        normalized = raw.replace("T", " ").rstrip("Z")
+        normalized = raw.replace("T", " ").rstrip("Z").strip()
 
-        if ":" in normalized:
-            for fmt in (
-                "%Y-%m-%d %H:%M:%S",
-                "%Y-%m-%d %H:%M",
-                "%Y/%m/%d %H:%M:%S",
-                "%Y/%m/%d %H:%M",
-            ):
-                try:
-                    return datetime.strptime(normalized, fmt).strftime("%Y-%m-%d %H:%M")  # noqa: DTZ007
-                except ValueError:
-                    continue
-            return normalized
+        for fmt in (
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M",
+            "%Y/%m/%d %H:%M:%S",
+            "%Y/%m/%d %H:%M",
+            "%d-%m-%Y %H:%M:%S",
+            "%d-%m-%Y %H:%M",
+            "%d/%m/%Y %H:%M:%S",
+            "%d/%m/%Y %H:%M",
+        ):
+            try:
+                return _ensure_non_zero(datetime.strptime(normalized, fmt)).strftime("%Y-%m-%d %H:%M")  # noqa: DTZ007
+            except ValueError:
+                continue
 
-        for fmt in ("%Y-%m-%d", "%Y/%m/%d"):
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y"):
             try:
                 date_part = datetime.strptime(normalized, fmt).strftime("%Y-%m-%d")  # noqa: DTZ007
                 return f"{date_part} {fallback_hhmm}"
             except ValueError:
                 continue
 
-        return f"{normalized} {fallback_hhmm}"
+        date_prefix = re.match(r"^(\d{4}[-/]\d{2}[-/]\d{2})", normalized)
+        if date_prefix:
+            date_part = date_prefix.group(1).replace("/", "-")
+            return f"{date_part} {fallback_hhmm}"
+
+        return fallback_full
 
     for row in rows:
         # Validasi ringan via schema (akan raise jika field wajib tidak valid)

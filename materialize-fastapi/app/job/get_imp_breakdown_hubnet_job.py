@@ -15,6 +15,49 @@ CHANNEL_NAME = "sending_ke_hubnet_channel"
 logger = logging.getLogger("hubnet")
 
 
+def _normalized_flt_datetime(date_value, time_value) -> str:
+    now_ref = datetime.now(jakarta_tz)
+    fallback_date = now_ref.strftime("%Y-%m-%d")
+    fallback_time = now_ref.strftime("%H:%M:%S")
+
+    date_text = str(date_value).strip() if date_value is not None else ""
+    time_text = str(time_value).strip() if time_value is not None else ""
+
+    if not date_text:
+        date_text = fallback_date
+
+    parsed_date = None
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y"):
+        try:
+            parsed_date = datetime.strptime(date_text, fmt).strftime("%Y-%m-%d")  # noqa: DTZ007
+            break
+        except ValueError:
+            continue
+    if parsed_date is None:
+        parsed_date = fallback_date
+
+    if not time_text:
+        time_text = fallback_time
+    elif time_text in {"00:00", "0:00", "00:00:00", "0:00:00", "00:00:00.000000"}:
+        time_text = fallback_time
+
+    parsed_time = None
+    for fmt in ("%H:%M:%S", "%H:%M"):
+        try:
+            t = datetime.strptime(time_text, fmt)  # noqa: DTZ007
+            if t.hour == 0 and t.minute == 0 and t.second == 0:
+                parsed_time = fallback_time
+            else:
+                parsed_time = t.strftime("%H:%M:%S")
+            break
+        except ValueError:
+            continue
+    if parsed_time is None:
+        parsed_time = fallback_time
+
+    return f"{parsed_date} {parsed_time}"
+
+
 def run_breakdown():
     try:
         qfile = "app/repository/hubnet_query/get_imp_hubnet.sql"
@@ -28,18 +71,21 @@ def run_breakdown():
         for cust in customers:
             # print(cust["MasterAWB"])
             if __cek_hostawb(cust["MasterAWB"]):
-                logger.info(f"AWB_NO {cust["MasterAWB"]} sudah ada, skip insert 👈(ﾟヮﾟ👈)")
+                logger.info(f"AWB_NO {cust['MasterAWB']} sudah ada, skip insert 👈(ﾟヮﾟ👈)")
                 pass
             else:
+                flt_datetime = _normalized_flt_datetime(
+                    cust["DateOfBreakdown"], cust["TimeOfBreakdown"]
+                )
                 with SessionDB1W() as db1:
                     new_request = HubnetRequest(
                         AWB_NO=cust["MasterAWB"],
                         FLT_NUMBER=cust["FlightNo"],
-                        FLT_DATE=f"{cust["DateOfBreakdown"]} {cust["TimeOfBreakdown"]}",
+                        FLT_DATE=flt_datetime,
                         ORI=cust["Origin"],
                         DEST="CGK",
                         FLT_NUMBER1=cust["FlightNo"],
-                        FLT_DATE1=f"{cust["DateOfBreakdown"] } {cust["TimeOfBreakdown"]}",
+                        FLT_DATE1=flt_datetime,
                         ORI1=cust["Origin"],
                         T=str(cust["Volume"]),
                         K=str(cust["Quantity"]),

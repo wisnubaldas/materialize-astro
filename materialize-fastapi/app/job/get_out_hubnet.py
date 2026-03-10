@@ -16,6 +16,49 @@ now_wib = datetime.now(jakarta_tz)
 logger = logging.getLogger("hubnet")
 
 
+def _normalized_flt_datetime(date_value, time_value) -> str:
+    now_ref = datetime.now(jakarta_tz)
+    fallback_date = now_ref.strftime("%Y-%m-%d")
+    fallback_time = now_ref.strftime("%H:%M:%S")
+
+    date_text = str(date_value).strip() if date_value is not None else ""
+    time_text = str(time_value).strip() if time_value is not None else ""
+
+    if not date_text:
+        date_text = fallback_date
+
+    parsed_date = None
+    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y"):
+        try:
+            parsed_date = datetime.strptime(date_text, fmt).strftime("%Y-%m-%d")  # noqa: DTZ007
+            break
+        except ValueError:
+            continue
+    if parsed_date is None:
+        parsed_date = fallback_date
+
+    if not time_text:
+        time_text = fallback_time
+    elif time_text in {"00:00", "0:00", "00:00:00", "0:00:00", "00:00:00.000000"}:
+        time_text = fallback_time
+
+    parsed_time = None
+    for fmt in ("%H:%M:%S", "%H:%M"):
+        try:
+            t = datetime.strptime(time_text, fmt)  # noqa: DTZ007
+            if t.hour == 0 and t.minute == 0 and t.second == 0:
+                parsed_time = fallback_time
+            else:
+                parsed_time = t.strftime("%H:%M:%S")
+            break
+        except ValueError:
+            continue
+    if parsed_time is None:
+        parsed_time = fallback_time
+
+    return f"{parsed_date} {parsed_time}"
+
+
 def run_outgoing():
     try:
         query_file = "app/repository/query/get_out_hubnet.sql"
@@ -37,15 +80,16 @@ def run_outgoing():
                     ),
                 )
             else:
+                flt_datetime = _normalized_flt_datetime(item["DateOfArrival"], item["TimeOfArrival"])
                 with SessionDB1W() as db1:
                     new_request = HubnetRequest(
                         AWB_NO=item["MasterAWB"],
                         FLT_NUMBER=item["FlightNumber"],
-                        FLT_DATE=f"{item['DateOfArrival']} {item['TimeOfArrival']}",
+                        FLT_DATE=flt_datetime,
                         ORI=item["OriginCode"],
                         DEST=item["DestinasiCode"],
                         FLT_NUMBER1=item["FlightNumber"],
-                        FLT_DATE1=f"{item['DateOfArrival']} {item['TimeOfArrival']}",
+                        FLT_DATE1=flt_datetime,
                         ORI1=item["OriginCode"],
                         T=str(item["Volume"]),
                         K=str(item["Pieces"]),
