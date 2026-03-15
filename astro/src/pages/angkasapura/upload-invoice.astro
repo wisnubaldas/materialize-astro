@@ -1,0 +1,12 @@
+---
+import AdminLayout from '@layouts/BaseLayout.astro';
+import UploadInvoiceExcel from '@components/angkasapura/UploadInvoiceExcel.jsx';
+---
+
+<AdminLayout title="Upload Invoice AP2" description="Upload excel invoice untuk mapping data inv_ap2">
+  <div class="row m-4" style="min-height: 500px;">
+    <div class="container-xxl grow container-p-y">
+      <UploadInvoiceExcel client:only />
+    </div>
+  </div>
+</AdminLayout>

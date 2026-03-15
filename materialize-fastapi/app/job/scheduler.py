@@ -51,16 +51,18 @@ def init_scheduler():
         coalesce=True,  # gabungkan job yang terlewat jika tertunda
         misfire_grace_time=30,
     )
-    scheduler.add_job(
-        INVAp2Service.get_data_inv,
-        "interval",
-        minutes=60,
-        id="get_data_inv_job",
-        max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
-        coalesce=False,
-        misfire_grace_time=None,
-        replace_existing=True,
-    )
+    # Disabled by design:
+    # Mapping invoice dari DB2 -> inv_ap2 sekarang dilakukan via endpoint upload excel.
+    # scheduler.add_job(
+    #     INVAp2Service.get_data_inv,
+    #     "interval",
+    #     minutes=60,
+    #     id="get_data_inv_job",
+    #     max_instances=1,
+    #     coalesce=False,
+    #     misfire_grace_time=None,
+    #     replace_existing=True,
+    # )
     scheduler.add_job(
         run_invoice_daily_counter_sync,
         "interval",

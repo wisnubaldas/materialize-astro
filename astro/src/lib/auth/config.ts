@@ -19,7 +19,7 @@ export const AUTH_ENDPOINTS = {
 export { AUTH_API_BASE_URL };
 
 export const AUTH_COOKIE_MAX_AGE = {
-  default: 60 * 60 * 2, // 2 hours
+  default: 60 * 60 * 24, // 1 day
   remember: 60 * 60 * 24 * 30, // 30 days
 } as const;
 

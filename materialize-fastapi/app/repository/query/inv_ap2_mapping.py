@@ -1,3 +1,17 @@
+"""Konfigurasi mapping data invoice sumber -> kolom tabel inv_ap2.
+
+File ini dipakai saat sinkronisasi invoice di:
+- app/services/inv_ap2_service.py
+- method: INVAp2Service.get_data_inv()
+
+Alur pakai singkat:
+1. Query SQL (get_inv_export/get_inv_import/get_inv_export_pcp) ambil data mentah.
+2. Setiap kolom hasil query di-convert dengan INVTOAP2INV ke nama field schema InvoiceCreate.
+3. Nilai default/konstan di-inject lewat INVTOAP2INV_BASE sebelum insert ke tabel inv_ap2.
+"""
+
+# Nilai default/konstan untuk field inv_ap2.
+# Nilai ini akan overwrite jika key yang sama sudah ada dari hasil mapping query.
 INVTOAP2INV_BASE = {
     "DOM_INT": "I",
     "PJT_HANDLING_FEE": "0",
@@ -28,6 +42,7 @@ INVTOAP2INV_BASE = {
     "INC_OUT": "O",
 }
 
+# Mapping nama kolom hasil query sumber menjadi nama field standar inv_ap2/InvoiceCreate.
 INVTOAP2INV = {
     "InvoiceNumber": "NO_INVOICE",
     "DateOfTransaction": "TANGGAL",

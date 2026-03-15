@@ -1,9 +1,9 @@
 """Define Angkasapura routes used by frontend pages."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from app.db.mysql import get_db1_r, get_db1_w
+from app.db.mysql import get_db1_r, get_db1_w, get_db2_r
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.inv_ap2_schema import InvoiceGet
 from app.schemas.invoice_daily_counter_schema import (
@@ -21,6 +21,19 @@ router = APIRouter(prefix="/angkasapura", tags=["Angkasapura"])
 def angkasapura(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     """Return filtered invoice data."""
     return INVAp2Service.datatable(db=db, params=params)
+
+
+@router.post("/upload-invoice-excel", summary="Upload Excel invoice AP2")
+def upload_invoice_excel(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db1_w),
+    db2: Session = Depends(get_db2_r),
+):
+    """Upload excel invoice AP2, map ke inv_ap2, lalu insert data baru."""
+    filename = (file.filename or "").lower()
+    if not filename.endswith((".xlsx", ".xlsm", ".xls")):
+        raise HTTPException(status_code=400, detail="Invalid file format")
+    return INVAp2Service.upload_invoice_excel(file=file, db=db, db2=db2)
 
 
 @router.post(

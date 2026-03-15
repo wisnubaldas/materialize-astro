@@ -65,6 +65,7 @@ def set_jwt_cookie(response: Response, token: str):
     Set cookie JWT secara aman dengan environment-aware.
     """
     settings = _resolve_auth_cookie_settings()
+    token_max_age = max(int(ENV.ACCESS_TOKEN_EXPIRE_MINUTES) * 60, 60)
     response.set_cookie(
         key="access_token",
         value=token,
@@ -72,7 +73,7 @@ def set_jwt_cookie(response: Response, token: str):
         secure=settings["secure"],
         samesite=settings["same_site"],  # type: ignore[arg-type]
         domain=settings["domain"],  # type: ignore[arg-type]
-        max_age=60 * 60 * 24,  # 1 hari
+        max_age=token_max_age,
         path="/",
     )
 
