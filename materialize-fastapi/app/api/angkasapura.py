@@ -1,9 +1,9 @@
 """Define Angkasapura routes used by frontend pages."""
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
-from app.db.mysql import get_db1_r, get_db1_w, get_db2_r
+from app.db.mysql import get_db1_r, get_db1_w
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.inv_ap2_schema import InvoiceGet
 from app.schemas.invoice_daily_counter_schema import (
@@ -23,17 +23,20 @@ def angkasapura(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     return INVAp2Service.datatable(db=db, params=params)
 
 
-@router.post("/upload-invoice-excel", summary="Upload Excel invoice AP2")
-def upload_invoice_excel(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db1_w),
-    db2: Session = Depends(get_db2_r),
-):
-    """Upload excel invoice AP2, map ke inv_ap2, lalu insert data baru."""
-    filename = (file.filename or "").lower()
-    if not filename.endswith((".xlsx", ".xlsm", ".xls")):
-        raise HTTPException(status_code=400, detail="Invalid file format")
-    return INVAp2Service.upload_invoice_excel(file=file, db=db, db2=db2)
+@router.post(
+    "/upload-invoice-excel",
+    status_code=202,
+    summary="Upload Excel invoice AP2 via background job",
+)
+def upload_invoice_excel(file: UploadFile = File(...)):
+    """Start background job upload excel invoice AP2."""
+    return INVAp2Service.start_upload_invoice_excel_job(file=file)
+
+
+@router.get("/upload-invoice-excel/status", summary="Status job upload Excel invoice AP2")
+def upload_invoice_excel_status():
+    """Get latest status for upload excel invoice AP2 job."""
+    return INVAp2Service.get_upload_invoice_excel_job_status()
 
 
 @router.post(

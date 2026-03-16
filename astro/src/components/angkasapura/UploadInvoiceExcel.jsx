@@ -1,163 +1,30 @@
 import { Icon } from '@iconify-icon/react';
-import { useCallback, useMemo, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
 
-import { angkasapuraApi } from '@lib/api/angkasapuraApi';
-
-const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
-const DEFAULT_MESSAGE = 'Unggah file Excel invoice AP2 untuk diproses ke tabel inv_ap2.';
-
-const parseUploadErrorMessage = (error) => {
-  const fallback = 'Gagal mengunggah file. Silakan coba kembali.';
-  const rawMessage = error instanceof Error ? error.message : fallback;
-
-  if (!rawMessage) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(rawMessage);
-    if (parsed?.detail?.message) {
-      return String(parsed.detail.message);
-    }
-    if (parsed?.detail && typeof parsed.detail === 'string') {
-      return parsed.detail;
-    }
-    if (parsed?.message && typeof parsed.message === 'string') {
-      return parsed.message;
-    }
-  } catch (parseError) {
-    // fallback ke raw message
-  }
-
-  return rawMessage;
-};
+import { useUploadInvoiceExcelLogic } from './upload-invoice-excel';
 
 export default function UploadInvoiceExcel() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [feedback, setFeedback] = useState(() => ({
-    variant: 'info',
-    message: DEFAULT_MESSAGE,
-  }));
-  const [dropError, setDropError] = useState(null);
-  const [uploadResult, setUploadResult] = useState(null);
-  const [inputKey, setInputKey] = useState(0);
-
-  const handleUpload = useCallback(async (file) => {
-    setIsUploading(true);
-    setDropError(null);
-    setUploadResult(null);
-    setFeedback({ variant: 'info', message: 'Mengunggah file invoice...' });
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await angkasapuraApi.uploadInvoiceExcel(formData);
-      setUploadResult(response);
-
-      const inserted = Number(response?.inserted ?? 0);
-      const skippedExisting = Number(response?.skipped_existing ?? 0);
-      const skippedDuplicateFile = Number(response?.skipped_duplicate_file ?? 0);
-      const sourceNotFoundCount = Array.isArray(response?.source_not_found_invoices)
-        ? response.source_not_found_invoices.length
-        : 0;
-
-      const statusMessage =
-        response?.message ||
-        `Selesai. Inserted: ${inserted}, existing: ${skippedExisting}, duplicate file: ${skippedDuplicateFile}.`;
-
-      if (inserted > 0 && sourceNotFoundCount === 0) {
-        setFeedback({ variant: 'success', message: statusMessage });
-      } else if (inserted > 0 || sourceNotFoundCount > 0) {
-        setFeedback({ variant: 'warning', message: statusMessage });
-      } else {
-        setFeedback({ variant: 'danger', message: statusMessage });
-      }
-
-      setSelectedFile(null);
-      setInputKey((prev) => prev + 1);
-    } catch (error) {
-      setFeedback({
-        variant: 'danger',
-        message: parseUploadErrorMessage(error),
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  }, []);
-
-  const onDrop = useCallback(
-    (acceptedFiles) => {
-      if (!acceptedFiles.length) {
-        return;
-      }
-      const [file] = acceptedFiles;
-      setSelectedFile(file);
-      handleUpload(file);
-    },
-    [handleUpload]
-  );
-
-  const onDropRejected = useCallback((rejections) => {
-    if (!rejections.length) {
-      return;
-    }
-
-    const messages = [];
-    rejections.forEach((rejection) => {
-      rejection.errors.forEach((err) => {
-        if (err?.message) {
-          messages.push(err.message);
-        }
-      });
-    });
-
-    const message = messages.join(', ') || 'File tidak valid.';
-    setDropError(message);
-    setFeedback({ variant: 'danger', message });
-    setSelectedFile(null);
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    onDropRejected,
-    multiple: false,
-    accept: {
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.ms-excel.sheet.macroEnabled.12': ['.xlsm'],
-    },
-    maxSize: MAX_UPLOAD_SIZE,
-  });
-
-  const selectedFileSummary = useMemo(() => {
-    if (!selectedFile) {
-      return '';
-    }
-
-    const sizeInKB = selectedFile.size / 1024;
-    const formattedSize =
-      sizeInKB >= 1024 ? `${(sizeInKB / 1024).toFixed(2)} MB` : `${sizeInKB.toFixed(2)} KB`;
-
-    return `${selectedFile.name} - ${formattedSize}`;
-  }, [selectedFile]);
-
-  const feedbackClass =
-    feedback.variant === 'success'
-      ? 'success'
-      : feedback.variant === 'warning'
-      ? 'warning'
-      : feedback.variant === 'danger'
-      ? 'danger'
-      : 'primary';
-
-  const dropzoneClassName = `dropzone needsclick${isDragActive ? ' dz-drag-hover' : ''}`;
-  const sourceNotFoundInvoices = Array.isArray(uploadResult?.source_not_found_invoices)
-    ? uploadResult.source_not_found_invoices
-    : [];
-  const uploadErrors = Array.isArray(uploadResult?.errors) ? uploadResult.errors : [];
+  const {
+    inputKey,
+    isStartingUpload,
+    feedback,
+    feedbackClass,
+    dropError,
+    uploadResult,
+    jobStatus,
+    sseError,
+    isSseFallbackActive,
+    isSseConnected,
+    isJobRunning,
+    dropzoneClassName,
+    selectedFileSummary,
+    progress,
+    sourceNotFoundInvoices,
+    uploadErrors,
+    statusPollingIntervalSeconds,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+  } = useUploadInvoiceExcelLogic();
 
   return (
     <div className="row">
@@ -174,7 +41,8 @@ export default function UploadInvoiceExcel() {
                     borderRadius: '6px',
                     padding: '24px 20px',
                     textAlign: 'center',
-                    cursor: 'pointer',
+                    cursor: isStartingUpload || isJobRunning ? 'not-allowed' : 'pointer',
+                    opacity: isStartingUpload || isJobRunning ? 0.7 : 1,
                     transition: 'border .24s ease-in-out',
                   }}
                 >
@@ -196,7 +64,13 @@ export default function UploadInvoiceExcel() {
                   </div>
                 )}
 
-                {isUploading && <div className="mt-3 small text-primary">Sedang memproses upload...</div>}
+                {(isStartingUpload || isJobRunning) && (
+                  <div className="mt-3 small text-primary">
+                    {isStartingUpload
+                      ? 'Mengirim file ke server...'
+                      : 'Proses upload sedang berjalan, jangan upload file lain dulu.'}
+                  </div>
+                )}
 
                 {dropError && (
                   <div className="mt-3 alert alert-danger mb-0" role="alert">
@@ -206,16 +80,26 @@ export default function UploadInvoiceExcel() {
               </div>
 
               <div className="col-12 col-lg-8">
-                <div className={`card rounded-sm shadow-none bg-transparent border border-${feedbackClass}`}>
+                <div
+                  className={`card rounded-sm shadow-none bg-transparent border border-${feedbackClass}`}
+                >
                   <div className="d-flex align-items-end row">
                     <div className="col-md-7 order-2 order-md-1">
                       <div className="card-body">
-                        <h4 className={`card-title mb-2 text-${feedbackClass}`}>{feedback.message}</h4>
+                        <h4 className={`card-title mb-2 text-${feedbackClass}`}>
+                          {feedback.message}
+                        </h4>
+                        <div className="small text-muted mb-2">
+                          Status: <strong>{jobStatus?.status || 'idle'}</strong>
+                          {jobStatus?.job_id ? <span> | Job: {jobStatus.job_id}</span> : null}
+                        </div>
                         {uploadResult && (
                           <div className="small">
                             <div>Inserted: {uploadResult.inserted ?? 0}</div>
                             <div>Skipped existing: {uploadResult.skipped_existing ?? 0}</div>
-                            <div>Skipped duplicate file: {uploadResult.skipped_duplicate_file ?? 0}</div>
+                            <div>
+                              Skipped duplicate file: {uploadResult.skipped_duplicate_file ?? 0}
+                            </div>
                             <div>Source not found: {sourceNotFoundInvoices.length}</div>
                             <div>Error rows: {uploadErrors.length}</div>
                           </div>
@@ -232,6 +116,47 @@ export default function UploadInvoiceExcel() {
                         />
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <div className="card mt-3 border-primary">
+                  <div className="card-body">
+                    <div className="progress bg-label-primary">
+                      <div
+                        className={`progress-bar ${
+                          isJobRunning
+                            ? 'progress-bar-striped progress-bar-animated bg-primary'
+                            : jobStatus?.status === 'failed'
+                              ? 'bg-danger'
+                              : jobStatus?.status === 'completed'
+                                ? 'bg-success'
+                                : 'bg-primary'
+                        }`}
+                        role="progressbar"
+                        style={{ width: `${progress}%` }}
+                        aria-valuenow={progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        {progress}%
+                      </div>
+                    </div>
+                    <div className="small mt-2 text-muted">
+                      {jobStatus?.message || 'Menunggu upload file...'}
+                    </div>
+                    {isJobRunning && (
+                      <div className="small mt-1 text-warning">
+                        Notifikasi: proses upload masih berlangsung. Jangan upload file berikutnya
+                        dulu.
+                      </div>
+                    )}
+                    {sseError && <div className="small mt-1 text-danger">{sseError}</div>}
+                    {isSseFallbackActive && !isSseConnected && (
+                      <div className="small mt-1 text-warning">
+                        Fallback polling aktif (setiap {statusPollingIntervalSeconds} detik)
+                        sampai SSE tersambung kembali.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -288,4 +213,3 @@ export default function UploadInvoiceExcel() {
     </div>
   );
 }
-

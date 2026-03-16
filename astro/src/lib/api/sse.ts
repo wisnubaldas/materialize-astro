@@ -70,6 +70,14 @@ const SSE_REQUEST = {
       params,
     });
   },
+  async getAngkasapuraUploadInvoice(options?: SseRequestOptions) {
+    const key = await createSseKey({ client: 'angkasapura-upload-invoice' });
+    const params = { ...(options?.params ?? {}), key };
+    return apiClient.sse('/sse/angkasapura-upload-invoice', {
+      ...options,
+      params,
+    });
+  },
 };
 
 export default SSE_REQUEST;

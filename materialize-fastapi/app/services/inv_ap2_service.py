@@ -3,13 +3,16 @@
 import calendar
 import logging
 import re
+from copy import deepcopy
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
 from io import BytesIO
 from json import dumps
 from pathlib import Path
-from typing import Any
+from threading import Lock, Thread
+from typing import Any, Callable
+from uuid import uuid4
 
 import httpx
 import pandas as pd
@@ -178,6 +181,22 @@ INT_FIELDS = {
 SQL_DATE_FILTER_PATTERN = re.compile(r"a\.DateOfTransaction\s*=\s*:hari", flags=re.IGNORECASE)
 INVOICE_FILTER_PATTERN = re.compile(r"a\.InvoiceNumber\s*=\s*:invoice_number", flags=re.IGNORECASE)
 REQUIRED_HEADER_KEYS = {"INVOICE NO", "DATE OF TRANSACTION", "M-AWB", "AIRLINES", "FLIGHT NO"}
+UPLOAD_INVOICE_AP2_CHANNEL = "upload_invoice_ap2_channel"
+UPLOAD_JOB_ACTIVE_STATUSES = {"queued", "processing"}
+_UPLOAD_JOB_STATE_LOCK = Lock()
+_UPLOAD_JOB_STATE: dict[str, Any] = {
+    "job_id": None,
+    "filename": None,
+    "status": "idle",
+    "progress": 0,
+    "message": "Belum ada proses upload invoice excel.",
+    "started_at": None,
+    "finished_at": None,
+    "updated_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+    "result": None,
+    "error": None,
+    "can_upload": True,
+}
 DB2_INV_SYNC_ENABLED = False
 DOM_INC_OUT_SQL = text(
     """
@@ -282,20 +301,19 @@ def sanitize_number_for_int(value: Any) -> Any:  # noqa: PLR0911
     return value
 
 
-def read_excel_upload(file: UploadFile) -> pd.DataFrame:
-    filename = (file.filename or "").lower()
-    if not filename.endswith(UPLOAD_ALLOWED_EXTENSIONS):
+def read_excel_upload_payload(filename: str, payload: bytes) -> pd.DataFrame:
+    normalized_filename = (filename or "").lower()
+    if not normalized_filename.endswith(UPLOAD_ALLOWED_EXTENSIONS):
         raise HTTPException(
             status_code=400,
             detail="Format file tidak valid, gunakan Excel (.xlsx / .xlsm / .xls).",
         )
 
-    payload = file.file.read()
     if not payload:
         raise HTTPException(status_code=400, detail="File Excel kosong.")
 
     try:
-        if filename.endswith(".xls"):
+        if normalized_filename.endswith(".xls"):
             raw_df = pd.read_excel(BytesIO(payload), dtype=object, header=None)
         else:
             raw_df = pd.read_excel(BytesIO(payload), dtype=object, header=None, engine="openpyxl")
@@ -340,6 +358,11 @@ def read_excel_upload(file: UploadFile) -> pd.DataFrame:
     return data_df
 
 
+def read_excel_upload(file: UploadFile) -> pd.DataFrame:
+    payload = file.file.read()
+    return read_excel_upload_payload(filename=file.filename or "", payload=payload)
+
+
 def get_missing_required_invoice_fields(values: dict[str, Any]) -> list[str]:
     missing_fields: list[str] = []
     for field_name, model_field in InvoiceCreate.model_fields.items():
@@ -351,6 +374,172 @@ def get_missing_required_invoice_fields(values: dict[str, Any]) -> list[str]:
 
 
 class INVAp2Service:
+    @staticmethod
+    def _snapshot_upload_job_state() -> dict[str, Any]:
+        with _UPLOAD_JOB_STATE_LOCK:
+            return deepcopy(_UPLOAD_JOB_STATE)
+
+    @staticmethod
+    def _publish_upload_job_state(state: dict[str, Any]) -> None:
+        publish_sync(UPLOAD_INVOICE_AP2_CHANNEL, dumps(state))
+
+    @staticmethod
+    def _update_upload_job_state(
+        *,
+        patch: dict[str, Any],
+        job_id: str | None = None,
+        force: bool = False,
+    ) -> dict[str, Any]:
+        with _UPLOAD_JOB_STATE_LOCK:
+            current_job_id = _UPLOAD_JOB_STATE.get("job_id")
+            if job_id and current_job_id and current_job_id != job_id and not force:
+                return deepcopy(_UPLOAD_JOB_STATE)
+
+            _UPLOAD_JOB_STATE.update(patch)
+            _UPLOAD_JOB_STATE["updated_at"] = datetime.now().isoformat(timespec="seconds")  # noqa: DTZ005
+            status_value = str(_UPLOAD_JOB_STATE.get("status") or "idle")
+            _UPLOAD_JOB_STATE["can_upload"] = status_value not in UPLOAD_JOB_ACTIVE_STATUSES
+            snapshot = deepcopy(_UPLOAD_JOB_STATE)
+
+        INVAp2Service._publish_upload_job_state(snapshot)
+        return snapshot
+
+    @staticmethod
+    def get_upload_invoice_excel_job_status() -> dict[str, Any]:
+        return INVAp2Service._snapshot_upload_job_state()
+
+    @staticmethod
+    def start_upload_invoice_excel_job(file: UploadFile) -> dict[str, Any]:
+        filename = file.filename or ""
+        normalized_filename = filename.lower()
+        if not normalized_filename.endswith(UPLOAD_ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail="Invalid file format")
+
+        payload = file.file.read()
+        if not payload:
+            raise HTTPException(status_code=400, detail="File Excel kosong.")
+
+        with _UPLOAD_JOB_STATE_LOCK:
+            current_status = str(_UPLOAD_JOB_STATE.get("status") or "idle")
+            if current_status in UPLOAD_JOB_ACTIVE_STATUSES:
+                running_snapshot = deepcopy(_UPLOAD_JOB_STATE)
+            else:
+                job_id = uuid4().hex
+                _UPLOAD_JOB_STATE.update(
+                    {
+                        "job_id": job_id,
+                        "filename": filename,
+                        "status": "queued",
+                        "progress": 0,
+                        "message": "File diterima. Job upload dimulai.",
+                        "started_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+                        "finished_at": None,
+                        "result": None,
+                        "error": None,
+                        "updated_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+                        "can_upload": False,
+                    }
+                )
+                running_snapshot = deepcopy(_UPLOAD_JOB_STATE)
+
+        if current_status in UPLOAD_JOB_ACTIVE_STATUSES:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Proses upload excel sebelumnya masih berjalan. Mohon tunggu hingga selesai.",
+                    "job_status": running_snapshot,
+                },
+            )
+
+        INVAp2Service._publish_upload_job_state(running_snapshot)
+        Thread(
+            target=INVAp2Service._run_upload_invoice_excel_job,
+            kwargs={
+                "job_id": running_snapshot["job_id"],
+                "filename": filename,
+                "payload": payload,
+            },
+            daemon=True,
+        ).start()
+        return running_snapshot
+
+    @staticmethod
+    def _run_upload_invoice_excel_job(job_id: str, filename: str, payload: bytes) -> None:
+        db = SessionDB1W()
+        db2 = SessionDB2R()
+
+        def progress_callback(progress: int, message: str) -> None:
+            clamped_progress = max(0, min(99, int(progress)))
+            INVAp2Service._update_upload_job_state(
+                job_id=job_id,
+                patch={
+                    "status": "processing",
+                    "progress": clamped_progress,
+                    "message": message,
+                    "error": None,
+                },
+            )
+
+        try:
+            progress_callback(5, "Membaca file excel...")
+            result = INVAp2Service.upload_invoice_excel_payload(
+                filename=filename,
+                payload=payload,
+                db=db,
+                db2=db2,
+                progress_callback=progress_callback,
+            )
+            INVAp2Service._update_upload_job_state(
+                job_id=job_id,
+                patch={
+                    "status": "completed",
+                    "progress": 100,
+                    "message": result.get("message", "Upload invoice excel selesai diproses."),
+                    "finished_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+                    "result": result,
+                    "error": None,
+                },
+            )
+        except HTTPException as exc:
+            db.rollback()
+            detail = exc.detail
+            if isinstance(detail, dict):
+                detail_message = str(
+                    detail.get("message")
+                    or detail.get("detail")
+                    or "Gagal memproses upload invoice excel."
+                )
+            else:
+                detail_message = str(detail or "Gagal memproses upload invoice excel.")
+            INVAp2Service._update_upload_job_state(
+                job_id=job_id,
+                patch={
+                    "status": "failed",
+                    "progress": 100,
+                    "message": detail_message,
+                    "finished_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+                    "error": detail_message,
+                },
+            )
+            logger.exception("Job upload invoice excel gagal: %s", detail_message)
+        except Exception as exc:  # noqa: BLE001
+            db.rollback()
+            detail_message = f"Gagal memproses upload invoice excel: {exc}"
+            INVAp2Service._update_upload_job_state(
+                job_id=job_id,
+                patch={
+                    "status": "failed",
+                    "progress": 100,
+                    "message": detail_message,
+                    "finished_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
+                    "error": detail_message,
+                },
+            )
+            logger.exception("Job upload invoice excel gagal.")
+        finally:
+            db.close()
+            db2.close()
+
     @staticmethod
     def get_invoice_excel_perbulan(db: Session, bulan: str) -> bytes:
         logger.info(
@@ -736,13 +925,42 @@ class INVAp2Service:
         return None
 
     @staticmethod
-    def upload_invoice_excel(  # noqa: PLR0912, PLR0915
+    def upload_invoice_excel(
         file: UploadFile, db: Session, db2: Session
     ) -> dict[str, Any]:
         logger.info("Upload invoice AP2 via excel: %s", file.filename)
         dataframe = read_excel_upload(file=file)
+        return INVAp2Service._upload_invoice_excel_dataframe(dataframe=dataframe, db=db, db2=db2)
+
+    @staticmethod
+    def upload_invoice_excel_payload(
+        filename: str,
+        payload: bytes,
+        db: Session,
+        db2: Session,
+        progress_callback: Callable[[int, str], None] | None = None,
+    ) -> dict[str, Any]:
+        logger.info("Upload invoice AP2 via excel (job): %s", filename)
+        dataframe = read_excel_upload_payload(filename=filename, payload=payload)
+        return INVAp2Service._upload_invoice_excel_dataframe(
+            dataframe=dataframe,
+            db=db,
+            db2=db2,
+            progress_callback=progress_callback,
+        )
+
+    @staticmethod
+    def _upload_invoice_excel_dataframe(  # noqa: PLR0912, PLR0915
+        dataframe: pd.DataFrame,
+        db: Session,
+        db2: Session,
+        progress_callback: Callable[[int, str], None] | None = None,
+    ) -> dict[str, Any]:
         if dataframe.empty:
             raise HTTPException(status_code=400, detail="File Excel tidak memiliki data.")
+
+        if progress_callback:
+            progress_callback(10, "Menyiapkan struktur kolom file excel...")
 
         normalized_to_actual_col = {
             normalize_excel_header(column): column for column in dataframe.columns
@@ -755,9 +973,25 @@ class INVAp2Service:
         pending_records: list[dict[str, Any]] = []
         validation_errors: list[dict[str, Any]] = []
         source_not_found_invoices: list[str] = []
+        rows = dataframe.to_dict(orient="records")
+        total_rows = len(rows)
+        last_progress = 15
 
-        for row_idx, row in enumerate(dataframe.to_dict(orient="records"), start=2):
+        if progress_callback:
+            progress_callback(15, f"Memproses {total_rows} baris data excel...")
+
+        for row_idx, row in enumerate(rows, start=2):
             if all(is_empty_value(value) for value in row.values()):
+                if progress_callback and total_rows:
+                    processed = row_idx - 1
+                    if processed == total_rows or processed % 25 == 0:
+                        next_progress = 15 + int((processed / total_rows) * 60)
+                        next_progress = min(next_progress, 75)
+                        if next_progress > last_progress:
+                            last_progress = next_progress
+                            progress_callback(
+                                next_progress, f"Memproses baris {processed}/{total_rows}..."
+                            )
                 continue
 
             mapped_row: dict[str, Any] = dict(INVTOAP2INV_BASE)
@@ -850,7 +1084,18 @@ class INVAp2Service:
 
             pending_records.append(payload)
 
+            if progress_callback and total_rows:
+                processed = row_idx - 1
+                if processed == total_rows or processed % 25 == 0:
+                    next_progress = 15 + int((processed / total_rows) * 60)
+                    next_progress = min(next_progress, 75)
+                    if next_progress > last_progress:
+                        last_progress = next_progress
+                        progress_callback(next_progress, f"Memproses baris {processed}/{total_rows}...")
+
         if not pending_records:
+            if progress_callback:
+                progress_callback(100, "Tidak ada data valid untuk diinsert.")
             return {
                 "message": "Tidak ada data valid untuk diinsert.",
                 "inserted": 0,
@@ -859,6 +1104,9 @@ class INVAp2Service:
                 "source_not_found_invoices": sorted(set(source_not_found_invoices)),
                 "errors": validation_errors,
             }
+
+        if progress_callback:
+            progress_callback(80, "Memvalidasi duplikasi invoice...")
 
         unique_invoice_numbers = {
             str(no_inv)
@@ -890,6 +1138,9 @@ class INVAp2Service:
             seen_in_file.add(invoice_number)
             records_to_insert.append(record)
 
+        if progress_callback:
+            progress_callback(90, "Menyimpan data invoice ke database...")
+
         if records_to_insert:
             try:
                 db.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore[arg-type]
@@ -901,6 +1152,9 @@ class INVAp2Service:
                     status_code=500,
                     detail="Gagal menyimpan data upload invoice AP2.",
                 ) from exc
+
+        if progress_callback:
+            progress_callback(99, "Finalisasi proses upload invoice...")
 
         return {
             "message": "Upload invoice excel selesai diproses.",
