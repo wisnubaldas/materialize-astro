@@ -82,7 +82,7 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
         </div>
 
         <div class="layout-page">
-          <Nav client:load username={username} />
+          <Nav client:load username={username} menuData={menuData} currentPath={currentPath} />
           <div style="min-height: 600px;">
             <slot />
           </div>

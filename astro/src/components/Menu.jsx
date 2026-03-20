@@ -1,5 +1,3 @@
-import React from 'react';
-
 const isExternal = (url) => /^https?:\/\//i.test(url ?? '');
 const isVoidLink = (url) => {
   const value = typeof url === 'string' ? url : '';

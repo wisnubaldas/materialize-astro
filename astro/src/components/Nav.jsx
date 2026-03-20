@@ -1,5 +1,5 @@
-import React from 'react';
 import { logout } from '../js/auth.js';
+import Breadcrumb from './Breadcrumb.jsx';
 
 const clearStorageAndCookies = () => {
   localStorage.clear();
@@ -39,7 +39,7 @@ const clearStorageAndCookies = () => {
   });
 };
 
-const Nav = ({ username = '' }) => {
+const Nav = ({ username = '', menuData = [], currentPath = '/' }) => {
   const displayName = typeof username === 'string' ? username.trim() || 'User' : 'User';
   const handleLogout = async (event) => {
     event.preventDefault();
@@ -59,67 +59,13 @@ const Nav = ({ username = '' }) => {
         </a>
       </div>
 
-      <div className="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
-        <div className="navbar-nav align-items-center">
-          <div className="nav-item dropdown me-2 me-xl-0">
-            <a
-              className="nav-link dropdown-toggle hide-arrow"
-              id="nav-theme"
-              href="javascript:void(0);"
-              data-bs-toggle="dropdown"
-            >
-              <i className="icon-base ri ri-sun-line icon-22px theme-icon-active"></i>
-              <span className="d-none ms-2" id="nav-theme-text">
-                Toggle theme
-              </span>
-            </a>
-            <ul className="dropdown-menu dropdown-menu-start" aria-labelledby="nav-theme-text">
-              <li>
-                <button
-                  type="button"
-                  className="dropdown-item align-items-center active"
-                  data-bs-theme-value="light"
-                  aria-pressed="false"
-                >
-                  <span>
-                    <i className="icon-base ri ri-sun-line icon-22px me-3" data-icon="sun-line"></i>
-                    Light
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="dropdown-item align-items-center"
-                  data-bs-theme-value="dark"
-                  aria-pressed="true"
-                >
-                  <span>
-                    <i
-                      className="icon-base ri ri-moon-clear-line icon-22px me-3"
-                      data-icon="moon-clear-line"
-                    ></i>
-                    Dark
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="dropdown-item align-items-center"
-                  data-bs-theme-value="system"
-                  aria-pressed="false"
-                >
-                  <span>
-                    <i
-                      className="icon-base ri ri-computer-line icon-22px me-3"
-                      data-icon="computer-line"
-                    ></i>
-                    System
-                  </span>
-                </button>
-              </li>
-            </ul>
+      <div
+        className="navbar-nav-right d-flex align-items-center justify-content-end"
+        id="navbar-collapse"
+      >
+        <div className="navbar-nav align-items-center me-auto">
+          <div className="nav-item">
+            <Breadcrumb menuData={menuData} currentPath={currentPath} />
           </div>
         </div>
 

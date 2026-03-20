@@ -11,7 +11,7 @@ from io import BytesIO
 from json import dumps
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Any, Callable
+from typing import Any, Callable  # noqa: UP035
 from uuid import uuid4
 
 import httpx
@@ -522,7 +522,7 @@ class INVAp2Service:
                 },
             )
             logger.exception("Job upload invoice excel gagal: %s", detail_message)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001, RUF100
             db.rollback()
             detail_message = f"Gagal memproses upload invoice excel: {exc}"
             INVAp2Service._update_upload_job_state(
@@ -846,7 +846,9 @@ class INVAp2Service:
             return normalized_query
 
         if SQL_DATE_FILTER_PATTERN.search(normalized_query):
-            return SQL_DATE_FILTER_PATTERN.sub("a.InvoiceNumber = :invoice_number", normalized_query)
+            return SQL_DATE_FILTER_PATTERN.sub(
+                "a.InvoiceNumber = :invoice_number", normalized_query
+            )
 
         if re.search(r"\bWHERE\b", normalized_query, flags=re.IGNORECASE):
             return f"{normalized_query}\n  AND a.InvoiceNumber = :invoice_number"
@@ -881,7 +883,9 @@ class INVAp2Service:
     ) -> tuple[dict[str, Any], str | None]:
         for query_path, query_sql in lookup_queries:
             try:
-                result = db2.execute(query_sql, {"invoice_number": invoice_number}).mappings().first()
+                result = (
+                    db2.execute(query_sql, {"invoice_number": invoice_number}).mappings().first()
+                )
             except Exception:
                 logger.exception(
                     "Gagal lookup invoice %s dari query %s",
@@ -896,7 +900,9 @@ class INVAp2Service:
     @staticmethod
     def _lookup_dom_int_inc_out(db2: Session, invoice_number: str) -> dict[str, str]:
         try:
-            row = db2.execute(DOM_INC_OUT_SQL, {"invoice_number": invoice_number}).mappings().first()
+            row = (
+                db2.execute(DOM_INC_OUT_SQL, {"invoice_number": invoice_number}).mappings().first()
+            )
         except Exception:
             logger.exception("Gagal lookup DOM_INT/INC_OUT untuk invoice %s", invoice_number)
             return {}
@@ -912,7 +918,9 @@ class INVAp2Service:
         return result
 
     @staticmethod
-    def _get_excel_value(row: dict[str, Any], normalized_to_actual_col: dict[str, str], field: str) -> Any:
+    def _get_excel_value(
+        row: dict[str, Any], normalized_to_actual_col: dict[str, str], field: str
+    ) -> Any:
         field_headers = INV_FIELD_TO_EXCEL_HEADERS.get(field, [])
         direct_headers = [field, field.replace("_", " ")]
         for candidate in [*field_headers, *direct_headers]:
@@ -925,9 +933,7 @@ class INVAp2Service:
         return None
 
     @staticmethod
-    def upload_invoice_excel(
-        file: UploadFile, db: Session, db2: Session
-    ) -> dict[str, Any]:
+    def upload_invoice_excel(file: UploadFile, db: Session, db2: Session) -> dict[str, Any]:
         logger.info("Upload invoice AP2 via excel: %s", file.filename)
         dataframe = read_excel_upload(file=file)
         return INVAp2Service._upload_invoice_excel_dataframe(dataframe=dataframe, db=db, db2=db2)
@@ -1007,7 +1013,11 @@ class INVAp2Service:
 
             if not invoice_number:
                 validation_errors.append(
-                    {"row": row_idx, "invoice": None, "error": "NO_INVOICE / Invoice No wajib diisi."}
+                    {
+                        "row": row_idx,
+                        "invoice": None,
+                        "error": "NO_INVOICE / Invoice No wajib diisi.",
+                    }
                 )
                 continue
 
@@ -1091,7 +1101,9 @@ class INVAp2Service:
                     next_progress = min(next_progress, 75)
                     if next_progress > last_progress:
                         last_progress = next_progress
-                        progress_callback(next_progress, f"Memproses baris {processed}/{total_rows}...")
+                        progress_callback(
+                            next_progress, f"Memproses baris {processed}/{total_rows}..."
+                        )
 
         if not pending_records:
             if progress_callback:
