@@ -236,12 +236,6 @@ export default function ChartDataTerkirim() {
               </p>
             </div>
             <div className="ms-md-auto mt-3 mt-md-0" style={{ minWidth: '220px' }}>
-              <SelectMonth
-                title="Pilih data tracking berdasarkan Bulan"
-                data={bulan}
-                callback={handleDataMonth}
-              />
-
               <label className="form-label text-muted mb-1">Pilih Bulan</label>
               <input
                 ref={monthInputRef}
