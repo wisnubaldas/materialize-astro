@@ -101,3 +101,36 @@ class HubnetRequestRepository:
             }
             for row in rows
         ]
+
+    def get_sending_status_summary_perbulan(self, bulan: str) -> dict[str, int]:
+        bulan = bulan.strip()
+        try:
+            datetime.strptime(bulan, "%Y-%m")  # noqa: DTZ007
+        except ValueError as exc:
+            raise ValueError("format bulan harus YYYY-MM") from exc
+
+        sent = func.sum(case((HubnetRequest.IS_SEND == "1", 1), else_=0)).label("sent")
+        failed = func.sum(case((HubnetRequest.IS_FAILED == "1", 1), else_=0)).label("failed")
+        pending = func.sum(
+            case(
+                (
+                    and_(HubnetRequest.IS_SEND != "1", HubnetRequest.IS_FAILED != "1"),
+                    1,
+                ),
+                else_=0,
+            )
+        ).label("pending")
+        total = func.count(HubnetRequest.id).label("total")
+
+        row = (
+            self.db.query(sent, failed, pending, total)
+            .filter(func.substr(HubnetRequest.FLT_DATE, 1, 7) == bulan)
+            .one()
+        )
+
+        return {
+            "sent": int(row.sent or 0),
+            "failed": int(row.failed or 0),
+            "pending": int(row.pending or 0),
+            "total": int(row.total or 0),
+        }

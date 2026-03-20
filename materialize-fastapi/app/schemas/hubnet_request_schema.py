@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class HubnetRequestBase(BaseModel):
@@ -34,8 +34,16 @@ class HubnetRequestBase(BaseModel):
     REMARKS: str | None = Field(default=None, examples=["Baterai Nokia"])
     IS_INTERNATIONAL: str | None = Field(default=None, examples=["0"])
     IS_EKSPOR: str | None = Field(default=None, examples=["1"])
+    IS_SEND: str | None = Field(default=None, examples=["1"])
 
     model_config = {"from_attributes": True, "extra": "ignore"}
+
+    @field_validator("IS_SEND", mode="before")
+    @classmethod
+    def normalize_is_send(cls, value):
+        if value is None:
+            return None
+        return str(value)
 
 
 class HubnetRequestGet(HubnetRequestBase):

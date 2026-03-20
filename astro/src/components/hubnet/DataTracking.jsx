@@ -5,6 +5,32 @@ import { hubnetApi } from '@lib/api/hubnetApi';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 export default function DataTracking() {
+  const getSendingStatus = (value) => {
+    const normalizedValue = String(value ?? '').trim();
+
+    if (normalizedValue === '1') {
+      return {
+        label: 'Terkirim',
+        className: 'bg-label-success',
+        sortValue: 1,
+      };
+    }
+
+    if (normalizedValue === '0') {
+      return {
+        label: 'Gagal',
+        className: 'bg-label-danger',
+        sortValue: 0,
+      };
+    }
+
+    return {
+      label: '-',
+      className: 'bg-label-dark',
+      sortValue: -1,
+    };
+  };
+
   const tableOptions = {
     order: [[2, 'desc']],
   };
@@ -46,6 +72,22 @@ export default function DataTracking() {
         },
         filter: (data) => {
           return String(data ?? '').toUpperCase();
+        },
+      },
+    },
+    {
+      data: 'IS_SEND',
+      title: 'Status Sending',
+      render: {
+        display: (data) => {
+          const status = getSendingStatus(data);
+          return `<span class="badge ${status.className}">${status.label}</span>`;
+        },
+        filter: (data) => {
+          return getSendingStatus(data).label.toUpperCase();
+        },
+        sort: (data) => {
+          return getSendingStatus(data).sortValue;
         },
       },
     },

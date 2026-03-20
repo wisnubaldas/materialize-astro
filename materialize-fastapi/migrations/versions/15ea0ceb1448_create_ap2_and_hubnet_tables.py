@@ -1,4 +1,4 @@
-"""create ap2 and hubnet tables
+"""create ap2 tables
 
 Revision ID: 15ea0ceb1448
 Revises: d9e0a1b2c3d4
@@ -140,72 +140,7 @@ def upgrade() -> None:
             mysql_engine="InnoDB",
         )
 
-    if not _table_exists("hubnet_request"):
-        op.create_table(
-            "hubnet_request",
-            sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-            sa.Column("AWB_NO", sa.String(length=255), nullable=True),
-            sa.Column("ref_id", sa.String(length=255), nullable=True),
-            sa.Column("FLT_NUMBER", sa.String(length=255), nullable=True),
-            sa.Column("FLT_DATE", sa.String(length=255), nullable=True),
-            sa.Column("ORI", sa.String(length=255), nullable=True),
-            sa.Column("DEST", sa.String(length=255), nullable=True),
-            sa.Column("FLT_NUMBER1", sa.String(length=255), nullable=True),
-            sa.Column("FLT_DATE1", sa.String(length=255), nullable=True),
-            sa.Column("ORI1", sa.String(length=255), nullable=True),
-            sa.Column("T", sa.String(length=255), nullable=True),
-            sa.Column("K", sa.String(length=255), nullable=True),
-            sa.Column("CH_WEIGHT", sa.String(length=255), nullable=True),
-            sa.Column("MC", sa.String(length=255), nullable=True),
-            sa.Column("AGT_NAME", sa.String(length=255), nullable=True),
-            sa.Column("AGT_ADD", sa.String(length=255), nullable=True),
-            sa.Column("SHP_ADD", sa.String(length=255), nullable=True),
-            sa.Column("SHP_NAME", sa.String(length=255), nullable=True),
-            sa.Column("CNE_NAME", sa.String(length=255), nullable=True),
-            sa.Column("CNE_ADD", sa.String(length=255), nullable=True),
-            sa.Column("KATEGORI_CARGO", sa.String(length=255), nullable=True),
-            sa.Column("COMMODITY", sa.String(length=255), nullable=True),
-            sa.Column("CARGO_TREATMENT", sa.String(length=255), nullable=True),
-            sa.Column("REMARKS", sa.String(length=255), nullable=True),
-            sa.Column("IS_INTERNATIONAL", sa.String(length=255), nullable=True),
-            sa.Column("IS_EKSPOR", sa.String(length=255), nullable=True),
-            sa.Column("IS_SEND", sa.String(length=255), nullable=True),
-            sa.Column("IS_FAILED", sa.String(length=255), nullable=True),
-            sa.Column("ERROR_MESSAGE", sa.String(length=255), nullable=True),
-            sa.Column("IS_SUCCESS", sa.String(length=255), nullable=True),
-            sa.Column("SUCCESS_MESSAGE", sa.String(length=255), nullable=True),
-            sa.Column("IS_BREAK", sa.String(length=255), nullable=True),
-            sa.Column("BREAK_MESSAGE", sa.String(length=255), nullable=True),
-            sa.Column(
-                "created_at",
-                sa.TIMESTAMP(),
-                nullable=False,
-                server_default=sa.text("CURRENT_TIMESTAMP"),
-            ),
-            sa.Column(
-                "updated_at",
-                sa.TIMESTAMP(),
-                nullable=False,
-                server_default=sa.text("CURRENT_TIMESTAMP"),
-                server_onupdate=sa.text("CURRENT_TIMESTAMP"),
-            ),
-            mysql_engine="InnoDB",
-        )
-
-    if not _table_exists("hubnet_response"):
-        op.create_table(
-            "hubnet_response",
-            sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-            sa.Column("status", sa.String(length=255), nullable=True),
-            sa.Column("message", sa.String(length=255), nullable=True),
-            sa.Column("ref_id", sa.String(length=255), nullable=True),
-            mysql_engine="InnoDB",
-        )
-
-
 def downgrade() -> None:
-    op.drop_table("hubnet_response")
-    op.drop_table("hubnet_request")
     op.drop_table("void_inv_ap2")
     op.drop_table("respons_inv_ap2")
     op.drop_table("inv_ap2")

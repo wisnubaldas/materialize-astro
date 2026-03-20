@@ -82,3 +82,15 @@ def sending_per_bulan(
     except ValueError as exc:
         logger.warning("Validasi bulan gagal: %s", exc)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/sending-status-summary/{bulan}", summary="Ringkasan status kirim perbulan")
+def sending_status_summary(
+    bulan: str, service: HbnetRequestService = Depends(get_data_sending_per_bulan_service)
+):
+    logger.info("Data ringkasan status kirim perbulan %s", bulan)
+    try:
+        return service.data_sending_status_summary_per_bulan(bulan)
+    except ValueError as exc:
+        logger.warning("Validasi bulan gagal: %s", exc)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

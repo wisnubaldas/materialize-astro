@@ -33,9 +33,48 @@ const STATUS_CONFIG = [
   },
 ];
 
+const SUMMARY_CONFIG = [
+  {
+    key: 'pending',
+    label: 'Belum Dikirim',
+    badgeClassName: 'bg-label-warning text-warning',
+  },
+  {
+    key: 'sent',
+    label: 'Sudah Dikirim',
+    badgeClassName: 'bg-label-success text-success',
+  },
+  {
+    key: 'failed',
+    label: 'Gagal',
+    badgeClassName: 'bg-label-danger text-danger',
+  },
+];
+
+const DEFAULT_SENDING_STATUS_SUMMARY = {
+  pending: 0,
+  sent: 0,
+  failed: 0,
+  total: 0,
+};
+
 const numberOrZero = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeSendingStatusSummary = (response) => {
+  const payload =
+    response && typeof response === 'object' && 'data' in response
+      ? response.data
+      : response ?? {};
+
+  return {
+    pending: numberOrZero(payload?.pending),
+    sent: numberOrZero(payload?.sent),
+    failed: numberOrZero(payload?.failed),
+    total: numberOrZero(payload?.total),
+  };
 };
 
 const buildChartData = (rows = []) => {
@@ -98,6 +137,9 @@ export default function ChartDataTerkirim() {
   const [dataError, setDataError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [chartData, setChartData] = useState(buildChartData());
+  const [sendingStatusSummary, setSendingStatusSummary] = useState(
+    DEFAULT_SENDING_STATUS_SUMMARY
+  );
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   const monthInputRef = useRef(null);
@@ -188,12 +230,17 @@ export default function ChartDataTerkirim() {
       setIsLoadingData(true);
       setDataError(null);
       try {
-        const response = await hubnetApi.sendingPerbulan(selectedMonth);
+        const [response, summaryResponse] = await Promise.all([
+          hubnetApi.sendingPerbulan(selectedMonth),
+          hubnetApi.sendingStatusSummaryPerbulan(selectedMonth),
+        ]);
         const payload = Array.isArray(response) ? response : response?.data ?? [];
+        const normalizedSummary = normalizeSendingStatusSummary(summaryResponse);
 
         if (!isCurrent) return;
 
         setChartData(buildChartData(payload));
+        setSendingStatusSummary(normalizedSummary);
         if (!payload.length) {
           setDataError('Belum ada data terkirim untuk bulan ini.');
         }
@@ -202,6 +249,7 @@ export default function ChartDataTerkirim() {
         const message = err instanceof Error ? err.message : 'Gagal memuat data pengiriman';
         setDataError(message);
         setChartData(buildChartData());
+        setSendingStatusSummary(DEFAULT_SENDING_STATUS_SUMMARY);
       } finally {
         if (isCurrent) {
           setIsLoadingData(false);
@@ -251,6 +299,19 @@ export default function ChartDataTerkirim() {
             {dataError && !isLoadingData && (
               <div className="alert alert-warning py-2 px-3">{dataError}</div>
             )}
+            <div className="row g-3 mb-3">
+              {SUMMARY_CONFIG.map((item) => (
+                <div className="col-12 col-md-4" key={item.key}>
+                  <div className="border rounded-3 p-3 h-100">
+                    <div className="d-flex justify-content-between align-items-start mb-1">
+                      <span className="text-muted small">{item.label}</span>
+                      <span className={`badge ${item.badgeClassName}`}>{item.label}</span>
+                    </div>
+                    <h4 className="mb-0">{sendingStatusSummary[item.key]}</h4>
+                  </div>
+                </div>
+              ))}
+            </div>
             <div style={{ height: '320px' }}>
               <LineComponent options={options} data={chartData} />
             </div>
