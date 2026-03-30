@@ -1131,6 +1131,7 @@ class INVAp2Service:
                 "message": "Tidak ada data valid untuk diinsert.",
                 "inserted": 0,
                 "skipped_existing": 0,
+                "updated_existing_status": 0,
                 "skipped_duplicate_file": 0,
                 "source_not_found_invoices": sorted(set(source_not_found_invoices)),
                 "errors": validation_errors,
@@ -1155,6 +1156,7 @@ class INVAp2Service:
 
         records_to_insert: list[dict[str, Any]] = []
         seen_in_file: set[str] = set()
+        existing_numbers_to_reset_status: set[str] = set()
         skipped_existing = 0
         skipped_duplicate_file = 0
 
@@ -1162,6 +1164,7 @@ class INVAp2Service:
             invoice_number = str(record.get("NO_INVOICE", "")).strip()
             if invoice_number in existing_numbers:
                 skipped_existing += 1
+                existing_numbers_to_reset_status.add(invoice_number)
                 continue
             if invoice_number in seen_in_file:
                 skipped_duplicate_file += 1
@@ -1172,13 +1175,22 @@ class INVAp2Service:
         if progress_callback:
             progress_callback(90, "Menyimpan data invoice ke database...")
 
-        if records_to_insert:
+        if records_to_insert or existing_numbers_to_reset_status:
             try:
-                db.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore[arg-type]
+                if existing_numbers_to_reset_status:
+                    db.query(InvAp2).filter(
+                        InvAp2.NO_INVOICE.in_(existing_numbers_to_reset_status)
+                    ).update(
+                        {InvAp2.status: 0},
+                        synchronize_session=False,
+                    )
+
+                if records_to_insert:
+                    db.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore[arg-type]
                 db.commit()
             except Exception as exc:
                 db.rollback()
-                logger.exception("Gagal insert upload invoice AP2 via excel.")
+                logger.exception("Gagal simpan upload invoice AP2 via excel.")
                 raise HTTPException(
                     status_code=500,
                     detail="Gagal menyimpan data upload invoice AP2.",
@@ -1191,6 +1203,7 @@ class INVAp2Service:
             "message": "Upload invoice excel selesai diproses.",
             "inserted": len(records_to_insert),
             "skipped_existing": skipped_existing,
+            "updated_existing_status": len(existing_numbers_to_reset_status),
             "skipped_duplicate_file": skipped_duplicate_file,
             "source_not_found_invoices": sorted(set(source_not_found_invoices)),
             "errors": validation_errors,
