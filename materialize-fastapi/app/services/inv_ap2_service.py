@@ -1023,9 +1023,9 @@ class INVAp2Service:
                 if excel_value is not None:
                     mapped_row[field] = excel_value
 
-            # Kolom KADE tidak tersedia di template mastersiogo; defaultkan 0 jika kosong.
+            # Kolom KADE tidak tersedia di template mastersiogo; defaultkan "0" jika kosong.
             if is_empty_value(mapped_row.get("KADE")):
-                mapped_row["KADE"] = 0
+                mapped_row["KADE"] = "0"
 
             invoice_number = normalize_value(mapped_row.get("NO_INVOICE"))
             invoice_number = str(invoice_number).strip() if invoice_number is not None else ""
