@@ -1,11 +1,28 @@
 ---
-import AdminLayout from '@layouts/BaseLayout.astro';
 import UploadInvoiceExcel from '@components/angkasapura/UploadInvoiceExcel.jsx';
+import AdminLayout from '@layouts/BaseLayout.astro';
+
+const TEMPLATE_URL = '/templates/mastersiogo-template.xls';
 ---
 
-<AdminLayout title="Upload Invoice AP2" description="Upload excel invoice untuk mapping data inv_ap2">
+<AdminLayout
+  title="Upload Invoice AP2"
+  description="Upload excel invoice untuk mapping data inv_ap2"
+>
   <div class="row m-4" style="min-height: 500px;">
     <div class="container-xxl grow container-p-y">
+      <div class="alert alert-info mb-4" role="alert">
+        Gunakan format template resmi sebelum upload invoice.
+        <a
+          class="alert-link ms-1 text-danger"
+          href={TEMPLATE_URL}
+          download="mastersiogo-template.xls"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Download template mastersiogo (.xls)
+        </a>
+      </div>
       <UploadInvoiceExcel client:only />
     </div>
   </div>

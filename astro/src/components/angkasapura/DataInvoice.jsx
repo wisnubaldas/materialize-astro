@@ -5,6 +5,26 @@ import { formatRupiah } from '@js/utils.js';
 // Kolom yang dikirim ke DataTables (server-side) termasuk renderer badge untuk invoice.
 const columns = [
   {
+    data: 'status',
+    title: 'Status',
+    render: (data, type) => {
+      const normalized = Number(data);
+      const hasNumericStatus = Number.isFinite(normalized);
+      if (type === 'display') {
+        if (normalized === 1) {
+          return '<span class="badge bg-label-success border border-success text-success text-uppercase fw-semibold px-3 py-2 rounded-pill">Terkirim</span>';
+        }
+        if (normalized === 0) {
+          return '<span class="badge bg-label-warning border border-warning text-warning text-uppercase fw-semibold px-3 py-2 rounded-pill">Dalam Antrian</span>';
+        }
+        return `<span class="badge bg-label-secondary border border-secondary text-body-secondary text-uppercase fw-semibold px-3 py-2 rounded-pill">${
+          data ?? '-'
+        }</span>`;
+      }
+      return hasNumericStatus ? normalized : data;
+    },
+  },
+  {
     data: 'NO_INVOICE',
     title: 'No Invoice',
     className: 'text-primary fw-semibold',
@@ -54,7 +74,7 @@ export default function DataInvoice() {
   // Opsi DataTables yang jarang berubah dibuat memo supaya referensinya stabil.
   const tableOptions = useMemo(
     () => ({
-      order: [[1, 'desc']],
+      order: [[2, 'desc']],
       searching: false,
       lengthChange: false,
       pageLength: 10,

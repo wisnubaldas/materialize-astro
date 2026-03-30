@@ -132,6 +132,7 @@ INV_FIELD_TO_EXCEL_HEADERS: dict[str, list[str]] = {
     "NO_INVOICE": ["INVOICE NO"],
     "TANGGAL": ["DATE OF TRANSACTION"],
     "SMU": ["M-AWB"],
+    "HAWB": ["HOST MAWB", "M-AWB"],
     "KDAIRLINE": ["AIRLINES"],
     "FLIGHT_NUMBER": ["FLIGHT NO"],
     "DOM_INT": ["INVOICE GATE"],
@@ -144,6 +145,8 @@ INV_FIELD_TO_EXCEL_HEADERS: dict[str, list[str]] = {
     "BERAT": ["CAW"],
     "VOLUME": ["BERAT"],
     "JML_HARI": ["OVERSTAY"],
+    "CARGO_CHG": ["WAREHOUSE FEE"],
+    "TOTAL_PENDAPATAN_TANPA_PPN": ["WAREHOUSE FEE"],
     "TOTAL_PENDAPATAN_DENGAN_PPN": ["WAREHOUSE FEE"],
 }
 INT_FIELDS = {
@@ -190,6 +193,7 @@ INVOICE_FILTER_PATTERN = re.compile(
 INVOICE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)InvoiceNumber\b", flags=re.IGNORECASE)
 DATE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)DateOfTransaction\b", flags=re.IGNORECASE)
 REQUIRED_HEADER_KEYS = {"INVOICE NO", "DATE OF TRANSACTION", "M-AWB", "AIRLINES", "FLIGHT NO"}
+REQUIRED_HEADER_DISPLAY = "Invoice No, Date Of Transaction, M-AWB, Airlines, Flight No"
 UPLOAD_INVOICE_AP2_CHANNEL = "upload_invoice_ap2_channel"
 UPLOAD_JOB_ACTIVE_STATUSES = {"queued", "processing"}
 _UPLOAD_JOB_STATE_LOCK = Lock()
@@ -346,7 +350,13 @@ def read_excel_upload_payload(filename: str, payload: bytes) -> pd.DataFrame:
             break
 
     if header_row_index is None:
-        header_row_index = 0
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Format template Excel tidak sesuai. "
+                f"Kolom wajib tidak ditemukan: {REQUIRED_HEADER_DISPLAY}."
+            ),
+        )
 
     header_values = raw_df.iloc[header_row_index].tolist()
     columns: list[str] = []
@@ -422,11 +432,18 @@ class INVAp2Service:
         filename = file.filename or ""
         normalized_filename = filename.lower()
         if not normalized_filename.endswith(UPLOAD_ALLOWED_EXTENSIONS):
-            raise HTTPException(status_code=400, detail="Invalid file format")
+            raise HTTPException(
+                status_code=400,
+                detail="Format file tidak valid, gunakan Excel (.xlsx / .xlsm / .xls).",
+            )
 
         payload = file.file.read()
         if not payload:
             raise HTTPException(status_code=400, detail="File Excel kosong.")
+
+        # Validasi format template lebih awal agar pengguna mendapat feedback 4xx langsung,
+        # bukan menunggu status job gagal di background.
+        read_excel_upload_payload(filename=filename, payload=payload)
 
         with _UPLOAD_JOB_STATE_LOCK:
             current_status = str(_UPLOAD_JOB_STATE.get("status") or "idle")
@@ -819,30 +836,6 @@ class INVAp2Service:
         ]
 
     @staticmethod
-    def search_invoice_response(db: Session, invoice_number: str):
-        logger.info("Searching for invoice responses with invoice number: %s", invoice_number)
-        try:
-            responses = (
-                db.query(ResponsInvAp2)
-                .filter(ResponsInvAp2.inv == invoice_number)
-                .order_by(ResponsInvAp2.created_at.desc())
-                .all()
-            )
-
-            if not responses:
-                logger.info("No invoice response found")
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Invoice number '{invoice_number}' not found.",
-                )
-
-            logger.info("Found %d response entries", len(responses))
-            return [ResponsInvAp2Get.from_orm(item) for item in responses]
-        except Exception as e:
-            logger.error("Error searching for invoice response: %s", e, exc_info=True)
-            raise
-
-    @staticmethod
     def datatable(db: Session, params: DataTablesParams) -> DataTablesResponse[InvoiceGet]:
         # with task_name("Datatables"):
         # logger.info("Menampilkan semua data invoice")
@@ -1029,6 +1022,10 @@ class INVAp2Service:
                 excel_value = INVAp2Service._get_excel_value(row, normalized_to_actual_col, field)
                 if excel_value is not None:
                     mapped_row[field] = excel_value
+
+            # Kolom KADE tidak tersedia di template mastersiogo; defaultkan 0 jika kosong.
+            if is_empty_value(mapped_row.get("KADE")):
+                mapped_row["KADE"] = 0
 
             invoice_number = normalize_value(mapped_row.get("NO_INVOICE"))
             invoice_number = str(invoice_number).strip() if invoice_number is not None else ""

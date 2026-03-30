@@ -26,10 +26,10 @@ def angkasapura(params: DataTablesParams, db: Session = Depends(get_db1_r)):
 @router.post(
     "/upload-invoice-excel",
     status_code=202,
-    summary="Upload Excel invoice AP2 via background job",
+    summary="Upload Excel invoice AP2 via background job (template mastersiogo)",
 )
 def upload_invoice_excel(file: UploadFile = File(...)):
-    """Start background job upload excel invoice AP2."""
+    """Start background job upload excel invoice AP2 dengan validasi format template."""
     return INVAp2Service.start_upload_invoice_excel_job(file=file)
 
 
@@ -79,13 +79,3 @@ async def void_invoice(params: VoidInvoiceSchemaBase, db: Session = Depends(get_
 def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
     """Serve voided invoice data for datatables."""
     return INVAp2Service.table_void_invoice(db=db, params=params)
-
-
-@router.get(
-    "/search-invoice-response/{invoice_number}",
-    response_model=list[ResponsInvAp2Get],
-    summary="Search Invoice Response by Invoice Number",
-)
-def search_invoice_response(invoice_number: str, db: Session = Depends(get_db1_r)):
-    """Search response rows by invoice number."""
-    return INVAp2Service.search_invoice_response(db=db, invoice_number=invoice_number)

@@ -5,7 +5,7 @@ import { angkasapuraApi } from '@lib/api/angkasapuraApi';
 import SSE_REQUEST from '@lib/api/sse';
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
-const DEFAULT_MESSAGE = 'Unggah file Excel invoice AP2 untuk diproses ke tabel inv_ap2.';
+const DEFAULT_MESSAGE = 'Unggah file Excel invoice CTOS untuk dikirim ke API SIGO';
 const ACTIVE_UPLOAD_STATUSES = new Set(['queued', 'processing']);
 const STATUS_POLLING_INTERVAL_MS = 5000;
 
@@ -38,7 +38,8 @@ const parseUploadError = (error) => {
     if (detail && typeof detail === 'object') {
       return {
         message: detail?.message || parsed?.message || fallback.message,
-        jobStatus: detail?.job_status && typeof detail.job_status === 'object' ? detail.job_status : null,
+        jobStatus:
+          detail?.job_status && typeof detail.job_status === 'object' ? detail.job_status : null,
       };
     }
     if (typeof detail === 'string') {
@@ -259,9 +260,7 @@ export function useUploadInvoiceExcelLogic() {
         setIsSseConnected(false);
         setIsSseFallbackActive(true);
         setSseError(
-          error instanceof Error
-            ? error.message
-            : 'Tidak bisa membuka SSE status upload invoice.'
+          error instanceof Error ? error.message : 'Tidak bisa membuka SSE status upload invoice.'
         );
         scheduleReconnect();
       }
