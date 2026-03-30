@@ -178,8 +178,17 @@ INT_FIELDS = {
     "PPN_FEE",
     "status",
 }
-SQL_DATE_FILTER_PATTERN = re.compile(r"a\.DateOfTransaction\s*=\s*:hari", flags=re.IGNORECASE)
-INVOICE_FILTER_PATTERN = re.compile(r"a\.InvoiceNumber\s*=\s*:invoice_number", flags=re.IGNORECASE)
+HARI_PARAM_PATTERN = re.compile(r":hari\b", flags=re.IGNORECASE)
+SQL_DATE_FILTER_PATTERN = re.compile(
+    r"(?P<prefix>\b\w+\.)DateOfTransaction\s*=\s*:invoice_number\b",
+    flags=re.IGNORECASE,
+)
+INVOICE_FILTER_PATTERN = re.compile(
+    r"\b\w+\.InvoiceNumber\s*=\s*:invoice_number\b",
+    flags=re.IGNORECASE,
+)
+INVOICE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)InvoiceNumber\b", flags=re.IGNORECASE)
+DATE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)DateOfTransaction\b", flags=re.IGNORECASE)
 REQUIRED_HEADER_KEYS = {"INVOICE NO", "DATE OF TRANSACTION", "M-AWB", "AIRLINES", "FLIGHT NO"}
 UPLOAD_INVOICE_AP2_CHANNEL = "upload_invoice_ap2_channel"
 UPLOAD_JOB_ACTIVE_STATUSES = {"queued", "processing"}
@@ -842,18 +851,31 @@ class INVAp2Service:
     @staticmethod
     def _prepare_invoice_lookup_sql(raw_query: str) -> str:
         normalized_query = raw_query.strip().rstrip(";")
+        normalized_query = HARI_PARAM_PATTERN.sub(":invoice_number", normalized_query)
+
+        invoice_ref_match = INVOICE_COLUMN_REF_PATTERN.search(normalized_query)
+        if invoice_ref_match:
+            invoice_column_ref = f"{invoice_ref_match.group('prefix')}InvoiceNumber"
+        else:
+            date_ref_match = DATE_COLUMN_REF_PATTERN.search(normalized_query)
+            invoice_column_ref = (
+                f"{date_ref_match.group('prefix')}InvoiceNumber"
+                if date_ref_match
+                else "a.InvoiceNumber"
+            )
+
         if INVOICE_FILTER_PATTERN.search(normalized_query):
             return normalized_query
 
         if SQL_DATE_FILTER_PATTERN.search(normalized_query):
             return SQL_DATE_FILTER_PATTERN.sub(
-                "a.InvoiceNumber = :invoice_number", normalized_query
+                f"{invoice_column_ref} = :invoice_number", normalized_query
             )
 
         if re.search(r"\bWHERE\b", normalized_query, flags=re.IGNORECASE):
-            return f"{normalized_query}\n  AND a.InvoiceNumber = :invoice_number"
+            return f"{normalized_query}\n  AND {invoice_column_ref} = :invoice_number"
 
-        return f"{normalized_query}\nWHERE a.InvoiceNumber = :invoice_number"
+        return f"{normalized_query}\nWHERE {invoice_column_ref} = :invoice_number"
 
     @staticmethod
     @lru_cache(maxsize=1)
