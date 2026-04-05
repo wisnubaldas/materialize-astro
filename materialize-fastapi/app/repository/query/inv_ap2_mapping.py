@@ -1,7 +1,7 @@
 """Konfigurasi mapping data invoice sumber -> kolom tabel inv_ap2.
 
 File ini dipakai saat sinkronisasi invoice di:
-- app/services/inv_ap2_service.py
+- app/services/angkasapura_service.py
 - method: INVAp2Service.get_data_inv()
 
 Alur pakai singkat:

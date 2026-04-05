@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from app.services.crypto_service import decrypt_key
-from app.services.inv_ap2_service import INVAp2Service, UPLOAD_INVOICE_AP2_CHANNEL
+from app.services.angkasapura_service import INVAp2Service, UPLOAD_INVOICE_AP2_CHANNEL
 from app.services.sse_service import SSEUTIL
 
 REDIS_URL = "redis://localhost:6379/0"

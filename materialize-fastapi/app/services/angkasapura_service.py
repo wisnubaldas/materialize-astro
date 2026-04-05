@@ -11,6 +11,7 @@ from io import BytesIO
 from json import dumps
 from pathlib import Path
 from threading import Lock, Thread
+from time import sleep
 from typing import Any, Callable  # noqa: UP035
 from uuid import uuid4
 
@@ -55,6 +56,9 @@ from app.utils.env import ENV
 from app.utils.helper import HELPER
 
 CHANNEL_NAME = "send_invoice_ap2_channel"
+DEBUG_SOURCE_UPLOAD_EXCEL = "upload_excel_invoice"
+DEBUG_SOURCE_SCHEDULER_SYNC = "scheduler_get_data_inv"
+DEBUG_SOURCE_SCHEDULER_SEND = "scheduler_send_invoice"
 MONTH_PATTERN = re.compile(r"^\d{4}-\d{2}$")
 MONTH_NAMES = {index: name for index, name in enumerate(calendar.month_name) if index}
 
@@ -195,11 +199,12 @@ DATE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)DateOfTransaction\b", 
 REQUIRED_HEADER_KEYS = {"INVOICE NO", "DATE OF TRANSACTION", "M-AWB", "AIRLINES", "FLIGHT NO"}
 REQUIRED_HEADER_DISPLAY = "Invoice No, Date Of Transaction, M-AWB, Airlines, Flight No"
 UPLOAD_INVOICE_AP2_CHANNEL = "upload_invoice_ap2_channel"
-UPLOAD_JOB_ACTIVE_STATUSES = {"queued", "processing"}
+UPLOAD_JOB_ACTIVE_STATUSES = {"waiting_scheduler", "queued", "processing"}
 _UPLOAD_JOB_STATE_LOCK = Lock()
 _UPLOAD_JOB_STATE: dict[str, Any] = {
     "job_id": None,
     "filename": None,
+    "source": DEBUG_SOURCE_UPLOAD_EXCEL,
     "status": "idle",
     "progress": 0,
     "message": "Belum ada proses upload invoice excel.",
@@ -208,9 +213,18 @@ _UPLOAD_JOB_STATE: dict[str, Any] = {
     "updated_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
     "result": None,
     "error": None,
+    "scheduler_runs": [],
     "can_upload": True,
 }
-DB2_INV_SYNC_ENABLED = False
+SCHEDULER_RUN_STATE_LOCK = Lock()
+SCHEDULER_ACTIVE_RUNS: dict[str, str] = {}
+DB2_INV_SYNC_ENABLED = True
+
+
+def build_debug_message(source: str, message: str, run_id: str | None = None) -> str:
+    if run_id:
+        return f"[{source}][{run_id}] {message}"
+    return f"[{source}] {message}"
 DOM_INC_OUT_SQL = text(
     """
     SELECT
@@ -394,13 +408,72 @@ def get_missing_required_invoice_fields(values: dict[str, Any]) -> list[str]:
 
 class INVAp2Service:
     @staticmethod
+    def _register_scheduler_run(*, source: str, run_id: str) -> None:
+        with SCHEDULER_RUN_STATE_LOCK:
+            SCHEDULER_ACTIVE_RUNS[run_id] = source
+
+    @staticmethod
+    def _unregister_scheduler_run(*, run_id: str) -> None:
+        with SCHEDULER_RUN_STATE_LOCK:
+            SCHEDULER_ACTIVE_RUNS.pop(run_id, None)
+
+    @staticmethod
+    def _list_active_scheduler_runs() -> list[dict[str, str]]:
+        with SCHEDULER_RUN_STATE_LOCK:
+            return [
+                {"run_id": active_run_id, "source": active_source}
+                for active_run_id, active_source in SCHEDULER_ACTIVE_RUNS.items()
+            ]
+
+    @staticmethod
+    def _is_scheduler_job_active() -> bool:
+        with SCHEDULER_RUN_STATE_LOCK:
+            return bool(SCHEDULER_ACTIVE_RUNS)
+
+    @staticmethod
+    def _is_upload_job_active() -> bool:
+        with _UPLOAD_JOB_STATE_LOCK:
+            current_status = str(_UPLOAD_JOB_STATE.get("status") or "idle")
+            return current_status in UPLOAD_JOB_ACTIVE_STATUSES
+
+    @staticmethod
+    def _publish_scheduler_event(
+        *,
+        source: str,
+        run_id: str,
+        message: str,
+        level: str = "info",
+        **extra: Any,
+    ) -> None:
+        payload: dict[str, Any] = {
+            "level": level,
+            "source": source,
+            "run_id": run_id,
+            "message": build_debug_message(source, message, run_id),
+        }
+        payload.update(extra)
+        publish_sync(CHANNEL_NAME, dumps(payload))
+
+    @staticmethod
     def _snapshot_upload_job_state() -> dict[str, Any]:
         with _UPLOAD_JOB_STATE_LOCK:
-            return deepcopy(_UPLOAD_JOB_STATE)
+            snapshot = deepcopy(_UPLOAD_JOB_STATE)
+
+        status_value = str(snapshot.get("status") or "idle")
+        if status_value not in UPLOAD_JOB_ACTIVE_STATUSES:
+            active_scheduler_runs = INVAp2Service._list_active_scheduler_runs()
+            snapshot["scheduler_runs"] = active_scheduler_runs
+            if active_scheduler_runs:
+                snapshot["can_upload"] = False
+                snapshot["message"] = "Scheduler invoice sedang berjalan. Upload akan antre otomatis."
+
+        return snapshot
 
     @staticmethod
     def _publish_upload_job_state(state: dict[str, Any]) -> None:
-        publish_sync(UPLOAD_INVOICE_AP2_CHANNEL, dumps(state))
+        state_payload = dict(state)
+        state_payload.setdefault("source", DEBUG_SOURCE_UPLOAD_EXCEL)
+        publish_sync(UPLOAD_INVOICE_AP2_CHANNEL, dumps(state_payload))
 
     @staticmethod
     def _update_upload_job_state(
@@ -415,6 +488,7 @@ class INVAp2Service:
                 return deepcopy(_UPLOAD_JOB_STATE)
 
             _UPLOAD_JOB_STATE.update(patch)
+            _UPLOAD_JOB_STATE["source"] = DEBUG_SOURCE_UPLOAD_EXCEL
             _UPLOAD_JOB_STATE["updated_at"] = datetime.now().isoformat(timespec="seconds")  # noqa: DTZ005
             status_value = str(_UPLOAD_JOB_STATE.get("status") or "idle")
             _UPLOAD_JOB_STATE["can_upload"] = status_value not in UPLOAD_JOB_ACTIVE_STATUSES
@@ -444,6 +518,8 @@ class INVAp2Service:
         # Validasi format template lebih awal agar pengguna mendapat feedback 4xx langsung,
         # bukan menunggu status job gagal di background.
         read_excel_upload_payload(filename=filename, payload=payload)
+        active_scheduler_runs = INVAp2Service._list_active_scheduler_runs()
+        scheduler_is_active = bool(active_scheduler_runs)
 
         with _UPLOAD_JOB_STATE_LOCK:
             current_status = str(_UPLOAD_JOB_STATE.get("status") or "idle")
@@ -451,17 +527,25 @@ class INVAp2Service:
                 running_snapshot = deepcopy(_UPLOAD_JOB_STATE)
             else:
                 job_id = uuid4().hex
+                initial_status = "waiting_scheduler" if scheduler_is_active else "queued"
+                initial_message = (
+                    "Scheduler invoice sedang berjalan. Upload menunggu hingga scheduler selesai."
+                    if scheduler_is_active
+                    else "File diterima. Job upload dimulai."
+                )
                 _UPLOAD_JOB_STATE.update(
                     {
                         "job_id": job_id,
                         "filename": filename,
-                        "status": "queued",
+                        "source": DEBUG_SOURCE_UPLOAD_EXCEL,
+                        "status": initial_status,
                         "progress": 0,
-                        "message": "File diterima. Job upload dimulai.",
+                        "message": initial_message,
                         "started_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
                         "finished_at": None,
                         "result": None,
                         "error": None,
+                        "scheduler_runs": active_scheduler_runs,
                         "updated_at": datetime.now().isoformat(timespec="seconds"),  # noqa: DTZ005
                         "can_upload": False,
                     }
@@ -478,6 +562,18 @@ class INVAp2Service:
             )
 
         INVAp2Service._publish_upload_job_state(running_snapshot)
+        if scheduler_is_active:
+            Thread(
+                target=INVAp2Service._wait_scheduler_then_run_upload_job,
+                kwargs={
+                    "job_id": running_snapshot["job_id"],
+                    "filename": filename,
+                    "payload": payload,
+                },
+                daemon=True,
+            ).start()
+            return running_snapshot
+
         Thread(
             target=INVAp2Service._run_upload_invoice_excel_job,
             kwargs={
@@ -488,6 +584,30 @@ class INVAp2Service:
             daemon=True,
         ).start()
         return running_snapshot
+
+    @staticmethod
+    def _wait_scheduler_then_run_upload_job(job_id: str, filename: str, payload: bytes) -> None:
+        logger.info(
+            build_debug_message(
+                DEBUG_SOURCE_UPLOAD_EXCEL,
+                f"Upload menunggu scheduler selesai. job_id={job_id}",
+            ),
+            extra={"event": "invoice.upload_excel.wait_scheduler", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+        )
+        while INVAp2Service._is_scheduler_job_active():
+            sleep(2)
+
+        INVAp2Service._update_upload_job_state(
+            job_id=job_id,
+            patch={
+                "status": "queued",
+                "progress": 0,
+                "message": "Scheduler selesai. Job upload dimulai.",
+                "scheduler_runs": [],
+                "error": None,
+            },
+        )
+        INVAp2Service._run_upload_invoice_excel_job(job_id=job_id, filename=filename, payload=payload)
 
     @staticmethod
     def _run_upload_invoice_excel_job(job_id: str, filename: str, payload: bytes) -> None:
@@ -547,7 +667,10 @@ class INVAp2Service:
                     "error": detail_message,
                 },
             )
-            logger.exception("Job upload invoice excel gagal: %s", detail_message)
+            logger.exception(
+                build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, f"Job upload invoice excel gagal: {detail_message}"),
+                extra={"event": "invoice.upload_excel.job_failed", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+            )
         except Exception as exc:  # noqa: BLE001, RUF100
             db.rollback()
             detail_message = f"Gagal memproses upload invoice excel: {exc}"
@@ -561,7 +684,10 @@ class INVAp2Service:
                     "error": detail_message,
                 },
             )
-            logger.exception("Job upload invoice excel gagal.")
+            logger.exception(
+                build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, "Job upload invoice excel gagal."),
+                extra={"event": "invoice.upload_excel.job_failed", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+            )
         finally:
             db.close()
             db2.close()
@@ -949,7 +1075,10 @@ class INVAp2Service:
 
     @staticmethod
     def upload_invoice_excel(file: UploadFile, db: Session, db2: Session) -> dict[str, Any]:
-        logger.info("Upload invoice AP2 via excel: %s", file.filename)
+        logger.info(
+            build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, f"Upload invoice AP2 via excel: {file.filename}"),
+            extra={"event": "invoice.upload_excel.start", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+        )
         dataframe = read_excel_upload(file=file)
         return INVAp2Service._upload_invoice_excel_dataframe(dataframe=dataframe, db=db, db2=db2)
 
@@ -961,7 +1090,13 @@ class INVAp2Service:
         db2: Session,
         progress_callback: Callable[[int, str], None] | None = None,
     ) -> dict[str, Any]:
-        logger.info("Upload invoice AP2 via excel (job): %s", filename)
+        logger.info(
+            build_debug_message(
+                DEBUG_SOURCE_UPLOAD_EXCEL,
+                f"Upload invoice AP2 via excel (job): {filename}",
+            ),
+            extra={"event": "invoice.upload_excel.job", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+        )
         dataframe = read_excel_upload_payload(filename=filename, payload=payload)
         return INVAp2Service._upload_invoice_excel_dataframe(
             dataframe=dataframe,
@@ -1190,7 +1325,13 @@ class INVAp2Service:
                 db.commit()
             except Exception as exc:
                 db.rollback()
-                logger.exception("Gagal simpan upload invoice AP2 via excel.")
+                logger.exception(
+                    build_debug_message(
+                        DEBUG_SOURCE_UPLOAD_EXCEL,
+                        "Gagal simpan upload invoice AP2 via excel.",
+                    ),
+                    extra={"event": "invoice.upload_excel.error", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+                )
                 raise HTTPException(
                     status_code=500,
                     detail="Gagal menyimpan data upload invoice AP2.",
@@ -1211,34 +1352,73 @@ class INVAp2Service:
 
     # Dipanggil oleh APScheduler (lihat app/job/scheduler.py -> job id: get_data_inv_job, interval: 60 menit)
     # Fungsi ini sinkronisasi data invoice dari MySQL2 ke tabel inv_ap2 di MySQL1.
+    # Catatan debug:
+    # - Upload excel invoice dan scheduler dapat berjalan di waktu yang berdekatan.
+    # - Gunakan `source` + `run_id` pada log/payload untuk bedakan alur eksekusi.
     @staticmethod
     def get_data_inv():  # noqa: PLR0912, PLR0915
+        run_id = uuid4().hex[:8]
         if not DB2_INV_SYNC_ENABLED:
             logger.warning(
-                "Job get_data_inv dinonaktifkan. Sinkronisasi DB2 -> inv_ap2 sekarang via upload excel."
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "Job get_data_inv dinonaktifkan via konfigurasi DB2_INV_SYNC_ENABLED.",
+                    run_id,
+                ),
+                extra={
+                    "event": "invoice.sync.disabled",
+                    "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "run_id": run_id,
+                },
             )
             return
-        logger.info("Sync data invoice untuk di send dari mysql2 ke mysql1")
-        publish_sync(
-            CHANNEL_NAME,
-            dumps(
-                {
-                    "level": "info",
-                    "message": "sync data invoice untuk di send dari mysql2 ke mysql1",
-                }
+        INVAp2Service._register_scheduler_run(source=DEBUG_SOURCE_SCHEDULER_SYNC, run_id=run_id)
+        logger.info(
+            build_debug_message(
+                DEBUG_SOURCE_SCHEDULER_SYNC,
+                "Sync data invoice untuk di send dari mysql2 ke mysql1",
+                run_id,
             ),
+            extra={"event": "invoice.sync.start", "source": DEBUG_SOURCE_SCHEDULER_SYNC, "run_id": run_id},
+        )
+        if INVAp2Service._is_upload_job_active():
+            logger.warning(
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "Upload excel invoice sedang berjalan; scheduler sync tetap diproses.",
+                    run_id,
+                ),
+                extra={
+                    "event": "invoice.sync.concurrent_upload",
+                    "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "run_id": run_id,
+                },
+            )
+        INVAp2Service._publish_scheduler_event(
+            source=DEBUG_SOURCE_SCHEDULER_SYNC,
+            run_id=run_id,
+            message="Mulai sinkronisasi invoice DB2 -> inv_ap2",
         )
         db1 = SessionDB1W()
         db2 = SessionDB2R()
         try:
             params = get_dynamic_params()
-            logger.info("Parameter query: %s", params)
+            logger.info(
+                build_debug_message(DEBUG_SOURCE_SCHEDULER_SYNC, f"Parameter query: {params}", run_id),
+                extra={
+                    "event": "invoice.sync.params",
+                    "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "run_id": run_id,
+                    "params": params,
+                },
+            )
 
             # Kumpulan query sumber data invoice
             query_files = [
                 "app/repository/query/get_inv_export.sql",
                 "app/repository/query/get_inv_import.sql",
                 "app/repository/query/get_inv_export_pcp.sql",
+                "app/repository/query/get_inv_outgoing.sql",
             ]
 
             pending_records: list[dict] = []
@@ -1247,7 +1427,20 @@ class INVAp2Service:
                 query = HELPER.load_sql_query(qpath)
                 sql = text(query)
                 rows = db2.execute(sql, params).mappings().all()
-                logger.info("Loaded %d rows from %s", len(rows), qpath)
+                logger.info(
+                    build_debug_message(
+                        DEBUG_SOURCE_SCHEDULER_SYNC,
+                        f"Loaded {len(rows)} rows from {qpath}",
+                        run_id,
+                    ),
+                    extra={
+                        "event": "invoice.sync.query_loaded",
+                        "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                        "run_id": run_id,
+                        "query_file": qpath,
+                        "row_count": len(rows),
+                    },
+                )
                 for row in rows:
                     mapped_row: dict = {}
                     for k, v in row.items():
@@ -1268,7 +1461,23 @@ class INVAp2Service:
                     pending_records.append(values)
 
             if not pending_records:
-                logger.info("Tidak ada data invoice yang ditemukan untuk sinkronisasi")
+                logger.info(
+                    build_debug_message(
+                        DEBUG_SOURCE_SCHEDULER_SYNC,
+                        "Tidak ada data invoice yang ditemukan untuk sinkronisasi",
+                        run_id,
+                    ),
+                    extra={
+                        "event": "invoice.sync.empty",
+                        "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                        "run_id": run_id,
+                    },
+                )
+                INVAp2Service._publish_scheduler_event(
+                    source=DEBUG_SOURCE_SCHEDULER_SYNC,
+                    run_id=run_id,
+                    message="Tidak ada data invoice untuk sinkronisasi",
+                )
                 return
 
             unique_invoices = {
@@ -1300,45 +1509,88 @@ class INVAp2Service:
                     seen_numbers.add(normalized_no_invoice)
                     values["NO_INVOICE"] = normalized_no_invoice
                 else:
-                    logger.warning("NO_INVOICE tidak tersedia, jalankan insert baru")
+                    logger.warning(
+                        build_debug_message(
+                            DEBUG_SOURCE_SCHEDULER_SYNC,
+                            "NO_INVOICE tidak tersedia, jalankan insert baru",
+                            run_id,
+                        ),
+                        extra={
+                            "event": "invoice.sync.missing_no_invoice",
+                            "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                            "run_id": run_id,
+                        },
+                    )
 
                 records_to_insert.append(values)
 
             if not records_to_insert:
-                logger.info("Semua invoice sudah ada, tidak ada data baru untuk ditambahkan")
-                publish_sync(
-                    CHANNEL_NAME,
-                    dumps(
-                        {
-                            "level": "info",
-                            "message": "Semua invoice sudah ada, tidak ada data baru untuk ditambahkan",
-                        }
+                logger.info(
+                    build_debug_message(
+                        DEBUG_SOURCE_SCHEDULER_SYNC,
+                        "Semua invoice sudah ada, tidak ada data baru untuk ditambahkan",
+                        run_id,
                     ),
+                    extra={
+                        "event": "invoice.sync.no_new_data",
+                        "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                        "run_id": run_id,
+                    },
+                )
+                INVAp2Service._publish_scheduler_event(
+                    source=DEBUG_SOURCE_SCHEDULER_SYNC,
+                    run_id=run_id,
+                    message="Semua invoice sudah ada, tidak ada data baru untuk ditambahkan",
                 )
                 return
 
             db1.bulk_insert_mappings(InvAp2, records_to_insert)  # type: ignore
 
             logger.info(
-                "Berhasil menambahkan %d invoice baru ke inv_ap2 (lewati %d duplikat)",
-                len(records_to_insert),
-                skipped,
-            )
-            publish_sync(
-                CHANNEL_NAME,
-                dumps(
-                    {
-                        "level": "info",
-                        "message": f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)",
-                    }
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SYNC,
+                    f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 (lewati {skipped} duplikat)",
+                    run_id,
                 ),
+                extra={
+                    "event": "invoice.sync.success",
+                    "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "run_id": run_id,
+                    "inserted": len(records_to_insert),
+                    "skipped_duplicates": skipped,
+                },
+            )
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SYNC,
+                run_id=run_id,
+                message=(
+                    f"Berhasil menambahkan {len(records_to_insert)} invoice baru ke inv_ap2 "
+                    f"(lewati {skipped} duplikat)"
+                ),
+                inserted=len(records_to_insert),
+                skipped_duplicates=skipped,
             )
 
             db1.commit()
         except Exception as e:
             db1.rollback()
-            logger.error("Error sync breakdown: %s", e, exc_info=True)
+            logger.error(
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SYNC,
+                    f"Error sync breakdown: {e}",
+                    run_id,
+                ),
+                exc_info=True,
+                extra={"event": "invoice.sync.error", "source": DEBUG_SOURCE_SCHEDULER_SYNC, "run_id": run_id},
+            )
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SYNC,
+                run_id=run_id,
+                message=f"Info: {e!s}",
+                level="error",
+            )
         finally:
+            INVAp2Service._unregister_scheduler_run(run_id=run_id)
             db1.close()
             db2.close()
 
@@ -1346,13 +1598,19 @@ class INVAp2Service:
     # Fungsi ini mengirim invoice berstatus pending (status=0) ke API AP2.
     @staticmethod
     def send_invoice():
-        logger.info("Mulai proses kirim invoice ke AP2", extra={"event": "invoice.send.start"})
+        run_id = uuid4().hex[:8]
+        INVAp2Service._register_scheduler_run(source=DEBUG_SOURCE_SCHEDULER_SEND, run_id=run_id)
+        logger.info(
+            build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Mulai proses kirim invoice ke AP2", run_id),
+            extra={"event": "invoice.send.start", "source": DEBUG_SOURCE_SCHEDULER_SEND, "run_id": run_id},
+        )
         db1 = SessionDB1W()
         results = []
         try:
-            publish_sync(
-                CHANNEL_NAME,
-                dumps({"level": "info", "message": "Mulai kirim invoice"}),
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message="Mulai kirim invoice",
             )
 
             sql = text("SELECT * FROM inv_ap2 WHERE status = 0 LIMIT 10")
@@ -1360,16 +1618,26 @@ class INVAp2Service:
             if not rows:
                 msg = "Invoice not found"
                 logger.info(
-                    "Tidak ada invoice baru yang siap dikirim",
-                    extra={"event": "invoice.send.empty"},
+                    build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Tidak ada invoice baru yang siap dikirim", run_id),
+                    extra={
+                        "event": "invoice.send.empty",
+                        "source": DEBUG_SOURCE_SCHEDULER_SEND,
+                        "run_id": run_id,
+                    },
                 )
-                publish_sync(CHANNEL_NAME, dumps({"level": "info", "message": msg}))
+                INVAp2Service._publish_scheduler_event(
+                    source=DEBUG_SOURCE_SCHEDULER_SEND,
+                    run_id=run_id,
+                    message=msg,
+                )
                 db1.commit()
                 return []
 
-            publish_sync(
-                CHANNEL_NAME,
-                dumps({"level": "info", "message": f"Ditemukan {len(rows)} invoice untuk dikirim"}),
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Ditemukan {len(rows)} invoice untuk dikirim",
+                pending_count=len(rows),
             )
 
             with requests.Session() as client:
@@ -1379,9 +1647,11 @@ class INVAp2Service:
                     payload = schema.model_dump()
 
                     inv_no = payload.get("NO_INVOICE")
-                    publish_sync(
-                        CHANNEL_NAME,
-                        dumps({"level": "info", "message": f"Kirim invoice: {inv_no}"}),
+                    INVAp2Service._publish_scheduler_event(
+                        source=DEBUG_SOURCE_SCHEDULER_SEND,
+                        run_id=run_id,
+                        message=f"Kirim invoice: {inv_no}",
+                        invoice=str(inv_no) if inv_no is not None else None,
                     )
 
                     success = False
@@ -1405,9 +1675,12 @@ class INVAp2Service:
                             "message": f"Info: {e!s}",
                             "status": "500",
                         }
-                        publish_sync(
-                            CHANNEL_NAME,
-                            dumps({"level": "info", "message": f"Info: {e!s}"}),
+                        INVAp2Service._publish_scheduler_event(
+                            source=DEBUG_SOURCE_SCHEDULER_SEND,
+                            run_id=run_id,
+                            message=f"Info: {e!s}",
+                            level="error",
+                            invoice=str(inv_no) if inv_no is not None else None,
                         )
                     finally:
                         if inv_no:
@@ -1427,48 +1700,58 @@ class INVAp2Service:
                     results.append({"invoice": inv_no, **response_data})
 
                     if success:
-                        publish_sync(
-                            CHANNEL_NAME,
-                            dumps(
-                                {
-                                    "level": "info",
-                                    "message": f"Berhasil invoice: {inv_no} (HTTP {response_data['status']})",
-                                }
-                            ),
+                        INVAp2Service._publish_scheduler_event(
+                            source=DEBUG_SOURCE_SCHEDULER_SEND,
+                            run_id=run_id,
+                            message=f"Berhasil invoice: {inv_no} (HTTP {response_data['status']})",
+                            invoice=str(inv_no) if inv_no is not None else None,
+                            http_status=response_data["status"],
                         )
                     else:
-                        publish_sync(
-                            CHANNEL_NAME,
-                            dumps(
-                                {
-                                    "level": "info",
-                                    "message": f"Gagal invoice: {inv_no} (HTTP {response_data['status']})",
-                                }
-                            ),
+                        INVAp2Service._publish_scheduler_event(
+                            source=DEBUG_SOURCE_SCHEDULER_SEND,
+                            run_id=run_id,
+                            message=f"Gagal invoice: {inv_no} (HTTP {response_data['status']})",
+                            level="error",
+                            invoice=str(inv_no) if inv_no is not None else None,
+                            http_status=response_data["status"],
                         )
 
             db1.commit()
-            publish_sync(
-                CHANNEL_NAME,
-                dumps({"level": "info", "message": f"Selesai kirim {len(results)} invoice"}),
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Selesai kirim {len(results)} invoice",
+                sent_count=len(results),
             )
             logger.info(
-                "Selesai kirim %d invoice ke AP2",
-                len(results),
-                extra={"event": "invoice.send.complete", "count": len(results)},
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SEND,
+                    f"Selesai kirim {len(results)} invoice ke AP2",
+                    run_id,
+                ),
+                extra={
+                    "event": "invoice.send.complete",
+                    "source": DEBUG_SOURCE_SCHEDULER_SEND,
+                    "run_id": run_id,
+                    "count": len(results),
+                },
             )
         except Exception as e:
             db1.rollback()
             logger.exception(
-                "Gagal mengirim invoice ke AP2",
-                extra={"event": "invoice.send.error"},
+                build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Gagal mengirim invoice ke AP2", run_id),
+                extra={"event": "invoice.send.error", "source": DEBUG_SOURCE_SCHEDULER_SEND, "run_id": run_id},
             )
-            publish_sync(
-                CHANNEL_NAME,
-                dumps({"level": "info", "message": f"Info: {e!s}"}),
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Info: {e!s}",
+                level="error",
             )
             raise
         finally:
+            INVAp2Service._unregister_scheduler_run(run_id=run_id)
             db1.close()
         return results
 

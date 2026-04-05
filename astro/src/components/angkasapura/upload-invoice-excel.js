@@ -6,7 +6,7 @@ import SSE_REQUEST from '@lib/api/sse';
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
 const DEFAULT_MESSAGE = 'Unggah file Excel invoice CTOS untuk dikirim ke API SIGO';
-const ACTIVE_UPLOAD_STATUSES = new Set(['queued', 'processing']);
+const ACTIVE_UPLOAD_STATUSES = new Set(['waiting_scheduler', 'queued', 'processing']);
 const STATUS_POLLING_INTERVAL_MS = 5000;
 
 const createDefaultJobStatus = () => ({
@@ -19,6 +19,7 @@ const createDefaultJobStatus = () => ({
   finished_at: null,
   result: null,
   error: null,
+  scheduler_runs: [],
   can_upload: true,
 });
 
@@ -129,6 +130,14 @@ export function useUploadInvoiceExcelLogic() {
       setFeedback({
         variant: 'warning',
         message: message || 'Proses upload invoice sedang berjalan.',
+      });
+      return;
+    }
+
+    if (incomingStatus.can_upload === false) {
+      setFeedback({
+        variant: 'warning',
+        message: message || 'Upload sementara dinonaktifkan karena scheduler sedang berjalan.',
       });
     }
   }, []);
@@ -318,14 +327,20 @@ export function useUploadInvoiceExcelLogic() {
     };
   }, [isSseFallbackActive, loadCurrentStatus]);
 
-  const isJobRunning = ACTIVE_UPLOAD_STATUSES.has(String(jobStatus?.status || 'idle'));
+  const statusValue = String(jobStatus?.status || 'idle');
+  const isStatusActive = ACTIVE_UPLOAD_STATUSES.has(statusValue);
+  const isLockedByScheduler = !isStatusActive && jobStatus?.can_upload === false;
+  const isJobRunning = isStatusActive || isLockedByScheduler;
 
   const handleUpload = useCallback(
     async (file) => {
       if (isJobRunning) {
+        const waitingByScheduler = !isStatusActive && jobStatus?.can_upload === false;
         setFeedback({
           variant: 'warning',
-          message: 'Proses upload sebelumnya masih berjalan. Mohon tunggu sampai selesai.',
+          message: waitingByScheduler
+            ? jobStatus?.message || 'Scheduler sedang berjalan. Upload akan diproses setelah scheduler selesai.'
+            : 'Proses upload sebelumnya masih berjalan. Mohon tunggu sampai selesai.',
         });
         return;
       }
@@ -356,7 +371,7 @@ export function useUploadInvoiceExcelLogic() {
         setIsStartingUpload(false);
       }
     },
-    [applyJobStatus, isJobRunning]
+    [applyJobStatus, isJobRunning, isStatusActive, jobStatus]
   );
 
   const onDrop = useCallback(

@@ -1,4 +1,8 @@
-SELECT 
+-- Refactored from outgoing invoice source query
+-- Parameters:
+--   :hari        -> match a.DateOfTransaction (YYYY-MM-DD)
+
+SELECT
   a.PaymentCode,
     a.CustomerCode,
     a.InvoiceNumber,
@@ -52,4 +56,5 @@ LEFT JOIN fare_directory d2
       AND a.DateOfTransaction BETWEEN d2.Datefrom AND d2.DateUntil
 WHERE a.PaymentCode != 'F'
   AND a.AgreementCode NOT IN ('FX-MAWB')
+  AND a.DateOfTransaction = :hari
   AND a.AgreementCode <> 'TRANS';

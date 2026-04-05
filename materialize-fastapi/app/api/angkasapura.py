@@ -12,7 +12,7 @@ from app.schemas.invoice_daily_counter_schema import (
 )
 from app.schemas.respons_inv_ap2_schema import ResponsInvAp2Get
 from app.schemas.void_invoice_schema import VoidInvoiceSchemaBase, VoidInvoiceSchemaResponse
-from app.services.inv_ap2_service import INVAp2Service
+from app.services.angkasapura_service import INVAp2Service
 
 router = APIRouter(prefix="/angkasapura", tags=["Angkasapura"])
 

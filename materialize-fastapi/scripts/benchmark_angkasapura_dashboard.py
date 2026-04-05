@@ -13,7 +13,7 @@ import time
 from sqlalchemy import text
 
 from app.db.mysql import SessionDB1R
-from app.services.inv_ap2_service import INVAp2Service
+from app.services.angkasapura_service import INVAp2Service
 
 
 def _run_case(label: str, loops: int, fn) -> None:
