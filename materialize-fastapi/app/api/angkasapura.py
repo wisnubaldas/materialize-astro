@@ -69,13 +69,7 @@ def report_invoice_monthly(tahun: int, db: Session = Depends(get_db1_r)):
     return INVAp2Service.report_invoice_monthly(db=db, tahun=tahun)
 
 
-@router.post("/void-invoice")
+@router.post("/void-invoice", response_model=VoidInvoiceSchemaResponse)
 async def void_invoice(params: VoidInvoiceSchemaBase, db: Session = Depends(get_db1_w)):
-    """Void invoice AP2 and persist response."""
+    """Void invoice AP2 dan update flag void pada inv_ap2 jika sukses."""
     return await INVAp2Service.void_invoice_ap2(params, db)
-
-
-@router.post("/get-void-invoice", response_model=DataTablesResponse[VoidInvoiceSchemaResponse])
-def get_void_invoice(params: DataTablesParams, db: Session = Depends(get_db1_r)):
-    """Serve voided invoice data for datatables."""
-    return INVAp2Service.table_void_invoice(db=db, params=params)

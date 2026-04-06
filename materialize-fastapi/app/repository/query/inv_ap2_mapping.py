@@ -39,6 +39,7 @@ INVTOAP2INV_BASE = {
     "FWB_FEE": "0",
     "CARGO_INSPECTION_REPORT_FEE": "0",
     "status": "0",
+    "void": "0",
     "INC_OUT": "O",
 }
 

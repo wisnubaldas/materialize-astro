@@ -83,6 +83,12 @@ class DataTablesService:
                     # custom_filter_conditions.append(model_column == filter_value)
                     # tanggal pake like juga kalo ada jamnya
                     custom_filter_conditions.append(model_column.like(f"%{filter_value}%"))
+                elif filter_name.upper() == "VOID":
+                    try:
+                        void_value = int(str(filter_value).strip())
+                    except (TypeError, ValueError):
+                        continue
+                    custom_filter_conditions.append(model_column == void_value)
 
                 else:
                     # filter LIKE untuk string

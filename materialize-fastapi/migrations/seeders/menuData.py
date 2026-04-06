@@ -17,12 +17,6 @@ MENU = [
         "parent": 1,
         "icon": "",
     },
-    {
-        "name": "Void Invoice",
-        "url": "/angkasapura/void-invoice",
-        "parent": 1,
-        "icon": "",
-    },
     {"name": "Data HUBNET", "url": "/hub-net/dashboard", "parent": 2, "icon": ""},
     {"name": "Data Tracking", "url": "/hub-net/data-tracking", "parent": 2, "icon": ""},
     {

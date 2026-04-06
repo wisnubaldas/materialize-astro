@@ -6,8 +6,8 @@ from pydantic import BaseModel
 class VoidInvoiceSchemaBase(BaseModel):
     TANGGAL: str
     NO_INVOICE: str
-    HAWB: str
-    SMU: str
+    HAWB: str | None = None
+    SMU: str | None = None
 
     class Config:
         from_attributes = True
@@ -19,8 +19,9 @@ class VoidInvoiceSchemaRequest(VoidInvoiceSchemaBase):
 
 
 class VoidInvoiceSchemaResponse(VoidInvoiceSchemaBase):
-    RESPONSE: Any
-
-
-class VoidInvoiceSchemaCreate(VoidInvoiceSchemaBase):
-    RESPONSE: str
+    success: bool
+    message: str
+    status: str
+    affected_rows: int = 0
+    void: int
+    response: Any | None = None

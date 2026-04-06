@@ -28,6 +28,16 @@ const fieldsConfig = [
     placeholder: 'SMU',
     type: 'text',
   },
+  {
+    name: 'void',
+    placeholder: 'VOID',
+    type: 'select',
+    options: [
+      { value: '', label: 'Semua Status' },
+      { value: '0', label: 'Aktif (Belum Void)' },
+      { value: '1', label: 'Sudah Void' },
+    ],
+  },
 ];
 
 export default function InvoiceFilters({ values, onChange, onSubmit, onReset, isSubmitting }) {
@@ -69,20 +79,36 @@ export default function InvoiceFilters({ values, onChange, onSubmit, onReset, is
         <div className="col-10 p-5">
           <div className="row">
             {/* Render input secara dinamis sesuai konfigurasi field */}
-            {fieldsConfig.map(({ name, placeholder, type }) => (
+            {fieldsConfig.map(({ name, placeholder, type, options }) => (
               <div key={name} className="col-12 col-md-4 col-lg-3">
                 <label htmlFor={name} className="form-label text-uppercase small fw-semibold">
                   {placeholder.replace(/_/g, ' ')}
                 </label>
-                <input
-                  id={name}
-                  name={name}
-                  type={type}
-                  value={filters[name] ?? ''}
-                  placeholder={placeholder}
-                  className="form-control form-control-sm rounded-4"
-                  onChange={handleChange}
-                />
+                {type === 'select' ? (
+                  <select
+                    id={name}
+                    name={name}
+                    value={filters[name] ?? ''}
+                    className="form-select form-select-sm rounded-4"
+                    onChange={handleChange}
+                  >
+                    {(options ?? []).map((option) => (
+                      <option key={`${name}-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={name}
+                    name={name}
+                    type={type}
+                    value={filters[name] ?? ''}
+                    placeholder={placeholder}
+                    className="form-control form-control-sm rounded-4"
+                    onChange={handleChange}
+                  />
+                )}
               </div>
             ))}
             <div className="col-12 mt-3 btn-group" role="group" aria-label="Form actions">

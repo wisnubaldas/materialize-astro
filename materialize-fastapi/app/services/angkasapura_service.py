@@ -29,7 +29,6 @@ from app.models.BaseDB1.ap2_fail_inv import AP2FAILINV
 from app.models.BaseDB1.inv_ap2 import InvAp2
 from app.models.BaseDB1.invoice_daily_counter import InvoiceDailyCounter
 from app.models.BaseDB1.respons_inv_ap2 import ResponsInvAp2
-from app.models.BaseDB1.void_inv_ap2 import VoidInvAp2
 from app.repository.query.inv_ap2_mapping import INVTOAP2INV, INVTOAP2INV_BASE
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.ap2_send_inv_schema import AP2SendInv
@@ -67,7 +66,15 @@ logger = logging.getLogger(__name__)
 inv_ap2_datatable_service = DataTablesService(
     model=InvAp2,
     schema=InvoiceGet,
-    search_columns=["NO_INVOICE", "TANGGAL", "JENIS_KARGO", "FLIGHT_NUMBER", "KDAIRLINE", "SMU"],
+    search_columns=[
+        "NO_INVOICE",
+        "TANGGAL",
+        "JENIS_KARGO",
+        "FLIGHT_NUMBER",
+        "KDAIRLINE",
+        "SMU",
+        "void",
+    ],
     custom_filters=[
         "NO_INVOICE",
         "TANGGAL",
@@ -77,6 +84,7 @@ inv_ap2_datatable_service = DataTablesService(
         "TANGGAL_AKHIR",
         "KDAIRLINE",
         "SMU",
+        "void",
     ],
 )
 inv_ap2_response_inv = DataTablesService(
@@ -102,12 +110,6 @@ fail_inv_ap2 = DataTablesService(
     custom_filters=["inv", "desc", "status"],
 )
 
-void_invoice = DataTablesService(
-    model=VoidInvAp2,
-    schema=VoidInvoiceSchemaResponse,
-    search_columns=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
-    custom_filters=["NO_INVOICE", "TANGGAL", "HAWB", "SMU", "KDAIRLINE"],
-)
 invoice_daily_counter_datatable = DataTablesService(
     model=InvoiceDailyCounter,
     schema=InvoiceDailyCounterGet,
@@ -122,9 +124,8 @@ invoice_daily_counter_datatable = DataTablesService(
     ],
     custom_filters=["tanggal"],
 )
-HEADERS = {
-    "Cookie": "dtCookie=CD78B9A24184B932B72CB79ED316B71D|X2RlZmF1bHR8MQ; cookiesession1=678B28B551C74227D505AC9459A5396E"
-}
+AP2_COOKIE_VALUE = str(ENV.AP2_COOKIE or "").strip().strip("'").strip('"')
+HEADERS = {"Cookie": AP2_COOKIE_VALUE} if AP2_COOKIE_VALUE else {}
 UPLOAD_ALLOWED_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 QUERY_FILES_FOR_INVOICE_LOOKUP = [
     "app/repository/query/get_inv_export.sql",
@@ -225,6 +226,8 @@ def build_debug_message(source: str, message: str, run_id: str | None = None) ->
     if run_id:
         return f"[{source}][{run_id}] {message}"
     return f"[{source}] {message}"
+
+
 DOM_INC_OUT_SQL = text(
     """
     SELECT
@@ -326,6 +329,50 @@ def sanitize_number_for_int(value: Any) -> Any:  # noqa: PLR0911
         except ValueError:
             return value
     return value
+
+
+def normalize_void_timestamp(raw_value: str) -> str:
+    value = str(raw_value or "").strip()
+    if not value:
+        return datetime.now().strftime("%Y-%m-%d %H:%M")  # noqa: DTZ005
+
+    formats = (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y/%m/%d %H:%M",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M",
+        "%d/%m/%Y %H:%M:%S",
+        "%d/%m/%Y %H:%M",
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%d-%m-%Y",
+        "%d/%m/%Y",
+    )
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(value, fmt)  # noqa: DTZ007
+            return parsed.strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            continue
+
+    return value
+
+
+def is_ap2_void_success(http_status: int, payload: dict[str, Any]) -> bool:
+    if not (200 <= http_status < 300):
+        return False
+
+    raw_status = payload.get("status")
+    if raw_status is None:
+        return True
+
+    status_str = str(raw_status).strip()
+    if not status_str:
+        return True
+
+    return status_str.startswith("2")
 
 
 def read_excel_upload_payload(filename: str, payload: bytes) -> pd.DataFrame:
@@ -465,7 +512,9 @@ class INVAp2Service:
             snapshot["scheduler_runs"] = active_scheduler_runs
             if active_scheduler_runs:
                 snapshot["can_upload"] = False
-                snapshot["message"] = "Scheduler invoice sedang berjalan. Upload akan antre otomatis."
+                snapshot["message"] = (
+                    "Scheduler invoice sedang berjalan. Upload akan antre otomatis."
+                )
 
         return snapshot
 
@@ -592,7 +641,10 @@ class INVAp2Service:
                 DEBUG_SOURCE_UPLOAD_EXCEL,
                 f"Upload menunggu scheduler selesai. job_id={job_id}",
             ),
-            extra={"event": "invoice.upload_excel.wait_scheduler", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+            extra={
+                "event": "invoice.upload_excel.wait_scheduler",
+                "source": DEBUG_SOURCE_UPLOAD_EXCEL,
+            },
         )
         while INVAp2Service._is_scheduler_job_active():
             sleep(2)
@@ -607,7 +659,9 @@ class INVAp2Service:
                 "error": None,
             },
         )
-        INVAp2Service._run_upload_invoice_excel_job(job_id=job_id, filename=filename, payload=payload)
+        INVAp2Service._run_upload_invoice_excel_job(
+            job_id=job_id, filename=filename, payload=payload
+        )
 
     @staticmethod
     def _run_upload_invoice_excel_job(job_id: str, filename: str, payload: bytes) -> None:
@@ -668,8 +722,13 @@ class INVAp2Service:
                 },
             )
             logger.exception(
-                build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, f"Job upload invoice excel gagal: {detail_message}"),
-                extra={"event": "invoice.upload_excel.job_failed", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+                build_debug_message(
+                    DEBUG_SOURCE_UPLOAD_EXCEL, f"Job upload invoice excel gagal: {detail_message}"
+                ),
+                extra={
+                    "event": "invoice.upload_excel.job_failed",
+                    "source": DEBUG_SOURCE_UPLOAD_EXCEL,
+                },
             )
         except Exception as exc:  # noqa: BLE001, RUF100
             db.rollback()
@@ -686,7 +745,10 @@ class INVAp2Service:
             )
             logger.exception(
                 build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, "Job upload invoice excel gagal."),
-                extra={"event": "invoice.upload_excel.job_failed", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+                extra={
+                    "event": "invoice.upload_excel.job_failed",
+                    "source": DEBUG_SOURCE_UPLOAD_EXCEL,
+                },
             )
         finally:
             db.close()
@@ -1076,7 +1138,9 @@ class INVAp2Service:
     @staticmethod
     def upload_invoice_excel(file: UploadFile, db: Session, db2: Session) -> dict[str, Any]:
         logger.info(
-            build_debug_message(DEBUG_SOURCE_UPLOAD_EXCEL, f"Upload invoice AP2 via excel: {file.filename}"),
+            build_debug_message(
+                DEBUG_SOURCE_UPLOAD_EXCEL, f"Upload invoice AP2 via excel: {file.filename}"
+            ),
             extra={"event": "invoice.upload_excel.start", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
         )
         dataframe = read_excel_upload(file=file)
@@ -1330,7 +1394,10 @@ class INVAp2Service:
                         DEBUG_SOURCE_UPLOAD_EXCEL,
                         "Gagal simpan upload invoice AP2 via excel.",
                     ),
-                    extra={"event": "invoice.upload_excel.error", "source": DEBUG_SOURCE_UPLOAD_EXCEL},
+                    extra={
+                        "event": "invoice.upload_excel.error",
+                        "source": DEBUG_SOURCE_UPLOAD_EXCEL,
+                    },
                 )
                 raise HTTPException(
                     status_code=500,
@@ -1379,7 +1446,11 @@ class INVAp2Service:
                 "Sync data invoice untuk di send dari mysql2 ke mysql1",
                 run_id,
             ),
-            extra={"event": "invoice.sync.start", "source": DEBUG_SOURCE_SCHEDULER_SYNC, "run_id": run_id},
+            extra={
+                "event": "invoice.sync.start",
+                "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                "run_id": run_id,
+            },
         )
         if INVAp2Service._is_upload_job_active():
             logger.warning(
@@ -1404,7 +1475,9 @@ class INVAp2Service:
         try:
             params = get_dynamic_params()
             logger.info(
-                build_debug_message(DEBUG_SOURCE_SCHEDULER_SYNC, f"Parameter query: {params}", run_id),
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SYNC, f"Parameter query: {params}", run_id
+                ),
                 extra={
                     "event": "invoice.sync.params",
                     "source": DEBUG_SOURCE_SCHEDULER_SYNC,
@@ -1581,7 +1654,11 @@ class INVAp2Service:
                     run_id,
                 ),
                 exc_info=True,
-                extra={"event": "invoice.sync.error", "source": DEBUG_SOURCE_SCHEDULER_SYNC, "run_id": run_id},
+                extra={
+                    "event": "invoice.sync.error",
+                    "source": DEBUG_SOURCE_SCHEDULER_SYNC,
+                    "run_id": run_id,
+                },
             )
             INVAp2Service._publish_scheduler_event(
                 source=DEBUG_SOURCE_SCHEDULER_SYNC,
@@ -1601,8 +1678,14 @@ class INVAp2Service:
         run_id = uuid4().hex[:8]
         INVAp2Service._register_scheduler_run(source=DEBUG_SOURCE_SCHEDULER_SEND, run_id=run_id)
         logger.info(
-            build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Mulai proses kirim invoice ke AP2", run_id),
-            extra={"event": "invoice.send.start", "source": DEBUG_SOURCE_SCHEDULER_SEND, "run_id": run_id},
+            build_debug_message(
+                DEBUG_SOURCE_SCHEDULER_SEND, "Mulai proses kirim invoice ke AP2", run_id
+            ),
+            extra={
+                "event": "invoice.send.start",
+                "source": DEBUG_SOURCE_SCHEDULER_SEND,
+                "run_id": run_id,
+            },
         )
         db1 = SessionDB1W()
         results = []
@@ -1618,7 +1701,11 @@ class INVAp2Service:
             if not rows:
                 msg = "Invoice not found"
                 logger.info(
-                    build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Tidak ada invoice baru yang siap dikirim", run_id),
+                    build_debug_message(
+                        DEBUG_SOURCE_SCHEDULER_SEND,
+                        "Tidak ada invoice baru yang siap dikirim",
+                        run_id,
+                    ),
                     extra={
                         "event": "invoice.send.empty",
                         "source": DEBUG_SOURCE_SCHEDULER_SEND,
@@ -1684,9 +1771,13 @@ class INVAp2Service:
                         )
                     finally:
                         if inv_no:
-                            db1.execute(
-                                text("UPDATE inv_ap2 SET status = :status WHERE NO_INVOICE = :inv"),
-                                {"status": 1 if success else 2, "inv": str(inv_no)},
+                            update_payload: dict[str, Any] = {"status": 1 if success else 2}
+                            if success:
+                                update_payload["void"] = 0
+                            (
+                                db1.query(InvAp2)
+                                .filter(InvAp2.NO_INVOICE == str(inv_no))
+                                .update(update_payload, synchronize_session=False)
                             )
 
                     db1.add(
@@ -1740,8 +1831,14 @@ class INVAp2Service:
         except Exception as e:
             db1.rollback()
             logger.exception(
-                build_debug_message(DEBUG_SOURCE_SCHEDULER_SEND, "Gagal mengirim invoice ke AP2", run_id),
-                extra={"event": "invoice.send.error", "source": DEBUG_SOURCE_SCHEDULER_SEND, "run_id": run_id},
+                build_debug_message(
+                    DEBUG_SOURCE_SCHEDULER_SEND, "Gagal mengirim invoice ke AP2", run_id
+                ),
+                extra={
+                    "event": "invoice.send.error",
+                    "source": DEBUG_SOURCE_SCHEDULER_SEND,
+                    "run_id": run_id,
+                },
             )
             INVAp2Service._publish_scheduler_event(
                 source=DEBUG_SOURCE_SCHEDULER_SEND,
@@ -1777,84 +1874,142 @@ class INVAp2Service:
     async def void_invoice_ap2(
         request: VoidInvoiceSchemaBase, db: Session
     ) -> VoidInvoiceSchemaResponse:
+        invoice_number = str(request.NO_INVOICE or "").strip()
+        if not invoice_number:
+            raise HTTPException(status_code=400, detail="NO_INVOICE wajib diisi.")
+
+        invoice_row = db.query(InvAp2).filter(InvAp2.NO_INVOICE == invoice_number).first()
+        if not invoice_row:
+            raise HTTPException(status_code=404, detail="Invoice tidak ditemukan di inv_ap2.")
+
+        if int(invoice_row.void or 0) == 1:
+            return VoidInvoiceSchemaResponse(
+                TANGGAL=str(invoice_row.TANGGAL),
+                NO_INVOICE=invoice_number,
+                HAWB=request.HAWB or getattr(invoice_row, "HAWB", None),
+                SMU=request.SMU or getattr(invoice_row, "SMU", None),
+                success=True,
+                message="Invoice sudah berstatus void.",
+                status="200",
+                affected_rows=0,
+                void=1,
+                response={"message": "Invoice sudah berstatus void.", "status": "200"},
+            )
+
         ext_request = VoidInvoiceSchemaRequest(
-            **request.model_dump(), USR=ENV.AP2_DEV_USER, PSW=ENV.AP2_DEV_PASSWORD
+            TANGGAL=normalize_void_timestamp(request.TANGGAL or str(invoice_row.TANGGAL)),
+            NO_INVOICE=invoice_number,
+            HAWB=request.HAWB or getattr(invoice_row, "HAWB", "") or "",
+            SMU=request.SMU or getattr(invoice_row, "SMU", "") or "",
+            USR=ENV.AP2_USER,
+            PSW=ENV.AP2_PASSWORD,
         )
 
+        payload = {key: (None, str(value)) for key, value in ext_request.model_dump().items()}
+
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=ENV.AP2_TIMEOUT) as client:
                 resp = await client.post(
-                    f"{ENV.AP2_DEV_URL}/api/void_invo_dtl",
+                    f"{ENV.AP2_URL}/api/void_invo_dtl",
                     headers=HEADERS,
-                    data=ext_request.model_dump(),
+                    files=payload,
                 )
-                resp.raise_for_status()
         except httpx.TimeoutException as exc:
             logger.error(
                 "Timeout saat menghubungi AP2 untuk void invoice %s",
-                request.NO_INVOICE,
+                invoice_number,
                 exc_info=exc,
-                extra={"event": "invoice.void.timeout", "invoice": request.NO_INVOICE},
+                extra={"event": "invoice.void.timeout", "invoice": invoice_number},
             )
-            raise HTTPException(status_code=504, detail="AP2 tidak merespons.") from exc
-        except httpx.HTTPStatusError as exc:
-            logger.error(
-                "AP2 mengembalikan status %s saat void invoice %s",
-                exc.response.status_code,
-                request.NO_INVOICE,
-                exc_info=exc,
-                extra={
-                    "event": "invoice.void.http_error",
-                    "invoice": request.NO_INVOICE,
-                    "status": exc.response.status_code,
+            return VoidInvoiceSchemaResponse(
+                TANGGAL=ext_request.TANGGAL,
+                NO_INVOICE=invoice_number,
+                HAWB=ext_request.HAWB,
+                SMU=ext_request.SMU,
+                success=False,
+                message="AP2 timeout: tidak ada respons sebelum batas waktu.",
+                status="timeout",
+                affected_rows=0,
+                void=int(invoice_row.void or 0),
+                response={
+                    "error_type": "timeout",
+                    "error": str(exc),
+                    "endpoint": f"{ENV.AP2_URL}/api/void_invo_dtl",
+                    "timeout_seconds": ENV.AP2_TIMEOUT,
                 },
             )
-            raise HTTPException(
-                status_code=exc.response.status_code, detail=exc.response.text
-            ) from exc
         except httpx.RequestError as exc:
             logger.error(
                 "Gagal menghubungi AP2 untuk void invoice %s",
-                request.NO_INVOICE,
+                invoice_number,
                 exc_info=exc,
-                extra={"event": "invoice.void.connection_error", "invoice": request.NO_INVOICE},
+                extra={"event": "invoice.void.connection_error", "invoice": invoice_number},
             )
-            raise HTTPException(status_code=502, detail="Gagal menghubungi layanan AP2.") from exc
-
-        resp_json = resp.json()
-        merged = request.model_dump()
-        merged["RESPONSE"] = resp_json
-        result = VoidInvoiceSchemaResponse(**merged)
+            return VoidInvoiceSchemaResponse(
+                TANGGAL=ext_request.TANGGAL,
+                NO_INVOICE=invoice_number,
+                HAWB=ext_request.HAWB,
+                SMU=ext_request.SMU,
+                success=False,
+                message="Gagal menghubungi AP2.",
+                status="request_error",
+                affected_rows=0,
+                void=int(invoice_row.void or 0),
+                response={
+                    "error_type": "request_error",
+                    "error": str(exc),
+                    "endpoint": f"{ENV.AP2_URL}/api/void_invo_dtl",
+                },
+            )
 
         try:
-            obj_data = VoidInvAp2(
-                TANGGAL=result.TANGGAL,
-                NO_INVOICE=result.NO_INVOICE,
-                HAWB=result.HAWB,
-                SMU=result.SMU,
-                RESPONSE=dumps(resp_json),
-            )
-            db.add(obj_data)
-            db.commit()
-            db.refresh(obj_data)
-        except Exception as exc:  # pragma: no cover - defensive
-            db.rollback()
-            logger.exception(
-                "Gagal menyimpan data void invoice AP2 untuk %s",
-                result.NO_INVOICE,
-                extra={"event": "invoice.void.persist_error", "invoice": result.NO_INVOICE},
-            )
-            raise HTTPException(
-                status_code=500, detail="Gagal menyimpan respons void invoice AP2."
-            ) from exc
+            resp_json = resp.json()
+        except ValueError:
+            resp_json = {
+                "message": resp.text[:255] if resp.text else f"HTTP {resp.status_code}",
+                "affected_rows": 0,
+                "status": str(resp.status_code),
+            }
 
-        return result
+        status_value = str(resp_json.get("status") or resp.status_code)
+        message_value = str(resp_json.get("message") or f"HTTP {resp.status_code}")
+        try:
+            affected_rows = int(resp_json.get("affected_rows") or 0)
+        except (TypeError, ValueError):
+            affected_rows = 0
 
-    @staticmethod
-    def table_void_invoice(
-        db: Session, params: DataTablesParams
-    ) -> DataTablesResponse[VoidInvoiceSchemaResponse]:
-        return void_invoice.get_datatable(db=db, params=params)
+        is_success = is_ap2_void_success(resp.status_code, resp_json)
+        if is_success:
+            try:
+                (
+                    db.query(InvAp2)
+                    .filter(InvAp2.NO_INVOICE == invoice_number)
+                    .update({"void": 1}, synchronize_session=False)
+                )
+                db.commit()
+            except Exception as exc:  # pragma: no cover - defensive
+                db.rollback()
+                logger.exception(
+                    "Gagal update void invoice pada inv_ap2 untuk %s",
+                    invoice_number,
+                    extra={"event": "invoice.void.update_error", "invoice": invoice_number},
+                )
+                raise HTTPException(
+                    status_code=500, detail="Gagal update status void invoice pada inv_ap2."
+                ) from exc
+
+        return VoidInvoiceSchemaResponse(
+            TANGGAL=ext_request.TANGGAL,
+            NO_INVOICE=invoice_number,
+            HAWB=ext_request.HAWB,
+            SMU=ext_request.SMU,
+            success=is_success,
+            message=message_value,
+            status=status_value,
+            affected_rows=affected_rows,
+            void=1 if is_success else int(invoice_row.void or 0),
+            response=resp_json,
+        )
 
     @staticmethod
     def report_invoice_daily_counter(

@@ -62,6 +62,7 @@ class InvAp2(BaseDB1):
     MATERAI_FEE = Column(Integer, nullable=True)
     PPN_FEE = Column(Integer, nullable=True)
 
+    void = Column(SmallInteger, nullable=False, default=0)
     status = Column(SmallInteger, nullable=False, default=0)
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)

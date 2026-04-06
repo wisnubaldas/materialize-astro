@@ -57,6 +57,7 @@ class InvAp2Base(BaseModel):
     MATERAI_FEE: int | None = None
     PPN_FEE: int | None = None
 
+    void: int = 0
     status: int = 1
 
     class Config:
