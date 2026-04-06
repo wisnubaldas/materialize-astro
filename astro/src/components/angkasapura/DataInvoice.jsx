@@ -12,26 +12,78 @@ const escapeHtmlAttr = (value) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+const DETAIL_FIELDS = [
+  { key: 'NO_INVOICE', label: 'NO INVOICE' },
+  { key: 'TANGGAL', label: 'TANGGAL' },
+  { key: 'SMU', label: 'SMU' },
+  { key: 'FLIGHT_NUMBER', label: 'FLIGHT NUMBER' },
+  { key: 'KOLI', label: 'KOLI' },
+  { key: 'BERAT', label: 'BERAT' },
+  { key: 'VOLUME', label: 'VOLUME' },
+  { key: 'TOTAL_PENDAPATAN_TANPA_PPN', label: 'PENDAPATAN NON PPN' },
+  { key: 'status', label: 'STATUS' },
+  { key: 'void', label: 'VOID' },
+];
+
+const buildDetailHtml = (rowData = {}) => {
+  const rows = DETAIL_FIELDS.map(({ key, label }) => {
+    let value = rowData?.[key];
+    if (key === 'TOTAL_PENDAPATAN_TANPA_PPN') {
+      value = value ? formatRupiah(value) : '0';
+    } else if (key === 'status') {
+      const status = Number(value);
+      if (status === 1) {
+        value = 'Terkirim';
+      } else if (status === 0) {
+        value = 'Dalam Antrian';
+      } else {
+        value = value ?? '-';
+      }
+    } else if (key === 'void') {
+      value = Number(value) === 1 ? 'Sudah Void' : 'Aktif';
+    }
+
+    return `
+      <tr>
+        <th class="text-uppercase small text-muted pe-3" style="width: 220px;">${label}</th>
+        <td>${escapeHtmlAttr(value ?? '-')}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="table-responsive p-2">
+      <table class="table table-sm mb-0">
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+};
+
 // Kolom yang dikirim ke DataTables (server-side) termasuk renderer badge untuk invoice.
 const columns = [
   {
-    data: 'status',
-    title: 'Status',
-    render: (data, type) => {
-      const normalized = Number(data);
-      const hasNumericStatus = Number.isFinite(normalized);
-      if (type === 'display') {
-        if (normalized === 1) {
-          return '<span class="badge bg-label-success border border-success text-success text-uppercase fw-semibold px-3 py-2 rounded-pill">Terkirim</span>';
-        }
-        if (normalized === 0) {
-          return '<span class="badge bg-label-warning border border-warning text-warning text-uppercase fw-semibold px-3 py-2 rounded-pill">Dalam Antrian</span>';
-        }
-        return `<span class="badge bg-label-secondary border border-secondary text-body-secondary text-uppercase fw-semibold px-3 py-2 rounded-pill">${
-          data ?? '-'
-        }</span>`;
+    data: null,
+    title: '',
+    className: 'control dtr-control text-center',
+    orderable: false,
+    searchable: false,
+    defaultContent: '',
+    render: (_data, type) => {
+      if (type !== 'display') {
+        return '';
       }
-      return hasNumericStatus ? normalized : data;
+      return `
+        <button
+          type="button"
+          class="btn btn-sm btn-icon border-0 shadow-none p-0 text-primary"
+          data-detail-action="1"
+          aria-expanded="false"
+          aria-label="Lihat detail baris"
+        >
+          <i class="ri ri-arrow-right-s-line fs-5"></i>
+        </button>
+      `;
     },
   },
   {
@@ -65,6 +117,27 @@ const columns = [
       return Number.isFinite(normalized) ? normalized : data;
     },
   },
+  {
+    data: 'status',
+    title: 'Status',
+    render: (data, type) => {
+      const normalized = Number(data);
+      const hasNumericStatus = Number.isFinite(normalized);
+      if (type === 'display') {
+        if (normalized === 1) {
+          return '<span class="badge bg-label-success border border-success text-success text-uppercase fw-semibold px-3 py-2 rounded-pill">Terkirim</span>';
+        }
+        if (normalized === 0) {
+          return '<span class="badge bg-label-warning border border-warning text-warning text-uppercase fw-semibold px-3 py-2 rounded-pill">Dalam Antrian</span>';
+        }
+        return `<span class="badge bg-label-secondary border border-secondary text-body-secondary text-uppercase fw-semibold px-3 py-2 rounded-pill">${
+          data ?? '-'
+        }</span>`;
+      }
+      return hasNumericStatus ? normalized : data;
+    },
+  },
+
   {
     data: 'NO_INVOICE',
     title: 'No Invoice',
@@ -119,12 +192,15 @@ export default function DataInvoice() {
   // Opsi DataTables yang jarang berubah dibuat memo supaya referensinya stabil.
   const tableOptions = useMemo(
     () => ({
-      order: [[3, 'desc']],
+      order: [[4, 'desc']],
       searching: false,
       lengthChange: false,
       pageLength: 10,
       info: true,
       paging: true,
+      responsive: {
+        details: false,
+      },
     }),
     []
   );
@@ -179,8 +255,11 @@ export default function DataInvoice() {
       if (!button.dataset.originalLabel) {
         button.dataset.originalLabel = button.textContent?.trim() || 'Void';
       }
+      if (!button.dataset.originalClass) {
+        button.dataset.originalClass = button.className;
+      }
       button.disabled = true;
-      button.classList.remove('btn-outline-danger');
+      button.classList.remove('btn-label-danger', 'btn-label-primary');
       button.classList.add('btn-secondary');
       button.innerHTML =
         '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Loading...';
@@ -188,17 +267,27 @@ export default function DataInvoice() {
     }
 
     const originalLabel = button.dataset.originalLabel || 'Void';
-    button.innerHTML = originalLabel;
-    if (originalLabel.toLowerCase().includes('sudah void')) {
-      button.disabled = true;
-      button.classList.remove('btn-outline-danger');
-      button.classList.add('btn-secondary');
-    } else {
-      button.disabled = false;
-      button.classList.remove('btn-secondary');
-      button.classList.add('btn-outline-danger');
+    const originalClass = button.dataset.originalClass;
+    if (originalClass) {
+      button.className = originalClass;
     }
+    button.innerHTML = originalLabel;
+    button.disabled = originalLabel.toLowerCase().includes('sudah void');
     delete button.dataset.originalLabel;
+    delete button.dataset.originalClass;
+  }, []);
+
+  const setDetailButtonExpanded = useCallback((button, expanded) => {
+    if (!button || !(button instanceof HTMLButtonElement)) {
+      return;
+    }
+    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    const icon = button.querySelector('i');
+    if (!icon) {
+      return;
+    }
+    icon.classList.remove('ri-arrow-right-s-line', 'ri-arrow-down-s-line');
+    icon.classList.add(expanded ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line');
   }, []);
 
   const handleVoidInvoice = useCallback(
@@ -236,13 +325,17 @@ export default function DataInvoice() {
         showToast({
           type: success ? 'success' : 'danger',
           title: 'Void Invoice',
-          message: `Status: ${statusText} | Message: ${messageText} | Response: ${rawResponseText}`,
+          message: `Status: ${statusText}\nMessage: ${messageText}\nResponse: ${rawResponseText}`,
+          persist: true,
+          duration: 0,
         });
       } catch (error) {
         showToast({
           type: 'danger',
           title: 'Void Invoice',
           message: error?.message || 'Gagal mengirim request void invoice.',
+          persist: true,
+          duration: 0,
         });
       } finally {
         activeVoidRequestsRef.current.delete(invoiceNumber);
@@ -266,6 +359,55 @@ export default function DataInvoice() {
         return;
       }
 
+      const detailButton = target.closest('button[data-detail-action="1"]');
+      if (detailButton && detailButton instanceof HTMLButtonElement) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const api = tableRef.current?.dt?.();
+        if (!api) {
+          return;
+        }
+
+        const rowElement = detailButton.closest('tr');
+        if (!rowElement) {
+          return;
+        }
+
+        const rowApi = api.row(rowElement);
+        if (!rowApi || !rowApi.node()) {
+          return;
+        }
+
+        const isShown = rowApi.child.isShown();
+
+        api.rows({ page: 'current' }).every(function () {
+          if (this.index() === rowApi.index()) {
+            return;
+          }
+          if (this.child && this.child.isShown()) {
+            this.child.hide();
+            const siblingNode = this.node();
+            if (siblingNode?.classList) {
+              siblingNode.classList.remove('parent');
+            }
+            const siblingBtn = siblingNode?.querySelector?.('button[data-detail-action="1"]');
+            setDetailButtonExpanded(siblingBtn, false);
+          }
+        });
+
+        if (isShown) {
+          rowApi.child.hide();
+          rowElement.classList.remove('parent');
+          setDetailButtonExpanded(detailButton, false);
+        } else {
+          rowApi.child(buildDetailHtml(rowApi.data())).show();
+          rowElement.classList.add('parent');
+          setDetailButtonExpanded(detailButton, true);
+        }
+        return;
+      }
+
       const button = target.closest('button[data-void-action="1"]');
       if (!button || !(button instanceof HTMLButtonElement) || button.disabled) {
         return;
@@ -285,7 +427,7 @@ export default function DataInvoice() {
     return () => {
       container.removeEventListener('click', onClick);
     };
-  }, [handleVoidInvoice]);
+  }, [handleVoidInvoice, setDetailButtonExpanded]);
 
   return (
     <div className="container-fluid px-0">
@@ -306,7 +448,7 @@ export default function DataInvoice() {
 
       {/* Wrapper tabel server-side */}
       <div className="card border-0 shadow-sm">
-        <div className="card-body p-0" ref={tableContainerRef}>
+        <div className="card-body p-3" ref={tableContainerRef}>
           <div className="card-datatable mb-3">
             <GridData
               ref={tableRef}

@@ -11,12 +11,14 @@ export function ToasterProvider({ children = null } = {}) {
   const [toasts, setToasts] = useState([]);
 
   // 🔹 Fungsi utama untuk menambahkan toast
-  const addToast = (message, type = 'info', duration = 5000, title) => {
+  const addToast = (message, type = 'info', duration = 5000, title, persist = false) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type, title }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, duration);
+    if (!persist && Number(duration) > 0) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, duration);
+    }
   };
 
   // 🔹 Hapus manual (kalau klik tombol X)
@@ -27,8 +29,8 @@ export function ToasterProvider({ children = null } = {}) {
   // 🔹 Dengarkan event global dari luar React
   useEffect(() => {
     const handleGlobalToast = (e) => {
-      const { message, type = 'info', duration = 4000, title } = e.detail || {};
-      addToast(message, type, duration, title);
+      const { message, type = 'info', duration = 4000, title, persist = false } = e.detail || {};
+      addToast(message, type, duration, title, persist);
     };
     window.addEventListener('toast', handleGlobalToast);
     return () => window.removeEventListener('toast', handleGlobalToast);
@@ -59,7 +61,9 @@ export function ToasterProvider({ children = null } = {}) {
                 onClick={() => removeToast(t.id)}
               ></button>
             </div>
-            <div className={`toast-body text-${t.type}`}>{t.message}</div>
+            <div className={`toast-body text-${t.type}`} style={{ whiteSpace: 'pre-wrap' }}>
+              {t.message}
+            </div>
           </div>
         ))}
       </div>
