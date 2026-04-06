@@ -1,3 +1,4 @@
+import { Icon } from '@iconify-icon/react';
 import { useMemo } from 'react';
 
 // Daftar field yang ingin ditampilkan pada form filter.
@@ -90,7 +91,10 @@ export default function InvoiceFilters({ values, onChange, onSubmit, onReset, is
                 className="btn btn-label-primary waves-effect text-uppercase"
                 onClick={onReset}
               >
-                Reset Form
+                <span className="d-flex align-items-center justify-content-center">
+                  <Icon icon="line-md:rotate-270" className="me-1" />
+                  Reset Form
+                </span>
               </button>
               {/* Tombol Apply berada di kanan agar mudah diakses */}
               <button
@@ -98,7 +102,19 @@ export default function InvoiceFilters({ values, onChange, onSubmit, onReset, is
                 className="btn btn-info waves-effect text-uppercase"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Loading…' : 'Apply Filter'}
+                <span className="d-flex align-items-center justify-content-center">
+                  {isSubmitting ? (
+                    <>
+                      <Icon icon="line-md:loading-loop" className="me-1" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Icon icon="line-md:filter-twotone" className="me-1" />
+                      Tampilkan Data
+                    </>
+                  )}
+                </span>
               </button>
             </div>
           </div>
