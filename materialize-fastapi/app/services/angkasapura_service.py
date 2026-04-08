@@ -128,7 +128,14 @@ AP2_COOKIE_VALUE = str(ENV.AP2_COOKIE or "").strip().strip("'").strip('"')
 HEADERS = {"Cookie": AP2_COOKIE_VALUE} if AP2_COOKIE_VALUE else {}
 AP2_DEV_COOKIE_VALUE = str(ENV.AP2_DEV_COOKIE or "").strip().strip("'").strip('"')
 AP2_DEV_VOID_HEADERS = {"Cookie": AP2_DEV_COOKIE_VALUE} if AP2_DEV_COOKIE_VALUE else HEADERS
-AP2_VOID_TIMEOUT_SECONDS = max(int(ENV.AP2_TIMEOUT), int(ENV.AP2_VOID_TIMEOUT))
+AP2_VOID_TIMEOUT_SECONDS = max(1, int(ENV.AP2_VOID_TIMEOUT))
+AP2_VOID_HTTPX_TIMEOUT = httpx.Timeout(
+    timeout=AP2_VOID_TIMEOUT_SECONDS,
+    connect=min(5, AP2_VOID_TIMEOUT_SECONDS),
+    read=AP2_VOID_TIMEOUT_SECONDS,
+    write=min(5, AP2_VOID_TIMEOUT_SECONDS),
+    pool=min(5, AP2_VOID_TIMEOUT_SECONDS),
+)
 UPLOAD_ALLOWED_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 QUERY_FILES_FOR_INVOICE_LOOKUP = [
     "app/repository/query/get_inv_export.sql",
@@ -1903,11 +1910,65 @@ class INVAp2Service:
                 response={"message": "Invoice sudah berstatus void.", "status": "200"},
             )
 
+        invoice_date = normalize_void_timestamp(str(getattr(invoice_row, "TANGGAL", "") or ""))
+        request_date = normalize_void_timestamp(request.TANGGAL or "")
+        if request_date and invoice_date and request_date != invoice_date:
+            logger.warning(
+                "Void invoice dibatalkan (fail-fast): tanggal tidak sesuai | invoice=%s | request_tanggal=%s | invoice_tanggal=%s",
+                invoice_number,
+                request_date,
+                invoice_date,
+                extra={"event": "invoice.void.validation_failed", "invoice": invoice_number},
+            )
+            return VoidInvoiceSchemaResponse(
+                TANGGAL=request_date,
+                NO_INVOICE=invoice_number,
+                HAWB=request.HAWB or getattr(invoice_row, "HAWB", None),
+                SMU=request.SMU or getattr(invoice_row, "SMU", None),
+                success=False,
+                message="TANGGAL tidak sesuai dengan data invoice.",
+                status="400",
+                affected_rows=0,
+                void=int(invoice_row.void or 0),
+                response={
+                    "error_type": "validation_error",
+                    "field": "TANGGAL",
+                    "message": "TANGGAL tidak sesuai dengan data invoice.",
+                },
+            )
+
+        invoice_smu = str(getattr(invoice_row, "SMU", "") or "").strip()
+        request_smu = str(request.SMU or "").strip()
+        if request_smu and invoice_smu and request_smu != invoice_smu:
+            logger.warning(
+                "Void invoice dibatalkan (fail-fast): SMU tidak sesuai | invoice=%s | request_smu=%s | invoice_smu=%s",
+                invoice_number,
+                request_smu,
+                invoice_smu,
+                extra={"event": "invoice.void.validation_failed", "invoice": invoice_number},
+            )
+            return VoidInvoiceSchemaResponse(
+                TANGGAL=request_date or invoice_date,
+                NO_INVOICE=invoice_number,
+                HAWB=request.HAWB or getattr(invoice_row, "HAWB", None),
+                SMU=request_smu,
+                success=False,
+                message="SMU tidak sesuai dengan data invoice.",
+                status="400",
+                affected_rows=0,
+                void=int(invoice_row.void or 0),
+                response={
+                    "error_type": "validation_error",
+                    "field": "SMU",
+                    "message": "SMU tidak sesuai dengan data invoice.",
+                },
+            )
+
         ext_request = VoidInvoiceSchemaRequest(
-            TANGGAL=normalize_void_timestamp(request.TANGGAL or str(invoice_row.TANGGAL)),
+            TANGGAL=request_date or invoice_date,
             NO_INVOICE=invoice_number,
             # HAWB=request.HAWB or getattr(invoice_row, "HAWB", "") or "",
-            SMU=request.SMU or getattr(invoice_row, "SMU", "") or "",
+            SMU=request_smu or invoice_smu,
             USR=ENV.AP2_DEV_USER,
             PSW=ENV.AP2_DEV_PASSWORD,
         )
@@ -1942,7 +2003,7 @@ class INVAp2Service:
             },
         )
         try:
-            async with httpx.AsyncClient(timeout=AP2_VOID_TIMEOUT_SECONDS) as client:
+            async with httpx.AsyncClient(timeout=AP2_VOID_HTTPX_TIMEOUT) as client:
                 resp = await client.post(
                     endpoint,
                     headers=AP2_DEV_VOID_HEADERS,

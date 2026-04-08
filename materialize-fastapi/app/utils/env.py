@@ -49,7 +49,7 @@ class ENV(BaseSettings):
     AP2_DEV_USER: str
     AP2_DEV_PASSWORD: str
     AP2_DEV_COOKIE: str | None = None
-    AP2_VOID_TIMEOUT: int = 60
+    AP2_VOID_TIMEOUT: int = 15
 
     HUBNET_URL: str
     HUBNET_URL_DEV: str
