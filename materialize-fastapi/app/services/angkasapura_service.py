@@ -126,6 +126,9 @@ invoice_daily_counter_datatable = DataTablesService(
 )
 AP2_COOKIE_VALUE = str(ENV.AP2_COOKIE or "").strip().strip("'").strip('"')
 HEADERS = {"Cookie": AP2_COOKIE_VALUE} if AP2_COOKIE_VALUE else {}
+AP2_DEV_COOKIE_VALUE = str(ENV.AP2_DEV_COOKIE or "").strip().strip("'").strip('"')
+AP2_DEV_VOID_HEADERS = {"Cookie": AP2_DEV_COOKIE_VALUE} if AP2_DEV_COOKIE_VALUE else HEADERS
+AP2_VOID_TIMEOUT_SECONDS = max(int(ENV.AP2_TIMEOUT), int(ENV.AP2_VOID_TIMEOUT))
 UPLOAD_ALLOWED_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 QUERY_FILES_FOR_INVOICE_LOOKUP = [
     "app/repository/query/get_inv_export.sql",
@@ -334,7 +337,7 @@ def sanitize_number_for_int(value: Any) -> Any:  # noqa: PLR0911
 def normalize_void_timestamp(raw_value: str) -> str:
     value = str(raw_value or "").strip()
     if not value:
-        return datetime.now().strftime("%Y-%m-%d %H:%M")  # noqa: DTZ005
+        return datetime.now().strftime("%Y-%m-%d")  # noqa: DTZ005
 
     formats = (
         "%Y-%m-%d %H:%M:%S",
@@ -353,9 +356,13 @@ def normalize_void_timestamp(raw_value: str) -> str:
     for fmt in formats:
         try:
             parsed = datetime.strptime(value, fmt)  # noqa: DTZ007
-            return parsed.strftime("%Y-%m-%d %H:%M")
+            return parsed.strftime("%Y-%m-%d")
         except ValueError:
             continue
+
+    iso_date_match = re.match(r"^(\d{4}-\d{2}-\d{2})", value)
+    if iso_date_match:
+        return iso_date_match.group(1)
 
     return value
 
@@ -1776,7 +1783,7 @@ class INVAp2Service:
                                 update_payload["void"] = 0
                             (
                                 db1.query(InvAp2)
-                                .filter(InvAp2.NO_INVOICE == str(inv_no))
+                                .filter(str(inv_no) == InvAp2.NO_INVOICE)
                                 .update(update_payload, synchronize_session=False)
                             )
 
@@ -1878,7 +1885,7 @@ class INVAp2Service:
         if not invoice_number:
             raise HTTPException(status_code=400, detail="NO_INVOICE wajib diisi.")
 
-        invoice_row = db.query(InvAp2).filter(InvAp2.NO_INVOICE == invoice_number).first()
+        invoice_row = db.query(InvAp2).filter(invoice_number == InvAp2.NO_INVOICE).first()
         if not invoice_row:
             raise HTTPException(status_code=404, detail="Invoice tidak ditemukan di inv_ap2.")
 
@@ -1899,19 +1906,42 @@ class INVAp2Service:
         ext_request = VoidInvoiceSchemaRequest(
             TANGGAL=normalize_void_timestamp(request.TANGGAL or str(invoice_row.TANGGAL)),
             NO_INVOICE=invoice_number,
-            HAWB=request.HAWB or getattr(invoice_row, "HAWB", "") or "",
+            # HAWB=request.HAWB or getattr(invoice_row, "HAWB", "") or "",
             SMU=request.SMU or getattr(invoice_row, "SMU", "") or "",
-            USR=ENV.AP2_USER,
-            PSW=ENV.AP2_PASSWORD,
+            USR=ENV.AP2_DEV_USER,
+            PSW=ENV.AP2_DEV_PASSWORD,
         )
 
-        payload = {key: (None, str(value)) for key, value in ext_request.model_dump().items()}
-
+        payload = {
+            "USR": (None, str(ext_request.USR)),
+            "PSW": (None, str(ext_request.PSW)),
+            "TANGGAL": (None, str(ext_request.TANGGAL)),
+            "NO_INVOICE": (None, str(ext_request.NO_INVOICE)),
+            "SMU": (None, str(ext_request.SMU or "")),
+        }
+        endpoint = f"{ENV.AP2_DEV_URL}/api/void_invo_dtl_v1"
+        audit_request_payload = {
+            "USR": str(ext_request.USR),
+            "PSW": "******",
+            "TANGGAL": str(ext_request.TANGGAL),
+            "NO_INVOICE": str(ext_request.NO_INVOICE),
+            "SMU": str(ext_request.SMU or ""),
+        }
+        logger.info(
+            "Audit request void invoice SIGO",
+            extra={
+                "event": "invoice.void.audit.request",
+                "invoice": invoice_number,
+                "endpoint": endpoint,
+                "timeout_seconds": AP2_VOID_TIMEOUT_SECONDS,
+                "request_payload": audit_request_payload,
+            },
+        )
         try:
-            async with httpx.AsyncClient(timeout=ENV.AP2_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=AP2_VOID_TIMEOUT_SECONDS) as client:
                 resp = await client.post(
-                    f"{ENV.AP2_URL}/api/void_invo_dtl",
-                    headers=HEADERS,
+                    endpoint,
+                    headers=AP2_DEV_VOID_HEADERS,
                     files=payload,
                 )
         except httpx.TimeoutException as exc:
@@ -1919,7 +1949,12 @@ class INVAp2Service:
                 "Timeout saat menghubungi AP2 untuk void invoice %s",
                 invoice_number,
                 exc_info=exc,
-                extra={"event": "invoice.void.timeout", "invoice": invoice_number},
+                extra={
+                    "event": "invoice.void.timeout",
+                    "invoice": invoice_number,
+                    "endpoint": endpoint,
+                    "request_payload": audit_request_payload,
+                },
             )
             return VoidInvoiceSchemaResponse(
                 TANGGAL=ext_request.TANGGAL,
@@ -1934,8 +1969,8 @@ class INVAp2Service:
                 response={
                     "error_type": "timeout",
                     "error": str(exc),
-                    "endpoint": f"{ENV.AP2_URL}/api/void_invo_dtl",
-                    "timeout_seconds": ENV.AP2_TIMEOUT,
+                    "endpoint": endpoint,
+                    "timeout_seconds": AP2_VOID_TIMEOUT_SECONDS,
                 },
             )
         except httpx.RequestError as exc:
@@ -1943,8 +1978,14 @@ class INVAp2Service:
                 "Gagal menghubungi AP2 untuk void invoice %s",
                 invoice_number,
                 exc_info=exc,
-                extra={"event": "invoice.void.connection_error", "invoice": invoice_number},
+                extra={
+                    "event": "invoice.void.connection_error",
+                    "invoice": invoice_number,
+                    "endpoint": endpoint,
+                    "request_payload": audit_request_payload,
+                },
             )
+
             return VoidInvoiceSchemaResponse(
                 TANGGAL=ext_request.TANGGAL,
                 NO_INVOICE=invoice_number,
@@ -1958,10 +1999,11 @@ class INVAp2Service:
                 response={
                     "error_type": "request_error",
                     "error": str(exc),
-                    "endpoint": f"{ENV.AP2_URL}/api/void_invo_dtl",
+                    "endpoint": endpoint,
                 },
             )
 
+        response_text = (resp.text or "")[:5000]
         try:
             resp_json = resp.json()
         except ValueError:
@@ -1970,6 +2012,18 @@ class INVAp2Service:
                 "affected_rows": 0,
                 "status": str(resp.status_code),
             }
+        logger.info(
+            "Audit response void invoice SIGO",
+            extra={
+                "event": "invoice.void.audit.response",
+                "invoice": invoice_number,
+                "endpoint": endpoint,
+                "http_status": resp.status_code,
+                "request_payload": audit_request_payload,
+                "response_json": resp_json,
+                "response_text": response_text,
+            },
+        )
 
         status_value = str(resp_json.get("status") or resp.status_code)
         message_value = str(resp_json.get("message") or f"HTTP {resp.status_code}")
@@ -1983,7 +2037,7 @@ class INVAp2Service:
             try:
                 (
                     db.query(InvAp2)
-                    .filter(InvAp2.NO_INVOICE == invoice_number)
+                    .filter(invoice_number == InvAp2.NO_INVOICE)
                     .update({"void": 1}, synchronize_session=False)
                 )
                 db.commit()
