@@ -1928,7 +1928,11 @@ class INVAp2Service:
             "SMU": str(ext_request.SMU or ""),
         }
         logger.info(
-            "Audit request void invoice SIGO",
+            "Audit request void invoice SIGO | invoice=%s | endpoint=%s | timeout_seconds=%s | request_payload=%s",
+            invoice_number,
+            endpoint,
+            AP2_VOID_TIMEOUT_SECONDS,
+            dumps(audit_request_payload, ensure_ascii=False),
             extra={
                 "event": "invoice.void.audit.request",
                 "invoice": invoice_number,
@@ -2013,7 +2017,12 @@ class INVAp2Service:
                 "status": str(resp.status_code),
             }
         logger.info(
-            "Audit response void invoice SIGO",
+            "Audit response void invoice SIGO | invoice=%s | endpoint=%s | http_status=%s | response_json=%s | response_text=%s",
+            invoice_number,
+            endpoint,
+            resp.status_code,
+            dumps(resp_json, ensure_ascii=False),
+            response_text,
             extra={
                 "event": "invoice.void.audit.response",
                 "invoice": invoice_number,
