@@ -1,8 +1,4 @@
-import logging
 import re
-import time
-from collections.abc import Callable
-from typing import TypeVar
 
 import pycountry
 from sqlalchemy import and_, bindparam, func, or_, text
@@ -60,31 +56,6 @@ _CUSTOMER_FIELDS = (
 )
 
 _COUNTRY_SPLIT_RE = re.compile(r"[,/;|()]+")
-T = TypeVar("T")
-logger = logging.getLogger("edi")
-
-
-def _log_query(name: str, fn: Callable[[], T]) -> T:
-    start = time.perf_counter()
-    try:
-        result = fn()
-    except Exception:
-        duration_ms = int((time.perf_counter() - start) * 1000)
-        logger.exception(
-            "db.query.error query=%s duration_ms=%d",
-            name,
-            duration_ms,
-            extra={"event": "db.query.error", "query": name, "duration_ms": duration_ms},
-        )
-        raise
-    duration_ms = int((time.perf_counter() - start) * 1000)
-    logger.info(
-        "db.query query=%s duration_ms=%d",
-        name,
-        duration_ms,
-        extra={"event": "db.query", "query": name, "duration_ms": duration_ms},
-    )
-    return result
 
 
 def _clean_text(value: str | None) -> str | None:
@@ -332,18 +303,12 @@ class EdiRepository:
         )
 
     def datatable(self, params: DataTablesParams) -> DataTablesResponse[EksBuildupHeaderOut]:
-        return _log_query(
-            "edi_repository.buildup_header_datatable",
-            lambda: self.buildup_header_datatable_service.get_datatable(db=self.db, params=params),
-        )
+        return self.buildup_header_datatable_service.get_datatable(db=self.db, params=params)
 
     def buildup_detail_datatable(
         self, params: DataTablesParams
     ) -> DataTablesResponse[EksBuildUpDetailOut]:
-        return _log_query(
-            "edi_repository.buildup_detail_datatable",
-            lambda: self.buildup_detail_datatable_service.get_datatable(db=self.db, params=params),
-        )
+        return self.buildup_detail_datatable_service.get_datatable(db=self.db, params=params)
 
     def weighing_datatable(self, params: DataTablesParams) -> DataTablesResponse[WeighingHeaderOut]:
         params = self.weighing_datatable_service.apply_custom_filters(params)
@@ -383,17 +348,11 @@ class EdiRepository:
         total_records_query = self.db.query(
             func.count(func.distinct(EksWeighingHeader.MasterAWB))
         )
-        total_records = _log_query(
-            "edi_repository.weighing_datatable.total_records",
-            total_records_query.scalar,
-        )
+        total_records = total_records_query.scalar()
         filtered_records_query = base_query.with_entities(
             func.count(func.distinct(EksWeighingHeader.MasterAWB))
         )
-        filtered_records = _log_query(
-            "edi_repository.weighing_datatable.filtered_records",
-            filtered_records_query.scalar,
-        )
+        filtered_records = filtered_records_query.scalar()
 
         subquery = (
             base_query.with_entities(func.max(EksWeighingHeader.noid).label("noid"))
@@ -418,10 +377,7 @@ class EdiRepository:
                     query = query.order_by(col.asc())
 
         results_query = query.offset(params.start).limit(params.length)
-        results = _log_query(
-            "edi_repository.weighing_datatable.results",
-            results_query.all,
-        )
+        results = results_query.all()
 
         return DataTablesResponse(
             draw=params.draw,
@@ -433,10 +389,7 @@ class EdiRepository:
     def masterwaybill_datatable(
         self, params: DataTablesParams
     ) -> DataTablesResponse[EksMasterWaybillOut]:
-        return _log_query(
-            "edi_repository.masterwaybill_datatable",
-            lambda: self.masterwaybill_datatable_service.get_datatable(db=self.db, params=params),
-        )
+        return self.masterwaybill_datatable_service.get_datatable(db=self.db, params=params)
 
     # query tarik data fhl di table weighing
     def get_weighing_by_awb(
@@ -466,7 +419,7 @@ class EdiRepository:
             .filter(EksWeighingHeader.MasterAWB == awb)
             .order_by(EksWeighingHeader.ProofNumber.desc(), EksWeighingDetail.noid.asc())
         )
-        rows = _log_query("edi_repository.get_weighing_by_awb.rows", rows_query.all)
+        rows = rows_query.all()
 
         if not rows:
             return None, []
@@ -501,17 +454,14 @@ class EdiRepository:
             .filter(EksWeighingHeader.MasterAWB == awb)
             .order_by(EksWeighingHeader.noid.desc())
         )
-        header = _log_query("edi_repository.get_weighing_by_awb_for_fwb.header", header_query.first)
+        header = header_query.first()
 
         details_query = (
             self.db.query(EksWeighingDetail)
             .filter(EksWeighingDetail.MasterAWB == awb)
             .order_by(EksWeighingDetail.noid.asc())
         )
-        details = _log_query(
-            "edi_repository.get_weighing_by_awb_for_fwb.details",
-            details_query.all,
-        )
+        details = details_query.all()
 
         primary_detail = details[0] if details else None
         host_awb = None
@@ -519,20 +469,14 @@ class EdiRepository:
             host_awb_query = self.db.query(EksHostAWB).filter(
                 EksHostAWB.HostAWB == primary_detail.HostAWB
             )
-            host_awb = _log_query(
-                "edi_repository.get_weighing_by_awb_for_fwb.host_awb_by_host",
-                host_awb_query.first,
-            )
+            host_awb = host_awb_query.first()
         if not host_awb:
             host_awb_query = (
                 self.db.query(EksHostAWB)
                 .filter(EksHostAWB.MasterAWB == awb)
                 .order_by(EksHostAWB.noid.asc())
             )
-            host_awb = _log_query(
-                "edi_repository.get_weighing_by_awb_for_fwb.host_awb_by_mawb",
-                host_awb_query.first,
-            )
+            host_awb = host_awb_query.first()
 
         if not header and not details:
             return None, [], None
@@ -553,10 +497,7 @@ class EdiRepository:
             customers_query = self.db.query(MstCustomer).filter(
                 MstCustomer.CustomerCode.in_(customer_codes)
             )
-            customers_list = _log_query(
-                "edi_repository.get_weighing_by_awb_for_fwb.customers",
-                customers_query.all,
-            )
+            customers_list = customers_query.all()
             customers = {item.CustomerCode: item for item in customers_list}
 
         shipper_customer = customers.get(shipper_code)
@@ -608,7 +549,7 @@ class EdiRepository:
             .join(shipper_customer, EksMasterWaybill.ShipperCode == shipper_customer.CustomerCode)
             .filter(EksMasterWaybill.MasterAWB == mawb)
         )
-        rows = _log_query("edi_repository.get_awb_mawb.rows", rows_query.all)
+        rows = rows_query.all()
 
         if not rows:
             return None
@@ -643,7 +584,7 @@ class EdiRepository:
         master_query = self.db.query(ImpMasterWaybill).filter(
             ImpMasterWaybill.MasterAWB == mawb
         )
-        master = _log_query("edi_repository.get_imp_masterwaybill.master", master_query.first)
+        master = master_query.first()
         if not master:
             return None
         return ImpMasterWaybillOut.model_validate(master)
@@ -652,16 +593,13 @@ class EdiRepository:
         breakdown_query = self.db.query(ImpBreakdownDetail).filter(
             ImpBreakdownDetail.MasterAWB == mawb
         )
-        breakdown = _log_query("edi_repository.get_imp_hostawb.breakdown", breakdown_query.first)
+        breakdown = breakdown_query.first()
         has_breakdown = breakdown is not None
         has_obdetail = (
-            _log_query(
-                "edi_repository.get_imp_hostawb.has_obdetail",
-                lambda: self.db.execute(
-                    text("SELECT 1 FROM imp_obdetail WHERE MasterAWB = :mawb LIMIT 1"),
-                    {"mawb": mawb},
-                ).first(),
-            )
+            self.db.execute(
+                text("SELECT 1 FROM imp_obdetail WHERE MasterAWB = :mawb LIMIT 1"),
+                {"mawb": mawb},
+            ).first()
             is not None
         )
         host_awbs_query = (
@@ -669,20 +607,17 @@ class EdiRepository:
             .filter(ImpHostAWB.MasterAWB == mawb)
             .order_by(ImpHostAWB.created_at.asc())
         )
-        host_awbs = _log_query("edi_repository.get_imp_hostawb.host_awbs", host_awbs_query.all)
+        host_awbs = host_awbs_query.all()
         delivered_hosts = set()
         host_awb_codes = [item.HostAWB for item in host_awbs if item.HostAWB]
         if host_awb_codes:
-            rows = _log_query(
-                "edi_repository.get_imp_hostawb.delivered_hosts",
-                lambda: self.db.execute(
-                    text(
-                        "SELECT DISTINCT HostMawb FROM imp_deliorderdetail "
-                        "WHERE HostMawb IN :host_awbs"
-                    ).bindparams(bindparam("host_awbs", expanding=True)),
-                    {"host_awbs": host_awb_codes},
-                ).all(),
-            )
+            rows = self.db.execute(
+                text(
+                    "SELECT DISTINCT HostMawb FROM imp_deliorderdetail "
+                    "WHERE HostMawb IN :host_awbs"
+                ).bindparams(bindparam("host_awbs", expanding=True)),
+                {"host_awbs": host_awb_codes},
+            ).all()
             delivered_hosts = {row[0] for row in rows if row and row[0]}
         if has_breakdown:
             for item in host_awbs:
@@ -715,7 +650,7 @@ class EdiRepository:
             .join(EksHostAWB, EksBuildUpDetail.MasterAWB == EksHostAWB.MasterAWB)
             .filter(EksBuildupHeader.buildup_number == buildup_number)
         )
-        rows = _log_query("edi_repository.get_buildup_mawb.rows", rows_query.all)
+        rows = rows_query.all()
 
         if not rows:
             missing = [

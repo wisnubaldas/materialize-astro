@@ -1685,6 +1685,90 @@ class INVAp2Service:
             db1.close()
             db2.close()
 
+    @staticmethod
+    def _send_single_invoice_to_ap2(
+        *, db1: Session, client: requests.Session, row: Any, run_id: str
+    ) -> dict[str, Any]:
+        row_dict = dict(row._mapping)
+        schema = AP2SendInv(USR=ENV.AP2_USER, PSW=ENV.AP2_PASSWORD, **row_dict)
+        payload = schema.model_dump()
+
+        inv_no = payload.get("NO_INVOICE")
+        invoice_value = str(inv_no) if inv_no is not None else None
+        INVAp2Service._publish_scheduler_event(
+            source=DEBUG_SOURCE_SCHEDULER_SEND,
+            run_id=run_id,
+            message=f"Kirim invoice: {inv_no}",
+            invoice=invoice_value,
+        )
+
+        success = False
+        try:
+            resp = client.post(
+                f"{ENV.AP2_URL}/api/invo_dtl_v2",
+                headers=HEADERS,
+                data=payload,
+                timeout=60,
+            )
+
+            success = resp.status_code == 200
+            response_data = {
+                "affected_rows": 1 if success else 0,
+                "message": resp.text[:255],
+                "status": str(resp.status_code),
+            }
+        except Exception as e:
+            response_data = {
+                "affected_rows": 0,
+                "message": f"Info: {e!s}",
+                "status": "500",
+            }
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Info: {e!s}",
+                level="error",
+                invoice=invoice_value,
+            )
+        finally:
+            if inv_no:
+                update_payload: dict[str, Any] = {"status": 1 if success else 2}
+                if success:
+                    update_payload["void"] = 0
+                (
+                    db1.query(InvAp2)
+                    .filter(str(inv_no) == InvAp2.NO_INVOICE)
+                    .update(update_payload, synchronize_session=False)
+                )
+
+        db1.add(
+            ResponsInvAp2(
+                inv=invoice_value,
+                response=dumps(response_data),
+                status=response_data["status"],
+            )
+        )
+
+        if success:
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Berhasil invoice: {inv_no} (HTTP {response_data['status']})",
+                invoice=invoice_value,
+                http_status=response_data["status"],
+            )
+        else:
+            INVAp2Service._publish_scheduler_event(
+                source=DEBUG_SOURCE_SCHEDULER_SEND,
+                run_id=run_id,
+                message=f"Gagal invoice: {inv_no} (HTTP {response_data['status']})",
+                level="error",
+                invoice=invoice_value,
+                http_status=response_data["status"],
+            )
+
+        return {"invoice": inv_no, **response_data}
+
     # Dipanggil oleh APScheduler (lihat app/job/scheduler.py -> job id: send_invoice_job, interval: 10 menit)
     # Fungsi ini mengirim invoice berstatus pending (status=0) ke API AP2.
     @staticmethod
@@ -1743,84 +1827,14 @@ class INVAp2Service:
 
             with requests.Session() as client:
                 for row in rows:
-                    row_dict = dict(row._mapping)
-                    schema = AP2SendInv(USR=ENV.AP2_USER, PSW=ENV.AP2_PASSWORD, **row_dict)
-                    payload = schema.model_dump()
-
-                    inv_no = payload.get("NO_INVOICE")
-                    INVAp2Service._publish_scheduler_event(
-                        source=DEBUG_SOURCE_SCHEDULER_SEND,
-                        run_id=run_id,
-                        message=f"Kirim invoice: {inv_no}",
-                        invoice=str(inv_no) if inv_no is not None else None,
-                    )
-
-                    success = False
-                    try:
-                        resp = client.post(
-                            f"{ENV.AP2_URL}/api/invo_dtl_v2",
-                            headers=HEADERS,
-                            data=payload,
-                            timeout=60,
-                        )
-
-                        success = resp.status_code == 200
-                        response_data = {
-                            "affected_rows": 1 if success else 0,
-                            "message": resp.text[:255],
-                            "status": str(resp.status_code),
-                        }
-                    except Exception as e:
-                        response_data = {
-                            "affected_rows": 0,
-                            "message": f"Info: {e!s}",
-                            "status": "500",
-                        }
-                        INVAp2Service._publish_scheduler_event(
-                            source=DEBUG_SOURCE_SCHEDULER_SEND,
+                    results.append(
+                        INVAp2Service._send_single_invoice_to_ap2(
+                            db1=db1,
+                            client=client,
+                            row=row,
                             run_id=run_id,
-                            message=f"Info: {e!s}",
-                            level="error",
-                            invoice=str(inv_no) if inv_no is not None else None,
-                        )
-                    finally:
-                        if inv_no:
-                            update_payload: dict[str, Any] = {"status": 1 if success else 2}
-                            if success:
-                                update_payload["void"] = 0
-                            (
-                                db1.query(InvAp2)
-                                .filter(str(inv_no) == InvAp2.NO_INVOICE)
-                                .update(update_payload, synchronize_session=False)
-                            )
-
-                    db1.add(
-                        ResponsInvAp2(
-                            inv=str(inv_no) if inv_no is not None else None,
-                            response=dumps(response_data),
-                            status=response_data["status"],
                         )
                     )
-
-                    results.append({"invoice": inv_no, **response_data})
-
-                    if success:
-                        INVAp2Service._publish_scheduler_event(
-                            source=DEBUG_SOURCE_SCHEDULER_SEND,
-                            run_id=run_id,
-                            message=f"Berhasil invoice: {inv_no} (HTTP {response_data['status']})",
-                            invoice=str(inv_no) if inv_no is not None else None,
-                            http_status=response_data["status"],
-                        )
-                    else:
-                        INVAp2Service._publish_scheduler_event(
-                            source=DEBUG_SOURCE_SCHEDULER_SEND,
-                            run_id=run_id,
-                            message=f"Gagal invoice: {inv_no} (HTTP {response_data['status']})",
-                            level="error",
-                            invoice=str(inv_no) if inv_no is not None else None,
-                            http_status=response_data["status"],
-                        )
 
             db1.commit()
             INVAp2Service._publish_scheduler_event(
