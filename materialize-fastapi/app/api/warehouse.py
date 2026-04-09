@@ -16,7 +16,7 @@ from app.schemas.exp_manifest_flight_detail_schema import (
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
 from app.schemas.warehouse_masterwaybill_schema import WarehouseMasterWaybillRequest
 from app.services.datatables_service import DataTablesService
-from app.services.warehouse_manifest_service import AirlineManifestUploadService
+from app.services.buildup_service import BuildupService
 from app.services.warehouse_service import WarehouseService
 
 router = APIRouter(prefix="/warehouse", tags=["Warehouse"])
@@ -110,9 +110,7 @@ def upload_fedex_manifest(
     payload_json: str | None = Form(default=None),
     db: Session = Depends(get_db1_w),
 ):
-    return AirlineManifestUploadService.upload_manifest(
-        file=file, payload_json=payload_json, db=db
-    )
+    return BuildupService.upload_manifest(file=file, payload_json=payload_json, db=db)
 
 
 @router.post(

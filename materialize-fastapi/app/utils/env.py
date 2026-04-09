@@ -66,6 +66,8 @@ class ENV(BaseSettings):
 
     LOG_SERVICE_NAME: str | None = None
     LOG_SERVICE_VERSION: int | None = None
+    REQUEST_LOG_SLOW_MS: int = 500
+    REQUEST_LOG_ALL: bool = False
 
     MAIL_USERNAME: str
     MAIL_PASSWORD: str

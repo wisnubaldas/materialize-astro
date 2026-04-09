@@ -3,6 +3,8 @@ import time
 
 from fastapi import Request
 
+from app.utils.env import ENV
+
 
 class RequestLoggingMiddleware:
     def __init__(self, app):
@@ -33,6 +35,15 @@ class RequestLoggingMiddleware:
         finally:
             duration_ms = int((time.perf_counter() - start) * 1000)
             status_code = status_code_holder["code"] or 0
+            should_log = (
+                ENV.REQUEST_LOG_ALL
+                or ENV.APP_DEBUG
+                or status_code >= 400
+                or duration_ms >= ENV.REQUEST_LOG_SLOW_MS
+            )
+            if not should_log:
+                return
+
             route_path = "-"
             route = scope.get("route")
             if route is not None:

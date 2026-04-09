@@ -5,7 +5,6 @@ from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import unquote, urlparse
 
 from fastapi import HTTPException, UploadFile
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -236,7 +235,7 @@ def _sanitize_filename(filename: str, default_stem: str = "manifest") -> str:
     return f"{cleaned_stem}{suffix}"
 
 
-class AirlineManifestUploadService:
+class BuildupService:
     @staticmethod
     def _build_workbook_from_payload(payload_json: str) -> tuple[bytes, str]:
         try:
@@ -300,9 +299,7 @@ class AirlineManifestUploadService:
                 )
             contents = file.file.read()
         elif payload_json:
-            contents, filename = AirlineManifestUploadService._build_workbook_from_payload(
-                payload_json
-            )
+            contents, filename = BuildupService._build_workbook_from_payload(payload_json)
         else:
             raise HTTPException(
                 status_code=400,
@@ -606,7 +603,7 @@ class AirlineManifestUploadService:
             payload["mawb_count"] = sum(len(uld["mawbs"]) for uld in payload["ulds"])
             flights_payload.append(payload)
 
-        pdf_bytes = AirlineManifestUploadService._generate_pdf(flights_payload)
+        pdf_bytes = BuildupService._generate_pdf(flights_payload)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         flight_tag = flights_payload[0].get("flight_number") if flights_payload else "manifest"
         flight_tag = "".join(ch for ch in str(flight_tag) if ch.isalnum() or ch in ("-", "_"))
@@ -686,24 +683,10 @@ class AirlineManifestUploadService:
     @staticmethod
     def _generate_pdf(flights: list[dict]) -> bytes:
         templates_dir = Path(__file__).resolve().parent.parent / "templates"
-        public_dir = PDF_DIR.parent.resolve()
-        logo_uri = "/images/fedex-logo.png"
         env = Environment(
             loader=FileSystemLoader(str(templates_dir)),
             autoescape=select_autoescape(["html", "xml"]),
         )
-
-        def _link_callback(uri: str, rel: str) -> str:
-            parsed = urlparse(uri)
-            if parsed.scheme in ("file", ""):
-                candidate = Path(unquote(parsed.path))
-                if candidate.is_absolute() and candidate.exists():
-                    return str(candidate)
-            if uri.startswith("/"):
-                candidate = (public_dir / uri.lstrip("/")).resolve()
-                if candidate.exists():
-                    return str(candidate)
-            raise FileNotFoundError(f"Resource not found: {uri}")
 
         try:
             template = env.get_template("fedex_manifest.html")
@@ -711,14 +694,12 @@ class AirlineManifestUploadService:
                 flights=flights,
                 generated_at=datetime.now(timezone.utc),
                 total_flights=len(flights),
-                logo_uri=logo_uri,
             )
             pdf_buffer = BytesIO()
             pdf_result = pisa.CreatePDF(
                 src=html_content,
                 dest=pdf_buffer,
                 encoding="utf-8",
-                link_callback=_link_callback,
             )
         except Exception as exc:
             logger.exception("Gagal menghasilkan PDF manifest Fedex.")

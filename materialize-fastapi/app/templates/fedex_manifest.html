@@ -18,22 +18,16 @@
             padding: 0;
         }
 
+        .header-table {
+            width: 100%;
+        }
 
         .header-table td {
             vertical-align: top;
         }
 
-        .logo {
-            width: 20%;
-        }
-
-        .logo img {
-            width: 90px;
-            height: auto;
-        }
-
         .title {
-            width: 50%;
+            width: 100%;
             text-align: center;
         }
 
@@ -55,6 +49,15 @@
             font-weight: bold;
         }
 
+        .section-gap {
+            height: 18pt;
+        }
+
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            /* border: 1px solid #000000; */
+        }
 
         .label {
             font-weight: bold;
@@ -101,10 +104,6 @@
             font-weight: bold;
         }
 
-        .mawb-line {
-            /* padding-left: 10px; */
-        }
-
         .total-row td {
             border-top: 1px solid #000000;
             font-weight: bold;
@@ -130,60 +129,10 @@
             page-break-after: always;
         }
 
-        .meta-table {
-            padding-top: 5px;
-            padding-bottom: 5px;
-        }
-    </style>
-</head>
-
-<body>
-    {% for flight in flights %}
-    <table class="header-table" width="100%">
-        <tr>
-            <td class="logo">
-                <img src="{{ logo_uri }}" alt="FedEx" />
-            </td>
-            <td class="title">
-                <div class="title-main">AIR CARGO MANIFEST</div>
-                <div class="title-sub">I.C.A.O ANNEX 9, APPENDIX 3</div>
-            </td>
-            <td class="flight-box">
-                <div>
-                    <span class="label">FLIGHT NR/DATE</span> :
-                    {{ flight.airline_code }}{{ flight.flight_number }} / {{ flight.flight_date }}
-                </div>
-                <div>
-                    <span class="label">POINT OF UNLOADING</span> : {{ flight.point_of_unloading }}
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <table class="meta-table">
-        <tr>
-            <td class="meta-left">
-                <div>
-                    <span class="label">OWNER OF OPERATOR</span> :
-                    {{ "FEDEX" if flight.airline_code == "FX" else (flight.airline_code or "-") }}
-                </div>
-                <div>
-                    <span class="label">MARKS OF NAT AND REGS</span> :
-                    {{ flight.aircraft_registration or "-" }}
-                </div>
-                <div>
-                    <span class="label">POINT OF LOADING</span> : {{ flight.point_of_loading }}
-                </div>
-            </td>
-            <td class="meta-right"></td>
-        </tr>
-    </table>
-    <style>
         .manifest-table {
             border-collapse: collapse;
             width: 100%;
             font-size: 7pt;
-
         }
 
         .manifest-table thead th {
@@ -202,7 +151,63 @@
             line-height: 1;
             white-space: nowrap;
         }
+
+        .grand-col-label {
+            width: 50%;
+        }
+
+        .grand-col-value {
+            width: 10%;
+            text-align: right;
+        }
+
+        .grand-col-page {
+            width: 30%;
+        }
     </style>
+</head>
+
+<body>
+    {% for flight in flights %}
+    <div class="title">
+        <div class="title-main">AIR CARGO MANIFEST</div>
+        <div class="title-sub">I.C.A.O ANNEX 9, APPENDIX 3</div>
+    </div>
+
+    <table class="header-table">
+        <tr>
+            <td></td>
+            <td class="flight-box">
+                <div>
+                    <span class="label">FLIGHT NR/DATE</span> :
+                    {{ flight.airline_code }}{{ flight.flight_number }} / {{ flight.flight_date }}
+                </div>
+                <div>
+                    <span class="label">POINT OF UNLOADING</span> : {{ flight.point_of_unloading }}
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="section-gap"></div>
+    <table class="meta-table">
+        <tr>
+            <td>
+                <div>
+                    <span class="label">OWNER OF OPERATOR</span> :
+                    {{ "FEDEX" if flight.airline_code == "FX" else (flight.airline_code or "-") }}
+                </div>
+                <div>
+                    <span class="label">MARKS OF NAT AND REGS</span> :
+                    {{ flight.aircraft_registration or "-" }}
+                </div>
+                <div>
+                    <span class="label">POINT OF LOADING</span> : {{ flight.point_of_loading }}
+                </div>
+            </td>
+            <td></td>
+        </tr>
+    </table>
+    <br>
     {% set dash_count = 180 %}
     <table class="manifest-table">
         <thead>
@@ -246,7 +251,7 @@
                     {% if loop.index0 == 0 %}
                     <div class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner }}</div>
                     {% endif %}
-                    <div class="mawb-line">{{ mawb.mawb_number or "-" }}</div>
+                    <div>{{ mawb.mawb_number or "-" }}</div>
                 </td>
                 <td class="col-pieces">{{ mawb.pieces }}/{{ mawb.total_pieces }}</td>
                 <td class="col-goods">{{ mawb.nature_of_goods or "-" }}</td>
@@ -291,10 +296,10 @@
 
     <table class="grand-total">
         <tr>
-            <td style="width: 50%;">GRAND TOTAL</td>
-            <td style="width: 10%; text-align: right;">{{ flight.total_pieces }}</td>
-            <td style="width: 10%; text-align: right;">{{ flight.total_weight_kg }}</td>
-            <td class="grand-page" style="width: 30%;">Page {{ loop.index }} of {{ total_flights }}</td>
+            <td class="grand-col-label">GRAND TOTAL</td>
+            <td class="grand-col-value">{{ flight.total_pieces }}</td>
+            <td class="grand-col-value">{{ flight.total_weight_kg }}</td>
+            <td class="grand-page grand-col-page">Page {{ loop.index }} of {{ total_flights }}</td>
         </tr>
     </table>
 
