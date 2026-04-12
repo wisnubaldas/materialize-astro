@@ -4,11 +4,11 @@ from typing import Any
 
 from app.repository.edi_repository import EdiRepository
 from app.schemas.awb_mawb_schema import AwbMawbResponse
+from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.fwb_table_schema import FwbTableOut
@@ -115,8 +115,8 @@ class EdiService:
 
     def manifest_mawb_datatables(
         self, params: DataTablesParams
-    ) -> DataTablesResponse[ExpManifestMawbOut]:
-        """Datatable accessor for exp_manifest_mawb (DB1)."""
+    ) -> DataTablesResponse[BuildUpDetailOut]:
+        """Datatable accessor for build_up_detail (DB1)."""
         return self.repository.manifest_mawb_datatable(params)
 
     def parse_fhl(self, awb: str) -> FhlResponse:

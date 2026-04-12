@@ -34,6 +34,8 @@ redis = "^6.4.0"
 itsdangerous = "^2.2.0"
 jinja2 = "^3.1.6"
 xhtml2pdf = "^0.2.16"
+weasyprint = "^62.3"
+pydyf = ">=0.10,<0.12"
 pycairo = { version = ">=1.25.0,<1.29.0", allow-prereleases = true }
 jsonlines = "^4.0.0"
 pyjwt = "^2.10.1"

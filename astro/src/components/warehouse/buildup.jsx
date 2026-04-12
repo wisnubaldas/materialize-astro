@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react';
 import BuildupDatatables from './buildupDatatables';
 import BuildupForm from './buildupForm';
-import MakeBuildUp from './makeBuildUp';
 export default function Buildup() {
   const tabs = useMemo(
     () => [
       { id: 'search', label: 'Cari Master AWB', content: <BuildupForm /> },
-      { id: 'upload', label: 'Upload Manifest', content: <MakeBuildUp /> },
       { id: 'data', label: 'Data Manifest', content: <BuildupDatatables /> },
     ],
     []

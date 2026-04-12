@@ -5,17 +5,16 @@ from pydantic import BaseModel
 
 class ExpManifestFlightOut(BaseModel):
     id: int
-    airline_code: str | None = None
-    flight_number: str | None = None
+    number_build_up: str | None = None
+    airlines_code: str | None = None
+    origin: str | None = None
+    dest: str | None = None
     flight_date: date | None = None
-    aircraft_registration: str | None = None
-    point_of_loading: str | None = None
-    point_of_unloading: str | None = None
+    for_official_use: str | None = None
     total_pieces: int | None = None
-    total_weight_kg: float | None = None
-    source_document: str | None = None
-    raw_text: str | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    total_weight: float | None = None
+    pdf_link: str | None = None
+    create_at: datetime | None = None
+    update_at: datetime | None = None
 
     model_config = {"from_attributes": True}

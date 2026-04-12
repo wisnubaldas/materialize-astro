@@ -7,11 +7,11 @@ import type {
 } from './datatable';
 
 export interface DataTableFilters {
-  airline_code?: string | null;
-  flight_number?: string | null;
+  number_build_up?: string | null;
+  airlines_code?: string | null;
   flight_date?: string | null;
-  point_of_loading?: string | null;
-  point_of_unloading?: string | null;
+  origin?: string | null;
+  dest?: string | null;
 }
 
 export type DataTableRequest = BaseDataTableRequest<DataTableFilters>;
@@ -20,77 +20,44 @@ export type { DataTableColumn, DataTableOrder, DataTableSearch };
 
 export interface ManifestFlight {
   id: number;
-  airline_code?: string | null;
-  flight_number?: string | null;
+  number_build_up?: string | null;
+  airlines_code?: string | null;
+  origin?: string | null;
+  dest?: string | null;
   flight_date?: string | null;
-  aircraft_registration?: string | null;
-  point_of_loading?: string | null;
-  point_of_unloading?: string | null;
+  for_official_use?: string | null;
   total_pieces?: number | null;
-  total_weight_kg?: number | null;
-  source_document?: string | null;
-  raw_text?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  total_weight?: number | null;
+  pdf_link?: string | null;
+  create_at?: string | null;
+  update_at?: string | null;
 }
 
-export interface ManifestFlightDetailRow {
-  uld_type?: string | null;
+export interface BuildUpDetail {
+  id: number;
+  header_id: number;
+  mawb?: string | null;
   uld_number?: string | null;
-  uld_owner?: string | null;
-  destination?: string | null;
-  remarks?: string | null;
-  mawb_prefix?: string | null;
-  mawb_number?: string | null;
+  uld_type?: string | null;
   pieces?: number | null;
-  weight_kg?: number | null;
+  weight?: number | null;
   nature_of_goods?: string | null;
-  route?: string | null;
-  transit_flag?: boolean | number | null;
+  remark?: string | null;
+  create_at?: string | null;
 }
 
-export interface ManifestFlightDetailResponse {
-  flight: ManifestFlight;
-  details: ManifestFlightDetailRow[];
-}
-
-export interface MasterWaybill {
-  MasterAWB: string;
-  Pieces?: number | null;
-  Weight?: number | null;
-  Volume?: number | null;
-  AirlinesCode?: string | null;
-  FlightNo?: string | null;
-  Origin?: string | null;
-  Destination?: string | null;
-  DateOfFlight?: string | null;
-  KindOfGood?: string | null;
-  KindOfCode?: string | null;
-  PENnumber?: string | null;
-  KTKR?: string | null;
-  DateOfPen?: string | null;
-  HSCode?: string | null;
-  AgenCode?: string | null;
-  ShipperCode?: string | null;
-  ConsigneeCode?: string | null;
-  bc11?: string | null;
-  tglbc11?: string | null;
-  nopos?: string | null;
-  Multihost?: string | null;
-  Parsial?: string | null;
-  DateOfOut?: string | null;
-  TimeOut?: string | null;
-  DateOfIn?: string | null;
-  TimeIn?: string | null;
-  RCS?: boolean | number | null;
-  FWB?: boolean | number | null;
-  PDE?: boolean | number | null;
-  Status?: boolean | number | null;
-  DateEntry?: string | null;
-  TimeEntry?: string | null;
-  void?: boolean | number | null;
-  token?: string | null;
-  created_at?: string | null;
+export interface ExportBuildupRow {
+  mawb: string;
+  airlines_code?: string | null;
+  flight_number?: string | null;
+  origin?: string | null;
+  dest?: string | null;
+  flight_date?: string | null;
+  pieces?: number | null;
+  total_pieces?: number | null;
+  weight?: number | null;
+  total_weight?: number | null;
+  nature_of_goods?: string | null;
 }
 
 export interface MasterWaybillBulkRequest {

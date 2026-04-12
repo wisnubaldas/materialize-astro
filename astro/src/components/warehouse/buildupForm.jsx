@@ -27,47 +27,88 @@ const splitAwbInput = (value) => {
 };
 
 const MASTER_FIELDS = [
-  { key: 'MasterAWB', label: 'Master AWB', type: 'text', className: 'text-nowrap' },
-  { key: 'total', label: 'Total Pieces', type: 'text', className: 'text-end' },
-  { key: 'Volume', label: 'Volume', type: 'text', className: 'text-end' },
-  { key: 'AirlinesCode', label: 'Airlines Code', type: 'text', className: 'text-nowrap' },
-  { key: 'FlightNo', label: 'Flight No', type: 'text', className: 'text-nowrap' },
-  { key: 'Origin', label: 'Origin', type: 'text', className: 'text-nowrap' },
-  { key: 'Destination', label: 'Destination', type: 'text', className: 'text-nowrap' },
-  { key: 'DateOfFlight', label: 'Date Of Flight', type: 'text', className: 'text-nowrap' },
-  { key: 'KindOfGood', label: 'Kind Of Good', type: 'text', className: 'text-nowrap' },
+  { key: 'mawb', label: 'MAWB', type: 'text', className: 'text-nowrap', readOnly: true },
+  {
+    key: 'airlines_code',
+    label: 'Airlines Code',
+    type: 'text',
+    className: 'text-nowrap',
+    readOnly: true,
+  },
+  { key: 'origin', label: 'Origin', type: 'text', className: 'text-nowrap', readOnly: true },
+  { key: 'dest', label: 'Destination', type: 'text', className: 'text-nowrap', readOnly: true },
+  {
+    key: 'flight_date',
+    label: 'Flight Date',
+    type: 'text',
+    className: 'text-nowrap',
+    readOnly: true,
+  },
+  {
+    key: 'total_pieces',
+    label: 'Total Pieces',
+    type: 'text',
+    className: 'text-end',
+    readOnly: true,
+  },
+  {
+    key: 'total_weight',
+    label: 'Total Weight',
+    type: 'text',
+    className: 'text-end',
+    readOnly: true,
+  },
+  {
+    key: 'flight_number',
+    label: 'Flight No',
+    type: 'text',
+    className: 'text-nowrap',
+    readOnly: true,
+  },
+  {
+    key: 'nature_of_goods',
+    label: 'Nature Of Goods',
+    type: 'text',
+    className: 'text-nowrap',
+    readOnly: true,
+  },
   {
     key: 'aircraft_registration',
     label: 'Aircraft Registration',
     type: 'text',
     className: 'text-nowrap',
   },
-  { key: 'route', label: 'Route', type: 'text', className: 'text-nowrap' },
+  { key: 'route', label: 'Route', type: 'text', className: 'text-nowrap', readOnly: true },
 ];
 
 const DETAIL_FIELDS = [
   { key: 'uld_type', label: 'ULD Type', type: 'text', className: 'text-nowrap' },
   { key: 'uld_number', label: 'ULD Number', type: 'text', className: 'text-nowrap' },
-  { key: 'Pieces', label: 'Pieces', type: 'text', className: 'text-end' },
-  { key: 'Weight', label: 'Weight', type: 'text', className: 'text-end' },
+  { key: 'pieces', label: 'Pieces', type: 'text', className: 'text-end' },
+  { key: 'weight', label: 'Weight', type: 'text', className: 'text-end' },
   { key: 'uld_owner', label: 'ULD Owner', type: 'text', className: 'text-nowrap' },
 ];
 
-const createEmptyDetail = () => ({
-  uld_type: '',
-  uld_number: '',
-  Pieces: '',
-  Weight: '',
-  uld_owner: '',
-});
+const toText = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+};
 
-const createDetailFromItem = (item) => ({
-  uld_type: item?.uld_type ?? '',
-  uld_number: item?.uld_number ?? '',
-  Pieces: item?.Pieces ?? '',
-  Weight: item?.Weight ?? '',
-  uld_owner: item?.uld_owner ?? '',
-});
+const normalizeDateText = (value) => {
+  const text = toText(value);
+  if (!text) {
+    return '';
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+    return text.slice(0, 10);
+  }
+  if (/^\d{4}\/\d{2}\/\d{2}/.test(text)) {
+    return text.slice(0, 10).replace(/\//g, '-');
+  }
+  return text;
+};
 
 const parseNumeric = (value) => {
   if (value === null || value === undefined || value === '') {
@@ -79,69 +120,103 @@ const parseNumeric = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const getDefaultTotalFromDetails = (details) => {
-  const numericPieces = details
-    .map((detail) => parseNumeric(detail?.Pieces))
-    .filter((value) => value !== null);
-
-  if (!numericPieces.length) {
-    return details[0]?.Pieces ?? '';
-  }
-
-  const sum = numericPieces.reduce((acc, value) => acc + value, 0);
-  return Number.isInteger(sum) ? String(sum) : String(sum);
-};
-
-const mapMasterRows = (data) => {
-  const groups = new Map();
-
-  (Array.isArray(data) ? data : []).forEach((item, index) => {
-    const normalizedMaster = String(item?.MasterAWB ?? '').trim();
-    const groupKey = normalizedMaster || `__missing-master-${index}`;
-
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, {
-        MasterAWB: item?.MasterAWB ?? '',
-        total: item?.total ?? item?.Total ?? '',
-        Volume: item?.Volume ?? '',
-        AirlinesCode: item?.AirlinesCode ?? '',
-        FlightNo: item?.FlightNo ?? '',
-        Origin: item?.Origin ?? '',
-        Destination: item?.Destination ?? '',
-        DateOfFlight: item?.DateOfFlight ?? '',
-        KindOfGood: item?.KindOfGood ?? '',
-        aircraft_registration: item?.aircraft_registration ?? '',
-        route: item?.route ?? '',
-        details: [],
-      });
-    }
-
-    groups.get(groupKey).details.push(createDetailFromItem(item));
-  });
-
-  return Array.from(groups.values()).map((row) => {
-    const details = row.details.length ? row.details : [createEmptyDetail()];
-    return {
-      ...row,
-      total: row.total || getDefaultTotalFromDetails(details),
-      details,
-    };
-  });
-};
-
-const toText = (value) => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  return String(value).trim();
-};
-
 const toNumericString = (value, fallback = '0') => {
   const parsed = parseNumeric(value);
   if (parsed === null) {
     return fallback;
   }
   return Number.isInteger(parsed) ? String(parsed) : String(parsed);
+};
+
+const getTotalPiecesFromDetails = (details) => {
+  const numericPieces = details
+    .map((detail) => parseNumeric(detail?.pieces))
+    .filter((value) => value !== null);
+
+  if (!numericPieces.length) {
+    return details[0]?.pieces ?? '';
+  }
+
+  const sum = numericPieces.reduce((acc, value) => acc + value, 0);
+  return Number.isInteger(sum) ? String(sum) : String(sum);
+};
+
+const getTotalWeightFromDetails = (details) => {
+  const numericWeight = details
+    .map((detail) => parseNumeric(detail?.weight))
+    .filter((value) => value !== null);
+
+  if (!numericWeight.length) {
+    return details[0]?.weight ?? '';
+  }
+
+  const sum = numericWeight.reduce((acc, value) => acc + value, 0);
+  return Number.isInteger(sum) ? String(sum) : String(sum);
+};
+
+const createEmptyDetail = (defaultOwner = '') => ({
+  uld_type: '',
+  uld_number: '',
+  pieces: '',
+  weight: '',
+  uld_owner: defaultOwner || 'FX',
+});
+
+const createDetailFromItem = (item, defaultOwner = '') => ({
+  uld_type: '',
+  uld_number: '',
+  pieces: item?.pieces ?? '',
+  weight: item?.weight ?? '',
+  uld_owner: defaultOwner || 'FX',
+});
+
+const mapMasterRows = (data) => {
+  const groups = new Map();
+
+  (Array.isArray(data) ? data : []).forEach((item, index) => {
+    const mawb = toText(item?.mawb);
+    const groupKey = mawb || `__missing-master-${index}`;
+    const airlineCode = toText(item?.airlines_code);
+    const origin = toText(item?.origin);
+    const dest = toText(item?.dest);
+    const defaultRoute = origin && dest ? `${origin}-${dest}` : '';
+
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, {
+        mawb: mawb,
+        airlines_code: airlineCode,
+        flight_number: toText(item?.flight_number),
+        origin: origin,
+        dest: dest,
+        flight_date: normalizeDateText(item?.flight_date),
+        total_pieces: item?.total_pieces ?? '',
+        total_weight: item?.total_weight ?? '',
+        nature_of_goods: toText(item?.nature_of_goods),
+        aircraft_registration: '',
+        route: defaultRoute,
+        details: [],
+      });
+    }
+
+    const row = groups.get(groupKey);
+    row.details.push(createDetailFromItem(item, row.airlines_code));
+    if (!row.nature_of_goods) {
+      row.nature_of_goods = toText(item?.nature_of_goods);
+    }
+    if (!row.flight_number) {
+      row.flight_number = toText(item?.flight_number);
+    }
+  });
+
+  return Array.from(groups.values()).map((row) => {
+    const details = row.details.length ? row.details : [createEmptyDetail(row.airlines_code)];
+    return {
+      ...row,
+      total_pieces: row.total_pieces || getTotalPiecesFromDetails(details),
+      total_weight: row.total_weight || getTotalWeightFromDetails(details),
+      details,
+    };
+  });
 };
 
 const parseMasterAwb = (masterAwb, fallbackPrefix = '') => {
@@ -165,10 +240,7 @@ const isAcceptedFlightDate = (value) => {
   if (!text) {
     return false;
   }
-  return (
-    /^\d{4}[-/]\d{2}[-/]\d{2}$/.test(text) ||
-    /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(text)
-  );
+  return /^\d{4}[-/]\d{2}[-/]\d{2}$/.test(text) || /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(text);
 };
 
 const mapRowsToManifestPayload = (rows) => {
@@ -179,14 +251,14 @@ const mapRowsToManifestPayload = (rows) => {
   let ignoredDetails = 0;
 
   (Array.isArray(rows) ? rows : []).forEach((row) => {
-    const airlineCode = toText(row?.AirlinesCode);
-    const flightNumber = toText(row?.FlightNo);
-    const flightDate = toText(row?.DateOfFlight);
-    const pointOfLoading = toText(row?.Origin);
-    const pointOfUnloading = toText(row?.Destination);
+    const airlineCode = toText(row?.airlines_code);
+    const flightNumber = toText(row?.flight_number);
+    const flightDate = toText(row?.flight_date);
+    const pointOfLoading = toText(row?.origin);
+    const pointOfUnloading = toText(row?.dest);
     const aircraftRegistration = toText(row?.aircraft_registration);
     const route = toText(row?.route);
-    const natureOfGoods = toText(row?.KindOfGood);
+    const natureOfGoods = toText(row?.nature_of_goods);
 
     if (
       !airlineCode ||
@@ -201,13 +273,15 @@ const mapRowsToManifestPayload = (rows) => {
     }
 
     const details = Array.isArray(row?.details) ? row.details : [];
-    const mawbInfo = parseMasterAwb(row?.MasterAWB, airlineCode);
+    const mawbInfo = parseMasterAwb(row?.mawb, airlineCode);
     if (!mawbInfo.mawb_prefix || !mawbInfo.mawb_number) {
       ignoredMasters += 1;
       return;
     }
-    const rowTotalPieces = parseNumeric(row?.total);
-    const fallbackTotalPieces = rowTotalPieces ?? parseNumeric(getDefaultTotalFromDetails(details)) ?? 0;
+
+    const rowTotalPieces = parseNumeric(row?.total_pieces);
+    const fallbackTotalPieces =
+      rowTotalPieces ?? parseNumeric(getTotalPiecesFromDetails(details)) ?? 0;
 
     const flightKey = `${flightNumber}|${flightDate}`;
     if (!flightMap.has(flightKey)) {
@@ -229,7 +303,7 @@ const mapRowsToManifestPayload = (rows) => {
     details.forEach((detail) => {
       const uldType = toText(detail?.uld_type);
       const uldNumber = toText(detail?.uld_number);
-      const uldOwner = toText(detail?.uld_owner) || 'FX';
+      const uldOwner = toText(detail?.uld_owner) || airlineCode || 'FX';
       if (!uldType || !uldNumber || !pointOfUnloading) {
         ignoredDetails += 1;
         return;
@@ -248,12 +322,11 @@ const mapRowsToManifestPayload = (rows) => {
         });
       }
 
-      const detailPieces = parseNumeric(detail?.Pieces) ?? 0;
-      const detailWeight = parseNumeric(detail?.Weight) ?? 0;
+      const detailPieces = parseNumeric(detail?.pieces) ?? 0;
+      const detailWeight = parseNumeric(detail?.weight) ?? 0;
       masterPiecesAccumulated += detailPieces;
 
       const mawbKey = `${uldKey}|${mawbInfo.mawb_prefix}|${mawbInfo.mawb_number}`;
-      const mawbTotalPieces = fallbackTotalPieces;
       if (!mawbMap.has(mawbKey)) {
         mawbMap.set(mawbKey, {
           flight_number: flightNumber,
@@ -263,12 +336,24 @@ const mapRowsToManifestPayload = (rows) => {
           mawb_prefix: mawbInfo.mawb_prefix,
           mawb_number: mawbInfo.mawb_number,
           pieces: toNumericString(detailPieces),
-          total_pieces: toNumericString(mawbTotalPieces),
+          total_pieces: toNumericString(fallbackTotalPieces),
           weight_kg: toNumericString(detailWeight),
           nature_of_goods: natureOfGoods,
           route: route,
           transit_flag: 0,
         });
+      } else {
+        const existing = mawbMap.get(mawbKey);
+        const nextPieces = (parseNumeric(existing.pieces) ?? 0) + detailPieces;
+        const nextWeight = (parseNumeric(existing.weight_kg) ?? 0) + detailWeight;
+        existing.pieces = toNumericString(nextPieces);
+        existing.weight_kg = toNumericString(nextWeight);
+        if (!existing.nature_of_goods && natureOfGoods) {
+          existing.nature_of_goods = natureOfGoods;
+        }
+        if (!existing.route && route) {
+          existing.route = route;
+        }
       }
 
       const flightRow = flightMap.get(flightKey);
@@ -341,7 +426,7 @@ export default function BuildupForm() {
       }
 
       const foundSet = new Set(
-        result.map((item) => String(item?.MasterAWB ?? '').toUpperCase()).filter(Boolean)
+        result.map((item) => String(item?.mawb ?? '').toUpperCase()).filter(Boolean)
       );
       const missing = masterAwbs.filter((awb) => !foundSet.has(String(awb).toUpperCase()));
       if (missing.length) {
@@ -398,9 +483,16 @@ export default function BuildupForm() {
             : detail
         );
 
+        const shouldRecalculateTotals = fieldKey === 'pieces' || fieldKey === 'weight';
+
         return {
           ...row,
-          total: fieldKey === 'Pieces' ? getDefaultTotalFromDetails(nextDetails) : row.total,
+          total_pieces: shouldRecalculateTotals
+            ? getTotalPiecesFromDetails(nextDetails)
+            : row.total_pieces,
+          total_weight: shouldRecalculateTotals
+            ? getTotalWeightFromDetails(nextDetails)
+            : row.total_weight,
           details: nextDetails,
         };
       })
@@ -414,10 +506,11 @@ export default function BuildupForm() {
           return row;
         }
 
-        const nextDetails = [...row.details, createEmptyDetail()];
+        const nextDetails = [...row.details, createEmptyDetail(row.airlines_code)];
         return {
           ...row,
-          total: getDefaultTotalFromDetails(nextDetails),
+          total_pieces: getTotalPiecesFromDetails(nextDetails),
+          total_weight: getTotalWeightFromDetails(nextDetails),
           details: nextDetails,
         };
       })
@@ -434,12 +527,15 @@ export default function BuildupForm() {
         const nextDetails = row.details.filter(
           (_, currentDetailIndex) => currentDetailIndex !== detailIndex
         );
+        const detailsOrFallback = nextDetails.length
+          ? nextDetails
+          : [createEmptyDetail(row.airlines_code)];
+
         return {
           ...row,
-          total: getDefaultTotalFromDetails(
-            nextDetails.length ? nextDetails : [createEmptyDetail()]
-          ),
-          details: nextDetails.length ? nextDetails : [createEmptyDetail()],
+          total_pieces: getTotalPiecesFromDetails(detailsOrFallback),
+          total_weight: getTotalWeightFromDetails(detailsOrFallback),
+          details: detailsOrFallback,
         };
       })
     );
@@ -470,7 +566,7 @@ export default function BuildupForm() {
     try {
       const formData = new FormData();
       formData.append('payload_json', JSON.stringify(payload));
-      const response = await warehouseClient.uploadFedexManifest(formData);
+      const response = await warehouseClient.submitFedexManifest(formData);
       const successMessage =
         response && typeof response === 'object' && 'message' in response
           ? response.message
@@ -577,11 +673,11 @@ export default function BuildupForm() {
 
           <div className="accordion accordion-header-primary" id="masterAwbAccordion">
             {rows.map((row, rowIndex) => {
-              const rowKey = row.MasterAWB ? `${row.MasterAWB}-${rowIndex}` : `row-${rowIndex}`;
+              const rowKey = row.mawb ? `${row.mawb}-${rowIndex}` : `row-${rowIndex}`;
               const headingId = `heading-${rowIndex}`;
               const collapseId = `collapse-${rowIndex}`;
               const isFirstItem = rowIndex === 0;
-              const masterLabel = row.MasterAWB || `Master AWB #${rowIndex + 1}`;
+              const masterLabel = row.mawb || `Master AWB #${rowIndex + 1}`;
 
               return (
                 <div className="accordion-item" key={rowKey}>
@@ -611,10 +707,20 @@ export default function BuildupForm() {
                             <label className="form-label mb-1">{field.label}</label>
                             <input
                               type={field.type}
-                              className={`form-control form-control-sm ${field.className || ''}`}
+                              className={`form-control form-control-sm ${field.className || ''} ${
+                                field.readOnly ? 'bg-light' : ''
+                              }`}
                               value={row[field.key] ?? ''}
-                              onChange={(event) =>
-                                handleMasterFieldChange(rowIndex, field.key, event.target.value)
+                              readOnly={Boolean(field.readOnly)}
+                              onChange={
+                                field.readOnly
+                                  ? undefined
+                                  : (event) =>
+                                      handleMasterFieldChange(
+                                        rowIndex,
+                                        field.key,
+                                        event.target.value
+                                      )
                               }
                             />
                           </div>

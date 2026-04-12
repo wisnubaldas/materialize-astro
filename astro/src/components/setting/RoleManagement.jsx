@@ -3,7 +3,7 @@ import Spinner from '@components/parsial/Spinner';
 import settingClient from '@lib/api/setting';
 import { showToast } from '@js/utils';
 import { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 const emptyRoleForm = {
   role_name: '',
@@ -237,3 +237,4 @@ export default function RoleManagement() {
     </div>
   );
 }
+

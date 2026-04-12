@@ -15,7 +15,7 @@ from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
 from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.utils.env import ENV
-from app.utils.helper import EMAIL_TEMPLATE_DIR, EXCEL_DIR, PDF_DIR
+from app.utils.helper import EMAIL_TEMPLATE_DIR, PDF_DIR
 from app.utils.logging_config import setup_logging
 
 # Set timezone environment variable
@@ -50,7 +50,6 @@ app = FastAPI(
 )
 # public path
 app.mount("/pdf", StaticFiles(directory=PDF_DIR), name="pdf")
-app.mount("/excel", StaticFiles(directory=EXCEL_DIR), name="excel")
 app.mount("/assets", StaticFiles(directory=EMAIL_TEMPLATE_DIR), name="assets")
 # Setup Skema OpenAPI dengan JWT Auth
 bearer_scheme = HTTPBearer()

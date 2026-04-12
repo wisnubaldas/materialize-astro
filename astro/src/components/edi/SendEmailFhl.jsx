@@ -3,7 +3,7 @@ import Spinner from '@components/parsial/Spinner';
 import { showToast } from '@js/utils';
 import ediClient from '@lib/api/edi';
 import { useEffect, useMemo, useState } from 'react';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 export default function SendEmailFhl({ slug }) {
   console.log(slug);
@@ -179,3 +179,4 @@ export default function SendEmailFhl({ slug }) {
     </>
   );
 }
+

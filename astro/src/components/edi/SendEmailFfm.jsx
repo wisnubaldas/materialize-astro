@@ -1,10 +1,9 @@
 import GridData from '@components/GridData';
 import formatFfmMessage from '@components/edi/ffmGenerator';
 import ediClient from '@lib/api/edi';
-import warehouseClient from '@lib/api/warehouse';
 import { showToast } from '@js/utils';
 import { useEffect, useMemo, useState } from 'react';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 const numberRenderer = (value, type, fractionDigits = 0) => {
   if (type !== 'display' && type !== 'filter') {
@@ -39,55 +38,53 @@ export default function SendEmailFfm({ slug }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [dataAjax, setDataAjax] = useState(null);
-  const flightData = dataAjax?.flight ?? null;
+  const flightData = dataAjax?.buildup ?? dataAjax?.flight ?? null;
   const detailData = Array.isArray(dataAjax?.details) ? dataAjax.details : [];
 
   const formattedTitle = useMemo(() => {
-    const titleRef = flightData?.flight_number ?? slug ?? '';
+    const titleRef = flightData?.flight_number ?? flightData?.buildup_number ?? slug ?? '';
     return `FFM Message (${titleRef})`;
-  }, [flightData?.flight_number, slug]);
+  }, [flightData?.buildup_number, flightData?.flight_number, slug]);
   const detailColumns = useMemo(
     () => [
-      { data: 'uld_type', title: 'ULD Type', className: 'text-uppercase' },
-      { data: 'uld_number', title: 'ULD Number', className: 'text-uppercase' },
-      { data: 'uld_owner', title: 'Owner', className: 'text-uppercase' },
-      { data: 'destination', title: 'Destination', className: 'text-uppercase text-center' },
       {
-        data: 'mawb_number',
+        data: 'MasterAWB',
         title: 'MAWB',
         className: 'text-uppercase',
-        render: (value, type, row) => {
-          if (type !== 'display') {
-            return value ?? '';
-          }
-          const prefix = row?.mawb_prefix ? `${row.mawb_prefix}-` : '';
-          return `${prefix}${value ?? ''}`;
-        },
       },
+      { data: 'BuildUpNumber', title: 'Build Up No', className: 'text-uppercase' },
+      { data: 'TransitCode', title: 'Transit', className: 'text-uppercase' },
+      { data: 'UldCardNumber', title: 'ULD Card', className: 'text-uppercase' },
       {
-        data: 'pieces',
+        data: 'Pieces',
         title: 'Pieces',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'weight_kg',
+        data: 'Netto',
         title: 'Weight (Kg)',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
-      { data: 'nature_of_goods', title: 'Nature of Goods' },
-      { data: 'route', title: 'Route', className: 'text-uppercase' },
       {
-        data: 'transit_flag',
-        title: 'Transit',
-        className: 'text-center',
+        data: 'Volume',
+        title: 'Volume',
+        className: 'text-end',
+        render: (value, type) => numberRenderer(value, type, 2),
+      },
+      { data: 'KindOfGood', title: 'Nature of Goods' },
+      { data: 'Remarks', title: 'Remarks' },
+      {
+        data: 'FFM',
+        title: 'FFM',
+        className: 'text-center text-uppercase',
         render: (value, type) =>
           badgeRenderer(value, type, {
-            trueLabel: 'Transit',
-            falseLabel: 'Direct',
-            trueClass: 'bg-label-warning',
-            falseClass: 'bg-label-success',
+            trueLabel: 'Sent',
+            falseLabel: 'Draft',
+            trueClass: 'bg-label-success',
+            falseClass: 'bg-label-secondary',
           }),
       },
     ],
@@ -137,7 +134,7 @@ export default function SendEmailFfm({ slug }) {
       setLoading(true);
       setError('');
       try {
-        const data = await warehouseClient.manifestFlightDetail(slug);
+        const data = await ediClient.parseBuildupMawb(slug);
         if (!active) return;
         setDataAjax(data);
         setMessage(formatFfmMessage(data, slug));
@@ -155,7 +152,7 @@ export default function SendEmailFfm({ slug }) {
       load();
     } else {
       setLoading(false);
-      setError('Flight ID tidak valid');
+      setError('Build up number tidak valid');
     }
 
     return () => {
@@ -253,3 +250,4 @@ export default function SendEmailFfm({ slug }) {
     </>
   );
 }
+

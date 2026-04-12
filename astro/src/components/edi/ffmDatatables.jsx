@@ -60,11 +60,12 @@ const linkRenderer = (value, type, label = 'View') => {
 };
 
 const createDefaultFilters = () => ({
-  airline_code: '',
-  flight_number: '',
+  number: '',
+  mawb: '',
+  airlines_code: '',
   flight_date: '',
-  point_of_loading: '',
-  point_of_unloading: '',
+  origin: '',
+  dest: '',
 });
 
 export default function FfmDatatables() {
@@ -126,20 +127,11 @@ export default function FfmDatatables() {
           );
         },
       },
+      { data: 'airlines_code', title: 'Airline', className: 'text-uppercase', responsivePriority: 2 },
+      { data: 'number', title: 'Build Up No', className: 'text-uppercase', responsivePriority: 3 },
+      { data: 'mawb', title: 'MAWB', className: 'text-uppercase' },
       {
-        data: 'airline_code',
-        title: 'Airline',
-        className: 'text-uppercase',
-        responsivePriority: 2,
-      },
-      {
-        data: 'flight_number',
-        title: 'Flight',
-        className: 'text-uppercase',
-        responsivePriority: 3,
-      },
-      {
-        data: 'id',
+        data: 'number',
         title: 'Detail',
         className: 'text-center',
         orderable: false,
@@ -149,6 +141,9 @@ export default function FfmDatatables() {
             return value ?? '';
           }
           const linkValue = value ?? '';
+          if (!linkValue) {
+            return '';
+          }
           return `<a class="btn btn-sm btn-primary" href="/edi/send-email/ffm@${linkValue}">Detail</a>`;
         },
       },
@@ -158,35 +153,30 @@ export default function FfmDatatables() {
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type),
       },
-      { data: 'point_of_loading', title: 'Origin', className: 'text-uppercase' },
-      { data: 'point_of_unloading', title: 'Destination', className: 'text-uppercase' },
-      { data: 'aircraft_registration', title: 'Aircraft', className: 'text-uppercase' },
+      { data: 'origin', title: 'Origin', className: 'text-uppercase' },
+      { data: 'dest', title: 'Destination', className: 'text-uppercase' },
+      { data: 'uld_type', title: 'ULD Type', className: 'text-uppercase' },
+      { data: 'uld_number', title: 'ULD Number', className: 'text-uppercase' },
       {
         data: 'total_pieces',
-        title: 'Pieces',
+        title: 'Total Pieces',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'total_weight_kg',
-        title: 'Weight (Kg)',
+        data: 'total_weight',
+        title: 'Total Weight',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
       {
-        data: 'source_document',
-        title: 'Source Excel',
-        className: 'text-nowrap',
-        render: (value, type) => linkRenderer(value, type, 'Excel'),
-      },
-      {
-        data: 'raw_text',
+        data: 'link_pdf',
         title: 'PDF',
         className: 'text-nowrap',
         render: (value, type) => linkRenderer(value, type, 'PDF'),
       },
       {
-        data: 'created_at',
+        data: 'create_at',
         title: 'Dibuat',
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
@@ -197,14 +187,12 @@ export default function FfmDatatables() {
 
   const tableOptions = useMemo(() => {
     const findIndex = (key) => columns.findIndex((col) => col.data === key);
-    const createdIdx = findIndex('created_at');
-    const numberTargets = ['total_pieces', 'total_weight_kg']
-      .map(findIndex)
-      .filter((idx) => idx >= 0);
+    const createdIdx = findIndex('create_at');
+    const numberTargets = ['total_pieces', 'total_weight'].map(findIndex).filter((idx) => idx >= 0);
 
     const defs = [];
     const controlIndex = findIndex(null);
-    const detailIndex = findIndex('id');
+    const detailIndex = columns.findIndex((col) => col.title === 'Detail');
     if (controlIndex >= 0) {
       defs.push({
         targets: controlIndex,
@@ -236,9 +224,9 @@ export default function FfmDatatables() {
       <div className="card-body pb-0">
         <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
           <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Data Manifest Flight (FFM)</h5>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Build Up (FFM)</h5>
             <p className="mb-0 text-muted">
-              Filter berdasarkan flight, origin, destination, atau tanggal.
+              Filter berdasarkan build up number, MAWB, route, dan flight date.
             </p>
           </div>
           <div className="text-muted small">
@@ -248,25 +236,36 @@ export default function FfmDatatables() {
 
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
-            <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Airline</label>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Build Up No</label>
               <input
                 type="text"
-                name="airline_code"
+                name="number"
                 className="form-control"
-                placeholder="FX"
-                value={formFilters.airline_code}
+                placeholder="BL04112026ACKS"
+                value={formFilters.number}
                 onChange={handleChange}
               />
             </div>
             <div className="col-sm-6 col-md-2">
-              <label className="form-label mb-1">Flight</label>
+              <label className="form-label mb-1">MAWB</label>
               <input
                 type="text"
-                name="flight_number"
+                name="mawb"
                 className="form-control"
-                placeholder="FX123"
-                value={formFilters.flight_number}
+                placeholder="023-50032721"
+                value={formFilters.mawb}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Airline</label>
+              <input
+                type="text"
+                name="airlines_code"
+                className="form-control"
+                placeholder="FX"
+                value={formFilters.airlines_code}
                 onChange={handleChange}
               />
             </div>
@@ -284,10 +283,10 @@ export default function FfmDatatables() {
               <label className="form-label mb-1">Origin</label>
               <input
                 type="text"
-                name="point_of_loading"
+                name="origin"
                 className="form-control"
-                placeholder="CGK"
-                value={formFilters.point_of_loading}
+                placeholder="CKG"
+                value={formFilters.origin}
                 onChange={handleChange}
               />
             </div>
@@ -295,10 +294,10 @@ export default function FfmDatatables() {
               <label className="form-label mb-1">Destination</label>
               <input
                 type="text"
-                name="point_of_unloading"
+                name="dest"
                 className="form-control"
-                placeholder="SIN"
-                value={formFilters.point_of_unloading}
+                placeholder="MEM"
+                value={formFilters.dest}
                 onChange={handleChange}
               />
             </div>

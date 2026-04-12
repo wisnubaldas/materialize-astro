@@ -1,0 +1,177 @@
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 8pt;
+    color: #333333;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  color: #000;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.title-main {
+  font-size: 13pt;
+  font-weight: bold;
+}
+
+.title-sub {
+  font-size: 8pt;
+}
+
+.meta-row {
+  margin-bottom: 3px;
+}
+
+.uld-line {
+  font-weight: bold;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.page-break {
+  page-break-after: always;
+}
+
+.manifest-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.manifest-table--mb {
+  margin-bottom: 8px;
+}
+
+.manifest-table--mt {
+  margin-top: 8px;
+}
+
+.manifest-table--fixed {
+  table-layout: fixed;
+}
+
+.manifest-cell-top {
+  vertical-align: top;
+}
+
+.manifest-cell-44 {
+  width: 44%;
+}
+
+.manifest-cell-no-padding {
+  padding: 0;
+}
+
+.manifest-cell-meta {
+  padding: 4px 6px;
+}
+
+.manifest-grid-cell {
+  border: 1px solid #000;
+  padding: 2pt 3pt;
+  vertical-align: top;
+}
+
+table.table-uld {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+table.table-uld td,
+table.table-uld th {
+  border: 1px solid #aaaaaa;
+}
+
+table.table-uld tbody tr:nth-child(even) {
+  background: #d0e4f5;
+}
+
+table.table-uld thead {
+  background: #1c6ea4;
+}
+
+table.table-uld thead th {
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  vertical-align: middle;
+  border-left: 2px solid #d0e4f5;
+}
+
+table.table-uld thead th:first-child {
+  border-left: none;
+}
+
+table.table-uld tfoot .links {
+  text-align: right;
+}
+
+table.table-uld tfoot .links a {
+  display: inline-block;
+  background: #1c6ea4;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+table.table-uld tfoot td {
+  background: #f2f2f2;
+  vertical-align: middle;
+}
+.col-no {
+  width: 28pt;
+}
+
+.col-uld-mawb {
+  width: 146pt;
+}
+
+.col-pieces {
+  width: 74pt;
+}
+
+.col-nature {
+  width: 91pt;
+}
+
+.col-weight {
+  width: 55pt;
+}
+
+.col-dest {
+  width: 41pt;
+}
+
+.col-official {
+  width: 58pt;
+}
+
+.col-remark {
+  width: 45pt;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-bold {
+  font-weight: bold;
+}

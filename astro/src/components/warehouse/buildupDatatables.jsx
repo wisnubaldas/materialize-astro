@@ -1,10 +1,14 @@
 import GridData from '@components/GridData';
-import { Icon } from '@iconify-icon/react';
+import { showToast } from '@js/utils';
 import { API_BASE_URL } from '@lib/api/client';
-import { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
+import warehouseClient, { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+const loadSwal = async () => {
+  const module = await import('sweetalert2/dist/sweetalert2.esm.all.js');
+  return module.default ?? module;
+};
 
 const numberRenderer = (value, type, fractionDigits = 0) => {
   if (type !== 'display' && type !== 'filter') {
@@ -20,18 +24,6 @@ const numberRenderer = (value, type, fractionDigits = 0) => {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   });
-};
-
-const badgeRenderer = (value, type, { trueLabel, falseLabel, trueClass, falseClass }) => {
-  if (type !== 'display') {
-    return value;
-  }
-
-  const isTrue = value === true || value === 1 || value === '1' || value === 'true';
-  const label = isTrue ? trueLabel : falseLabel;
-  const theme = isTrue ? trueClass : falseClass;
-
-  return `<span class="badge rounded-pill ${theme} px-2">${label}</span>`;
 };
 
 const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
@@ -74,13 +66,75 @@ const linkRenderer = (value, type, label = 'View') => {
   return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
 };
 
+const escapeHtml = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 const createDefaultFilters = () => ({
-  airline_code: '',
-  flight_number: '',
+  number_build_up: '',
+  airlines_code: '',
   flight_date: '',
-  point_of_loading: '',
-  point_of_unloading: '',
+  origin: '',
+  dest: '',
 });
+
+const renderDetailHtml = (details) => {
+  if (!Array.isArray(details) || !details.length) {
+    return '<p class="mb-0 text-muted">Detail tidak ditemukan.</p>';
+  }
+
+  const rows = details
+    .map((item, index) => {
+      const pieces = Number.isFinite(Number(item?.pieces)) ? Number(item.pieces).toLocaleString('id-ID') : '-';
+      const weight = Number.isFinite(Number(item?.weight))
+        ? Number(item.weight).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '-';
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(item?.mawb || '-')}</td>
+          <td>${escapeHtml(item?.uld_type || '-')}</td>
+          <td>${escapeHtml(item?.uld_number || '-')}</td>
+          <td class="text-end">${pieces}</td>
+          <td class="text-end">${weight}</td>
+          <td>${escapeHtml(item?.nature_of_goods || '-')}</td>
+          <td>${escapeHtml(item?.remark || '-')}</td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-bordered align-middle mb-0">
+        <thead>
+          <tr>
+            <th style="width:48px">No</th>
+            <th>MAWB</th>
+            <th>ULD Type</th>
+            <th>ULD Number</th>
+            <th class="text-end">Pieces</th>
+            <th class="text-end">Weight</th>
+            <th>Nature Of Goods</th>
+            <th>Remark</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
 
 export default function BuildupDatatables() {
   const tableRef = useRef(null);
@@ -138,79 +192,145 @@ export default function BuildupDatatables() {
     setActiveFilters(reset);
   };
 
+  const handleViewDetail = useCallback(async (headerId, numberBuildUp) => {
+    if (!headerId) {
+      return;
+    }
+
+    try {
+      const details = await warehouseClient.manifestFlightDetail(headerId);
+      const Swal = await loadSwal();
+      await Swal.fire({
+        title: `Detail Build Up ${numberBuildUp || ''}`,
+        html: renderDetailHtml(details),
+        width: '1100px',
+        confirmButtonText: 'Tutup',
+        customClass: {
+          htmlContainer: 'text-start',
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal memuat detail build up.';
+      showToast({
+        type: 'danger',
+        title: 'Detail Build Up',
+        message,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    let containerRef = null;
+    let clickHandlerRef = null;
+    let intervalId = null;
+
+    const attachHandler = () => {
+      const api = tableRef.current?.dt?.();
+      if (!api?.table) {
+        return false;
+      }
+
+      const container = api.table().container();
+      if (!container || containerRef === container) {
+        return Boolean(containerRef);
+      }
+
+      const clickHandler = (event) => {
+        const button = event.target?.closest?.('button.js-view-detail');
+        if (!button) {
+          return;
+        }
+
+        const headerId = Number(button.getAttribute('data-header-id'));
+        const numberBuildUp = button.getAttribute('data-number-build-up') || '';
+        if (!Number.isFinite(headerId)) {
+          return;
+        }
+
+        void handleViewDetail(headerId, numberBuildUp);
+      };
+
+      container.addEventListener('click', clickHandler);
+      containerRef = container;
+      clickHandlerRef = clickHandler;
+      return true;
+    };
+
+    if (!attachHandler()) {
+      intervalId = window.setInterval(() => {
+        if (attachHandler() && intervalId) {
+          window.clearInterval(intervalId);
+          intervalId = null;
+        }
+      }, 300);
+    }
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+      if (containerRef && clickHandlerRef) {
+        containerRef.removeEventListener('click', clickHandlerRef);
+      }
+    };
+  }, [handleViewDetail]);
+
   const columns = useMemo(
     () => [
       {
-        data: null,
-        title: '',
-        defaultContent: '',
-        className: 'dtr-control control text-center',
-        orderable: false,
-        searchable: false,
+        data: 'number_build_up',
+        title: 'Build Up No',
+        className: 'text-uppercase',
         responsivePriority: 1,
-        render: (_value, type) => {
-          if (type !== 'display') {
-            return '';
-          }
-          const markup = renderToStaticMarkup(
-            <Icon icon="line-md:arrow-down-square-twotone" width="20" height="20" />
-          );
-          return (
-            markup ||
-            '<span class="text-primary fw-bold" aria-label="Toggle details">&#9662;</span>'
-          );
-        },
       },
-      {
-        data: 'airline_code',
-        title: 'Airline',
-        className: 'text-uppercase',
-        responsivePriority: 2,
-      },
-      {
-        data: 'flight_number',
-        title: 'Flight',
-        className: 'text-uppercase',
-        responsivePriority: 3,
-      },
+      { data: 'airlines_code', title: 'Airline', className: 'text-uppercase' },
+      { data: 'origin', title: 'Origin', className: 'text-uppercase' },
+      { data: 'dest', title: 'Destination', className: 'text-uppercase' },
       {
         data: 'flight_date',
         title: 'Flight Date',
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type),
       },
-      { data: 'point_of_loading', title: 'Origin', className: 'text-uppercase' },
-      { data: 'point_of_unloading', title: 'Destination', className: 'text-uppercase' },
-      { data: 'aircraft_registration', title: 'Aircraft', className: 'text-uppercase' },
       {
         data: 'total_pieces',
-        title: 'Pieces',
+        title: 'Total Pieces',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type),
       },
       {
-        data: 'total_weight_kg',
-        title: 'Weight (Kg)',
+        data: 'total_weight',
+        title: 'Total Weight',
         className: 'text-end',
         render: (value, type) => numberRenderer(value, type, 2),
       },
+      { data: 'for_official_use', title: 'Official Use', className: 'text-uppercase' },
       {
-        data: 'source_document',
-        title: 'Source Excel',
-        className: 'text-nowrap',
-        render: (value, type) => linkRenderer(value, type, 'Excel'),
-      },
-      {
-        data: 'raw_text',
+        data: 'pdf_link',
         title: 'PDF',
         className: 'text-nowrap',
         render: (value, type) => linkRenderer(value, type, 'PDF'),
       },
       {
-        data: 'created_at',
+        data: 'create_at',
         title: 'Dibuat',
         className: 'text-nowrap',
         render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
+      },
+      {
+        data: null,
+        title: 'Detail',
+        className: 'text-nowrap text-center',
+        orderable: false,
+        searchable: false,
+        render: (_value, type, row) => {
+          if (type !== 'display') {
+            return '';
+          }
+          const headerId = row?.id ?? '';
+          const numberBuildUp = escapeHtml(row?.number_build_up ?? '');
+          return `<button type="button" class="btn btn-sm btn-outline-primary js-view-detail" data-header-id="${headerId}" data-number-build-up="${numberBuildUp}">Lihat Detail</button>`;
+        },
       },
     ],
     []
@@ -218,28 +338,18 @@ export default function BuildupDatatables() {
 
   const tableOptions = useMemo(() => {
     const findIndex = (key) => columns.findIndex((col) => col.data === key);
-    const createdAtIndex = findIndex('created_at');
-    const numberTargets = ['total_pieces', 'total_weight_kg']
+    const createdAtIndex = findIndex('create_at');
+    const numberTargets = ['total_pieces', 'total_weight']
       .map(findIndex)
       .filter((idx) => idx >= 0);
+
     const defs = [];
-
-    const controlIndex = findIndex(null);
-    if (controlIndex >= 0) {
-      defs.push({
-        targets: controlIndex,
-        className: 'dtr-control control text-center',
-        orderable: false,
-        searchable: false,
-      });
-    }
-
     if (numberTargets.length) {
       defs.push({ targets: numberTargets, className: 'text-end' });
     }
 
     return {
-      order: [[createdAtIndex >= 0 ? createdAtIndex : 1, 'desc']],
+      order: [[createdAtIndex >= 0 ? createdAtIndex : 0, 'desc']],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       autoWidth: false,
@@ -252,37 +362,35 @@ export default function BuildupDatatables() {
       <div className="card-body pb-0">
         <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
           <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Data Manifest Flight</h5>
+            <h5 className="mb-1 fw-bold text-uppercase">Data Build Up (Master)</h5>
             <p className="mb-0 text-muted">
-              Gunakan filter di bawah untuk memuat data manifest flight.
+              Tabel menampilkan data header build up. Klik tombol Lihat Detail untuk melihat item detail.
             </p>
           </div>
-          <div className="text-muted small">
-            Menampilkan data yang sudah di build up dari file manifest excel.
-          </div>
+          <div className="text-muted small">Menampilkan data build up yang sudah tersimpan di database.</div>
         </div>
 
         <form onSubmit={handleApply}>
           <div className="row g-2 mb-3">
-            <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Airline</label>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Build Up No</label>
               <input
                 type="text"
-                name="airline_code"
+                name="number_build_up"
                 className="form-control"
-                placeholder="FX"
-                value={formFilters.airline_code}
+                placeholder="BL12042026..."
+                value={formFilters.number_build_up}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-3">
-              <label className="form-label mb-1">Flight Number</label>
+            <div className="col-sm-6 col-md-2">
+              <label className="form-label mb-1">Airline</label>
               <input
                 type="text"
-                name="flight_number"
+                name="airlines_code"
                 className="form-control"
-                placeholder="FX123"
-                value={formFilters.flight_number}
+                placeholder="FX"
+                value={formFilters.airlines_code}
                 onChange={handleChange}
               />
             </div>
@@ -296,25 +404,25 @@ export default function BuildupDatatables() {
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-sm-6 col-md-3">
               <label className="form-label mb-1">Origin</label>
               <input
                 type="text"
-                name="point_of_loading"
+                name="origin"
                 className="form-control"
                 placeholder="CGK"
-                value={formFilters.point_of_loading}
+                value={formFilters.origin}
                 onChange={handleChange}
               />
             </div>
-            <div className="col-sm-6 col-md-2">
+            <div className="col-sm-6 col-md-3">
               <label className="form-label mb-1">Destination</label>
               <input
                 type="text"
-                name="point_of_unloading"
+                name="dest"
                 className="form-control"
-                placeholder="SIN"
-                value={formFilters.point_of_unloading}
+                placeholder="MEM"
+                value={formFilters.dest}
                 onChange={handleChange}
               />
             </div>

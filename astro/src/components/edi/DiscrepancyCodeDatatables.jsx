@@ -4,7 +4,7 @@ import { showToast } from '@js/utils';
 import ediClient, { EDI_DISCREPANCY_CODE_DATATABLE_ENDPOINT } from '@lib/api/edi';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
 
 const severityOptions = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL'];
 
@@ -651,3 +651,4 @@ export default function DiscrepancyCodeDatatables() {
     </div>
   );
 }
+

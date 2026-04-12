@@ -5,7 +5,7 @@ from sqlalchemy import and_, bindparam, func, or_, text
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from app.models.BaseDB1.exp_manifest_mawb import ExpManifestMawb
+from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.fwb import Fwb
 from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
 from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
@@ -23,7 +23,7 @@ from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_hostawb import EksHostAWBOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
+from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
 from app.schemas.imp_masterwaybill import ImpMasterWaybillOut
 from app.schemas.mst_customer_schema import CustomerOut
@@ -229,10 +229,10 @@ class EdiRepository:
             ],
         )
         self.manifest_mawb_datatable_service = DataTablesService(
-            model=ExpManifestMawb,
-            schema=ExpManifestMawbOut,
-            search_columns=["mawb_number", "nature_of_goods", "route"],
-            custom_filters=["mawb_number", "nature_of_goods", "route"],
+            model=BuildUpDetail,
+            schema=BuildUpDetailOut,
+            search_columns=["mawb", "uld_number", "uld_type", "nature_of_goods", "remark"],
+            custom_filters=["header_id", "mawb", "uld_number", "uld_type", "nature_of_goods"],
         )
         self.weighing_datatable_service = DataTablesService(
             model=EksWeighingHeader,
@@ -691,7 +691,7 @@ class EdiRepository:
         }
 
     def manifest_mawb_datatable(self, params: DataTablesParams):
-        """Datatable wrapper for exp_manifest_mawb (DB1)."""
+        """Datatable wrapper for build_up_detail (DB1)."""
         return self.manifest_mawb_datatable_service.get_datatable(db=self.db, params=params)
 
     def get_fwb_by_mawb(self, mawb: str) -> Fwb | None:

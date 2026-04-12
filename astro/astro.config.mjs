@@ -26,7 +26,6 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
-      force: true,
       include: [
         'react',
         'react-dom',
@@ -35,6 +34,7 @@ export default defineConfig({
         'apexcharts',
         'flatpickr',
         'flatpickr/dist/plugins/monthSelect',
+        'sweetalert2/dist/sweetalert2.esm.all.js',
       ],
     },
 

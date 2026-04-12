@@ -17,10 +17,10 @@ from app.dependencies.edi_deps import (
 )
 from app.dependencies.fsu_message_deps import get_fsu_message_service_r, get_fsu_message_service_w
 from app.schemas.awb_mawb_schema import AwbMawbResponse
+from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.schemas.exp_manifest_mawb_schema import ExpManifestMawbOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fsu_message_schema import (
@@ -80,12 +80,12 @@ def export_awb_mawb(
 @router.post(
     "/manifest-mawb",
     summary="MAWB manifest data grid table",
-    response_model=DataTablesResponse[ExpManifestMawbOut],
+    response_model=DataTablesResponse[BuildUpDetailOut],
 )
 def manifest_mawb_datatables(
     params: DataTablesParams, service: EdiService = Depends(get_manifest_mawb_service)
 ):
-    """Datatable for exp_manifest_mawb using DB1 repository."""
+    """Datatable for build_up_detail using DB1 repository."""
     return service.manifest_mawb_datatables(params)
 
 
