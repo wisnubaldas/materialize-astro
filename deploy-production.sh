@@ -76,11 +76,22 @@ if [ -d "$BACKEND_DIR" ]; then
     fi
   fi
 
-  # Ensure build deps for pycairo/xhtml2pdf are available.
-  echo "🧩 Ensuring system deps for pycairo..."
+  # Ensure build + runtime deps for pycairo / WeasyPrint are available.
+  echo "🧩 Ensuring system deps for pycairo/WeasyPrint..."
   if command -v apt-get &>/dev/null; then
     sudo apt-get update -y
-    sudo apt-get install -y libcairo2-dev pkg-config python3-dev build-essential
+    sudo apt-get install -y \
+      build-essential \
+      pkg-config \
+      python3-dev \
+      libcairo2 \
+      libcairo2-dev \
+      pango1.0-tools \
+      libpango-1.0-0 \
+      libpangocairo-1.0-0 \
+      libgdk-pixbuf-2.0-0 \
+      libffi-dev \
+      shared-mime-info
   fi
 
   # Keep env local to project so runtime scripts are predictable.
@@ -113,6 +124,7 @@ if [ -d "$BACKEND_DIR" ]; then
 
   "$BACKEND_DIR/.venv/bin/python" --version
   "$BACKEND_DIR/.venv/bin/python" -c "import cairo; print(cairo.version)"
+  "$BACKEND_DIR/.venv/bin/python" -c "from weasyprint import HTML; HTML(string='<h1>ok</h1>').write_pdf('/tmp/weasyprint-smoke-prod.pdf')"
   "$BACKEND_DIR/.venv/bin/gunicorn" --version
   echo "✅ Backend dependencies installed."
 else
