@@ -2,7 +2,7 @@
   size: A4 portrait;
   margin: 10mm;
   @bottom-right {
-    content: "Page " counter(page) " of " counter(pages);
+    content: 'Page ' counter(page) ' of ' counter(pages);
     font-size: 8pt;
     color: #333333;
   }
@@ -18,7 +18,7 @@ body {
 
 .title {
   text-align: center;
-  margin-bottom: 2px;
+  margin-bottom: 25px;
 }
 
 .title-main {
@@ -86,17 +86,27 @@ body {
 }
 
 table.table-uld {
+  table-layout: fixed;
   width: 100%;
   text-align: left;
   border-collapse: collapse;
 }
 
-table.table-uld td,
+table.table-uld td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 table.table-uld th {
+  white-space: normal;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.2;
   border: 1px solid #aaaaaa;
 }
 
-table.table-uld tbody tr:nth-child(even) {
+table.table-uld tbody tr.mawb-row-highlight {
   background: #d0e4f5;
 }
 
@@ -133,35 +143,35 @@ table.table-uld tfoot td {
   vertical-align: middle;
 }
 .col-no {
-  width: 28pt;
+  width: 22pt;
 }
 
 .col-uld-mawb {
-  width: 146pt;
+  width: 60pt;
 }
 
 .col-pieces {
-  width: 74pt;
+  width: 35pt;
 }
 
 .col-nature {
-  width: 91pt;
+  width: 140pt;
 }
 
 .col-weight {
-  width: 55pt;
+  width: 35pt;
 }
 
 .col-dest {
-  width: 41pt;
+  width: 30pt;
 }
 
 .col-official {
-  width: 58pt;
+  width: 50pt;
 }
 
 .col-remark {
-  width: 45pt;
+  width: 120pt;
 }
 
 .text-center {
@@ -174,4 +184,59 @@ table.table-uld tfoot td {
 
 .text-bold {
   font-weight: bold;
+}
+
+.manifest-meta-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  border: none;
+}
+
+.manifest-meta-table td {
+  padding: 2pt 6pt;
+  vertical-align: middle;
+  border: none;
+}
+
+.meta-col-label-left,
+.meta-col-label-right {
+  width: 24%;
+}
+
+.meta-col-value-left,
+.meta-col-value-right {
+  width: 26%;
+}
+
+.manifest-meta-label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.manifest-meta-value {
+  white-space: nowrap;
+}
+
+.meta-nowrap {
+  white-space: nowrap;
+}
+
+.text-middle {
+  vertical-align: middle;
+}
+
+.uld-title-cell {
+  padding-top: 3pt;
+  padding-bottom: 3pt;
+}
+
+.stacked-line {
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.uld-total-row td {
+  vertical-align: middle;
 }

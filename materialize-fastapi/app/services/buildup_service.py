@@ -189,9 +189,7 @@ def _read_headers(ws, expected: list[str], sheet_name: str) -> list[str | None]:
     return headers
 
 
-def _read_headers_any(
-    ws, expected_groups: list[list[str]], sheet_name: str
-) -> list[str | None]:
+def _read_headers_any(ws, expected_groups: list[list[str]], sheet_name: str) -> list[str | None]:
     header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
     if not header_row:
         raise HTTPException(status_code=400, detail=f"Sheet {sheet_name} tidak memiliki header.")
@@ -275,8 +273,10 @@ class BuildupService:
         flight_rows = payload.get("flight_manifest", [])
         uld_rows = payload.get("uld", [])
         mawb_rows = payload.get("mawb", [])
-        if not isinstance(flight_rows, list) or not isinstance(uld_rows, list) or not isinstance(
-            mawb_rows, list
+        if (
+            not isinstance(flight_rows, list)
+            or not isinstance(uld_rows, list)
+            or not isinstance(mawb_rows, list)
         ):
             raise HTTPException(
                 status_code=400,
@@ -606,7 +606,7 @@ class BuildupService:
             autoescape=select_autoescape(["html", "xml"]),
         )
         manifest = BuildupService._build_manifest_payload(flights)
-
+        print(f"ini kenapa flight? {flights}")
         try:
             template = env.get_template("air_cargo_manifest2.html")
             html_content = template.render(
@@ -643,7 +643,7 @@ class BuildupService:
                     "Gunakan pydyf versi >=0.10 dan <0.12, lalu install ulang dependency."
                 ),
             ) from exc
-        except Exception as exc:
+        except Exception:
             logger.exception("WeasyPrint gagal menghasilkan output PDF build up.")
             raise HTTPException(
                 status_code=500,

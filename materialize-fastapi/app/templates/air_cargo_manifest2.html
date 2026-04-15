@@ -14,42 +14,35 @@
         <div class="title-sub">I.C.A.O ANNEX 9, APPENDIX 3</div>
     </div>
 
-    <table class="manifest-table manifest-table--mb">
-        <tr>
-            <td class="manifest-cell-top"></td>
-            <td class="manifest-cell-top manifest-cell-44 manifest-cell-no-padding">
-                <table class="manifest-table">
-                    <tr>
-                        <td class="manifest-cell-meta">
-                            <span class="label">FLIGHT NR/DATE</span> :
-                            {{ manifest.airline_code }}{{ manifest.flight_number }} / {{ manifest.flight_date }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="manifest-cell-meta">
-                            <span class="label">POINT OF UNLOADING</span> : {{ manifest.point_of_unloading }}
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-
-    <table class="manifest-table manifest-table--mb">
-        <tr>
-            <td class="manifest-cell-meta">
-                <div class="meta-row">
-                    <span class="label">OWNER OF OPERATOR</span> :
-                    {{ "FEDEX" if manifest.airline_code == "FX" else (manifest.airline_code or "-") }}
-                </div>
-                <div class="meta-row">
-                    <span class="label">MARKS OF NAT AND REGS</span> : {{ manifest.aircraft_registration or "-" }}
-                </div>
-                <div>
-                    <span class="label">POINT OF LOADING</span> : {{ manifest.point_of_loading }}
-                </div>
-            </td>
-        </tr>
+    <table class="manifest-meta-table">
+        <colgroup>
+            <col class="meta-col-label-left" />
+            <col class="meta-col-value-left" />
+            <col class="meta-col-label-right" />
+            <col class="meta-col-value-right" />
+        </colgroup>
+        <tbody>
+            <tr>
+                <td class="manifest-meta-label">OWNER OF OPERATOR</td>
+                <td class="manifest-meta-value">: {{ "FEDEX" if manifest.airline_code == "FX" else
+                    (manifest.airline_code or "-") }}</td>
+                <td class="manifest-meta-label">FLIGHT NR/DATE</td>
+                <td class="manifest-meta-value meta-nowrap">: {{ manifest.airline_code }}{{ manifest.flight_number }} /
+                    {{ manifest.flight_date }}</td>
+            </tr>
+            <tr>
+                <td class="manifest-meta-label">MARKS OF NAT AND REGS</td>
+                <td class="manifest-meta-value">: {{ manifest.aircraft_registration or "-" }}</td>
+                <td class="manifest-meta-label">POINT OF UNLOADING</td>
+                <td class="manifest-meta-value">: {{ manifest.point_of_unloading or "-" }}</td>
+            </tr>
+            <tr>
+                <td class="manifest-meta-label">POINT OF LOADING</td>
+                <td class="manifest-meta-value">: {{ manifest.point_of_loading or "-" }}</td>
+                <td class="manifest-meta-label"></td>
+                <td class="manifest-meta-value"></td>
+            </tr>
+        </tbody>
     </table>
 
     {% set grand = namespace(pieces=0, weight=0, has_data=false) %}
@@ -59,9 +52,9 @@
                 <th class="manifest-grid-cell col-no text-center">
                     NO</th>
                 <th class="manifest-grid-cell col-uld-mawb text-center">
-                    ULD NUMBER / MAWB</th>
+                    ULD<br>NUMBER<br>MAWB</th>
                 <th class="manifest-grid-cell col-pieces text-center">
-                    NUMBER OF PIECES</th>
+                    NUMBER<br>OF<br>PIECES</th>
                 <th class="manifest-grid-cell col-nature text-center">
                     NATURE OF GOODS</th>
                 <th class="manifest-grid-cell col-weight text-center">
@@ -78,39 +71,91 @@
             {% if manifest.ulds %}
             {% for uld in manifest.ulds %}
             {% set uld_no = loop.index %}
-            {% if uld.mawbs %}
             {% set totals = namespace(pieces=0, weight=0) %}
+            {% if uld.mawbs %}
             {% for mawb in uld.mawbs %}
             {% set totals.pieces = totals.pieces + (mawb.pieces or 0) %}
             {% set totals.weight = totals.weight + (mawb.weight_kg | float) %}
             {% set grand.pieces = grand.pieces + (mawb.pieces or 0) %}
             {% set grand.weight = grand.weight + (mawb.weight_kg | float) %}
             {% set grand.has_data = true %}
+            {% endfor %}
+            {% endif %}
             <tr>
-                <td class="manifest-grid-cell col-no text-center">
-                    {% if loop.index0 == 0 %}{{ uld_no }}{% endif %}</td>
+                <td class="manifest-grid-cell col-no text-center text-middle" rowspan="{{ 3 if uld.mawbs else 2 }}">
+                    {{ uld_no }}
+                </td>
+                <td class="manifest-grid-cell uld-title-cell" colspan="7">
+                    <span class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner or "-" }}</span>
+                </td>
+            </tr>
+            <tr {% if uld.mawbs %}class="mawb-row-highlight" {% endif %}>
                 <td class="manifest-grid-cell col-uld-mawb">
-                    {% if loop.index0 == 0 %}
-                    <div class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner }}</div>
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">-</div>
                     {% endif %}
-                    <div>{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</div>
                 </td>
                 <td class="manifest-grid-cell col-pieces text-center">
-                    {{ mawb.pieces }}/{{ mawb.total_pieces }}</td>
-                <td class="manifest-grid-cell col-nature">{{
-                    mawb.nature_of_goods or "-" }}</td>
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ mawb.pieces }}/{{ mawb.total_pieces }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">-</div>
+                    {% endif %}
+                </td>
+                <td class="manifest-grid-cell col-nature text-center">
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ mawb.nature_of_goods or "-" }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">-</div>
+                    {% endif %}
+                </td>
                 <td class="manifest-grid-cell col-weight text-right">
-                    {{ mawb.weight_kg }}</td>
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ mawb.weight_kg }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">-</div>
+                    {% endif %}
+                </td>
                 <td class="manifest-grid-cell col-dest text-center">
-                    {{ uld.destination }}</td>
-                <td class="manifest-grid-cell col-official">{{ mawb.route or
-                    "-" }}</td>
-                <td class="manifest-grid-cell col-remark">{{ uld.remarks or
-                    mawb.transit_flag or "-" }}</td>
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ uld.destination or "-" }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">{{ uld.destination or "-" }}</div>
+                    {% endif %}
+                </td>
+                <td class="manifest-grid-cell col-official text-center">
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ mawb.route or "-" }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">-</div>
+                    {% endif %}
+                </td>
+                <td class="manifest-grid-cell col-remark text-center">
+                    {% if uld.mawbs %}
+                    {% for mawb in uld.mawbs %}
+                    <div class="stacked-line">{{ uld.remarks or mawb.transit_flag or "-" }}</div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="stacked-line">{{ uld.remarks or "-" }}</div>
+                    {% endif %}
+                </td>
             </tr>
-            {% endfor %}
-            <tr>
-                <td class="manifest-grid-cell text-bold"></td>
+            {% if uld.mawbs %}
+            <tr class="uld-total-row">
                 <td class="manifest-grid-cell text-bold">TOTAL</td>
                 <td class="manifest-grid-cell text-center text-bold">
                     {{ totals.pieces }}</td>
@@ -120,24 +165,6 @@
                 <td class="manifest-grid-cell text-bold"></td>
                 <td class="manifest-grid-cell text-bold"></td>
                 <td class="manifest-grid-cell text-bold"></td>
-            </tr>
-            {% else %}
-            <tr>
-                <td class="manifest-grid-cell col-no text-center">
-                    {{ uld_no }}</td>
-                <td class="manifest-grid-cell col-uld-mawb">
-                    <div class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner or "-" }}</div>
-                </td>
-                <td class="manifest-grid-cell col-pieces text-center">
-                    -</td>
-                <td class="manifest-grid-cell col-nature">-</td>
-                <td class="manifest-grid-cell col-weight text-right">
-                    -</td>
-                <td class="manifest-grid-cell col-dest text-center">
-                    {{ uld.destination }}</td>
-                <td class="manifest-grid-cell col-official">-</td>
-                <td class="manifest-grid-cell col-remark">{{ uld.remarks or
-                    "-" }}</td>
             </tr>
             {% endif %}
             {% endfor %}
