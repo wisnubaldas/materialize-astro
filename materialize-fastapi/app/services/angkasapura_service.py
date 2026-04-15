@@ -139,7 +139,6 @@ AP2_VOID_HTTPX_TIMEOUT = httpx.Timeout(
 UPLOAD_ALLOWED_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 QUERY_FILES_FOR_INVOICE_LOOKUP = [
     "app/repository/query/get_inv_export.sql",
-    "app/repository/query/get_inv_export_pcp.sql",
     "app/repository/query/get_inv_import.sql",
     "app/repository/query/get_inv_outgoing.sql",
 ]
@@ -1304,7 +1303,7 @@ class INVAp2Service:
                         "invoice": invoice_number,
                         "error": (
                             "Invoice tidak ditemukan pada source query "
-                            "(get_inv_export/get_inv_export_pcp/get_inv_import/get_inv_outgoing)."
+                            "(get_inv_export/get_inv_import/get_inv_outgoing)."
                         ),
                         "missing_fields": missing_required_fields,
                     }
@@ -1504,7 +1503,6 @@ class INVAp2Service:
             query_files = [
                 "app/repository/query/get_inv_export.sql",
                 "app/repository/query/get_inv_import.sql",
-                "app/repository/query/get_inv_export_pcp.sql",
                 "app/repository/query/get_inv_outgoing.sql",
             ]
 
