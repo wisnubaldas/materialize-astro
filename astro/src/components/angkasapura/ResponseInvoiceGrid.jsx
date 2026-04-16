@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GridData from '@components/GridData';
 import { formatDateTime } from '@js/utils';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const escapeHtml = (value) =>
   String(value ?? '')
@@ -92,8 +92,8 @@ const columns = [
         <div class="d-flex flex-column gap-1">
           <span class="text-heading fw-semibold">${escapeHtml(summary.message)}</span>
           <small class="text-muted">HTTP: ${escapeHtml(summary.status)} | Affected: ${escapeHtml(
-        summary.affectedRows
-      )}</small>
+            summary.affectedRows
+          )}</small>
         </div>
       `;
     },
@@ -222,7 +222,11 @@ export default function ResponseInvoiceGrid() {
                 <button type="submit" className="btn btn-primary w-100" disabled={isProcessing}>
                   {isProcessing ? 'Memuat...' : 'Apply'}
                 </button>
-                <button type="button" className="btn btn-label-secondary w-100" onClick={resetFilters}>
+                <button
+                  type="button"
+                  className="btn btn-label-secondary w-100"
+                  onClick={resetFilters}
+                >
                   Reset
                 </button>
               </div>
@@ -233,7 +237,7 @@ export default function ResponseInvoiceGrid() {
 
       <div className="card border-0 shadow-sm">
         <div className="card-body p-0">
-          <div className="card-datatable mb-3">
+          <div className="card-datatable m-3">
             <GridData
               ref={tableRef}
               columns={columns}

@@ -324,7 +324,9 @@ export default function ReportInvoice() {
         <div className="card-body">
           <div className="d-flex flex-wrap align-items-start gap-3 mb-4">
             <div>
-              <small className="text-muted text-uppercase fw-semibold d-block">Grafik Per Bulan</small>
+              <small className="text-muted text-uppercase fw-semibold d-block">
+                Grafik Per Bulan
+              </small>
               <div className="d-flex align-items-center gap-2">
                 <span className="fs-6 fw-semibold text-heading">Tahun</span>
                 <select
@@ -352,7 +354,11 @@ export default function ReportInvoice() {
             </div>
           ) : isLoadingMonthly ? (
             <div className="py-5 text-center text-muted">
-              <div className="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+              <div
+                className="spinner-border text-primary mb-3"
+                role="status"
+                aria-hidden="true"
+              ></div>
               <span>Mengambil data grafik invoice bulanan...</span>
             </div>
           ) : (
@@ -394,7 +400,11 @@ export default function ReportInvoice() {
                 <button type="submit" className="btn btn-primary w-100" disabled={isProcessing}>
                   {isProcessing ? 'Memuat...' : 'Apply'}
                 </button>
-                <button type="button" className="btn btn-label-secondary w-100" onClick={resetFilters}>
+                <button
+                  type="button"
+                  className="btn btn-label-secondary w-100"
+                  onClick={resetFilters}
+                >
                   Reset
                 </button>
               </div>
@@ -405,7 +415,7 @@ export default function ReportInvoice() {
 
       <div className="card border-0 shadow-sm">
         <div className="card-body p-0">
-          <div className="card-datatable mb-3">
+          <div className="card-datatable m-3">
             <GridData
               ref={tableRef}
               columns={columns}
