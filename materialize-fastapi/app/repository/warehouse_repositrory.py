@@ -1,8 +1,11 @@
+import logging
 from pathlib import Path
 
 from sqlalchemy import bindparam, text
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
+from app.models.BaseDB1.build_up_dead_stock import BuildUpDeadStock
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
@@ -11,6 +14,8 @@ from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
 from app.services.datatables_service import DataTablesService
+
+logger = logging.getLogger("warehouse")
 
 
 class WarehouseRepository:
@@ -21,8 +26,9 @@ class WarehouseRepository:
         "updated_at": "update_at",
     }
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, db_dead_stock: Session | None = None):
         self.db = db
+        self.db_dead_stock = db_dead_stock or db
         self.manifest_flight_datatable_service = DataTablesService(
             model=BuildUpHeader,
             schema=ExpManifestFlightOut,
@@ -105,6 +111,36 @@ class WarehouseRepository:
             .all()
         )
 
+    def get_manifest_flight_by_id(self, header_id: int) -> BuildUpHeader | None:
+        return self.db.query(BuildUpHeader).filter(BuildUpHeader.id == header_id).first()
+
+    def delete_manifest_flight(self, header_id: int) -> tuple[bool, str | None]:
+        record = self.get_manifest_flight_by_id(header_id)
+        if not record:
+            return (False, None)
+
+        pdf_link = record.pdf_link
+        detail_ids = [
+            detail_id
+            for (detail_id,) in self.db.query(BuildUpDetail.id)
+            .filter(BuildUpDetail.header_id == header_id)
+            .all()
+        ]
+
+        if detail_ids:
+            self.db.query(BuildUpDeadStock).filter(
+                BuildUpDeadStock.build_up_detail_id.in_(detail_ids)
+            ).delete(synchronize_session=False)
+
+        self.db.delete(record)
+        try:
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
+
+        return (True, pdf_link)
+
     def masterwaybill_datatable(
         self, params: DataTablesParams
     ) -> DataTablesResponse[EksMasterWaybillOut]:
@@ -115,6 +151,16 @@ class WarehouseRepository:
         if not value:
             return ""
         return value.strip().upper()
+
+    @staticmethod
+    def _is_missing_dead_stock_table_error(exc: ProgrammingError) -> bool:
+        original = getattr(exc, "orig", None)
+        if original is not None:
+            args = getattr(original, "args", ())
+            if args and args[0] == 1146:
+                return True
+        message = str(exc).lower()
+        return "build_up_dead_stock" in message and "doesn't exist" in message
 
     def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
         """Fetch build-up master rows from SQL query based on MasterAWB list."""
@@ -139,10 +185,49 @@ class WarehouseRepository:
         result = self.db.execute(sql, {"mawb": unique_awbs})
         rows = [ExportBuildupOut.model_validate(dict(row._mapping)) for row in result]
 
+        dead_stock_rows = []
+        try:
+            dead_stock_rows = (
+                self.db_dead_stock.query(
+                    BuildUpDeadStock.mawb.label("mawb"),
+                    BuildUpDeadStock.pieces.label("pieces"),
+                    BuildUpDeadStock.weight.label("weight"),
+                    BuildUpDeadStock.id.label("id"),
+                )
+                .filter(BuildUpDeadStock.mawb.in_(unique_awbs))
+                .order_by(BuildUpDeadStock.id.desc())
+                .all()
+            )
+        except ProgrammingError as exc:
+            if self._is_missing_dead_stock_table_error(exc):
+                logger.warning(
+                    "Tabel build_up_dead_stock belum tersedia. Fallback ke total default MAWB."
+                )
+                self.db_dead_stock.rollback()
+            else:
+                raise
+
+        dead_stock_by_mawb: dict[str, tuple[int | None, float | None]] = {}
+        for stock in dead_stock_rows:
+            stock_key = self._normalize_awb_key(stock.mawb)
+            if not stock_key or stock_key in dead_stock_by_mawb:
+                continue
+            dead_stock_by_mawb[stock_key] = (
+                int(stock.pieces) if stock.pieces is not None else None,
+                float(stock.weight) if stock.weight is not None else None,
+            )
+
         by_mawb: dict[str, ExportBuildupOut] = {}
         for row in rows:
             key = self._normalize_awb_key(row.mawb)
             if key and key not in by_mawb:
+                dead_stock_totals = dead_stock_by_mawb.get(key)
+                if dead_stock_totals:
+                    pieces, weight = dead_stock_totals
+                    if pieces is not None:
+                        row.total_pieces = pieces
+                    if weight is not None:
+                        row.total_weight = weight
                 by_mawb[key] = row
 
         ordered_rows: list[ExportBuildupOut] = []

@@ -22,6 +22,8 @@ const warehouseClient = {
     apiClient.get<BuildUpDetail[]>(
       `${WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}/${headerId}/details`
     ),
+  manifestFlightDelete: (headerId: number | string) =>
+    apiClient.delete(`${WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}/${headerId}`),
   submitFedexManifest: (formData: FormData) =>
     apiClient.post(WAREHOUSE_FEDEX_MANIFEST_SUBMIT_ENDPOINT, formData),
   masterwaybillBulk: (payload: MasterWaybillBulkRequest) =>

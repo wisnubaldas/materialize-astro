@@ -38,3 +38,4 @@ class BuildUpDetail(BaseDB1):
     create_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
 
     header = relationship("BuildUpHeader", back_populates="details")
+    dead_stocks = relationship("BuildUpDeadStock", back_populates="build_up_detail")

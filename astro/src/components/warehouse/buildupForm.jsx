@@ -2,7 +2,10 @@ import { showToast } from '@js/utils';
 import warehouseClient from '@lib/api/warehouse';
 import { useState } from 'react';
 
-const normalizeAwbKey = (value) => String(value ?? '').trim().toUpperCase();
+const normalizeAwbKey = (value) =>
+  String(value ?? '')
+    .trim()
+    .toUpperCase();
 
 const splitAwbInput = (value) => {
   if (!value) {
@@ -158,6 +161,21 @@ const getTotalWeightFromDetails = (details) => {
   return Number.isInteger(sum) ? String(sum) : String(sum);
 };
 
+const getRemainingFromDetails = (totalValue, details, detailField) => {
+  const total = parseNumeric(totalValue);
+  if (total === null) {
+    return '';
+  }
+
+  const used = (Array.isArray(details) ? details : []).reduce((acc, detail) => {
+    const parsed = parseNumeric(detail?.[detailField]);
+    return acc + (parsed ?? 0);
+  }, 0);
+
+  const remaining = Math.max(total - used, 0);
+  return Number.isInteger(remaining) ? String(remaining) : String(remaining);
+};
+
 const createEmptyDetail = (defaultOwner = '') => ({
   uld_type: '',
   uld_number: '',
@@ -239,16 +257,6 @@ const mapMasterRows = (data) => {
   });
 };
 
-const resolveTotalPieces = (details, fallback = '') => {
-  const calculated = getTotalPiecesFromDetails(details);
-  return calculated === '' ? fallback : calculated;
-};
-
-const resolveTotalWeight = (details, fallback = '') => {
-  const calculated = getTotalWeightFromDetails(details);
-  return calculated === '' ? fallback : calculated;
-};
-
 const parseMasterAwb = (masterAwb, fallbackPrefix = '') => {
   const raw = toText(masterAwb).replace(/\s+/g, '');
   const [left, ...rest] = raw.split('-');
@@ -312,6 +320,9 @@ const mapRowsToManifestPayload = (rows) => {
     const rowTotalPieces = parseNumeric(row?.total_pieces);
     const fallbackTotalPieces =
       rowTotalPieces ?? parseNumeric(getTotalPiecesFromDetails(details)) ?? 0;
+    const rowTotalWeight = parseNumeric(row?.total_weight);
+    const fallbackTotalWeight =
+      rowTotalWeight ?? parseNumeric(getTotalWeightFromDetails(details)) ?? 0;
 
     const flightKey = `${flightNumber}|${flightDate}`;
     if (!flightMap.has(flightKey)) {
@@ -358,20 +369,21 @@ const mapRowsToManifestPayload = (rows) => {
 
       const mawbKey = `${uldKey}|${mawbInfo.mawb_prefix}|${mawbInfo.mawb_number}`;
       if (!mawbMap.has(mawbKey)) {
-        mawbMap.set(mawbKey, {
-          flight_number: flightNumber,
-          flight_date: flightDate,
-          uld_type: uldType,
-          uld_number: uldNumber,
-          mawb_prefix: mawbInfo.mawb_prefix,
-          mawb_number: mawbInfo.mawb_number,
-          pieces: toNumericString(detailPieces),
-          total_pieces: toNumericString(fallbackTotalPieces),
-          weight_kg: toNumericString(detailWeight),
-          nature_of_goods: natureOfGoods,
-          route: route,
-          transit_flag: 0,
-        });
+          mawbMap.set(mawbKey, {
+            flight_number: flightNumber,
+            flight_date: flightDate,
+            uld_type: uldType,
+            uld_number: uldNumber,
+            mawb_prefix: mawbInfo.mawb_prefix,
+            mawb_number: mawbInfo.mawb_number,
+            pieces: toNumericString(detailPieces),
+            total_pieces: toNumericString(fallbackTotalPieces),
+            total_weight_kg: toNumericString(fallbackTotalWeight),
+            weight_kg: toNumericString(detailWeight),
+            nature_of_goods: natureOfGoods,
+            route: route,
+            transit_flag: 0,
+          });
       } else {
         const existing = mawbMap.get(mawbKey);
         const nextPieces = (parseNumeric(existing.pieces) ?? 0) + detailPieces;
@@ -455,9 +467,7 @@ export default function BuildupForm() {
         });
       }
 
-      const foundSet = new Set(
-        result.map((item) => normalizeAwbKey(item?.mawb)).filter(Boolean)
-      );
+      const foundSet = new Set(result.map((item) => normalizeAwbKey(item?.mawb)).filter(Boolean));
       const missing = masterAwbs.filter((awb) => !foundSet.has(normalizeAwbKey(awb)));
       if (missing.length) {
         showToast({
@@ -513,16 +523,8 @@ export default function BuildupForm() {
             : detail
         );
 
-        const shouldRecalculateTotals = fieldKey === 'pieces' || fieldKey === 'weight';
-
         return {
           ...row,
-          total_pieces: shouldRecalculateTotals
-            ? resolveTotalPieces(nextDetails, row.initial_total_pieces)
-            : row.total_pieces,
-          total_weight: shouldRecalculateTotals
-            ? resolveTotalWeight(nextDetails, row.initial_total_weight)
-            : row.total_weight,
           details: nextDetails,
         };
       })
@@ -539,8 +541,6 @@ export default function BuildupForm() {
         const nextDetails = [...row.details, createEmptyDetail(row.airlines_code)];
         return {
           ...row,
-          total_pieces: resolveTotalPieces(nextDetails, row.initial_total_pieces),
-          total_weight: resolveTotalWeight(nextDetails, row.initial_total_weight),
           details: nextDetails,
         };
       })
@@ -563,8 +563,6 @@ export default function BuildupForm() {
 
         return {
           ...row,
-          total_pieces: resolveTotalPieces(detailsOrFallback, row.initial_total_pieces),
-          total_weight: resolveTotalWeight(detailsOrFallback, row.initial_total_weight),
           details: detailsOrFallback,
         };
       })
@@ -708,6 +706,16 @@ export default function BuildupForm() {
               const collapseId = `collapse-${rowIndex}`;
               const isFirstItem = rowIndex === 0;
               const masterLabel = row.mawb || `Master AWB #${rowIndex + 1}`;
+              const remainingPieces = getRemainingFromDetails(
+                row.total_pieces,
+                row.details,
+                'pieces'
+              );
+              const remainingWeight = getRemainingFromDetails(
+                row.total_weight,
+                row.details,
+                'weight'
+              );
 
               return (
                 <div className="accordion-item" key={rowKey}>
@@ -779,19 +787,46 @@ export default function BuildupForm() {
                                 {DETAIL_FIELDS.map((field) => (
                                   <div key={field.key} className="col-12 col-md-6 col-xl-2">
                                     <label className="form-label mb-1">{field.label}</label>
-                                    <input
-                                      type={field.type}
-                                      className={`form-control form-control-sm ${field.className || ''}`}
-                                      value={detail[field.key] ?? ''}
-                                      onChange={(event) =>
-                                        handleDetailFieldChange(
-                                          rowIndex,
-                                          detailIndex,
-                                          field.key,
-                                          event.target.value
-                                        )
-                                      }
-                                    />
+                                    {field.key === 'pieces' || field.key === 'weight' ? (
+                                      <div className="input-group input-group-sm">
+                                        <input
+                                          type={field.type}
+                                          className={`form-control ${field.className || ''}`}
+                                          value={detail[field.key] ?? ''}
+                                          aria-describedby={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
+                                          onChange={(event) =>
+                                            handleDetailFieldChange(
+                                              rowIndex,
+                                              detailIndex,
+                                              field.key,
+                                              event.target.value
+                                            )
+                                          }
+                                        />
+                                        <span
+                                          className="input-group-text"
+                                          id={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
+                                        >
+                                          {field.key === 'pieces'
+                                            ? `Sisa: ${remainingPieces || '-'}`
+                                            : `Sisa: ${remainingWeight || '-'}`}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type={field.type}
+                                        className={`form-control form-control-sm ${field.className || ''}`}
+                                        value={detail[field.key] ?? ''}
+                                        onChange={(event) =>
+                                          handleDetailFieldChange(
+                                            rowIndex,
+                                            detailIndex,
+                                            field.key,
+                                            event.target.value
+                                          )
+                                        }
+                                      />
+                                    )}
                                   </div>
                                 ))}
 

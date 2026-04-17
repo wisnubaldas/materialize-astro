@@ -219,6 +219,44 @@ export default function BuildupDatatables() {
     }
   }, []);
 
+  const handleDeleteManifest = useCallback(async (headerId, numberBuildUp) => {
+    if (!headerId) {
+      return;
+    }
+
+    const titleLabel = numberBuildUp ? ` ${numberBuildUp}` : '';
+    try {
+      const Swal = await loadSwal();
+      const result = await Swal.fire({
+        title: `Hapus Build Up${titleLabel}?`,
+        text: 'Data build up akan dihapus permanen.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal',
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      await warehouseClient.manifestFlightDelete(headerId);
+      showToast({
+        type: 'success',
+        title: 'Build Up',
+        message: 'Data build up berhasil dihapus.',
+      });
+      tableRef.current?.reload?.(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Gagal menghapus data build up.';
+      showToast({
+        type: 'danger',
+        title: 'Build Up',
+        message,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     let containerRef = null;
     let clickHandlerRef = null;
@@ -236,18 +274,28 @@ export default function BuildupDatatables() {
       }
 
       const clickHandler = (event) => {
-        const button = event.target?.closest?.('button.js-view-detail');
-        if (!button) {
+        const detailButton = event.target?.closest?.('button.js-view-detail');
+        if (detailButton) {
+          const headerId = Number(detailButton.getAttribute('data-header-id'));
+          const numberBuildUp = detailButton.getAttribute('data-number-build-up') || '';
+          if (!Number.isFinite(headerId)) {
+            return;
+          }
+
+          void handleViewDetail(headerId, numberBuildUp);
           return;
         }
 
-        const headerId = Number(button.getAttribute('data-header-id'));
-        const numberBuildUp = button.getAttribute('data-number-build-up') || '';
-        if (!Number.isFinite(headerId)) {
-          return;
-        }
+        const deleteButton = event.target?.closest?.('button.js-delete-manifest');
+        if (deleteButton) {
+          const headerId = Number(deleteButton.getAttribute('data-header-id'));
+          const numberBuildUp = deleteButton.getAttribute('data-number-build-up') || '';
+          if (!Number.isFinite(headerId)) {
+            return;
+          }
 
-        void handleViewDetail(headerId, numberBuildUp);
+          void handleDeleteManifest(headerId, numberBuildUp);
+        }
       };
 
       container.addEventListener('click', clickHandler);
@@ -273,7 +321,7 @@ export default function BuildupDatatables() {
         containerRef.removeEventListener('click', clickHandlerRef);
       }
     };
-  }, [handleViewDetail]);
+  }, [handleDeleteManifest, handleViewDetail]);
 
   const columns = useMemo(
     () => [
@@ -319,7 +367,7 @@ export default function BuildupDatatables() {
       },
       {
         data: null,
-        title: 'Detail',
+        title: 'Aksi',
         className: 'text-nowrap text-center',
         orderable: false,
         searchable: false,
@@ -329,7 +377,16 @@ export default function BuildupDatatables() {
           }
           const headerId = row?.id ?? '';
           const numberBuildUp = escapeHtml(row?.number_build_up ?? '');
-          return `<button type="button" class="btn btn-sm btn-outline-primary js-view-detail" data-header-id="${headerId}" data-number-build-up="${numberBuildUp}">Lihat Detail</button>`;
+          return `
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-primary js-view-detail" data-header-id="${headerId}" data-number-build-up="${numberBuildUp}">
+                Lihat Detail
+              </button>
+              <button type="button" class="btn btn-outline-danger js-delete-manifest" data-header-id="${headerId}" data-number-build-up="${numberBuildUp}">
+                Hapus
+              </button>
+            </div>
+          `;
         },
       },
     ],

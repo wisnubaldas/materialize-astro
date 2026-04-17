@@ -9,9 +9,10 @@ from fastapi import HTTPException
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from openpyxl import load_workbook
 from openpyxl.utils.datetime import from_excel
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 from sqlalchemy.orm import Session
 
+from app.models.BaseDB1.build_up_dead_stock import BuildUpDeadStock
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.utils.helper import PDF_DIR
@@ -42,6 +43,22 @@ ULD_HEADERS = [
 ]
 
 MAWB_HEADERS = [
+    "flight_number",
+    "flight_date",
+    "uld_type",
+    "uld_number",
+    "mawb_prefix",
+    "mawb_number",
+    "pieces",
+    "total_pieces",
+    "total_weight_kg",
+    "weight_kg",
+    "nature_of_goods",
+    "route",
+    "transit_flag",
+]
+
+MAWB_HEADERS_WITHOUT_TOTAL_WEIGHT = [
     "flight_number",
     "flight_date",
     "uld_type",
@@ -110,6 +127,22 @@ def _normalize_identifier(value, pad: int | None = None) -> str | None:
     if pad:
         return result.zfill(pad)
     return result
+
+
+def _normalize_awb_key(value: str | None) -> str:
+    if not value:
+        return ""
+    return value.strip().upper()
+
+
+def _is_missing_dead_stock_table_error(exc: ProgrammingError) -> bool:
+    original = getattr(exc, "orig", None)
+    if original is not None:
+        args = getattr(original, "args", ())
+        if args and args[0] == 1146:
+            return True
+    message = str(exc).lower()
+    return "build_up_dead_stock" in message and "doesn't exist" in message
 
 
 def _parse_date(value, field: str, row_idx: int) -> date:
@@ -342,7 +375,11 @@ class BuildupService:
 
         _read_headers(ws_flight, FLIGHT_HEADERS, "flight_manifest")
         _read_headers(ws_uld, ULD_HEADERS, "uld")
-        mawb_headers = _read_headers_any(ws_mawb, [MAWB_HEADERS, MAWB_HEADERS_LEGACY], "mawb")
+        mawb_headers = _read_headers_any(
+            ws_mawb,
+            [MAWB_HEADERS, MAWB_HEADERS_WITHOUT_TOTAL_WEIGHT, MAWB_HEADERS_LEGACY],
+            "mawb",
+        )
 
         flight_entries: dict[tuple[str, date], dict] = {}
         uld_entries: dict[tuple[str, date, str, str], dict] = {}
@@ -431,6 +468,10 @@ class BuildupService:
             flight_entry["ulds"].append(uld_payload)
             uld_entries[uld_key] = uld_payload
 
+        supports_total_pieces = "total_pieces" in mawb_headers
+        supports_total_weight = "total_weight_kg" in mawb_headers
+        mawb_dead_stock_tracker: dict[str, dict] = {}
+
         for idx, row in enumerate(ws_mawb.iter_rows(min_row=2, values_only=True), start=2):
             if not _row_has_values(row):
                 continue
@@ -457,9 +498,49 @@ class BuildupService:
                 )
 
             pieces = _to_int(values.get("pieces"), "pieces", idx)
-            total_pieces = _to_int(values.get("total_pieces"), "total_pieces", idx, default=pieces)
             weight = _to_decimal(values.get("weight_kg"), "weight_kg", idx)
+            total_pieces = (
+                _to_int(values.get("total_pieces"), "total_pieces", idx, default=pieces)
+                if supports_total_pieces
+                else None
+            )
+            total_weight = (
+                _to_decimal(values.get("total_weight_kg"), "total_weight_kg", idx, default=weight)
+                if supports_total_weight
+                else None
+            )
             transit_flag = _to_bool(values.get("transit_flag"))
+            mawb_full_code = f"{mawb_prefix}-{mawb_number}"
+            mawb_key = _normalize_awb_key(mawb_full_code)
+
+            if mawb_key not in mawb_dead_stock_tracker:
+                mawb_dead_stock_tracker[mawb_key] = {
+                    "mawb": mawb_full_code,
+                    "expected_pieces": total_pieces,
+                    "expected_weight": total_weight,
+                    "input_pieces": 0,
+                    "input_weight": Decimal("0"),
+                    "build_up_detail_id": None,
+                }
+            else:
+                tracker = mawb_dead_stock_tracker[mawb_key]
+                if total_pieces is not None:
+                    existing_expected_pieces = tracker.get("expected_pieces")
+                    tracker["expected_pieces"] = (
+                        max(existing_expected_pieces, total_pieces)
+                        if existing_expected_pieces is not None
+                        else total_pieces
+                    )
+                if total_weight is not None:
+                    existing_expected_weight = tracker.get("expected_weight")
+                    tracker["expected_weight"] = (
+                        max(existing_expected_weight, total_weight)
+                        if existing_expected_weight is not None
+                        else total_weight
+                    )
+
+            mawb_dead_stock_tracker[mawb_key]["input_pieces"] += pieces
+            mawb_dead_stock_tracker[mawb_key]["input_weight"] += weight
 
             uld_entry["mawbs"].append(
                 {
@@ -467,6 +548,9 @@ class BuildupService:
                     "mawb_number": mawb_number,
                     "pieces": pieces,
                     "total_pieces": total_pieces,
+                    "total_weight_kg": _format_decimal(total_weight)
+                    if total_weight is not None
+                    else None,
                     "weight_kg": _format_decimal(weight),
                     "nature_of_goods": _normalize_identifier(values.get("nature_of_goods")),
                     "route": _normalize_identifier(values.get("route")),
@@ -544,9 +628,10 @@ class BuildupService:
                 for uld in entry["ulds"]:
                     if uld["mawbs"]:
                         for mawb in uld["mawbs"]:
+                            mawb_full_code = f"{mawb['mawb_prefix']}-{mawb['mawb_number']}"
                             detail_obj = BuildUpDetail(
                                 header_id=header_obj.id,
-                                mawb=f"{mawb['mawb_prefix']}-{mawb['mawb_number']}",
+                                mawb=mawb_full_code,
                                 uld_number=uld["uld_number"],
                                 uld_type=uld["uld_type"],
                                 pieces=mawb["pieces"],
@@ -555,6 +640,16 @@ class BuildupService:
                                 remark=uld.get("remarks") or mawb.get("transit_flag") or None,
                             )
                             db.add(detail_obj)
+                            db.flush()
+                            mawb_tracker = mawb_dead_stock_tracker.get(
+                                _normalize_awb_key(mawb_full_code)
+                            )
+                            if (
+                                mawb_tracker
+                                and not mawb_tracker.get("build_up_detail_id")
+                                and detail_obj.id is not None
+                            ):
+                                mawb_tracker["build_up_detail_id"] = detail_obj.id
                             detail_count += 1
                     else:
                         detail_obj = BuildUpDetail(
@@ -568,7 +663,80 @@ class BuildupService:
                             remark=uld.get("remarks"),
                         )
                         db.add(detail_obj)
+                        db.flush()
                         detail_count += 1
+
+            try:
+                with db.begin_nested():
+                    tracked_mawbs = [tracker["mawb"] for tracker in mawb_dead_stock_tracker.values()]
+                    existing_dead_stocks = []
+                    if tracked_mawbs:
+                        existing_dead_stocks = (
+                            db.query(BuildUpDeadStock)
+                            .filter(BuildUpDeadStock.mawb.in_(tracked_mawbs))
+                            .order_by(BuildUpDeadStock.id.desc())
+                            .all()
+                        )
+                    latest_dead_stock_by_mawb: dict[str, BuildUpDeadStock] = {}
+                    for stock in existing_dead_stocks:
+                        key = _normalize_awb_key(stock.mawb)
+                        if key and key not in latest_dead_stock_by_mawb:
+                            latest_dead_stock_by_mawb[key] = stock
+
+                    for mawb_key, tracker in mawb_dead_stock_tracker.items():
+                        expected_pieces = tracker.get("expected_pieces")
+                        expected_weight = tracker.get("expected_weight")
+                        input_pieces = tracker.get("input_pieces", 0)
+                        input_weight = tracker.get("input_weight", Decimal("0"))
+                        detail_id = tracker.get("build_up_detail_id")
+                        if expected_pieces is None and expected_weight is None:
+                            continue
+
+                        remaining_pieces = None
+                        if expected_pieces is not None:
+                            remaining_pieces = max(int(expected_pieces) - int(input_pieces), 0)
+
+                        remaining_weight = None
+                        if expected_weight is not None:
+                            remaining_weight = expected_weight - input_weight
+                            if remaining_weight < 0:
+                                remaining_weight = Decimal("0")
+
+                        has_remaining = (
+                            (remaining_pieces is not None and remaining_pieces > 0)
+                            or (remaining_weight is not None and remaining_weight > 0)
+                        )
+                        existing_stock = latest_dead_stock_by_mawb.get(mawb_key)
+
+                        if has_remaining:
+                            if existing_stock:
+                                existing_stock.build_up_detail_id = detail_id
+                                existing_stock.pieces = remaining_pieces
+                                existing_stock.weight = (
+                                    float(remaining_weight) if remaining_weight is not None else None
+                                )
+                            else:
+                                db.add(
+                                    BuildUpDeadStock(
+                                        build_up_detail_id=detail_id,
+                                        mawb=tracker["mawb"],
+                                        pieces=remaining_pieces,
+                                        weight=float(remaining_weight)
+                                        if remaining_weight is not None
+                                        else None,
+                                    )
+                                )
+                        elif existing_stock:
+                            existing_stock.build_up_detail_id = detail_id
+                            existing_stock.pieces = None
+                            existing_stock.weight = None
+            except ProgrammingError as exc:
+                if _is_missing_dead_stock_table_error(exc):
+                    logger.warning(
+                        "Tabel build_up_dead_stock belum tersedia. Sinkronisasi dead stock dilewati."
+                    )
+                else:
+                    raise
 
             db.commit()
         except IntegrityError as exc:

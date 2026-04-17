@@ -1,5 +1,6 @@
 import logging
 
+from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.repository.warehouse_repositrory import WarehouseRepository
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -22,6 +23,12 @@ class WarehouseService:
     def manifest_flight_details(self, header_id: int) -> list[BuildUpDetailOut]:
         rows = self.repository.get_manifest_flight_details(header_id)
         return [BuildUpDetailOut.model_validate(row) for row in rows]
+
+    def get_manifest_flight_by_id(self, header_id: int) -> BuildUpHeader | None:
+        return self.repository.get_manifest_flight_by_id(header_id)
+
+    def delete_manifest_flight(self, header_id: int) -> tuple[bool, str | None]:
+        return self.repository.delete_manifest_flight(header_id)
 
     def masterwaybill_datatable(
         self, params: DataTablesParams
