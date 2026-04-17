@@ -110,12 +110,26 @@ class WarehouseRepository:
     ) -> DataTablesResponse[EksMasterWaybillOut]:
         return self.masterwaybill_datatable_service.get_datatable(db=self.db, params=params)
 
+    @staticmethod
+    def _normalize_awb_key(value: str | None) -> str:
+        if not value:
+            return ""
+        return value.strip().upper()
+
     def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
         """Fetch build-up master rows from SQL query based on MasterAWB list."""
         if not master_awbs:
             return []
 
-        unique_awbs = list(dict.fromkeys(master_awbs))
+        unique_awbs: list[str] = []
+        seen_awbs: set[str] = set()
+        for awb in master_awbs:
+            key = self._normalize_awb_key(awb)
+            if not key or key in seen_awbs:
+                continue
+            seen_awbs.add(key)
+            unique_awbs.append(awb.strip())
+
         query_path = (
             Path(__file__).resolve().parent / "query" / "get_export_buildup.sql"
         )
@@ -125,12 +139,17 @@ class WarehouseRepository:
         result = self.db.execute(sql, {"mawb": unique_awbs})
         rows = [ExportBuildupOut.model_validate(dict(row._mapping)) for row in result]
 
-        by_mawb: dict[str, list[ExportBuildupOut]] = {}
+        by_mawb: dict[str, ExportBuildupOut] = {}
         for row in rows:
-            by_mawb.setdefault(row.mawb, []).append(row)
+            key = self._normalize_awb_key(row.mawb)
+            if key and key not in by_mawb:
+                by_mawb[key] = row
 
         ordered_rows: list[ExportBuildupOut] = []
         for awb in unique_awbs:
-            ordered_rows.extend(by_mawb.get(awb, []))
+            key = self._normalize_awb_key(awb)
+            row = by_mawb.get(key)
+            if row:
+                ordered_rows.append(row)
 
         return ordered_rows

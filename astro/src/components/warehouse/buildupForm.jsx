@@ -2,6 +2,8 @@ import { showToast } from '@js/utils';
 import warehouseClient from '@lib/api/warehouse';
 import { useState } from 'react';
 
+const normalizeAwbKey = (value) => String(value ?? '').trim().toUpperCase();
+
 const splitAwbInput = (value) => {
   if (!value) {
     return [];
@@ -15,7 +17,7 @@ const splitAwbInput = (value) => {
   const unique = [];
   const seen = new Set();
   tokens.forEach((awb) => {
-    const key = awb.toUpperCase();
+    const key = normalizeAwbKey(awb);
     if (seen.has(key)) {
       return;
     }
@@ -128,6 +130,8 @@ const toNumericString = (value, fallback = '0') => {
   return Number.isInteger(parsed) ? String(parsed) : String(parsed);
 };
 
+const isBlank = (value) => value === null || value === undefined || value === '';
+
 const getTotalPiecesFromDetails = (details) => {
   const numericPieces = details
     .map((detail) => parseNumeric(detail?.pieces))
@@ -162,11 +166,11 @@ const createEmptyDetail = (defaultOwner = '') => ({
   uld_owner: defaultOwner || 'FX',
 });
 
-const createDetailFromItem = (item, defaultOwner = '') => ({
+const createDetailFromItem = (_item, defaultOwner = '') => ({
   uld_type: '',
   uld_number: '',
-  pieces: item?.pieces ?? '',
-  weight: item?.weight ?? '',
+  pieces: '',
+  weight: '',
   uld_owner: defaultOwner || 'FX',
 });
 
@@ -175,36 +179,48 @@ const mapMasterRows = (data) => {
 
   (Array.isArray(data) ? data : []).forEach((item, index) => {
     const mawb = toText(item?.mawb);
-    const groupKey = mawb || `__missing-master-${index}`;
+    const groupKey = normalizeAwbKey(mawb) || `__missing-master-${index}`;
     const airlineCode = toText(item?.airlines_code);
     const origin = toText(item?.origin);
     const dest = toText(item?.dest);
     const defaultRoute = origin && dest ? `${origin}-${dest}` : '';
+    const totalPieces = item?.total_pieces ?? '';
+    const totalWeight = item?.total_weight ?? '';
 
     if (!groups.has(groupKey)) {
       groups.set(groupKey, {
-        mawb: mawb,
+        mawb,
         airlines_code: airlineCode,
         flight_number: toText(item?.flight_number),
-        origin: origin,
-        dest: dest,
+        origin,
+        dest,
         flight_date: normalizeDateText(item?.flight_date),
-        total_pieces: item?.total_pieces ?? '',
-        total_weight: item?.total_weight ?? '',
+        total_pieces: totalPieces,
+        total_weight: totalWeight,
+        initial_total_pieces: totalPieces,
+        initial_total_weight: totalWeight,
         nature_of_goods: toText(item?.nature_of_goods),
         aircraft_registration: '',
         route: defaultRoute,
-        details: [],
+        details: [createDetailFromItem(item, airlineCode)],
       });
+      return;
     }
 
     const row = groups.get(groupKey);
-    row.details.push(createDetailFromItem(item, row.airlines_code));
     if (!row.nature_of_goods) {
       row.nature_of_goods = toText(item?.nature_of_goods);
     }
     if (!row.flight_number) {
       row.flight_number = toText(item?.flight_number);
+    }
+    if (isBlank(row.total_pieces) && totalPieces !== '') {
+      row.total_pieces = totalPieces;
+      row.initial_total_pieces = totalPieces;
+    }
+    if (isBlank(row.total_weight) && totalWeight !== '') {
+      row.total_weight = totalWeight;
+      row.initial_total_weight = totalWeight;
     }
   });
 
@@ -212,11 +228,25 @@ const mapMasterRows = (data) => {
     const details = row.details.length ? row.details : [createEmptyDetail(row.airlines_code)];
     return {
       ...row,
-      total_pieces: row.total_pieces || getTotalPiecesFromDetails(details),
-      total_weight: row.total_weight || getTotalWeightFromDetails(details),
+      total_pieces: isBlank(row.total_pieces)
+        ? getTotalPiecesFromDetails(details)
+        : row.total_pieces,
+      total_weight: isBlank(row.total_weight)
+        ? getTotalWeightFromDetails(details)
+        : row.total_weight,
       details,
     };
   });
+};
+
+const resolveTotalPieces = (details, fallback = '') => {
+  const calculated = getTotalPiecesFromDetails(details);
+  return calculated === '' ? fallback : calculated;
+};
+
+const resolveTotalWeight = (details, fallback = '') => {
+  const calculated = getTotalWeightFromDetails(details);
+  return calculated === '' ? fallback : calculated;
 };
 
 const parseMasterAwb = (masterAwb, fallbackPrefix = '') => {
@@ -426,9 +456,9 @@ export default function BuildupForm() {
       }
 
       const foundSet = new Set(
-        result.map((item) => String(item?.mawb ?? '').toUpperCase()).filter(Boolean)
+        result.map((item) => normalizeAwbKey(item?.mawb)).filter(Boolean)
       );
-      const missing = masterAwbs.filter((awb) => !foundSet.has(String(awb).toUpperCase()));
+      const missing = masterAwbs.filter((awb) => !foundSet.has(normalizeAwbKey(awb)));
       if (missing.length) {
         showToast({
           type: 'warning',
@@ -488,10 +518,10 @@ export default function BuildupForm() {
         return {
           ...row,
           total_pieces: shouldRecalculateTotals
-            ? getTotalPiecesFromDetails(nextDetails)
+            ? resolveTotalPieces(nextDetails, row.initial_total_pieces)
             : row.total_pieces,
           total_weight: shouldRecalculateTotals
-            ? getTotalWeightFromDetails(nextDetails)
+            ? resolveTotalWeight(nextDetails, row.initial_total_weight)
             : row.total_weight,
           details: nextDetails,
         };
@@ -509,8 +539,8 @@ export default function BuildupForm() {
         const nextDetails = [...row.details, createEmptyDetail(row.airlines_code)];
         return {
           ...row,
-          total_pieces: getTotalPiecesFromDetails(nextDetails),
-          total_weight: getTotalWeightFromDetails(nextDetails),
+          total_pieces: resolveTotalPieces(nextDetails, row.initial_total_pieces),
+          total_weight: resolveTotalWeight(nextDetails, row.initial_total_weight),
           details: nextDetails,
         };
       })
@@ -533,8 +563,8 @@ export default function BuildupForm() {
 
         return {
           ...row,
-          total_pieces: getTotalPiecesFromDetails(detailsOrFallback),
-          total_weight: getTotalWeightFromDetails(detailsOrFallback),
+          total_pieces: resolveTotalPieces(detailsOrFallback, row.initial_total_pieces),
+          total_weight: resolveTotalWeight(detailsOrFallback, row.initial_total_weight),
           details: detailsOrFallback,
         };
       })
