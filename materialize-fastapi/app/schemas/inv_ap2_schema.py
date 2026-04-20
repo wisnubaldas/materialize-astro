@@ -90,3 +90,8 @@ class InvoiceDailySummary(BaseModel):
     month: int
     day: int
     total_sent: int
+
+
+class InvoiceStatusSummary(BaseModel):
+    total_terkirim: int
+    total_belum_terkirim: int

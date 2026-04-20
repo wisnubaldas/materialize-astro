@@ -46,6 +46,16 @@ const formatDecimal = (value) => {
   }).format(amount);
 };
 
+const formatCount = (value) => {
+  const amount = Number(value ?? 0);
+  if (!Number.isFinite(amount)) {
+    return '0';
+  }
+  return new Intl.NumberFormat('id-ID', {
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
 const normalizeMonthlySeries = (payload) =>
   MONTH_LABELS.map((_, index) => {
     if (!Array.isArray(payload)) {
@@ -126,12 +136,20 @@ const createDefaultFilters = () => ({
   tanggal: '',
 });
 
+const createDefaultStatusSummary = () => ({
+  total_terkirim: 0,
+  total_belum_terkirim: 0,
+});
+
 export default function ReportInvoice() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [monthlySeriesData, setMonthlySeriesData] = useState(() => MONTH_LABELS.map(() => 0));
   const [isLoadingMonthly, setIsLoadingMonthly] = useState(true);
   const [errorMonthly, setErrorMonthly] = useState('');
+  const [statusSummary, setStatusSummary] = useState(() => createDefaultStatusSummary());
+  const [isLoadingStatusSummary, setIsLoadingStatusSummary] = useState(true);
+  const [errorStatusSummary, setErrorStatusSummary] = useState('');
 
   const endpoint = '/angkasapura/report-invoice/datatables';
   const tableRef = useRef(null);
@@ -193,6 +211,54 @@ export default function ReportInvoice() {
       isMounted = false;
     };
   }, [selectedYear]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchStatusSummary = async () => {
+      setIsLoadingStatusSummary(true);
+      setErrorStatusSummary('');
+
+      try {
+        const params = activeFilters.tanggal ? { tanggal: activeFilters.tanggal } : undefined;
+        const response = await apiClient.get(
+          '/angkasapura/report-invoice/status-summary',
+          params ? { params } : undefined
+        );
+
+        const totalTerkirim = Number(response?.total_terkirim ?? 0);
+        const totalBelumTerkirim = Number(response?.total_belum_terkirim ?? 0);
+
+        if (isMounted) {
+          setStatusSummary({
+            total_terkirim: Number.isFinite(totalTerkirim) ? totalTerkirim : 0,
+            total_belum_terkirim: Number.isFinite(totalBelumTerkirim) ? totalBelumTerkirim : 0,
+          });
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = error?.message || 'Gagal mengambil ringkasan status invoice.';
+          setErrorStatusSummary(message);
+          setStatusSummary(createDefaultStatusSummary());
+          showToast({
+            type: 'danger',
+            message,
+            title: 'Report Invoice',
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingStatusSummary(false);
+        }
+      }
+    };
+
+    fetchStatusSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeFilters.tanggal]);
 
   const monthlyChartOptions = useMemo(
     () => ({
@@ -320,6 +386,43 @@ export default function ReportInvoice() {
         </p>
       </div>
 
+      {errorStatusSummary ? (
+        <div className="alert alert-warning mb-4" role="alert">
+          {errorStatusSummary}
+        </div>
+      ) : null}
+
+      <div className="row g-3 mb-4">
+        <div className="col-md-6">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <small className="text-muted text-uppercase fw-semibold d-block mb-1">
+                Status Invoice
+              </small>
+              <h6 className="mb-2">Terkirim</h6>
+              <small className="text-muted d-block mb-2">Sumber data: inv_ap2.status = 1</small>
+              <span className="fs-4 fw-bold text-success">
+                {isLoadingStatusSummary ? '...' : formatCount(statusSummary.total_terkirim)}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <small className="text-muted text-uppercase fw-semibold d-block mb-1">
+                Status Invoice
+              </small>
+              <h6 className="mb-2">Belum Terkirim</h6>
+              <small className="text-muted d-block mb-2">Sumber data: inv_ap2.status = 0</small>
+              <span className="fs-4 fw-bold text-danger">
+                {isLoadingStatusSummary ? '...' : formatCount(statusSummary.total_belum_terkirim)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-body">
           <div className="d-flex flex-wrap align-items-start gap-3 mb-4">
@@ -344,7 +447,7 @@ export default function ReportInvoice() {
             </div>
             <div className="ms-md-auto text-end">
               <small className="text-muted text-uppercase fw-semibold d-block">Total Invoice</small>
-              <span className="fs-4 fw-bold text-primary">{totalInvoicesByYear}</span>
+              <span className="fs-4 fw-bold text-primary">{formatCount(totalInvoicesByYear)}</span>
             </div>
           </div>
 

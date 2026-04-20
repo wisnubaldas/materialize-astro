@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.inv_ap2_schema import InvoiceGet
+from app.schemas.inv_ap2_schema import InvoiceGet, InvoiceStatusSummary
 from app.schemas.invoice_daily_counter_schema import (
     InvoiceDailyCounterGet,
     InvoiceDailyCounterMonthlySummary,
@@ -67,6 +67,16 @@ def report_invoice_datatables(params: DataTablesParams, db: Session = Depends(ge
 def report_invoice_monthly(tahun: int, db: Session = Depends(get_db1_r)):
     """Serve grafik report invoice per bulan dari tabel `invoice_daily_counter`."""
     return INVAp2Service.report_invoice_monthly(db=db, tahun=tahun)
+
+
+@router.get(
+    "/report-invoice/status-summary",
+    response_model=InvoiceStatusSummary,
+    summary="Ringkasan status terkirim vs belum terkirim dari inv_ap2",
+)
+def report_invoice_status_summary(tanggal: str | None = None, db: Session = Depends(get_db1_r)):
+    """Serve ringkasan status invoice dari tabel `inv_ap2`."""
+    return INVAp2Service.report_invoice_status_summary(db=db, tanggal=tanggal)
 
 
 @router.post("/void-invoice", response_model=VoidInvoiceSchemaResponse)

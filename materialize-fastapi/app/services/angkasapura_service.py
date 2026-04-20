@@ -20,7 +20,7 @@ import pandas as pd
 import requests
 from fastapi import HTTPException, UploadFile
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import func, text
+from sqlalchemy import case, func, text
 from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
@@ -38,6 +38,7 @@ from app.schemas.inv_ap2_schema import (
     InvoiceDailySummary,
     InvoiceGet,
     InvoiceMonthlySummary,
+    InvoiceStatusSummary,
 )
 from app.schemas.invoice_daily_counter_schema import (
     InvoiceDailyCounterGet,
@@ -2182,3 +2183,33 @@ class INVAp2Service:
             for row in rows
             if row.year is not None and row.month is not None
         ]
+
+    @staticmethod
+    def report_invoice_status_summary(db: Session, tanggal: str | None = None) -> InvoiceStatusSummary:
+        if tanggal:
+            if not MONTH_PATTERN.match(tanggal):
+                raise HTTPException(
+                    status_code=400, detail="Format tanggal tidak valid. Gunakan YYYY-MM."
+                )
+            month_prefix = tanggal
+        else:
+            month_prefix = None
+
+        query = db.query(
+            func.coalesce(func.sum(case((InvAp2.status == 1, 1), else_=0)), 0).label(
+                "total_terkirim"
+            ),
+            func.coalesce(func.sum(case((InvAp2.status == 0, 1), else_=0)), 0).label(
+                "total_belum_terkirim"
+            ),
+        )
+
+        if month_prefix:
+            query = query.filter(InvAp2.TANGGAL.like(f"{month_prefix}%"))
+
+        result = query.one()
+
+        return InvoiceStatusSummary(
+            total_terkirim=int(result.total_terkirim or 0),
+            total_belum_terkirim=int(result.total_belum_terkirim or 0),
+        )

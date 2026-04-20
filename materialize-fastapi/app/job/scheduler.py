@@ -1,5 +1,5 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import pytz
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.job.get_imp_breakdown_hubnet_job import run_breakdown
 from app.job.get_inc_hubnet import run_incoming
@@ -78,7 +78,7 @@ def init_scheduler():
     scheduler.add_job(
         INVAp2Service.send_invoice,
         "interval",
-        minutes=10,
+        minutes=5,
         id="send_invoice_job",
         max_instances=1,  # 👈 hanya 1 instance yang boleh berjalan
         coalesce=False,
