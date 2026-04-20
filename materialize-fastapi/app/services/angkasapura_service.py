@@ -1792,7 +1792,7 @@ class INVAp2Service:
                 message="Mulai kirim invoice",
             )
 
-            sql = text("SELECT * FROM inv_ap2 WHERE status = 0 LIMIT 10")
+            sql = text("SELECT * FROM inv_ap2 WHERE status = 0 LIMIT 100")
             rows = db1.execute(sql).fetchall()
             if not rows:
                 msg = "Invoice not found"
