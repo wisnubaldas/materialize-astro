@@ -1,4 +1,11 @@
+-- Refactored from procedure `send_invoice_imp` into plain parameterized query
+-- Parameters:
+--   :hari        -> match a.DateOfTransaction (YYYY-MM-DD)
+-- penambahan field dengan nilai statis DOM_INT dan INC_OUT
+
 SELECT DISTINCT
+    'I' AS DOM_INT,
+    'O' AS INC_OUT,
     a.PaymentCode,
     a.CustomerCode,
     a.InvoiceNumber,

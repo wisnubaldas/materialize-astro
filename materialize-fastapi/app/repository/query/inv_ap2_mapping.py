@@ -11,7 +11,7 @@ Alur pakai singkat:
 """
 
 # Nilai default/konstan untuk field inv_ap2.
-# Nilai ini akan overwrite jika key yang sama sudah ada dari hasil mapping query.
+# Dipakai sebagai fallback jika field belum ada dari hasil mapping query.
 INVTOAP2INV_BASE = {
     "DOM_INT": "I",
     "PJT_HANDLING_FEE": "0",

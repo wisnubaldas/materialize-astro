@@ -207,6 +207,15 @@ INVOICE_FILTER_PATTERN = re.compile(
 )
 INVOICE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)InvoiceNumber\b", flags=re.IGNORECASE)
 DATE_COLUMN_REF_PATTERN = re.compile(r"(?P<prefix>\b\w+\.)DateOfTransaction\b", flags=re.IGNORECASE)
+HOST_AWB_FILTER_PATTERN = re.compile(
+    r"\b\w+\.Host(?:AWB|MAWB)\s*=\s*:host_awb\b",
+    flags=re.IGNORECASE,
+)
+HOST_AWB_COLUMN_ALIAS_PATTERN = re.compile(
+    r"(?P<column>\b\w+\.Host(?:AWB|MAWB))\s+AS\s+HostMAWB\b",
+    flags=re.IGNORECASE,
+)
+HOST_AWB_COLUMN_REF_PATTERN = re.compile(r"(?P<column>\b\w+\.Host(?:AWB|MAWB))\b", flags=re.IGNORECASE)
 REQUIRED_HEADER_KEYS = {"INVOICE NO", "DATE OF TRANSACTION", "M-AWB", "AIRLINES", "FLIGHT NO"}
 REQUIRED_HEADER_DISPLAY = "Invoice No, Date Of Transaction, M-AWB, Airlines, Flight No"
 UPLOAD_INVOICE_AP2_CHANNEL = "upload_invoice_ap2_channel"
@@ -236,49 +245,6 @@ def build_debug_message(source: str, message: str, run_id: str | None = None) ->
     if run_id:
         return f"[{source}][{run_id}] {message}"
     return f"[{source}] {message}"
-
-
-DOM_INC_OUT_SQL = text(
-    """
-    SELECT
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM eks_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM imp_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM imp_invoicepecahpos WHERE InvoiceNumber = :invoice_number LIMIT 1
-            ) THEN 'I'
-            WHEN EXISTS (
-                SELECT 1 FROM inc_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM out_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            ) THEN 'D'
-            ELSE NULL
-        END AS DOM_INT,
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM eks_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM out_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            ) THEN 'O'
-            WHEN EXISTS (
-                SELECT 1 FROM imp_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM imp_invoicepecahpos WHERE InvoiceNumber = :invoice_number LIMIT 1
-            )
-            OR EXISTS (
-                SELECT 1 FROM inc_invoiceheader WHERE InvoiceNumber = :invoice_number LIMIT 1
-            ) THEN 'I'
-            ELSE NULL
-        END AS INC_OUT
-    """
-)
 
 
 # Helper utilities
@@ -1073,13 +1039,47 @@ class INVAp2Service:
         return f"{normalized_query}\nWHERE {invoice_column_ref} = :invoice_number"
 
     @staticmethod
+    def _resolve_host_awb_column_ref(normalized_query: str) -> str:
+        alias_match = HOST_AWB_COLUMN_ALIAS_PATTERN.search(normalized_query)
+        if alias_match:
+            return alias_match.group("column")
+
+        ref_match = HOST_AWB_COLUMN_REF_PATTERN.search(normalized_query)
+        if ref_match:
+            return ref_match.group("column")
+
+        return "HostMAWB"
+
+    @staticmethod
+    def _prepare_host_awb_lookup_sql(raw_query: str) -> str:
+        normalized_query = raw_query.strip().rstrip(";")
+        normalized_query = HARI_PARAM_PATTERN.sub(":host_awb", normalized_query)
+        host_awb_column_ref = INVAp2Service._resolve_host_awb_column_ref(normalized_query)
+
+        if HOST_AWB_FILTER_PATTERN.search(normalized_query):
+            return normalized_query
+
+        date_filter_pattern = re.compile(
+            r"(?P<prefix>\b\w+\.)DateOfTransaction\s*=\s*:host_awb\b",
+            flags=re.IGNORECASE,
+        )
+        if date_filter_pattern.search(normalized_query):
+            return date_filter_pattern.sub(f"{host_awb_column_ref} = :host_awb", normalized_query)
+
+        if re.search(r"\bWHERE\b", normalized_query, flags=re.IGNORECASE):
+            return f"{normalized_query}\n  AND {host_awb_column_ref} = :host_awb"
+
+        return f"{normalized_query}\nWHERE {host_awb_column_ref} = :host_awb"
+
+    @staticmethod
     @lru_cache(maxsize=1)
-    def _build_lookup_query_texts() -> tuple[tuple[str, Any], ...]:
-        query_texts: list[tuple[str, Any]] = []
+    def _build_lookup_query_texts() -> tuple[tuple[str, Any, Any], ...]:
+        query_texts: list[tuple[str, Any, Any]] = []
         for path in QUERY_FILES_FOR_INVOICE_LOOKUP:
             raw_query = HELPER.load_sql_query(path)
-            lookup_query = INVAp2Service._prepare_invoice_lookup_sql(raw_query)
-            query_texts.append((path, text(lookup_query)))
+            invoice_lookup_query = INVAp2Service._prepare_invoice_lookup_sql(raw_query)
+            host_awb_lookup_query = INVAp2Service._prepare_host_awb_lookup_sql(raw_query)
+            query_texts.append((path, text(invoice_lookup_query), text(host_awb_lookup_query)))
         return tuple(query_texts)
 
     @staticmethod
@@ -1096,12 +1096,15 @@ class INVAp2Service:
     def _lookup_invoice_reference_data(
         db2: Session,
         invoice_number: str,
-        lookup_queries: list[tuple[str, Any]],
+        host_awb: str | None,
+        lookup_queries: tuple[tuple[str, Any, Any], ...],
     ) -> tuple[dict[str, Any], str | None]:
-        for query_path, query_sql in lookup_queries:
+        for query_path, query_sql_by_invoice, query_sql_by_host_awb in lookup_queries:
             try:
                 result = (
-                    db2.execute(query_sql, {"invoice_number": invoice_number}).mappings().first()
+                    db2.execute(query_sql_by_invoice, {"invoice_number": invoice_number})
+                    .mappings()
+                    .first()
                 )
             except Exception:
                 logger.exception(
@@ -1112,27 +1115,24 @@ class INVAp2Service:
                 continue
             if result:
                 return INVAp2Service._map_query_row_to_invoice_payload(dict(result)), query_path
+
+            if not host_awb:
+                continue
+            try:
+                result = (
+                    db2.execute(query_sql_by_host_awb, {"host_awb": host_awb}).mappings().first()
+                )
+            except Exception:
+                logger.exception(
+                    "Gagal lookup HostAWB %s dari query %s",
+                    host_awb,
+                    query_path,
+                )
+                continue
+            if result:
+                return INVAp2Service._map_query_row_to_invoice_payload(dict(result)), query_path
+
         return {}, None
-
-    @staticmethod
-    def _lookup_dom_int_inc_out(db2: Session, invoice_number: str) -> dict[str, str]:
-        try:
-            row = (
-                db2.execute(DOM_INC_OUT_SQL, {"invoice_number": invoice_number}).mappings().first()
-            )
-        except Exception:
-            logger.exception("Gagal lookup DOM_INT/INC_OUT untuk invoice %s", invoice_number)
-            return {}
-
-        if not row:
-            return {}
-
-        result: dict[str, str] = {}
-        if row.get("DOM_INT"):
-            result["DOM_INT"] = str(row["DOM_INT"])
-        if row.get("INC_OUT"):
-            result["INC_OUT"] = str(row["INC_OUT"])
-        return result
 
     @staticmethod
     def _get_excel_value(
@@ -1200,9 +1200,8 @@ class INVAp2Service:
             normalize_excel_header(column): column for column in dataframe.columns
         }
         lookup_queries = INVAp2Service._build_lookup_query_texts()
-        invoice_lookup_cache: dict[str, dict[str, Any]] = {}
-        invoice_lookup_source_cache: dict[str, str | None] = {}
-        dom_inc_lookup_cache: dict[str, dict[str, str]] = {}
+        invoice_lookup_cache: dict[tuple[str, str], dict[str, Any]] = {}
+        invoice_lookup_source_cache: dict[tuple[str, str], str | None] = {}
 
         pending_records: list[dict[str, Any]] = []
         validation_errors: list[dict[str, Any]] = []
@@ -1254,30 +1253,28 @@ class INVAp2Service:
                 continue
 
             mapped_row["NO_INVOICE"] = invoice_number
+            host_awb = normalize_value(mapped_row.get("HAWB"))
+            host_awb = str(host_awb).strip() if host_awb is not None else ""
+            if host_awb:
+                mapped_row["HAWB"] = host_awb
 
-            if invoice_number not in invoice_lookup_cache:
+            lookup_key = (invoice_number, host_awb)
+            if lookup_key not in invoice_lookup_cache:
                 ref_payload, source_query = INVAp2Service._lookup_invoice_reference_data(
                     db2=db2,
                     invoice_number=invoice_number,
+                    host_awb=host_awb or None,
                     lookup_queries=lookup_queries,
                 )
-                invoice_lookup_cache[invoice_number] = ref_payload
-                invoice_lookup_source_cache[invoice_number] = source_query
-            ref_data = invoice_lookup_cache[invoice_number]
-            source_query = invoice_lookup_source_cache.get(invoice_number)
+                invoice_lookup_cache[lookup_key] = ref_payload
+                invoice_lookup_source_cache[lookup_key] = source_query
+            ref_data = invoice_lookup_cache[lookup_key]
+            source_query = invoice_lookup_source_cache.get(lookup_key)
             for field, value in ref_data.items():
-                if is_empty_value(mapped_row.get(field)):
+                if field in {"DOM_INT", "INC_OUT"} and not is_empty_value(value):
                     mapped_row[field] = value
-
-            if invoice_number not in dom_inc_lookup_cache:
-                dom_inc_lookup_cache[invoice_number] = INVAp2Service._lookup_dom_int_inc_out(
-                    db2=db2, invoice_number=invoice_number
-                )
-            dom_inc_data = dom_inc_lookup_cache[invoice_number]
-            if dom_inc_data.get("DOM_INT"):
-                mapped_row["DOM_INT"] = dom_inc_data["DOM_INT"]
-            if dom_inc_data.get("INC_OUT"):
-                mapped_row["INC_OUT"] = dom_inc_data["INC_OUT"]
+                elif is_empty_value(mapped_row.get(field)):
+                    mapped_row[field] = value
 
             if (
                 is_empty_value(mapped_row.get("JENIS_KARGO"))
@@ -1537,8 +1534,9 @@ class INVAp2Service:
                             else:
                                 mapped_row[field_name] = v
 
-                    # Hardcode values (overwrite jika ada di query)
-                    mapped_row.update(INVTOAP2INV_BASE)  # type: ignore
+                    # Inject nilai default hanya jika field belum ada dari query.
+                    for base_field, base_value in INVTOAP2INV_BASE.items():
+                        mapped_row.setdefault(base_field, base_value)
 
                     # Validasi dan normalisasi via schema
                     invoice_schema = InvoiceCreate(**mapped_row)  # type: ignore

@@ -1,9 +1,11 @@
 -- Refactored from outgoing invoice source query
 -- Parameters:
 --   :hari        -> match a.DateOfTransaction (YYYY-MM-DD)
-
+-- penambahan field dengan nilai statis DOM_INT dan INC_OUT
 SELECT
-  a.PaymentCode,
+    'D' AS DOM_INT,
+    'O' AS INC_OUT,
+    a.PaymentCode,
     a.CustomerCode,
     a.InvoiceNumber,
     a.DateOfTransaction,
