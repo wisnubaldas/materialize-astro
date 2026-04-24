@@ -60,7 +60,6 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
   - `templates/`
 - Dependency Injection: wajib konsisten di service/repository
 - Business logic dilarang di route/controller
-- Wajib menambahkan Docstring definisi modul, fungsi, kelas, atau metode dalam Python untuk mendokumentasikan kode
 
 ### Frontend (astro)
 
@@ -69,7 +68,6 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 - Language: **JavaScript only**
 - Gunakan file: `.js`, `.jsx`, `.astro`
 - Dilarang membuat file: `.ts`, `.tsx`
-- Wajib baca refrensi UI di `https://demos.pixinvent.com/materialize-html-admin-template/documentation/` ketika membuat komponent
 
 ---
 
@@ -82,6 +80,7 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 - `__init__.py` untuk exposing module secara rapi
 - Error response API konsisten (format terstandar)
 - Wajib ada Docstring pada class dan fungsi sebagai dokumentasi
+- Wajib menambahkan Docstring definisi modul, fungsi, kelas, atau metode dalam Python untuk mendokumentasikan kode
 
 ### Frontend Standards
 
@@ -89,6 +88,7 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 - Penanganan unauthorized (`401/403`) konsisten di UI
 - Pembuatan Components dan Pages wajib merujuk ke dokumentasi UI
 - Pastikan membuat Generic Components jika memungkinkan akan digunakan kembali
+- Wajib baca refrensi UI di `https://demos.pixinvent.com/materialize-html-admin-template/documentation/` ketika membuat komponent
 
 ## PROGRESS REPORT FILE (WAJIB)
 
@@ -110,3 +110,4 @@ Setelah eksekusi perubahan kode:
 ## IMPORTANT
 
 - setiap selesai eksekusi selalu commit ke remote office dan origin branch master
+- beri keterangan comitan yang logis
