@@ -10,7 +10,12 @@ const loadSwal = async () => {
   return module.default ?? module;
 };
 
-const SWEET_ALERT_Z_INDEX = 2000;
+const SWEET_ALERT_Z_INDEX = 3000;
+
+const getSwalBaseOptions = () => ({
+  zIndex: SWEET_ALERT_Z_INDEX,
+  target: typeof document !== 'undefined' ? document.body : undefined,
+});
 
 const numberRenderer = (value, type, fractionDigits = 0) => {
   if (type !== 'display' && type !== 'filter') {
@@ -203,10 +208,10 @@ export default function BuildupDatatables() {
       const details = await warehouseClient.manifestFlightDetail(headerId);
       const Swal = await loadSwal();
       await Swal.fire({
+        ...getSwalBaseOptions(),
         title: `Detail Build Up ${numberBuildUp || ''}`,
         html: renderDetailHtml(details),
         width: '1100px',
-        zIndex: SWEET_ALERT_Z_INDEX,
         confirmButtonText: 'Tutup',
         customClass: {
           htmlContainer: 'text-start',
@@ -231,10 +236,10 @@ export default function BuildupDatatables() {
     try {
       const Swal = await loadSwal();
       const result = await Swal.fire({
+        ...getSwalBaseOptions(),
         title: `Hapus Build Up${titleLabel}?`,
         text: 'Data build up akan dihapus permanen.',
         icon: 'warning',
-        zIndex: SWEET_ALERT_Z_INDEX,
         showCancelButton: true,
         confirmButtonText: 'Ya, hapus',
         cancelButtonText: 'Batal',
