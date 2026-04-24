@@ -1,8 +1,0 @@
-{
-  // 'astro/tsconfigs/strict' not found; remove or replace this with a valid base config, or install the 'astro' package
-  "compilerOptions": {
-    "jsx": "preserve",
-    "skipLibCheck": true,
-    "strictNullChecks": true
-  }
-}

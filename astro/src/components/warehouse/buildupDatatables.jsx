@@ -10,6 +10,8 @@ const loadSwal = async () => {
   return module.default ?? module;
 };
 
+const SWEET_ALERT_Z_INDEX = 2000;
+
 const numberRenderer = (value, type, fractionDigits = 0) => {
   if (type !== 'display' && type !== 'filter') {
     return value ?? null;
@@ -204,6 +206,7 @@ export default function BuildupDatatables() {
         title: `Detail Build Up ${numberBuildUp || ''}`,
         html: renderDetailHtml(details),
         width: '1100px',
+        zIndex: SWEET_ALERT_Z_INDEX,
         confirmButtonText: 'Tutup',
         customClass: {
           htmlContainer: 'text-start',
@@ -231,6 +234,7 @@ export default function BuildupDatatables() {
         title: `Hapus Build Up${titleLabel}?`,
         text: 'Data build up akan dihapus permanen.',
         icon: 'warning',
+        zIndex: SWEET_ALERT_Z_INDEX,
         showCancelButton: true,
         confirmButtonText: 'Ya, hapus',
         cancelButtonText: 'Batal',
