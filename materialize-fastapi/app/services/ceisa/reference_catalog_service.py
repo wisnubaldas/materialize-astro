@@ -12,6 +12,11 @@ from app.utils.env import ENV
 
 CEISA_REFERENCE_CATALOG: list[dict[str, str]] = [
     {
+        "reference_slug": "referensi-asal-barang",
+        "reference_name": "Referensi Asal Barang",
+        "doc_url": "https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang.md",
+    },
+    {
         "reference_slug": "referensi-asal-barang-ftz",
         "reference_name": "Referensi Asal Barang FTZ",
         "doc_url": "https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang-ftz.md",
