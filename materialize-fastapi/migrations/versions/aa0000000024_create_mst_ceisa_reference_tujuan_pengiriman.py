@@ -37,10 +37,12 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         mysql_engine="InnoDB",
+        mysql_charset="utf8mb4",
+        mysql_collate="utf8mb4_unicode_ci",
     )
 
     op.create_index(
-        "ix_mst_ceisa_reference_tujuan_pengiriman_reference_slug",
+        "ix_mst_ceisa_reference_tujuan_pengiriman_rslug",
         "mst_ceisa_reference_tujuan_pengiriman",
         ["reference_slug"],
         unique=False,
@@ -52,7 +54,7 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        "ix_mst_ceisa_reference_tujuan_pengiriman_is_active",
+        "ix_mst_ceisa_reference_tujuan_pengiriman_active",
         "mst_ceisa_reference_tujuan_pengiriman",
         ["is_active"],
         unique=False,
@@ -77,7 +79,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop table mst_ceisa_reference_tujuan_pengiriman."""
-    op.drop_index("ix_mst_ceisa_reference_tujuan_pengiriman_is_active", table_name="mst_ceisa_reference_tujuan_pengiriman")
+    op.drop_index("ix_mst_ceisa_reference_tujuan_pengiriman_active", table_name="mst_ceisa_reference_tujuan_pengiriman")
     op.drop_index("ix_mst_ceisa_reference_tujuan_pengiriman_code", table_name="mst_ceisa_reference_tujuan_pengiriman")
-    op.drop_index("ix_mst_ceisa_reference_tujuan_pengiriman_reference_slug", table_name="mst_ceisa_reference_tujuan_pengiriman")
+    op.drop_index("ix_mst_ceisa_reference_tujuan_pengiriman_rslug", table_name="mst_ceisa_reference_tujuan_pengiriman")
     op.drop_table("mst_ceisa_reference_tujuan_pengiriman")
