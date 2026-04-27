@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api import angkasapura, auth, edi, hubnet, setting, sse, warehouse
+from app.api import angkasapura, auth, ceisa, edi, hubnet, setting, sse, warehouse
 
 router = APIRouter()
 router.include_router(auth.router)
@@ -10,3 +10,4 @@ router.include_router(sse.router)
 router.include_router(edi.router)
 router.include_router(warehouse.router)
 router.include_router(setting.router)
+router.include_router(ceisa.router)

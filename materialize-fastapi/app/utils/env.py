@@ -57,6 +57,13 @@ class ENV(BaseSettings):
     HUBNET_PASSWORD: str
     HUBNET_BATCH_LIMIT: int = 10
 
+    CEISA_BASE_URL: str | None = None
+    CEISA_AUTH_URL: str | None = None
+    CEISA_CLIENT_ID: str | None = None
+    CEISA_CLIENT_SECRET: str | None = None
+    CEISA_API_KEY: str | None = None
+    CEISA_TIMEOUT: int = 30
+
     REDIS_URL: str = "redis://localhost:6379/5"
     SSE_KEY: str = None
     CORS_ALLOW_ORIGINS: str | None = None
