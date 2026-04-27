@@ -42,7 +42,7 @@ class CeisaReferenceCodeService:
         if params.filters is None:
             raise HTTPException(status_code=400, detail="Filter datatable tidak valid")
         params.filters.reference_slug = reference_slug
-        return self.repository.datatable(params)
+        return self.repository.datatable(reference_slug, params)
 
     def sync_reference(self, reference_slug: str) -> CeisaReferenceCodeSyncResult:
         """Sinkronisasi snapshot kategori referensi dari dokumentasi CEISA."""

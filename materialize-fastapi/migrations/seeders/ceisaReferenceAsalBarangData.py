@@ -1,0 +1,37 @@
+"""Seeder master data CEISA untuk referensi asal barang.
+
+Snapshot tanggal: 2026-04-27
+"""
+
+CEISA_REFERENCE_ASAL_BARANG_CODES = [{'reference_slug': 'referensi-asal-barang',
+  'reference_name': 'Referensi Asal Barang',
+  'code': '1',
+  'name': 'Sepenuhnya diperoleh dan/atau diproduksi di luar daerah pabean',
+  'description': 'Sepenuhnya diperoleh dan/atau diproduksi di luar daerah pabean',
+  'source': 'CEISA_GITBOOK',
+  'is_active': True,
+  'doc_url': 'https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang.md'},
+ {'reference_slug': 'referensi-asal-barang',
+  'reference_name': 'Referensi Asal Barang',
+  'code': '2',
+  'name': 'Sepenuhnya diperoleh dan/atau diproduksi di tempat lain dalam daerah pabean',
+  'description': 'Sepenuhnya diperoleh dan/atau diproduksi di tempat lain dalam daerah pabean',
+  'source': 'CEISA_GITBOOK',
+  'is_active': True,
+  'doc_url': 'https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang.md'},
+ {'reference_slug': 'referensi-asal-barang',
+  'reference_name': 'Referensi Asal Barang',
+  'code': '3',
+  'name': 'Kawasan Pabean',
+  'description': 'Kawasan Pabean',
+  'source': 'CEISA_GITBOOK',
+  'is_active': True,
+  'doc_url': 'https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang.md'},
+ {'reference_slug': 'referensi-asal-barang',
+  'reference_name': 'Referensi Asal Barang',
+  'code': '4',
+  'name': 'Lainnya',
+  'description': 'Lainnya',
+  'source': 'CEISA_GITBOOK',
+  'is_active': True,
+  'doc_url': 'https://ceisa40.gitbook.io/pia-ceisa40/referensi/referensi-asal-barang.md'}]

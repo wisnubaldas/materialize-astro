@@ -1,46 +1,61 @@
-"""Repository untuk master data referensi CEISA lintas kategori."""
+"""Repository untuk master data referensi CEISA per kategori."""
 
 from datetime import datetime, timezone
+from typing import Any
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.BaseDB1.mst_ceisa_reference_code import MstCeisaReferenceCode
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_ceisa_reference_code_schema import MstCeisaReferenceCodeOut
+from app.services.ceisa.reference_model_registry import (
+    CEISA_REFERENCE_MODEL_REGISTRY,
+    CeisaReferenceModel,
+)
 from app.services.datatables_service import DataTablesService
 
 
 class CeisaReferenceCodeRepository:
-    """Akses data master referensi CEISA di DB1."""
+    """Akses data master referensi CEISA per kategori di DB1."""
 
     def __init__(self, db: Session):
         """Inisialisasi repository."""
         self.db = db
-        self.datatable_service = DataTablesService(
-            model=MstCeisaReferenceCode,
-            schema=MstCeisaReferenceCodeOut,
-            search_columns=[
-                "reference_slug",
-                "reference_name",
-                "code",
-                "name",
-                "description",
-            ],
-            custom_filters=["reference_slug", "reference_name", "code", "name", "is_active"],
-        )
+        self.datatable_services = {
+            reference_slug: DataTablesService(
+                model=model,
+                schema=MstCeisaReferenceCodeOut,
+                search_columns=[
+                    "reference_slug",
+                    "reference_name",
+                    "code",
+                    "name",
+                    "description",
+                ],
+                custom_filters=["reference_slug", "reference_name", "code", "name", "is_active"],
+            )
+            for reference_slug, model in CEISA_REFERENCE_MODEL_REGISTRY.items()
+        }
 
-    def list_by_reference_slug(self, reference_slug: str) -> list[MstCeisaReferenceCode]:
+    def list_by_reference_slug(self, reference_slug: str) -> list[Any]:
         """Ambil semua data referensi berdasarkan slug kategori."""
+        model = self._get_model(reference_slug)
         return (
-            self.db.query(MstCeisaReferenceCode)
-            .filter(MstCeisaReferenceCode.reference_slug == reference_slug)
-            .order_by(MstCeisaReferenceCode.code.asc(), MstCeisaReferenceCode.name.asc())
+            self.db.query(model)
+            .filter(model.reference_slug == reference_slug)
+            .order_by(model.code.asc(), model.name.asc())
             .all()
         )
 
-    def datatable(self, params: DataTablesParams) -> DataTablesResponse[MstCeisaReferenceCodeOut]:
-        """Ambil data datatable referensi CEISA."""
-        return self.datatable_service.get_datatable(db=self.db, params=params)
+    def datatable(
+        self,
+        reference_slug: str,
+        params: DataTablesParams,
+    ) -> DataTablesResponse[MstCeisaReferenceCodeOut]:
+        """Ambil data datatable referensi CEISA untuk slug tertentu."""
+        _ = self._get_model(reference_slug)
+        datatable_service = self.datatable_services[reference_slug]
+        return datatable_service.get_datatable(db=self.db, params=params)
 
     def sync_rows(
         self,
@@ -49,13 +64,14 @@ class CeisaReferenceCodeRepository:
         rows: list[dict[str, str]],
     ) -> tuple[int, int, int, int]:
         """Sinkronisasi data referensi berdasarkan snapshot terbaru."""
+        model = self._get_model(reference_slug)
         now = datetime.now(timezone.utc)
         deduped_rows = self._dedupe_rows(rows)
         incoming_keys = {(row["code"], row["name"]) for row in deduped_rows}
 
         existing_rows = (
-            self.db.query(MstCeisaReferenceCode)
-            .filter(MstCeisaReferenceCode.reference_slug == reference_slug)
+            self.db.query(model)
+            .filter(model.reference_slug == reference_slug)
             .all()
         )
         existing_map = {(item.code, item.name): item for item in existing_rows}
@@ -71,7 +87,7 @@ class CeisaReferenceCodeRepository:
             record = existing_map.get(key)
             if record is None:
                 self.db.add(
-                    MstCeisaReferenceCode(
+                    model(
                         reference_slug=reference_slug,
                         reference_name=reference_name,
                         code=code,
@@ -113,14 +129,21 @@ class CeisaReferenceCodeRepository:
 
         self.db.commit()
         total_active = (
-            self.db.query(MstCeisaReferenceCode)
+            self.db.query(model)
             .filter(
-                MstCeisaReferenceCode.reference_slug == reference_slug,
-                MstCeisaReferenceCode.is_active.is_(True),
+                model.reference_slug == reference_slug,
+                model.is_active.is_(True),
             )
             .count()
         )
         return inserted, updated, deactivated, total_active
+
+    def _get_model(self, reference_slug: str) -> CeisaReferenceModel:
+        """Ambil model tabel berdasarkan `reference_slug`."""
+        model = CEISA_REFERENCE_MODEL_REGISTRY.get(reference_slug)
+        if model is None:
+            raise HTTPException(status_code=404, detail="Kategori referensi CEISA tidak didukung")
+        return model
 
     @staticmethod
     def _dedupe_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
