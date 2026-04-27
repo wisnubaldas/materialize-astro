@@ -15,7 +15,6 @@ class MstCeisaReferenceOriginGoods(BaseDB1):
     code = Column(String(10), nullable=False, unique=True)
     name = Column(String(500), nullable=False)
     description = Column(String(500), nullable=True)
-    source = Column(String(30), nullable=False, server_default="CEISA")
     is_active = Column(Boolean, nullable=False, server_default="1")
     last_synced_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())

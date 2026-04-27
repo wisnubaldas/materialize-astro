@@ -1,0 +1,35 @@
+"""Seeder master data CEISA untuk referensi jenis identitas.
+
+Snapshot tanggal: 2026-04-27
+"""
+
+CEISA_REFERENCE_JENIS_IDENTITAS_CODES = [{'reference_slug': 'referensi-jenis-identitas',
+  'reference_name': 'Referensi Jenis Identitas',
+  'code': '2',
+  'name': 'PASPOR',
+  'description': 'PASPOR',
+  'is_active': True},
+ {'reference_slug': 'referensi-jenis-identitas',
+  'reference_name': 'Referensi Jenis Identitas',
+  'code': '3',
+  'name': 'KTP',
+  'description': 'KTP',
+  'is_active': True},
+ {'reference_slug': 'referensi-jenis-identitas',
+  'reference_name': 'Referensi Jenis Identitas',
+  'code': '4',
+  'name': 'LAINNYA',
+  'description': 'LAINNYA',
+  'is_active': True},
+ {'reference_slug': 'referensi-jenis-identitas',
+  'reference_name': 'Referensi Jenis Identitas',
+  'code': '5',
+  'name': 'NPWP 15 DIGIT',
+  'description': 'NPWP 15 DIGIT',
+  'is_active': True},
+ {'reference_slug': 'referensi-jenis-identitas',
+  'reference_name': 'Referensi Jenis Identitas',
+  'code': '6',
+  'name': 'NPWP 16 DIGIT',
+  'description': 'NPWP 16 DIGIT',
+  'is_active': True}]

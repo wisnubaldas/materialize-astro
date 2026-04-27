@@ -13,8 +13,6 @@ class MstCeisaReferenceBaseMixin:
     code = Column(String(50), nullable=False)
     name = Column(String(500), nullable=False)
     description = Column(String(500), nullable=True)
-    doc_url = Column(String(255), nullable=True)
-    source = Column(String(30), nullable=False, server_default="CEISA_GITBOOK")
     is_active = Column(Boolean, nullable=False, server_default="1")
     last_synced_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())

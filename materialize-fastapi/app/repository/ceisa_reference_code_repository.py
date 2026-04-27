@@ -93,8 +93,6 @@ class CeisaReferenceCodeRepository:
                         code=code,
                         name=name,
                         description=row.get("description"),
-                        doc_url=row.get("doc_url"),
-                        source=row.get("source", "CEISA_GITBOOK"),
                         is_active=True,
                         last_synced_at=now,
                     )
@@ -106,8 +104,6 @@ class CeisaReferenceCodeRepository:
             for attr, value in {
                 "reference_name": reference_name,
                 "description": row.get("description"),
-                "doc_url": row.get("doc_url"),
-                "source": row.get("source", "CEISA_GITBOOK"),
                 "is_active": True,
             }.items():
                 if getattr(record, attr) != value:

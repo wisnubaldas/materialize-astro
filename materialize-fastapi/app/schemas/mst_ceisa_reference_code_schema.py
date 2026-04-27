@@ -10,7 +10,6 @@ class CeisaReferenceCatalogItem(BaseModel):
 
     reference_slug: str
     reference_name: str
-    doc_url: str
 
 
 class MstCeisaReferenceCodeBase(BaseModel):
@@ -21,8 +20,6 @@ class MstCeisaReferenceCodeBase(BaseModel):
     code: str = Field(..., min_length=1, max_length=50)
     name: str = Field(..., min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=500)
-    doc_url: str | None = Field(default=None, max_length=255)
-    source: str = Field(default="CEISA_GITBOOK", min_length=1, max_length=30)
     is_active: bool = True
 
 

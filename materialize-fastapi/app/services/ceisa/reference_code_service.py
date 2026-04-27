@@ -71,7 +71,6 @@ class CeisaReferenceCodeService:
                     "code": code,
                     "name": name,
                     "description": name,
-                    "source": "CEISA",
                 }
             )
         return normalized

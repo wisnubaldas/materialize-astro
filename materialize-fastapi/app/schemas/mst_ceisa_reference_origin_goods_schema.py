@@ -11,7 +11,6 @@ class MstCeisaReferenceOriginGoodsBase(BaseModel):
     code: str = Field(..., min_length=1, max_length=10)
     name: str = Field(..., min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=500)
-    source: str = Field(default="CEISA", min_length=1, max_length=30)
     is_active: bool = True
 
 
@@ -25,7 +24,6 @@ class MstCeisaReferenceOriginGoodsUpdate(BaseModel):
     code: str | None = Field(default=None, min_length=1, max_length=10)
     name: str | None = Field(default=None, min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=500)
-    source: str | None = Field(default=None, min_length=1, max_length=30)
     is_active: bool | None = None
 
 

@@ -19,8 +19,8 @@ class CeisaReferenceOriginGoodsRepository:
         self.datatable_service = DataTablesService(
             model=MstCeisaReferenceOriginGoods,
             schema=MstCeisaReferenceOriginGoodsOut,
-            search_columns=["code", "name", "description", "source"],
-            custom_filters=["code", "name", "source", "is_active"],
+            search_columns=["code", "name", "description"],
+            custom_filters=["code", "name", "is_active"],
         )
 
     def list_all(self) -> list[MstCeisaReferenceOriginGoods]:
@@ -92,7 +92,6 @@ class CeisaReferenceOriginGoodsRepository:
                         code=code,
                         name=row["name"],
                         description=row.get("description"),
-                        source=row.get("source", "CEISA"),
                         is_active=True,
                         last_synced_at=now,
                     )
@@ -102,7 +101,6 @@ class CeisaReferenceOriginGoodsRepository:
 
             record.name = row["name"]
             record.description = row.get("description")
-            record.source = row.get("source", "CEISA")
             record.is_active = True
             record.last_synced_at = now
             record.updated_at = now
