@@ -160,8 +160,8 @@ app/
 #### API CEISA module creation technical rules
 
 - Module CEISA di buat di backend
-- Buatkan service di `materialize-fastapi\app\services\ceisa` untuk setiap request ke CEISA API
-- Buatkan method agnostic dapat digunakan kembali oleh module-module lain
+- Service-service yang terkait dengan CEISA di letakan pada `integrations\ceisa`
+- Buatkan method agnostic yang dapat digunakan kembali oleh service diluar CEISA
 - Baca dokumentasi CEISA `https://ceisa40.gitbook.io/pia-ceisa40` sebelum eksekusi
 - Kirim data atau tarik data dari/ke CEISA harus memlalui background job
 - Buatkan ceisa_webhook_log dan ceisa_webhook_log untuk menyimpan log CEISA
@@ -174,3 +174,4 @@ app/
 - setiap pembuatan master data CEISA harus ada migrasi dan data seedernya
 - tabel-tabel CEISA harus menggunakan prefix `mst_ceisa_*` untuk master dan `ceisa_*` untuk tabel transaksi
 - wajib buatkan log untuk request dan response ke CEISA
+- Jangan menjaga backward compatibility lama ketika ada perubahan pada modul atau perubahan yang terkait dengan proses bisnis
