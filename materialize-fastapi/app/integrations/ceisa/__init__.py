@@ -1,12 +1,18 @@
-"""Ekspor service dan utilitas integrasi CEISA."""
+"""Ekspor service dan utilitas integrasi CEISA (lazy import)."""
 
-from app.integrations.ceisa.client import CeisaClientService
-from app.integrations.ceisa.log_service import CeisaLogService
-from app.integrations.ceisa.oauth import CeisaOAuthService
-from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
-from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
-from app.integrations.ceisa.sync_job import CeisaSyncJobService
-from app.integrations.ceisa.xray_photo_service import CeisaXrayPhotoService
+from __future__ import annotations
+
+from importlib import import_module
+
+_LAZY_ATTRS = {
+    "CeisaClientService": "app.integrations.ceisa.client",
+    "CeisaLogService": "app.integrations.ceisa.log_service",
+    "CeisaOAuthService": "app.integrations.ceisa.oauth",
+    "CeisaReferenceCatalogService": "app.integrations.ceisa.reference_catalog",
+    "CeisaReferenceCodeService": "app.integrations.ceisa.reference_code",
+    "CeisaSyncJobService": "app.integrations.ceisa.sync_job",
+    "CeisaXrayPhotoService": "app.integrations.ceisa.xray_photo_service",
+}
 
 __all__ = [
     "CeisaClientService",
@@ -17,3 +23,12 @@ __all__ = [
     "CeisaSyncJobService",
     "CeisaXrayPhotoService",
 ]
+
+
+def __getattr__(name: str):
+    """Load atribut package CEISA secara lazy untuk hindari circular import."""
+    module_path = _LAZY_ATTRS.get(name)
+    if module_path is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(module_path)
+    return getattr(module, name)
