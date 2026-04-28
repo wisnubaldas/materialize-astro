@@ -1,7 +1,23 @@
+"""Environment settings aplikasi.
+
+CEISA OAuth variables (ringkas):
+- CEISA_BASE_URL: Base URL gateway CEISA (`https://apisdev-gw.beacukai.go.id`).
+- CEISA_AUTH_URL: Optional override endpoint login OAuth CEISA.
+  Jika kosong maka otomatis menggunakan `{CEISA_BASE_URL}/nle-oauth/v1/user/login`.
+- CEISA_REFRESH_URL: Optional override endpoint refresh token.
+  Jika kosong maka otomatis menggunakan `{CEISA_BASE_URL}/nle-oauth/v1/user/update-token`.
+- CEISA_USERNAME: Username portal pengguna jasa CEISA.
+- CEISA_PASSWORD: Password portal pengguna jasa CEISA.
+- CEISA_API_KEY: API key CEISA (header `Beacukai-Api-Key` / `nle-api-key`).
+- CEISA_PLATFORM_ID: Optional `id_platform`.
+- CEISA_ORIGIN: Optional header `Origin`.
+"""
+
 from pydantic_settings import BaseSettings
 
 
 class ENV(BaseSettings):
+    """Map variabel environment ke settings aplikasi."""
     APP_ENV: str
     APP_DEBUG: bool = False
     APP_URL: str

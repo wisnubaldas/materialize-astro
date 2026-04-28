@@ -71,3 +71,12 @@ class CeisaReferenceCodeSyncJobStatus(BaseModel):
     total_snapshot: int | None = None
     total_active: int | None = None
     error_message: str | None = None
+
+
+class CeisaOAuthLoginProbeResult(BaseModel):
+    """Response ringkas untuk uji login OAuth2 CEISA."""
+
+    status: str
+    message: str
+    token_preview: str
+    has_refresh_token: bool

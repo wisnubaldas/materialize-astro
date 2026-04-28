@@ -31,8 +31,12 @@ class CeisaOAuthService:
         self.client_id = str(ENV.CEISA_CLIENT_ID or "").strip()
         self.client_secret = str(ENV.CEISA_CLIENT_SECRET or "").strip()
 
+        if self.auth_url and self._is_base_host_only(self.auth_url):
+            self.auth_url = f"{self.auth_url.rstrip('/')}/nle-oauth/v1/user/login"
         if not self.auth_url and self.base_url:
             self.auth_url = f"{self.base_url}/nle-oauth/v1/user/login"
+        if self.refresh_url and self._is_base_host_only(self.refresh_url):
+            self.refresh_url = f"{self.refresh_url.rstrip('/')}/nle-oauth/v1/user/update-token"
         if not self.refresh_url and self.base_url:
             self.refresh_url = f"{self.base_url}/nle-oauth/v1/user/update-token"
 
@@ -64,6 +68,18 @@ class CeisaOAuthService:
         cache_cls._access_token_cache = None
         cache_cls._refresh_token_cache = None
         cache_cls._token_expired_at_cache = None
+
+    def login_probe(self) -> dict[str, Any]:
+        """Uji login OAuth2 CEISA dan kembalikan metadata token yang aman ditampilkan."""
+        token = self.get_access_token(force_refresh=True)
+        cache_cls = type(self)
+        preview = token[:8] if len(token) >= 8 else token
+        return {
+            "status": "success",
+            "message": "Login OAuth2 CEISA berhasil",
+            "token_preview": f"{preview}***",
+            "has_refresh_token": bool(cache_cls._refresh_token_cache),
+        }
 
     def _request_login_token(self) -> dict[str, Any]:
         """Request access token via endpoint login CEISA."""
@@ -277,6 +293,16 @@ class CeisaOAuthService:
         if slash_pos == -1:
             return "/"
         return url[slash_pos:]
+
+    @staticmethod
+    def _is_base_host_only(url: str) -> bool:
+        """Cek apakah URL hanya berisi host root tanpa path endpoint."""
+        if "://" not in url:
+            return False
+        cleaned = url.strip().rstrip("/")
+        host_start = cleaned.find("://") + 3
+        slash_after_host = cleaned.find("/", host_start)
+        return slash_after_host == -1
 
     @staticmethod
     def _sanitize_headers(headers: dict[str, Any] | None) -> dict[str, Any]:

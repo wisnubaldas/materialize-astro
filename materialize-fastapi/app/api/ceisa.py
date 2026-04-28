@@ -3,6 +3,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.dependencies.ceisa_reference_code_deps import (
+    get_ceisa_oauth_service_w,
     get_ceisa_reference_code_service_r,
     get_ceisa_sync_job_service_w,
 )
@@ -10,14 +11,29 @@ from app.job.ceisa_sync_job import run_ceisa_reference_sync_job
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCatalogItem,
+    CeisaOAuthLoginProbeResult,
     CeisaReferenceCodeSyncEnqueueResult,
     CeisaReferenceCodeSyncJobStatus,
     MstCeisaReferenceCodeOut,
 )
+from app.services.ceisa.oauth_service import CeisaOAuthService
 from app.services.ceisa.sync_job_service import CeisaSyncJobService
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 router = APIRouter(prefix="/ceisa", tags=["CEISA Master Data"])
+
+
+@router.post(
+    "/oauth/login-test",
+    summary="Uji login OAuth2 CEISA",
+    response_model=CeisaOAuthLoginProbeResult,
+)
+def test_ceisa_oauth_login(
+    oauth_service: CeisaOAuthService = Depends(get_ceisa_oauth_service_w),
+):
+    """Coba login ke CEISA OAuth2 untuk validasi konfigurasi env."""
+    result = oauth_service.login_probe()
+    return CeisaOAuthLoginProbeResult(**result)
 
 
 @router.get(
