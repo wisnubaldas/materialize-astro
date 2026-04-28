@@ -8,7 +8,7 @@ from typing import Any
 import requests
 from fastapi import HTTPException
 
-from app.repository.ceisa_log_repository import CeisaLogRepository
+from app.services.ceisa.log_service import CeisaLogService
 from app.utils.env import ENV
 
 
@@ -19,9 +19,9 @@ class CeisaOAuthService:
     _refresh_token_cache: str | None = None
     _token_expired_at_cache: datetime | None = None
 
-    def __init__(self, log_repository: CeisaLogRepository | None = None):
+    def __init__(self, log_service: CeisaLogService | None = None):
         """Inisialisasi konfigurasi OAuth2 CEISA."""
-        self.log_repository = log_repository
+        self.log_service = log_service
         self.timeout = max(1, int(ENV.CEISA_TIMEOUT))
         self.base_url = str(ENV.CEISA_BASE_URL or "").rstrip("/")
         self.auth_url = str(ENV.CEISA_AUTH_URL or "").strip()
@@ -148,18 +148,17 @@ class CeisaOAuthService:
         use_form_data: bool = False,
     ) -> dict[str, Any]:
         """Eksekusi HTTP request untuk endpoint OAuth CEISA dan audit log."""
-        request_log = None
-        if self.log_repository:
-            try:
-                request_log = self.log_repository.create_request_log(
-                    service_name="ceisa_oauth",
-                    endpoint_path=endpoint_path,
-                    http_method="POST",
-                    request_headers=self._sanitize_headers(headers),
-                    request_payload=request_payload,
-                )
-            except Exception:
-                request_log = None
+        request_log = (
+            self.log_service.log_outbound_request(
+                service_name="ceisa_oauth",
+                endpoint_path=endpoint_path,
+                http_method="POST",
+                request_headers=headers,
+                request_payload=request_payload,
+            )
+            if self.log_service
+            else None
+        )
 
         try:
             if use_form_data:
@@ -177,7 +176,11 @@ class CeisaOAuthService:
                     timeout=self.timeout,
                 )
         except requests.RequestException as exc:
-            self._safe_mark_failed(request_log, error_message=f"Gagal request OAuth CEISA: {exc!s}")
+            if self.log_service:
+                self.log_service.log_outbound_failed(
+                    request_log=request_log,
+                    error_message=f"Gagal request OAuth CEISA: {exc!s}",
+                )
             raise HTTPException(
                 status_code=502, detail=f"Gagal menghubungi OAuth CEISA: {exc!s}"
             ) from exc
@@ -189,13 +192,14 @@ class CeisaOAuthService:
             response_payload = response.text
 
         if response.status_code >= 400:
-            self._safe_mark_failed(
-                request_log,
-                error_message=f"OAuth CEISA error HTTP {response.status_code}",
-                response_status_code=response.status_code,
-                response_headers=dict(response.headers),
-                response_payload=response_payload,
-            )
+            if self.log_service:
+                self.log_service.log_outbound_failed(
+                    request_log=request_log,
+                    error_message=f"OAuth CEISA error HTTP {response.status_code}",
+                    response_status_code=response.status_code,
+                    response_headers=dict(response.headers),
+                    response_payload=response_payload,
+                )
             detail = (
                 response.text.strip()[:500]
                 if isinstance(response_payload, str)
@@ -206,12 +210,13 @@ class CeisaOAuthService:
                 detail=f"OAuth CEISA gagal (HTTP {response.status_code}): {detail}",
             )
 
-        self._safe_mark_success(
-            request_log,
-            response_status_code=response.status_code,
-            response_headers=dict(response.headers),
-            response_payload=response_payload,
-        )
+        if self.log_service:
+            self.log_service.log_outbound_success(
+                request_log=request_log,
+                response_status_code=response.status_code,
+                response_headers=dict(response.headers),
+                response_payload=response_payload,
+            )
 
         if not isinstance(response_payload, dict):
             raise HTTPException(
@@ -301,59 +306,3 @@ class CeisaOAuthService:
         host_start = cleaned.find("://") + 3
         slash_after_host = cleaned.find("/", host_start)
         return slash_after_host == -1
-
-    @staticmethod
-    def _sanitize_headers(headers: dict[str, Any] | None) -> dict[str, Any]:
-        """Masking header sensitif sebelum disimpan ke audit log."""
-        if headers is None:
-            return {}
-        masked: dict[str, Any] = {}
-        for key, value in headers.items():
-            lowered = key.lower()
-            if lowered in {"authorization", "beacukai-api-key", "nle-api-key", "x-api-key"}:
-                masked[key] = "***"
-            else:
-                masked[key] = value
-        return masked
-
-    def _safe_mark_success(
-        self,
-        request_log,
-        response_status_code: int,
-        response_headers: dict[str, Any],
-        response_payload: Any,
-    ) -> None:
-        """Update log sukses tanpa memblokir flow utama jika logging gagal."""
-        if not request_log or not self.log_repository:
-            return
-        try:
-            self.log_repository.mark_request_success(
-                log=request_log,
-                response_status_code=response_status_code,
-                response_headers=self._sanitize_headers(response_headers),
-                response_payload=response_payload,
-            )
-        except Exception:
-            pass
-
-    def _safe_mark_failed(
-        self,
-        request_log,
-        error_message: str,
-        response_status_code: int | None = None,
-        response_headers: dict[str, Any] | None = None,
-        response_payload: Any = None,
-    ) -> None:
-        """Update log gagal tanpa memblokir flow utama jika logging gagal."""
-        if not request_log or not self.log_repository:
-            return
-        try:
-            self.log_repository.mark_request_failed(
-                log=request_log,
-                error_message=error_message,
-                response_status_code=response_status_code,
-                response_headers=self._sanitize_headers(response_headers or {}),
-                response_payload=response_payload,
-            )
-        except Exception:
-            pass

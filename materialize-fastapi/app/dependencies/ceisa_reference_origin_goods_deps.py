@@ -9,6 +9,7 @@ from app.repository.ceisa_reference_origin_goods_repository import (
     CeisaReferenceOriginGoodsRepository,
 )
 from app.services.ceisa.client_service import CeisaClientService
+from app.services.ceisa.log_service import CeisaLogService
 from app.services.ceisa.oauth_service import CeisaOAuthService
 from app.services.ceisa.reference_code_service import CeisaReferenceCodeService
 from app.services.ceisa_reference_origin_goods_service import CeisaReferenceOriginGoodsService
@@ -32,11 +33,11 @@ def get_ceisa_client_service(
     db: Session = Depends(get_db1_w),
 ) -> CeisaClientService:
     """Dependency client CEISA."""
-    log_repository = CeisaLogRepository(db)
-    oauth_service = CeisaOAuthService(log_repository=log_repository)
+    log_service = CeisaLogService(CeisaLogRepository(db))
+    oauth_service = CeisaOAuthService(log_service=log_service)
     return CeisaClientService(
         oauth_service=oauth_service,
-        log_repository=log_repository,
+        log_service=log_service,
     )
 
 

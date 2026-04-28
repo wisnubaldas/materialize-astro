@@ -7,7 +7,7 @@ from typing import Any
 import requests
 from fastapi import HTTPException
 
-from app.repository.ceisa_log_repository import CeisaLogRepository
+from app.services.ceisa.log_service import CeisaLogService
 from app.services.ceisa.oauth_service import CeisaOAuthService
 from app.utils.env import ENV
 
@@ -18,7 +18,7 @@ class CeisaClientService:
     def __init__(
         self,
         oauth_service: CeisaOAuthService,
-        log_repository: CeisaLogRepository | None = None,
+        log_service: CeisaLogService | None = None,
     ):
         """Inisialisasi konfigurasi dasar client CEISA."""
         self.base_url = str(ENV.CEISA_BASE_URL or "").rstrip("/")
@@ -27,7 +27,7 @@ class CeisaClientService:
         self.origin = str(ENV.CEISA_ORIGIN or ENV.APP_URL or "").strip()
         self.timeout = max(1, int(ENV.CEISA_TIMEOUT))
         self.oauth_service = oauth_service
-        self.log_repository = log_repository
+        self.log_service = log_service
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         """Lakukan HTTP GET ke endpoint CEISA."""
@@ -42,11 +42,20 @@ class CeisaClientService:
 
         headers = dict(kwargs.pop("headers", {}) or {})
         headers.update(self._build_headers())
-        request_log = self._create_request_log(
-            endpoint_path=normalized_path,
-            http_method=method,
-            headers=headers,
-            payload={"params": kwargs.get("params"), "json": kwargs.get("json"), "data": kwargs.get("data")},
+        request_log = (
+            self.log_service.log_outbound_request(
+                service_name="ceisa_api",
+                endpoint_path=normalized_path,
+                http_method=method,
+                request_headers=headers,
+                request_payload={
+                    "params": kwargs.get("params"),
+                    "json": kwargs.get("json"),
+                    "data": kwargs.get("data"),
+                },
+            )
+            if self.log_service
+            else None
         )
 
         try:
@@ -70,32 +79,35 @@ class CeisaClientService:
 
         if response.status_code in {401, 403}:
             self.oauth_service.invalidate_token()
-            self._safe_mark_failed(
-                request_log=request_log,
-                error_message="Autentikasi CEISA API tidak valid",
-                response_status_code=response.status_code,
-                response_headers=dict(response.headers),
-                response_payload=response_payload,
-            )
+            if self.log_service:
+                self.log_service.log_outbound_failed(
+                    request_log=request_log,
+                    error_message="Autentikasi CEISA API tidak valid",
+                    response_status_code=response.status_code,
+                    response_headers=dict(response.headers),
+                    response_payload=response_payload,
+                )
             raise HTTPException(status_code=502, detail="Autentikasi CEISA API tidak valid")
 
         if response.status_code >= 400:
-            self._safe_mark_failed(
+            if self.log_service:
+                self.log_service.log_outbound_failed(
+                    request_log=request_log,
+                    error_message=f"CEISA API error HTTP {response.status_code}",
+                    response_status_code=response.status_code,
+                    response_headers=dict(response.headers),
+                    response_payload=response_payload,
+                )
+            detail = response.text.strip()[:500] or "Request CEISA API gagal"
+            raise HTTPException(status_code=502, detail=f"CEISA API error: {detail}")
+
+        if self.log_service:
+            self.log_service.log_outbound_success(
                 request_log=request_log,
-                error_message=f"CEISA API error HTTP {response.status_code}",
                 response_status_code=response.status_code,
                 response_headers=dict(response.headers),
                 response_payload=response_payload,
             )
-            detail = response.text.strip()[:500] or "Request CEISA API gagal"
-            raise HTTPException(status_code=502, detail=f"CEISA API error: {detail}")
-
-        self._safe_mark_success(
-            request_log=request_log,
-            response_status_code=response.status_code,
-            response_headers=dict(response.headers),
-            response_payload=response_payload,
-        )
         return response_payload
 
     def _build_headers(self) -> dict[str, str]:
@@ -129,80 +141,3 @@ class CeisaClientService:
             raise HTTPException(
                 status_code=500, detail=f"Konfigurasi CEISA belum lengkap: {joined}"
             )
-
-    def _create_request_log(
-        self,
-        endpoint_path: str,
-        http_method: str,
-        headers: dict[str, Any],
-        payload: Any,
-    ):
-        """Buat audit log request outbound CEISA secara non-blocking."""
-        if not self.log_repository:
-            return None
-        try:
-            return self.log_repository.create_request_log(
-                service_name="ceisa_api",
-                endpoint_path=endpoint_path,
-                http_method=http_method,
-                request_headers=self._sanitize_headers(headers),
-                request_payload=payload,
-            )
-        except Exception:
-            return None
-
-    def _safe_mark_success(
-        self,
-        request_log,
-        response_status_code: int,
-        response_headers: dict[str, Any],
-        response_payload: Any,
-    ) -> None:
-        """Update audit log sukses secara non-blocking."""
-        if not request_log or not self.log_repository:
-            return
-        try:
-            self.log_repository.mark_request_success(
-                log=request_log,
-                response_status_code=response_status_code,
-                response_headers=self._sanitize_headers(response_headers),
-                response_payload=response_payload,
-            )
-        except Exception:
-            pass
-
-    def _safe_mark_failed(
-        self,
-        request_log,
-        error_message: str,
-        response_status_code: int | None = None,
-        response_headers: dict[str, Any] | None = None,
-        response_payload: Any = None,
-    ) -> None:
-        """Update audit log gagal secara non-blocking."""
-        if not request_log or not self.log_repository:
-            return
-        try:
-            self.log_repository.mark_request_failed(
-                log=request_log,
-                error_message=error_message,
-                response_status_code=response_status_code,
-                response_headers=self._sanitize_headers(response_headers or {}),
-                response_payload=response_payload,
-            )
-        except Exception:
-            pass
-
-    @staticmethod
-    def _sanitize_headers(headers: dict[str, Any] | None) -> dict[str, Any]:
-        """Masking header sensitif sebelum disimpan ke log."""
-        if headers is None:
-            return {}
-        masked: dict[str, Any] = {}
-        for key, value in headers.items():
-            lowered = key.lower()
-            if lowered in {"authorization", "beacukai-api-key", "nle-api-key", "x-api-key"}:
-                masked[key] = "***"
-            else:
-                masked[key] = value
-        return masked
