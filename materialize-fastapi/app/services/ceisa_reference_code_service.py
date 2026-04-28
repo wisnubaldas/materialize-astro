@@ -9,7 +9,7 @@ from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCodeSyncResult,
     MstCeisaReferenceCodeOut,
 )
-from app.services.ceisa.reference_catalog_service import CeisaReferenceCatalogService
+from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 
 
 class CeisaReferenceCodeService:

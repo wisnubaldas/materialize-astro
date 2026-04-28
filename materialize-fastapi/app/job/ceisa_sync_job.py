@@ -3,8 +3,8 @@
 import logging
 
 from app.db.mysql import SessionDB1W
-from app.services.ceisa.reference_catalog_service import CeisaReferenceCatalogService
-from app.services.ceisa.sync_job_service import CeisaSyncJobService
+from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
+from app.integrations.ceisa.sync_job import CeisaSyncJobService
 
 logger = logging.getLogger("ceisa")
 

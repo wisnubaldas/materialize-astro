@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 from app.db.mysql import get_db1_r, get_db1_w
 from app.repository.ceisa_log_repository import CeisaLogRepository
 from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
-from app.services.ceisa.log_service import CeisaLogService
-from app.services.ceisa.oauth_service import CeisaOAuthService
-from app.services.ceisa.reference_catalog_service import CeisaReferenceCatalogService
-from app.services.ceisa.sync_job_service import CeisaSyncJobService
+from app.integrations.ceisa.log_service import CeisaLogService
+from app.integrations.ceisa.oauth import CeisaOAuthService
+from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
+from app.integrations.ceisa.sync_job import CeisaSyncJobService
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 

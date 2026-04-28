@@ -8,10 +8,10 @@ from app.repository.ceisa_log_repository import CeisaLogRepository
 from app.repository.ceisa_reference_origin_goods_repository import (
     CeisaReferenceOriginGoodsRepository,
 )
-from app.services.ceisa.client_service import CeisaClientService
-from app.services.ceisa.log_service import CeisaLogService
-from app.services.ceisa.oauth_service import CeisaOAuthService
-from app.services.ceisa.reference_code_service import CeisaReferenceCodeService
+from app.integrations.ceisa.client import CeisaClientService
+from app.integrations.ceisa.log_service import CeisaLogService
+from app.integrations.ceisa.oauth import CeisaOAuthService
+from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
 from app.services.ceisa_reference_origin_goods_service import CeisaReferenceOriginGoodsService
 
 

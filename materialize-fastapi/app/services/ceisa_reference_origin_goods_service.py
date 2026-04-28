@@ -13,7 +13,7 @@ from app.schemas.mst_ceisa_reference_origin_goods_schema import (
     MstCeisaReferenceOriginGoodsOut,
     MstCeisaReferenceOriginGoodsUpdate,
 )
-from app.services.ceisa.reference_code_service import CeisaReferenceCodeService
+from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
 
 
 class CeisaReferenceOriginGoodsService:

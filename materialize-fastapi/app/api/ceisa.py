@@ -16,8 +16,8 @@ from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCodeSyncJobStatus,
     MstCeisaReferenceCodeOut,
 )
-from app.services.ceisa.oauth_service import CeisaOAuthService
-from app.services.ceisa.sync_job_service import CeisaSyncJobService
+from app.integrations.ceisa.oauth import CeisaOAuthService
+from app.integrations.ceisa.sync_job import CeisaSyncJobService
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 router = APIRouter(prefix="/ceisa", tags=["CEISA Master Data"])
