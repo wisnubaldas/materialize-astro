@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.mysql import get_db1_r, get_db1_w
 from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.services.ceisa.reference_catalog_service import CeisaReferenceCatalogService
+from app.services.ceisa.sync_job_service import CeisaSyncJobService
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 
@@ -42,3 +43,11 @@ def get_ceisa_reference_code_service_w(
 ) -> CeisaReferenceCodeService:
     """Dependency service write."""
     return CeisaReferenceCodeService(repo, catalog_service)
+
+
+def get_ceisa_sync_job_service_w(
+    db: Session = Depends(get_db1_w),
+    catalog_service: CeisaReferenceCatalogService = Depends(get_ceisa_reference_catalog_service),
+) -> CeisaSyncJobService:
+    """Dependency service write untuk enqueue/status job sinkronisasi CEISA."""
+    return CeisaSyncJobService(db=db, catalog_service=catalog_service)

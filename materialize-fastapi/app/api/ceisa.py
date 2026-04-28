@@ -1,17 +1,20 @@
 """API endpoint untuk master data CEISA."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.dependencies.ceisa_reference_code_deps import (
     get_ceisa_reference_code_service_r,
-    get_ceisa_reference_code_service_w,
+    get_ceisa_sync_job_service_w,
 )
+from app.job.ceisa_sync_job import run_ceisa_reference_sync_job
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCatalogItem,
-    CeisaReferenceCodeSyncResult,
+    CeisaReferenceCodeSyncEnqueueResult,
+    CeisaReferenceCodeSyncJobStatus,
     MstCeisaReferenceCodeOut,
 )
+from app.services.ceisa.sync_job_service import CeisaSyncJobService
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 router = APIRouter(prefix="/ceisa", tags=["CEISA Master Data"])
@@ -58,12 +61,50 @@ def datatable_reference_codes(
 
 @router.post(
     "/reference-codes/{reference_slug}/sync",
-    summary="Sinkronisasi master referensi CEISA dari GitBook",
-    response_model=CeisaReferenceCodeSyncResult,
+    summary="Enqueue sinkronisasi master referensi CEISA via background job",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=CeisaReferenceCodeSyncEnqueueResult,
 )
 def sync_reference_codes(
     reference_slug: str,
-    service: CeisaReferenceCodeService = Depends(get_ceisa_reference_code_service_w),
+    background_tasks: BackgroundTasks,
+    service: CeisaSyncJobService = Depends(get_ceisa_sync_job_service_w),
 ):
-    """Sinkronisasi snapshot kategori referensi CEISA."""
-    return service.sync_reference(reference_slug)
+    """Enqueue sinkronisasi snapshot kategori referensi CEISA."""
+    job = service.enqueue_reference_sync(reference_slug)
+    background_tasks.add_task(run_ceisa_reference_sync_job, int(job.id))
+    return CeisaReferenceCodeSyncEnqueueResult(
+        job_id=int(job.id),
+        reference_slug=job.reference_slug,
+        reference_name=job.reference_name,
+        status=job.status,
+        message="Job sinkronisasi CEISA berhasil diantrikan",
+    )
+
+
+@router.get(
+    "/reference-codes/sync-jobs/{job_id}",
+    summary="Status job sinkronisasi referensi CEISA",
+    response_model=CeisaReferenceCodeSyncJobStatus,
+)
+def get_sync_job_status(
+    job_id: int,
+    service: CeisaSyncJobService = Depends(get_ceisa_sync_job_service_w),
+):
+    """Ambil status dan ringkasan hasil job sinkronisasi CEISA."""
+    job = service.get_job(job_id)
+    return CeisaReferenceCodeSyncJobStatus(
+        job_id=int(job.id),
+        reference_slug=job.reference_slug,
+        reference_name=job.reference_name,
+        status=job.status,
+        requested_at=job.requested_at,
+        started_at=job.started_at,
+        finished_at=job.finished_at,
+        inserted=job.inserted_count,
+        updated=job.updated_count,
+        deactivated=job.deactivated_count,
+        total_snapshot=job.total_snapshot,
+        total_active=job.total_active,
+        error_message=job.error_message,
+    )

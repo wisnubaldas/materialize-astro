@@ -43,3 +43,31 @@ class CeisaReferenceCodeSyncResult(BaseModel):
     deactivated: int
     total_snapshot: int
     total_active: int
+
+
+class CeisaReferenceCodeSyncEnqueueResult(BaseModel):
+    """Response enqueue sinkronisasi referensi CEISA."""
+
+    job_id: int
+    reference_slug: str
+    reference_name: str
+    status: str
+    message: str
+
+
+class CeisaReferenceCodeSyncJobStatus(BaseModel):
+    """Response detail status job sinkronisasi referensi CEISA."""
+
+    job_id: int
+    reference_slug: str
+    reference_name: str
+    status: str
+    requested_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    inserted: int | None = None
+    updated: int | None = None
+    deactivated: int | None = None
+    total_snapshot: int | None = None
+    total_active: int | None = None
+    error_message: str | None = None
