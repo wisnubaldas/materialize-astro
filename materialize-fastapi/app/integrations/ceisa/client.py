@@ -41,7 +41,8 @@ class CeisaClientService:
         url = f"{self.base_url}{normalized_path}"
 
         headers = dict(kwargs.pop("headers", {}) or {})
-        headers.update(self._build_headers())
+        is_multipart = bool(kwargs.get("files"))
+        headers.update(self._build_headers(include_json_content_type=not is_multipart))
         request_log = (
             self.log_service.log_outbound_request(
                 service_name="ceisa_api",
@@ -52,6 +53,7 @@ class CeisaClientService:
                     "params": kwargs.get("params"),
                     "json": kwargs.get("json"),
                     "data": kwargs.get("data"),
+                    "files": self._describe_files(kwargs.get("files")),
                 },
             )
             if self.log_service
@@ -110,14 +112,15 @@ class CeisaClientService:
             )
         return response_payload
 
-    def _build_headers(self) -> dict[str, str]:
+    def _build_headers(self, include_json_content_type: bool = True) -> dict[str, str]:
         """Bangun header standar untuk request CEISA."""
         access_token = self.oauth_service.get_access_token()
         headers: dict[str, str] = {
             "Accept": "application/json",
-            "Content-Type": "application/json",
             "Authorization": f"Bearer {access_token}",
         }
+        if include_json_content_type:
+            headers["Content-Type"] = "application/json"
         if self.api_key:
             headers["Beacukai-Api-Key"] = self.api_key
             headers["nle-api-key"] = self.api_key
@@ -141,3 +144,27 @@ class CeisaClientService:
             raise HTTPException(
                 status_code=500, detail=f"Konfigurasi CEISA belum lengkap: {joined}"
             )
+
+    @staticmethod
+    def _describe_files(files: Any) -> list[dict[str, str]] | None:
+        """Ambil metadata ringan file multipart untuk audit log."""
+        if not files:
+            return None
+        described: list[dict[str, str]] = []
+        for item in files:
+            if not isinstance(item, tuple) or len(item) < 2:
+                continue
+            field_name = str(item[0])
+            file_tuple = item[1]
+            if not isinstance(file_tuple, tuple) or len(file_tuple) < 1:
+                continue
+            filename = file_tuple[0] if file_tuple[0] is not None else ""
+            content_type = file_tuple[2] if len(file_tuple) > 2 else ""
+            described.append(
+                {
+                    "field": field_name,
+                    "filename": str(filename),
+                    "content_type": str(content_type),
+                }
+            )
+        return described or None

@@ -5,9 +5,9 @@ from __future__ import annotations
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 from app.repository.ceisa_log_repository import CeisaLogRepository
 from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
-from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 
 
 class CeisaSyncJobService:

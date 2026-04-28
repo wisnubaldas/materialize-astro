@@ -6,6 +6,7 @@ from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
 from app.integrations.ceisa.sync_job import CeisaSyncJobService
+from app.integrations.ceisa.xray_photo_service import CeisaXrayPhotoService
 
 __all__ = [
     "CeisaClientService",
@@ -14,5 +15,5 @@ __all__ = [
     "CeisaReferenceCatalogService",
     "CeisaReferenceCodeService",
     "CeisaSyncJobService",
+    "CeisaXrayPhotoService",
 ]
-
