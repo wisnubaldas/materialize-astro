@@ -59,9 +59,14 @@ class ENV(BaseSettings):
 
     CEISA_BASE_URL: str | None = None
     CEISA_AUTH_URL: str | None = None
+    CEISA_REFRESH_URL: str | None = None
+    CEISA_USERNAME: str | None = None
+    CEISA_PASSWORD: str | None = None
     CEISA_CLIENT_ID: str | None = None
     CEISA_CLIENT_SECRET: str | None = None
     CEISA_API_KEY: str | None = None
+    CEISA_PLATFORM_ID: str | None = None
+    CEISA_ORIGIN: str | None = None
     CEISA_TIMEOUT: int = 30
 
     REDIS_URL: str = "redis://localhost:6379/5"

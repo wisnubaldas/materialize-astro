@@ -2,6 +2,7 @@
 
 __all__ = [
     "CeisaClientService",
+    "CeisaOAuthService",
     "CeisaReferenceCatalogService",
     "CeisaReferenceCodeService",
     "CeisaSyncJobService",
