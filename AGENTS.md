@@ -17,8 +17,9 @@ Tujuan Anda adalah membangun aplikasi **production-ready** yang scalable, modula
 ## COLLABORATION FLOW (WAJIB DIIKUTI)
 
 1. Mulai dari analisis kondisi codebase saat ini.
-2. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
-3. Buat rencana implementasi bertahap (milestone) + estimasi risiko.
+2. Simpan hasil analisis kondisi codebase kedalam laporan harian di `docs/milestone`.
+3. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
+4. Buat rencana implementasi bertahap (milestone) + estimasi risiko.
 
 ---
 
@@ -107,7 +108,69 @@ Setelah eksekusi perubahan kode:
 
 ---
 
+## THIRD-PARTY APPS
+
+### API CEISA 4.0
+
+Mengintegrasikan backend dengan API CEISA 4.0 menggunakan metode PATCH akan membangun koneksi Host-to-Host (H2H) untuk pembaruan data parsial, yang memerlukan autentikasi ketat melalui OAuth 2.0 dan kunci API. Pengembang harus mengelola komunikasi API melalui HTTPS ke gateway pengembangan atau produksi tertentu, memastikan dokumentasi dari GitBook diikuti. Untuk detail lebih lanjut, kunjungi [GitBook PIA-CEISA40](https://ceisa40.gitbook.io/pia-ceisa40).
+
+#### Alur CEISA
+
+```
+Data internal gudang
+   ↓
+Validasi internal
+   ↓
+Mapping ke format CEISA
+   ↓
+Simpan request ke log/outbox
+   ↓
+Kirim ke CEISA via background job
+   ↓
+Simpan response CEISA
+   ↓
+Update status transaksi
+```
+
+#### Struktur CEISA
+
+```
+app/
+├── api/
+│   └── ceisa_route.py
+├── services/
+│   ├── manifest_service.py
+│   └── ceisa_service.py
+├── integrations/
+│   └── ceisa/
+│       ├── client.py
+│       ├── schemas.py
+│       ├── mapper.py
+│       ├── exceptions.py
+│       └── signature.py
+├── jobs/
+│   └── ceisa_sync_job.py
+├── models/
+│   ├── ceisa_request_log.py
+│   └── ceisa_webhook_log.py
+└── repositories/
+    └── ceisa_log_repository.py
+```
+
+#### API CEISA module creation technical rules
+
+- Module CEISA di buat di backend
+- Buatkan service di `materialize-fastapi\app\services\ceisa` untuk setiap request ke CEISA API
+- Buatkan method agnostic dapat digunakan kembali oleh module-module lain
+- Baca dokumentasi CEISA `https://ceisa40.gitbook.io/pia-ceisa40` sebelum eksekusi
+- Kirim data atau tarik data dari/ke CEISA harus memlalui background job
+- Buatkan ceisa_webhook_log dan ceisa_webhook_log untuk menyimpan log CEISA
+
 ## IMPORTANT
 
-- setiap selesai eksekusi selalu commit ke remote office dan origin branch master
-- beri keterangan comitan yang logis
+- setiap selesai eksekusi selalu commit ke remote office dan origin branch master jangan di push
+- beri keterangan pada commit git
+- setiap pembuatan modul CEISA harus agnostic dan reusable
+- setiap pembuatan master data CEISA harus ada migrasi dan data seedernya
+- tabel-tabel CEISA harus menggunakan prefix `mst_ceisa_*` untuk master dan `ceisa_*` untuk tabel transaksi
+- wajib buatkan log untuk request dan response ke CEISA
