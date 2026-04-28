@@ -1,4 +1,4 @@
-"""Repository untuk request kirim foto X-Ray CEISA."""
+"""Repository untuk request get foto X-Ray CEISA."""
 
 from __future__ import annotations
 
@@ -9,32 +9,23 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.BaseDB1.ceisa_xray_photo_request import CeisaXrayPhotoRequest
-from app.models.BaseDB1.ceisa_xray_photo_request_image import CeisaXrayPhotoRequestImage
+from app.models.BaseDB1.ceisa_xray_photo_get_request import CeisaXrayPhotoGetRequest
 
 
-class CeisaXrayPhotoRepository:
-    """Akses data queue request kirim foto X-Ray CEISA."""
+class CeisaXrayPhotoGetRepository:
+    """Akses data queue request get foto X-Ray CEISA."""
 
     def __init__(self, db: Session):
         """Inisialisasi repository dengan SQLAlchemy session."""
         self.db = db
 
-    def create_queued(
-        self,
-        payload: dict[str, Any],
-        operation_type: str = "KIRIM",
-    ) -> CeisaXrayPhotoRequest:
-        """Buat queue request kirim foto X-Ray dengan status QUEUED."""
-        op_type = str(operation_type or "KIRIM").upper()
-        log = CeisaXrayPhotoRequest(
-            nomor_aju=str(payload["nomorAju"]).strip(),
-            nomor_bl_awb=str(payload["nomorBlAwb"]).strip(),
-            tanggal_bl_awb=payload["tanggalBlAwb"],
-            kode_kantor=str(payload["kodeKantor"]).strip(),
-            operation_type=op_type,
-            images_count=0,
-            request_payload=self._to_text(payload) or "{}",
+    def create_queued(self, payload: dict[str, Any]) -> CeisaXrayPhotoGetRequest:
+        """Buat queue request get foto X-Ray dengan status QUEUED."""
+        log = CeisaXrayPhotoGetRequest(
+            nomor_aju=self._normalize_nullable(payload.get("nomorAju")),
+            nomor_bl_awb=self._normalize_nullable(payload.get("nomorBlAwb")),
+            tanggal_bl_awb=payload.get("tanggalBlAwb"),
+            kode_kantor=self._normalize_nullable(payload.get("kodeKantor")),
             status="QUEUED",
         )
         self.db.add(log)
@@ -42,53 +33,15 @@ class CeisaXrayPhotoRepository:
         self.db.refresh(log)
         return log
 
-    def add_image(
-        self,
-        request_id: int,
-        original_filename: str,
-        stored_path: str,
-        content_type: str | None,
-        file_size: int | None,
-    ) -> CeisaXrayPhotoRequestImage:
-        """Simpan metadata file image yang diupload."""
-        image = CeisaXrayPhotoRequestImage(
-            xray_request_id=request_id,
-            original_filename=original_filename,
-            stored_path=stored_path,
-            content_type=content_type,
-            file_size=file_size,
-        )
-        self.db.add(image)
-        self.db.commit()
-        self.db.refresh(image)
-        return image
-
-    def set_images_count(self, log: CeisaXrayPhotoRequest, images_count: int) -> CeisaXrayPhotoRequest:
-        """Perbarui total image pada queue request."""
-        log.images_count = max(0, int(images_count))
-        log.updated_at = datetime.now(timezone.utc)
-        self.db.commit()
-        self.db.refresh(log)
-        return log
-
-    def get_by_id(self, request_id: int) -> CeisaXrayPhotoRequest | None:
+    def get_by_id(self, request_id: int) -> CeisaXrayPhotoGetRequest | None:
         """Ambil queue request berdasarkan id."""
         return (
-            self.db.query(CeisaXrayPhotoRequest)
-            .filter(CeisaXrayPhotoRequest.id == request_id)
+            self.db.query(CeisaXrayPhotoGetRequest)
+            .filter(CeisaXrayPhotoGetRequest.id == request_id)
             .first()
         )
 
-    def get_images(self, request_id: int) -> list[CeisaXrayPhotoRequestImage]:
-        """Ambil daftar metadata image berdasarkan id request."""
-        return (
-            self.db.query(CeisaXrayPhotoRequestImage)
-            .filter(CeisaXrayPhotoRequestImage.xray_request_id == request_id)
-            .order_by(CeisaXrayPhotoRequestImage.id.asc())
-            .all()
-        )
-
-    def mark_running(self, log: CeisaXrayPhotoRequest) -> CeisaXrayPhotoRequest:
+    def mark_running(self, log: CeisaXrayPhotoGetRequest) -> CeisaXrayPhotoGetRequest:
         """Ubah status menjadi RUNNING saat job mulai diproses."""
         log.status = "RUNNING"
         log.started_at = datetime.now(timezone.utc)
@@ -101,9 +54,9 @@ class CeisaXrayPhotoRepository:
 
     def mark_success(
         self,
-        log: CeisaXrayPhotoRequest,
+        log: CeisaXrayPhotoGetRequest,
         response_payload: Any,
-    ) -> CeisaXrayPhotoRequest:
+    ) -> CeisaXrayPhotoGetRequest:
         """Tandai request sebagai SUCCESS beserta payload response CEISA."""
         response_code, response_message = self._extract_response_summary(response_payload)
         log.status = "SUCCESS"
@@ -117,7 +70,7 @@ class CeisaXrayPhotoRepository:
         self.db.refresh(log)
         return log
 
-    def mark_failed(self, log: CeisaXrayPhotoRequest, error_message: str) -> CeisaXrayPhotoRequest:
+    def mark_failed(self, log: CeisaXrayPhotoGetRequest, error_message: str) -> CeisaXrayPhotoGetRequest:
         """Tandai request sebagai FAILED."""
         log.status = "FAILED"
         log.finished_at = datetime.now(timezone.utc)
@@ -128,11 +81,19 @@ class CeisaXrayPhotoRepository:
         return log
 
     @staticmethod
-    def ensure_exists(log: CeisaXrayPhotoRequest | None) -> CeisaXrayPhotoRequest:
+    def ensure_exists(log: CeisaXrayPhotoGetRequest | None) -> CeisaXrayPhotoGetRequest:
         """Validasi entity request harus ditemukan."""
         if log is None:
-            raise HTTPException(status_code=404, detail="Request kirim foto X-Ray CEISA tidak ditemukan")
+            raise HTTPException(status_code=404, detail="Request get foto X-Ray CEISA tidak ditemukan")
         return log
+
+    @staticmethod
+    def _normalize_nullable(value: Any) -> str | None:
+        """Normalisasi field string nullable."""
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
 
     @staticmethod
     def _extract_response_summary(response_payload: Any) -> tuple[int | None, str | None]:
@@ -159,3 +120,4 @@ class CeisaXrayPhotoRepository:
             return json.dumps(payload, ensure_ascii=False, default=str)
         except Exception:
             return str(payload)
+

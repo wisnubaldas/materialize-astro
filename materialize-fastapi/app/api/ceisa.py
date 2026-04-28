@@ -7,14 +7,22 @@ from app.dependencies.ceisa_reference_code_deps import (
     get_ceisa_reference_code_service_r,
     get_ceisa_sync_job_service_w,
 )
-from app.dependencies.ceisa_xray_photo_deps import get_ceisa_xray_photo_service_w
+from app.dependencies.ceisa_xray_photo_deps import (
+    get_ceisa_xray_photo_get_service_w,
+    get_ceisa_xray_photo_service_w,
+)
 from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.sync_job import CeisaSyncJobService
+from app.integrations.ceisa.xray_photo_get_service import CeisaXrayPhotoGetService
 from app.integrations.ceisa.xray_photo_service import CeisaXrayPhotoService
 from app.job.ceisa_sync_job import run_ceisa_reference_sync_job
+from app.job.ceisa_xray_photo_get_job import run_ceisa_xray_photo_get_job
 from app.job.ceisa_xray_photo_job import run_ceisa_xray_photo_job
 from app.schemas.ceisa_xray_photo_schema import (
     CeisaXrayPhotoEnqueueResult,
+    CeisaXrayPhotoGetEnqueueResult,
+    CeisaXrayPhotoGetJobStatus,
+    CeisaXrayPhotoGetRequestPayload,
     CeisaXrayPhotoJobStatus,
 )
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -146,12 +154,41 @@ def enqueue_kirim_foto_xray(
     service: CeisaXrayPhotoService = Depends(get_ceisa_xray_photo_service_w),
 ):
     """Enqueue request kirim foto X-Ray CEISA."""
-    job = service.enqueue_request(payload_json=data, images=images)
+    job = service.enqueue_request(payload_json=data, images=images, operation_type="KIRIM")
     background_tasks.add_task(run_ceisa_xray_photo_job, int(job.id))
     return CeisaXrayPhotoEnqueueResult(
         job_id=int(job.id),
         status=job.status,
+        operation_type=job.operation_type,
         message="Request kirim foto X-Ray CEISA berhasil diantrikan",
+        nomor_aju=job.nomor_aju,
+        nomor_bl_awb=job.nomor_bl_awb,
+        tanggal_bl_awb=job.tanggal_bl_awb,
+        kode_kantor=job.kode_kantor,
+        images_count=int(job.images_count or 0),
+    )
+
+
+@router.post(
+    "/xray/add-foto-xray",
+    summary="Enqueue add foto X-Ray CEISA via background job",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=CeisaXrayPhotoEnqueueResult,
+)
+def enqueue_add_foto_xray(
+    background_tasks: BackgroundTasks,
+    data: str = Form(..., description="JSON string payload part `data`"),
+    images: list[UploadFile] = File(..., description="Daftar file image (multipart field `images`)"),
+    service: CeisaXrayPhotoService = Depends(get_ceisa_xray_photo_service_w),
+):
+    """Enqueue request add foto X-Ray CEISA."""
+    job = service.enqueue_request(payload_json=data, images=images, operation_type="ADD")
+    background_tasks.add_task(run_ceisa_xray_photo_job, int(job.id))
+    return CeisaXrayPhotoEnqueueResult(
+        job_id=int(job.id),
+        status=job.status,
+        operation_type=job.operation_type,
+        message="Request add foto X-Ray CEISA berhasil diantrikan",
         nomor_aju=job.nomor_aju,
         nomor_bl_awb=job.nomor_bl_awb,
         tanggal_bl_awb=job.tanggal_bl_awb,
@@ -174,11 +211,64 @@ def get_kirim_foto_xray_job(
     return CeisaXrayPhotoJobStatus(
         job_id=int(job.id),
         status=job.status,
+        operation_type=job.operation_type,
         nomor_aju=job.nomor_aju,
         nomor_bl_awb=job.nomor_bl_awb,
         tanggal_bl_awb=job.tanggal_bl_awb,
         kode_kantor=job.kode_kantor,
         images_count=int(job.images_count or 0),
+        requested_at=job.requested_at,
+        started_at=job.started_at,
+        finished_at=job.finished_at,
+        ceisa_response_code=job.ceisa_response_code,
+        ceisa_response_message=job.ceisa_response_message,
+        error_message=job.error_message,
+    )
+
+
+@router.post(
+    "/xray/get-foto-xray",
+    summary="Enqueue get foto X-Ray CEISA via background job",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=CeisaXrayPhotoGetEnqueueResult,
+)
+def enqueue_get_foto_xray(
+    payload: CeisaXrayPhotoGetRequestPayload,
+    background_tasks: BackgroundTasks,
+    service: CeisaXrayPhotoGetService = Depends(get_ceisa_xray_photo_get_service_w),
+):
+    """Enqueue request get foto X-Ray CEISA."""
+    job = service.enqueue_request(payload=payload)
+    background_tasks.add_task(run_ceisa_xray_photo_get_job, int(job.id))
+    return CeisaXrayPhotoGetEnqueueResult(
+        job_id=int(job.id),
+        status=job.status,
+        message="Request get foto X-Ray CEISA berhasil diantrikan",
+        nomor_aju=job.nomor_aju,
+        nomor_bl_awb=job.nomor_bl_awb,
+        tanggal_bl_awb=job.tanggal_bl_awb,
+        kode_kantor=job.kode_kantor,
+    )
+
+
+@router.get(
+    "/xray/get-foto-xray/jobs/{job_id}",
+    summary="Status job get foto X-Ray CEISA",
+    response_model=CeisaXrayPhotoGetJobStatus,
+)
+def get_get_foto_xray_job(
+    job_id: int,
+    service: CeisaXrayPhotoGetService = Depends(get_ceisa_xray_photo_get_service_w),
+):
+    """Ambil status job get foto X-Ray CEISA."""
+    job = service.get_job(job_id)
+    return CeisaXrayPhotoGetJobStatus(
+        job_id=int(job.id),
+        status=job.status,
+        nomor_aju=job.nomor_aju,
+        nomor_bl_awb=job.nomor_bl_awb,
+        tanggal_bl_awb=job.tanggal_bl_awb,
+        kode_kantor=job.kode_kantor,
         requested_at=job.requested_at,
         started_at=job.started_at,
         finished_at=job.finished_at,

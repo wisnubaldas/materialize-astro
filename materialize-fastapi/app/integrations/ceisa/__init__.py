@@ -12,6 +12,7 @@ _LAZY_ATTRS = {
     "CeisaReferenceCodeService": "app.integrations.ceisa.reference_code",
     "CeisaSyncJobService": "app.integrations.ceisa.sync_job",
     "CeisaXrayPhotoService": "app.integrations.ceisa.xray_photo_service",
+    "CeisaXrayPhotoGetService": "app.integrations.ceisa.xray_photo_get_service",
 }
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "CeisaReferenceCodeService",
     "CeisaSyncJobService",
     "CeisaXrayPhotoService",
+    "CeisaXrayPhotoGetService",
 ]
 
 

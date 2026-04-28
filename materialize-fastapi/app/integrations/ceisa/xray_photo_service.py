@@ -43,11 +43,16 @@ class CeisaXrayPhotoService:
         self,
         payload_json: str,
         images: list[UploadFile],
+        operation_type: str = "KIRIM",
     ):
         """Simpan request kirim foto X-Ray ke queue dan storage lokal."""
+        op_type = self._normalize_operation_type(operation_type)
         payload = self.parse_payload_json(payload_json)
         self._ensure_images(images)
-        log = self.repository.create_queued(payload.model_dump())
+        log = self.repository.create_queued(
+            payload.model_dump(),
+            operation_type=op_type,
+        )
 
         saved_files = self._save_uploaded_images(int(log.id), images)
         for saved_file in saved_files:
@@ -76,7 +81,11 @@ class CeisaXrayPhotoService:
         try:
             self.repository.mark_running(log)
             payload = self._load_payload_dict(log.request_payload)
-            response_payload = self._send_to_ceisa(payload=payload, images=images)
+            response_payload = self._send_to_ceisa(
+                operation_type=str(log.operation_type or "KIRIM"),
+                payload=payload,
+                images=images,
+            )
             self.repository.mark_success(log=log, response_payload=response_payload)
         except HTTPException as exc:
             self.repository.mark_failed(log=log, error_message=str(exc.detail))
@@ -134,8 +143,9 @@ class CeisaXrayPhotoService:
             )
         return saved_files
 
-    def _send_to_ceisa(self, payload: dict[str, Any], images) -> Any:
+    def _send_to_ceisa(self, operation_type: str, payload: dict[str, Any], images) -> Any:
         """Kirim multipart data + images ke endpoint kirim foto X-Ray CEISA."""
+        endpoint_path = self._resolve_upload_endpoint(operation_type)
         multipart_files: list[tuple[str, Any]] = []
         opened_files = []
         try:
@@ -166,7 +176,7 @@ class CeisaXrayPhotoService:
                 )
             return self.client.request(
                 method="POST",
-                path="/openapi/cnpibk/xray/kirim-foto-xray",
+                path=endpoint_path,
                 files=multipart_files,
             )
         finally:
@@ -186,3 +196,22 @@ class CeisaXrayPhotoService:
         if not isinstance(parsed, dict):
             raise HTTPException(status_code=500, detail="Payload request X-Ray harus object JSON")
         return parsed
+
+    @staticmethod
+    def _normalize_operation_type(operation_type: str) -> str:
+        """Normalisasi dan validasi tipe operasi upload foto X-Ray."""
+        normalized = str(operation_type or "KIRIM").upper().strip()
+        if normalized not in {"KIRIM", "ADD"}:
+            raise HTTPException(
+                status_code=400,
+                detail="Operation type upload X-Ray tidak valid",
+            )
+        return normalized
+
+    @staticmethod
+    def _resolve_upload_endpoint(operation_type: str) -> str:
+        """Pilih endpoint CEISA sesuai tipe operasi upload foto X-Ray."""
+        normalized = CeisaXrayPhotoService._normalize_operation_type(operation_type)
+        if normalized == "ADD":
+            return "/openapi/cnpibk/xray/add-foto-xray"
+        return "/openapi/cnpibk/xray/kirim-foto-xray"

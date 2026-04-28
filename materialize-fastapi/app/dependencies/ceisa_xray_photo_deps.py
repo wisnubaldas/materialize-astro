@@ -7,6 +7,7 @@ from app.db.mysql import get_db1_w
 from app.integrations.ceisa.client import CeisaClientService
 from app.integrations.ceisa.log_service import CeisaLogService
 from app.integrations.ceisa.oauth import CeisaOAuthService
+from app.integrations.ceisa.xray_photo_get_service import CeisaXrayPhotoGetService
 from app.integrations.ceisa.xray_photo_service import CeisaXrayPhotoService
 from app.repository.ceisa_log_repository import CeisaLogRepository
 
@@ -30,3 +31,10 @@ def get_ceisa_xray_photo_service_w(
     """Dependency service write untuk enqueue/proses kirim foto X-Ray."""
     return CeisaXrayPhotoService(db=db, client=client)
 
+
+def get_ceisa_xray_photo_get_service_w(
+    db: Session = Depends(get_db1_w),
+    client: CeisaClientService = Depends(get_ceisa_client_service),
+) -> CeisaXrayPhotoGetService:
+    """Dependency service write untuk enqueue/proses get foto X-Ray."""
+    return CeisaXrayPhotoGetService(db=db, client=client)
