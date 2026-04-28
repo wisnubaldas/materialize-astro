@@ -223,31 +223,16 @@ class CeisaOAuthService:
     def _cache_tokens(self, payload: dict[str, Any]) -> str:
         """Ekstrak token dari payload lalu simpan ke cache in-memory."""
         cache_cls = type(self)
-        access_token = self._pick_first(payload, ("access_token", "accessToken", "token"))
+        token_container = self._extract_token_container(payload)
+        access_token = self._pick_first(token_container, ("access_token", "accessToken", "token"))
         refresh_token = self._pick_first(
-            payload,
+            token_container,
             ("refresh_token", "refreshToken", "tokenRefresh", "refresh"),
         )
         expires_value = self._pick_first(
-            payload,
+            token_container,
             ("expires_in", "expiresIn", "expiredIn", "expireIn"),
         )
-
-        if not access_token:
-            nested_data = payload.get("data")
-            if isinstance(nested_data, dict):
-                access_token = self._pick_first(
-                    nested_data, ("access_token", "accessToken", "token")
-                )
-                if not refresh_token:
-                    refresh_token = self._pick_first(
-                        nested_data,
-                        ("refresh_token", "refreshToken", "tokenRefresh", "refresh"),
-                    )
-                if not expires_value:
-                    expires_value = self._pick_first(
-                        nested_data, ("expires_in", "expiresIn", "expiredIn", "expireIn")
-                    )
 
         if not access_token:
             raise HTTPException(status_code=502, detail="Access token CEISA tidak ditemukan")
@@ -266,6 +251,19 @@ class CeisaOAuthService:
             seconds=max(30, expires_in - 30)
         )
         return cache_cls._access_token_cache
+
+    @staticmethod
+    def _extract_token_container(payload: dict[str, Any]) -> dict[str, Any]:
+        """Ambil container payload token dari beberapa bentuk wrapper response CEISA."""
+        if CeisaOAuthService._pick_first(payload, ("access_token", "accessToken", "token")):
+            return payload
+        for key in ("item", "data", "result", "results", "body"):
+            nested = payload.get(key)
+            if isinstance(nested, dict) and CeisaOAuthService._pick_first(
+                nested, ("access_token", "accessToken", "token")
+            ):
+                return nested
+        return payload
 
     def _ensure_auth_configuration(self) -> None:
         """Validasi konfigurasi minimum autentikasi CEISA."""
