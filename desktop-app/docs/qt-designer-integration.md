@@ -14,6 +14,8 @@ Dokumen ini menjelaskan workflow integrasi Qt Designer pada desktop app agar lay
 - File saat ini:
   - `app/resources/ui/login_view.ui`
   - `app/resources/ui/main_window.ui`
+  - `app/resources/ui/warehouse/weighing_view.ui`
+  - `app/resources/ui/warehouse/buildup_view.ui`
 
 ## Cara Edit dengan Qt Designer
 1. Jalankan `pyside6-designer`.
@@ -38,6 +40,18 @@ Dokumen ini menjelaskan workflow integrasi Qt Designer pada desktop app agar lay
 - `weighingPage`
 - `buildupPage`
 
+### Weighing View
+- `masterAwbInput`
+- `weightInput`
+- `saveButton`
+- `clearButton`
+- `statusLabel`
+
+### Buildup View
+- `masterAwbListInput`
+- `lookupButton`
+- `resultHintLabel`
+
 ## Pola Load UI
 - Gunakan helper: `app/views/ui_loader.py`.
 - Jangan hardcode layout widget di view jika sudah ada di `.ui`.
@@ -49,4 +63,3 @@ Dokumen ini menjelaskan workflow integrasi Qt Designer pada desktop app agar lay
 3. Pastikan tidak ada API call langsung dari view.
 4. Tambahkan/ubah test pada viewmodel/service yang relevan.
 5. Jalankan `python -m compileall app` dan `python -m pytest`.
-
