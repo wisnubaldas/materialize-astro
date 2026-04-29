@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable
 
 from PySide6.QtCore import QObject, QThread, Signal
@@ -27,7 +28,11 @@ class FunctionWorker(QObject):
             payload = self._fn(*self._args, **self._kwargs)
             self.result.emit(payload)
         except Exception as exc:  # noqa: BLE001
-            self.error.emit(str(exc))
+            logging.exception("Worker execution failed")
+            message = str(exc).strip()
+            if not message:
+                message = f"{exc.__class__.__name__} (tanpa detail pesan)"
+            self.error.emit(message)
         finally:
             self.finished.emit()
 

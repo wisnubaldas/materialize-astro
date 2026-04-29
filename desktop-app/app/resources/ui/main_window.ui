@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindowCentral</class>
+ <widget class="QWidget" name="MainWindowCentral">
+  <layout class="QHBoxLayout" name="rootLayout">
+   <item>
+    <layout class="QVBoxLayout" name="menuLayout">
+     <item>
+      <widget class="QLabel" name="userInfoLabel">
+       <property name="text">
+        <string>User: -</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="menuList"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="logoutButton">
+       <property name="text">
+        <string>Logout</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackPages">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="dashboardPage">
+      <layout class="QVBoxLayout" name="dashboardLayout">
+       <item>
+        <widget class="QLabel" name="dashboardLabel">
+         <property name="text">
+          <string>Selamat datang di desktop MAU APP.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="weighingPage">
+      <layout class="QVBoxLayout" name="weighingPageLayout"/>
+     </widget>
+     <widget class="QWidget" name="buildupPage">
+      <layout class="QVBoxLayout" name="buildupPageLayout"/>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+

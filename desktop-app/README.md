@@ -31,6 +31,26 @@ copy .env.example .env
 python -m app.main
 ```
 
+## Menjalankan Mode Debug
+
+1. Pastikan file `desktop-app/.env` ada (copy dari `.env.example`).
+2. Set `MAU_APP_DEBUG=true`.
+3. Jalankan dari terminal di folder `desktop-app`.
+
+Contoh:
+
+```bash
+set MAU_APP_DEBUG=true
+python -X dev -m app.main
+```
+
+Saat debug aktif, terminal akan menampilkan:
+- log konfigurasi (`API base URL`, timeout),
+- log request HTTP (`httpx/httpcore`),
+- traceback lengkap jika worker thread gagal.
+
+Jika login loading lama, cek dulu nilai `MAU_API_BASE_URL` pada `desktop-app/.env`.
+
 ## Menjalankan Test
 
 ```bash
@@ -44,3 +64,10 @@ pytest
 - Semua request API memakai `HttpClient` terpusat dengan timeout eksplisit.
 - Login menggunakan endpoint resmi backend: `POST /auth/login`.
 - Request jaringan dijalankan di background thread (`QThread`) agar UI tidak freeze.
+
+## Workflow Qt Designer
+
+- Layout/frame dikelola di file `.ui` pada `app/resources/ui`.
+- View Python memuat `.ui` via `app/views/ui_loader.py`, lalu melakukan event binding ke ViewModel.
+- Panduan detail ada di:
+  - `desktop-app/docs/qt-designer-integration.md`

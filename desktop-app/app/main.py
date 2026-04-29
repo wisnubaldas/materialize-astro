@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 
 from PySide6.QtWidgets import QApplication
@@ -25,6 +26,16 @@ from app.views.main_window import MainWindow
 def bootstrap() -> int:
     """Initialize dependencies, apply UI theme, and run desktop application loop."""
     config = AppConfig.load()
+    if config.app_debug:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        )
+        logging.getLogger("httpx").setLevel(logging.DEBUG)
+        logging.getLogger("httpcore").setLevel(logging.DEBUG)
+        logging.debug("Desktop debug mode enabled")
+        logging.debug("API base URL: %s", config.api_base_url)
+        logging.debug("API timeout seconds: %s", config.api_timeout_seconds)
 
     app = QApplication(sys.argv)
     apply_stylesheet(app, theme="light_blue.xml")

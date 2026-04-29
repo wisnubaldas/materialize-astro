@@ -165,6 +165,10 @@ desktop-app/
 
 - UI harus sederhana, cepat, dan cocok untuk input operasional gudang.
 - Desaign UI menggunakan `qt-material` tidak boleh membuat layout atau komponent tanpa Qt-Material
+- Untuk mempermudah maintainability, layout/frame desktop **wajib** dibuat melalui Qt Designer (`.ui`) jika screen bersifat form/page utama.
+- Simpan file `.ui` di `desktop-app/app/resources/ui/`.
+- File `views/*.py` bertugas memuat `.ui`, binding event, dan sinkronisasi state; jangan letakkan business logic atau request API langsung di view.
+- Gunakan `objectName` yang konsisten dan stabil di `.ui` agar binding Python tidak rusak saat refactor UI.
 - Form harus mendukung keyboard-first workflow jika digunakan operator.
 - Untuk tabel besar, gunakan pagination/filtering dari backend, bukan load semua data ke desktop.
 - Jangan freeze UI saat request API berjalan. Gunakan worker thread, `QThread`, `QRunnable`, atau pola async yang aman untuk Qt.
@@ -231,6 +235,7 @@ desktop-app/
 ### Desktop Frontend Standards
 
 - Desktop app menggunakan PySide6 sebagai UI framework utama.
+- Layout utama desktop direkomendasikan menggunakan Qt Designer (`.ui`) dan dimuat dari layer view.
 - Desktop app wajib mengikuti MVVM + Service Layer + API Client.
 - Business logic inti tetap di backend FastAPI.
 - Desktop app wajib menggunakan endpoint API resmi, bukan query database langsung.
