@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.utils.formatter import format_roles
+from app.utils.ui_style import set_button_variant
 from app.viewmodels.main_viewmodel import MainViewModel
 from app.views.ui_loader import load_ui_widget
 from app.views.warehouse.buildup_view import BuildupView
@@ -47,6 +48,7 @@ class MainWindow(QMainWindow):
         self._menu_list.addItem(QListWidgetItem("Warehouse Weighing"))
         self._menu_list.addItem(QListWidgetItem("Warehouse Buildup"))
 
+        set_button_variant(logout_button, "danger")
         logout_button.clicked.connect(self._on_logout_clicked)
         self._mount_page_widget(self._weighing_page, WeighingView())
         self._mount_page_widget(self._buildup_page, BuildupView())

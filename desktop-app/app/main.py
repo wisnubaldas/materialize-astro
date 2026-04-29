@@ -15,6 +15,7 @@ from app.core.session import SessionState
 from app.core.token_store import TokenStore
 from app.services.auth_service import AuthService
 from app.services.warehouse_service import WarehouseService
+from app.utils.ui_style import apply_app_stylesheet
 from app.viewmodels.login_viewmodel import LoginViewModel
 from app.viewmodels.main_viewmodel import MainViewModel
 from app.viewmodels.warehouse_viewmodel import WarehouseViewModel
@@ -38,6 +39,7 @@ def bootstrap() -> int:
 
     app = QApplication(sys.argv)
     app.setStyle(QStyleFactory.create("Fusion"))
+    apply_app_stylesheet(app)
 
     session = SessionState()
     token_store = TokenStore()

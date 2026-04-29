@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 
+from app.utils.ui_style import set_button_variant
 from app.views.ui_loader import load_ui_widget
 
 
@@ -24,6 +25,8 @@ class WeighingView(QWidget):
         self._clear_button = self._require_child(QPushButton, "clearButton")
         self._status_label = self._require_child(QLabel, "statusLabel")
 
+        set_button_variant(self._save_button, "primary")
+        set_button_variant(self._clear_button, "ghost")
         self._save_button.clicked.connect(self._on_save_clicked)
         self._clear_button.clicked.connect(self._on_clear_clicked)
 

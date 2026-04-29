@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidg
 
 from app.core.worker import run_in_thread
 from app.schemas.auth_schema import UserProfileDTO
+from app.utils.ui_style import set_button_variant
 from app.viewmodels.login_viewmodel import LoginViewModel
 from app.views.ui_loader import load_ui_widget
 
@@ -38,6 +39,7 @@ class LoginView(QWidget):
 
         self._password_input.returnPressed.connect(self._on_login_clicked)
         self._login_button.clicked.connect(self._on_login_clicked)
+        set_button_variant(self._login_button, "primary")
 
         self.setWindowTitle(self._ui_root.windowTitle())
         self.resize(420, 180)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 
+from app.utils.ui_style import set_button_variant
 from app.views.ui_loader import load_ui_widget
 
 
@@ -22,6 +23,7 @@ class BuildupView(QWidget):
         self._lookup_button = self._require_child(QPushButton, "lookupButton")
         self._result_hint_label = self._require_child(QLabel, "resultHintLabel")
 
+        set_button_variant(self._lookup_button, "primary")
         self._lookup_button.clicked.connect(self._on_lookup_clicked)
 
     def _require_child(self, widget_type: type, name: str):

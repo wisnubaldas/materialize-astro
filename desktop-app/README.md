@@ -64,6 +64,8 @@ pytest
 - Semua request API memakai `HttpClient` terpusat dengan timeout eksplisit.
 - Login menggunakan endpoint resmi backend: `POST /auth/login`.
 - Request jaringan dijalankan di background thread (`QThread`) agar UI tidak freeze.
+- Style tombol reusable dikelola di `app/resources/styles/app.qss` dengan helper `app/utils/ui_style.py`.
+- Varian tombol yang tersedia saat ini: `primary`, `danger`, `ghost`.
 
 ## Workflow Qt Designer
 
@@ -85,3 +87,17 @@ Jika butuh tampilan tambahan di masa depan, opsi yang relatif stabil dan ringan:
 - `QtAwesome` untuk icon font yang konsisten tanpa path file icon absolut.
 
 Gunakan plugin opsional hanya bila benar-benar diperlukan dan pastikan tidak mengganggu stabilitas startup.
+
+## Pemakaian Button Primary
+
+Contoh pemakaian pada view:
+
+```python
+from app.utils.ui_style import set_button_variant
+
+set_button_variant(self._login_button, "primary")
+```
+
+Varian lain:
+- `set_button_variant(button, "danger")`
+- `set_button_variant(button, "ghost")`
