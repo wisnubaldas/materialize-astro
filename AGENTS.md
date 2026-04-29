@@ -175,3 +175,15 @@ app/
 - tabel-tabel CEISA harus menggunakan prefix `mst_ceisa_*` untuk master dan `ceisa_*` untuk tabel transaksi
 - wajib buatkan log untuk request dan response ke CEISA
 - Jangan menjaga backward compatibility lama ketika ada perubahan pada modul atau perubahan yang terkait dengan proses bisnis
+
+# Barcode Scanner Project
+
+Buatkan program Python menggunakan framework PyQt6 untuk aplikasi barcode scanner. Alat yang digunakan adalah Symbol Barcode Scanner via USB HID (sebagai keyboard). Project directory berada di `barcode-scanner`
+
+### Fitur yang diinginkan
+
+- Interface memiliki satu QLineEdit yang selalu fokus secara otomatis.
+- Gunakan event filter atau listener untuk menangkap input barcode yang masuk dengan cepat.
+- Setiap kali karakter `Enter` (ASCII 13) terdeteksi (sebagai penanda akhir scan dari alat Symbol), ambil seluruh string barcode tersebut, tampilkan di daftar log pada UI, lalu kosongkan kembali input field-nya.
+- Tambahkan fungsi simulasi database sederhana (dictionary) untuk mengecek apakah barcode yang di-scan terdaftar atau tidak.
+- Pastikan kode menangani input cepat agar tidak ada karakter yang tertinggal.
