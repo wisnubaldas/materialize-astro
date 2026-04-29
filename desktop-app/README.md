@@ -72,25 +72,16 @@ pytest
 - Panduan detail ada di:
   - `desktop-app/docs/qt-designer-integration.md`
 
-## Qt Material + Designer
+## Tema UI Bawaan PySide6
 
-Catatan penting:
-- Saat file `.ui` dibuka langsung di Qt Designer, stylesheet runtime dari aplikasi tidak otomatis terpasang.
-- Tampilan final yang akurat adalah saat `.ui` dijalankan lewat runtime app/preview script.
+- Aplikasi memakai style bawaan Qt: `Fusion` (stabil dan ringan lintas platform).
+- Tidak ada dependency styling eksternal wajib.
+- Preview di Qt Designer akan lebih konsisten karena tidak bergantung plugin stylesheet runtime.
 
-Perintah preview `.ui` dengan tema yang sama seperti aplikasi:
+## Rekomendasi Plugin UI (Opsional)
 
-```bash
-python scripts/preview_ui.py app/resources/ui/login_view.ui
-```
+Jika butuh tampilan tambahan di masa depan, opsi yang relatif stabil dan ringan:
+- `QDarkStyleSheet (qdarkstyle)` untuk dark theme sederhana berbasis QSS.
+- `QtAwesome` untuk icon font yang konsisten tanpa path file icon absolut.
 
-Export stylesheet resolved untuk preview di Qt Designer:
-
-```bash
-python scripts/export_designer_qss.py
-```
-
-File output:
-- `app/resources/styles/qt_material_designer_preview.qss`
-
-Gunakan file QSS tersebut di Qt Designer (preview stylesheet) bila ingin tampilan mendekati runtime.
+Gunakan plugin opsional hanya bila benar-benar diperlukan dan pastikan tidak mengganggu stabilitas startup.

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import logging
 import sys
-from pathlib import Path
 
-from PySide6.QtWidgets import QApplication
-from qt_material import apply_stylesheet
+from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from app.api.auth_api import AuthApi
 from app.api.http_client import HttpClient
@@ -37,17 +35,9 @@ def bootstrap() -> int:
         logging.debug("Desktop debug mode enabled")
         logging.debug("API base URL: %s", config.api_base_url)
         logging.debug("API timeout seconds: %s", config.api_timeout_seconds)
-        logging.debug("UI theme: %s", config.ui_theme)
-        logging.debug("UI density scale: %s", config.ui_density_scale)
 
     app = QApplication(sys.argv)
-    css_override_path = Path(__file__).resolve().parent / "resources" / "styles" / "qt_material_overrides.css"
-    apply_stylesheet(
-        app,
-        theme=config.ui_theme,
-        extra={"density_scale": config.ui_density_scale},
-        css_file=str(css_override_path),
-    )
+    app.setStyle(QStyleFactory.create("Fusion"))
 
     session = SessionState()
     token_store = TokenStore()

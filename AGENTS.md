@@ -164,13 +164,15 @@ desktop-app/
 #### Desktop UI Rules
 
 - UI harus sederhana, cepat, dan cocok untuk input operasional gudang.
-- Desaign UI menggunakan `qt-material` tidak boleh membuat layout atau komponent tanpa Qt-Material
 - Untuk mempermudah maintainability, layout/frame desktop **wajib** dibuat melalui Qt Designer (`.ui`) jika screen bersifat form/page utama.
 - Simpan file `.ui` di `desktop-app/app/resources/ui/`.
 - File `views/*.py` bertugas memuat `.ui`, binding event, dan sinkronisasi state; jangan letakkan business logic atau request API langsung di view.
 - Gunakan `objectName` yang konsisten dan stabil di `.ui` agar binding Python tidak rusak saat refactor UI.
-- Karena Qt Designer tidak otomatis menerapkan `qt-material` runtime, validasi visual akhir **wajib** dilakukan dengan preview runtime bertema material (script preview) atau menjalankan aplikasi.
-- Gunakan stylesheet override terpusat (`desktop-app/app/resources/styles/qt_material_overrides.css`) untuk menjaga konsistensi spacing/ukuran komponen saat icon button ditambahkan.
+- Untuk stabilitas default, gunakan style bawaan Qt (`Fusion`) pada runtime desktop.
+- Plugin UI/styling eksternal bersifat opsional; hanya digunakan jika ada kebutuhan yang jelas dan harus diuji tidak mengganggu startup/performa.
+- Jika butuh plugin opsional yang relatif ringan/stabil:
+  - Theme sederhana: `qdarkstyle` (QSS-based).
+  - Icon konsisten: `qtawesome` (icon font).
 - Saat menambahkan icon di `.ui`, dilarang memakai path absolut OS; icon harus disimpan di `desktop-app/app/resources/icons/` dengan path project yang stabil.
 - Form harus mendukung keyboard-first workflow jika digunakan operator.
 - Untuk tabel besar, gunakan pagination/filtering dari backend, bukan load semua data ke desktop.
@@ -239,6 +241,7 @@ desktop-app/
 
 - Desktop app menggunakan PySide6 sebagai UI framework utama.
 - Layout utama desktop direkomendasikan menggunakan Qt Designer (`.ui`) dan dimuat dari layer view.
+- Gunakan UI style native Qt untuk baseline stabil; hindari ketergantungan theme plugin sebagai default.
 - Desktop app wajib mengikuti MVVM + Service Layer + API Client.
 - Business logic inti tetap di backend FastAPI.
 - Desktop app wajib menggunakan endpoint API resmi, bukan query database langsung.

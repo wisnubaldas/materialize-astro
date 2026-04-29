@@ -24,28 +24,17 @@ Dokumen ini menjelaskan workflow integrasi Qt Designer pada desktop app agar lay
 4. Pastikan `objectName` widget tidak berubah sembarangan.
 5. Simpan file `.ui`.
 
-## Kenapa Designer Tidak Otomatis Material
-- `qt-material` dipasang saat runtime aplikasi (`apply_stylesheet`), bukan saat file `.ui` dibuka mentah oleh Qt Designer.
-- Jadi preview native di Designer bisa berbeda dengan hasil final aplikasi.
-
-## Preview Bertema Material
-- Gunakan script preview runtime:
-  - `python scripts/preview_ui.py app/resources/ui/login_view.ui`
-  - `python scripts/preview_ui.py app/resources/ui/main_window.ui`
-
-## Export QSS untuk Designer
-1. Jalankan:
-   - `python scripts/export_designer_qss.py`
-2. File hasil:
-   - `app/resources/styles/qt_material_designer_preview.qss`
-3. Load file QSS tersebut ke preview stylesheet Qt Designer agar tampilan mendekati runtime.
+## Catatan Tema
+- Desktop app menggunakan style bawaan Qt (`Fusion`) untuk stabilitas.
+- Tidak ada stylesheet plugin eksternal wajib saat runtime.
+- Preview Qt Designer umumnya sudah mendekati runtime karena keduanya memakai UI native Qt.
 
 ## Aturan Icon di Designer
 - Jangan gunakan path absolut OS (contoh: `C:\Users\...\Pictures\icon.png`) pada properti icon widget.
 - Simpan icon di `app/resources/icons/`.
 - Gunakan path resource project yang stabil agar tidak rusak saat dijalankan di mesin lain.
-- Setelah menambahkan icon, validasi kembali dengan:
-  - `python scripts/preview_ui.py <path-ui>`
+- Setelah menambahkan icon, validasi kembali dengan menjalankan app:
+  - `python -m app.main`
 
 ## Kontrak Object Name
 ### Login View
