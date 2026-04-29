@@ -43,6 +43,9 @@
    </item>
    <item>
     <widget class="QPushButton" name="loginButton">
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
      <property name="text">
       <string>Login</string>
      </property>

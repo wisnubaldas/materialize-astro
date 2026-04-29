@@ -17,6 +17,8 @@ class AppConfig:
     api_timeout_seconds: float
     app_env: str
     app_debug: bool
+    ui_theme: str
+    ui_density_scale: str
 
     @classmethod
     def load(cls, env_file: str | None = None) -> "AppConfig":
@@ -35,9 +37,13 @@ class AppConfig:
         timeout = float(os.getenv("MAU_API_TIMEOUT_SECONDS", "15"))
         app_env = os.getenv("MAU_APP_ENV", "development")
         app_debug = os.getenv("MAU_APP_DEBUG", "false").lower() in {"1", "true", "yes", "on"}
+        ui_theme = os.getenv("MAU_UI_THEME", "light_blue.xml")
+        ui_density_scale = os.getenv("MAU_UI_DENSITY_SCALE", "0")
         return cls(
             api_base_url=base_url,
             api_timeout_seconds=timeout,
             app_env=app_env,
             app_debug=app_debug,
+            ui_theme=ui_theme,
+            ui_density_scale=ui_density_scale,
         )

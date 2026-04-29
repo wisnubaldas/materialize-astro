@@ -169,6 +169,9 @@ desktop-app/
 - Simpan file `.ui` di `desktop-app/app/resources/ui/`.
 - File `views/*.py` bertugas memuat `.ui`, binding event, dan sinkronisasi state; jangan letakkan business logic atau request API langsung di view.
 - Gunakan `objectName` yang konsisten dan stabil di `.ui` agar binding Python tidak rusak saat refactor UI.
+- Karena Qt Designer tidak otomatis menerapkan `qt-material` runtime, validasi visual akhir **wajib** dilakukan dengan preview runtime bertema material (script preview) atau menjalankan aplikasi.
+- Gunakan stylesheet override terpusat (`desktop-app/app/resources/styles/qt_material_overrides.css`) untuk menjaga konsistensi spacing/ukuran komponen saat icon button ditambahkan.
+- Saat menambahkan icon di `.ui`, dilarang memakai path absolut OS; icon harus disimpan di `desktop-app/app/resources/icons/` dengan path project yang stabil.
 - Form harus mendukung keyboard-first workflow jika digunakan operator.
 - Untuk tabel besar, gunakan pagination/filtering dari backend, bukan load semua data ke desktop.
 - Jangan freeze UI saat request API berjalan. Gunakan worker thread, `QThread`, `QRunnable`, atau pola async yang aman untuk Qt.
