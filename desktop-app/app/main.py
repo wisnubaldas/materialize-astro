@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 import sys
 
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from app.api.auth_api import AuthApi
 from app.api.http_client import HttpClient
 from app.api.warehouse_api import WarehouseApi
 from app.core.config import AppConfig
+from app.resources import resources_rc as _resources_rc
 from app.core.session import SessionState
 from app.core.token_store import TokenStore
 from app.services.auth_service import AuthService
@@ -39,6 +41,7 @@ def bootstrap() -> int:
 
     app = QApplication(sys.argv)
     app.setStyle(QStyleFactory.create("Fusion"))
+    app.setFont(QFont("Ubuntu", 11))
     apply_app_stylesheet(app)
 
     session = SessionState()

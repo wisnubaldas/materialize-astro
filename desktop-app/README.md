@@ -66,6 +66,8 @@ pytest
 - Request jaringan dijalankan di background thread (`QThread`) agar UI tidak freeze.
 - Style tombol reusable dikelola di `app/resources/styles/app.qss` dengan helper `app/utils/ui_style.py`.
 - Varian tombol yang tersedia saat ini: `primary`, `danger`, `ghost`.
+- Style form input (`QLineEdit`, `QComboBox`, `QSpinBox`, dll.) juga dikelola di `app/resources/styles/app.qss` dengan ukuran input yang lebih besar untuk workflow operasional.
+- Font global aplikasi ditetapkan ke `Ubuntu`.
 
 ## Workflow Qt Designer
 
@@ -73,6 +75,11 @@ pytest
 - View Python memuat `.ui` via `app/views/ui_loader.py`, lalu melakukan event binding ke ViewModel.
 - Panduan detail ada di:
   - `desktop-app/docs/qt-designer-integration.md`
+- Style global QSS:
+  - `app/resources/styles/app.qss`
+- Resource file untuk Designer/runtime:
+  - `app/resources/resources.qrc`
+  - `app/resources/resources_rc.py`
 
 ## Tema UI Bawaan PySide6
 

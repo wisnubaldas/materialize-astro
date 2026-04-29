@@ -1,3 +1,8 @@
+* {
+  font-family: "Ubuntu";
+  font-size: 11pt;
+}
+
 QPushButton {
   min-height: 34px;
   border: 1px solid #c8cdd4;
@@ -68,3 +73,51 @@ QPushButton[variant="ghost"]:hover {
   background-color: #f4f8ff;
 }
 
+QLineEdit,
+QTextEdit,
+QPlainTextEdit,
+QComboBox,
+QSpinBox,
+QDoubleSpinBox,
+QDateEdit,
+QTimeEdit,
+QDateTimeEdit {
+  min-height: 40px;
+  border: 1px solid #c8cdd4;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #25303b;
+  padding: 6px 10px;
+  selection-background-color: #1f6feb;
+  selection-color: #ffffff;
+}
+
+QLineEdit:focus,
+QTextEdit:focus,
+QPlainTextEdit:focus,
+QComboBox:focus,
+QSpinBox:focus,
+QDoubleSpinBox:focus,
+QDateEdit:focus,
+QTimeEdit:focus,
+QDateTimeEdit:focus {
+  border: 1px solid #1f6feb;
+}
+
+QLineEdit:disabled,
+QTextEdit:disabled,
+QPlainTextEdit:disabled,
+QComboBox:disabled,
+QSpinBox:disabled,
+QDoubleSpinBox:disabled,
+QDateEdit:disabled,
+QTimeEdit:disabled,
+QDateTimeEdit:disabled {
+  background-color: #f2f2f2;
+  color: #8a8f98;
+  border-color: #d9dce0;
+}
+
+QLabel {
+  color: #25303b;
+}

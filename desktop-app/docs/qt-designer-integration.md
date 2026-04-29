@@ -28,6 +28,23 @@ Dokumen ini menjelaskan workflow integrasi Qt Designer pada desktop app agar lay
 - Desktop app menggunakan style bawaan Qt (`Fusion`) untuk stabilitas.
 - Tidak ada stylesheet plugin eksternal wajib saat runtime.
 - Preview Qt Designer umumnya sudah mendekati runtime karena keduanya memakai UI native Qt.
+- Style global aplikasi berada di:
+  - `app/resources/styles/app.qss`
+
+## Konfigurasi QSS di Qt Designer (QRC)
+1. Pastikan file resource tersedia:
+   - `app/resources/resources.qrc`
+2. Di Qt Designer, buka panel **Resource Browser**.
+3. Klik ikon **pensil** lalu pilih **Open Resource File...**
+4. Pilih file `app/resources/resources.qrc`.
+5. Setelah resource ter-load, set property `styleSheet` pada root form:
+   - `@import url(:/styles/styles/app.qss);`
+6. Jalankan `Preview` (`Ctrl+R`) untuk melihat hasil.
+
+## Sinkronisasi Resource Runtime
+- Setelah mengubah `resources.qrc`, regenerate file Python resource:
+  - `pyside6-rcc app/resources/resources.qrc -o app/resources/resources_rc.py`
+- File `resources_rc.py` di-import saat startup app agar path `:/...` aktif.
 
 ## Aturan Icon di Designer
 - Jangan gunakan path absolut OS (contoh: `C:\Users\...\Pictures\icon.png`) pada properti icon widget.

@@ -169,6 +169,8 @@ desktop-app/
 - File `views/*.py` bertugas memuat `.ui`, binding event, dan sinkronisasi state; jangan letakkan business logic atau request API langsung di view.
 - Gunakan `objectName` yang konsisten dan stabil di `.ui` agar binding Python tidak rusak saat refactor UI.
 - Untuk stabilitas default, gunakan style bawaan Qt (`Fusion`) pada runtime desktop.
+- Global QSS desktop harus dikelola terpusat di `desktop-app/app/resources/styles/app.qss` dan diregistrasi via `desktop-app/app/resources/resources.qrc`.
+- Setelah perubahan pada `.qrc`, regenerate `resources_rc.py` dengan `pyside6-rcc` agar resource path `:/...` aktif di runtime.
 - Plugin UI/styling eksternal bersifat opsional; hanya digunakan jika ada kebutuhan yang jelas dan harus diuji tidak mengganggu startup/performa.
 - Jika butuh plugin opsional yang relatif ringan/stabil:
   - Theme sederhana: `qdarkstyle` (QSS-based).

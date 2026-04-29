@@ -530,6 +530,7 @@ $RECYCLE.BIN/
 # Files
 *.pyproject
 *.qrc
+!app/resources/resources.qrc
 /test/rc_project.py
 /rc_project.py
 /project.json
