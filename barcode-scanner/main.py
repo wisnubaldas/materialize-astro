@@ -51,6 +51,7 @@ class BarcodeScannerWindow(QMainWindow):
             "899999000002": {"item_name": "Cargo Label B", "location": "WH-B3"},
             "899999000003": {"item_name": "Cargo Label C", "location": "WH-C2"},
             "899999000004": {"item_name": "Cargo Label D", "location": "WH-D5"},
+            "8886008101053": {"item_name": "Cargo Label E", "location": "WH-E3"},
         }
 
     def _setup_ui(self) -> None:
