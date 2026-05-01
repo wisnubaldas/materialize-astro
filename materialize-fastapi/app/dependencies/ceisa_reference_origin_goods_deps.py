@@ -4,8 +4,8 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.repository.ceisa_log_repository import CeisaLogRepository
-from app.repository.ceisa_reference_origin_goods_repository import (
+from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_reference_origin_goods_repository import (
     CeisaReferenceOriginGoodsRepository,
 )
 from app.integrations.ceisa.client import CeisaClientService
@@ -62,3 +62,4 @@ def get_ceisa_reference_origin_goods_service_w(
 ) -> CeisaReferenceOriginGoodsService:
     """Dependency service write."""
     return CeisaReferenceOriginGoodsService(repo, ceisa_reference_service)
+

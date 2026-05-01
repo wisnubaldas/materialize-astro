@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r
-from app.repository.hubnet_request_repository import HubnetRequestRepository
+from app.repositories.hubnet_request_repository import HubnetRequestRepository
 from app.services.hubnet_service import HbnetRequestService
 
 
@@ -35,3 +35,4 @@ def get_data_sending_per_bulan_service(
 
 
 # ambil reponya dulu
+

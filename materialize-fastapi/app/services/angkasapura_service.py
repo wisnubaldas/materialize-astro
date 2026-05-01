@@ -29,7 +29,7 @@ from app.models.BaseDB1.ap2_fail_inv import AP2FAILINV
 from app.models.BaseDB1.inv_ap2 import InvAp2
 from app.models.BaseDB1.invoice_daily_counter import InvoiceDailyCounter
 from app.models.BaseDB1.respons_inv_ap2 import ResponsInvAp2
-from app.repository.query.inv_ap2_mapping import INVTOAP2INV, INVTOAP2INV_BASE
+from app.repositories.query.inv_ap2_mapping import INVTOAP2INV, INVTOAP2INV_BASE
 from app.schemas.ap2_fail_inv_schema import FailInvGet
 from app.schemas.ap2_send_inv_schema import AP2SendInv
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -139,9 +139,9 @@ AP2_VOID_HTTPX_TIMEOUT = httpx.Timeout(
 )
 UPLOAD_ALLOWED_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 QUERY_FILES_FOR_INVOICE_LOOKUP = [
-    "app/repository/query/get_inv_export.sql",
-    "app/repository/query/get_inv_import.sql",
-    "app/repository/query/get_inv_outgoing.sql",
+    "app/repositories/query/get_inv_export.sql",
+    "app/repositories/query/get_inv_import.sql",
+    "app/repositories/query/get_inv_outgoing.sql",
 ]
 INV_FIELD_TO_EXCEL_HEADERS: dict[str, list[str]] = {
     "NO_INVOICE": ["INVOICE NO"],
@@ -1499,9 +1499,9 @@ class INVAp2Service:
 
             # Kumpulan query sumber data invoice
             query_files = [
-                "app/repository/query/get_inv_export.sql",
-                "app/repository/query/get_inv_import.sql",
-                "app/repository/query/get_inv_outgoing.sql",
+                "app/repositories/query/get_inv_export.sql",
+                "app/repositories/query/get_inv_import.sql",
+                "app/repositories/query/get_inv_outgoing.sql",
             ]
 
             pending_records: list[dict] = []
@@ -2211,3 +2211,4 @@ class INVAp2Service:
             total_terkirim=int(result.total_terkirim or 0),
             total_belum_terkirim=int(result.total_belum_terkirim or 0),
         )
+

@@ -1,30 +1,238 @@
-# Materialize Project v2.2
+# MAU APP Agents Root
 
-## Role
+File ini adalah **root instruction** untuk Codex/AI agent pada repository:
 
-Anda adalah software engineer senior yang ahli dalam:
+```text
+c:/Users/wisnu/Documents/Belajar/materialize-project/
+```
 
-- FastAPI (backend)
-- Astro + React (web frontend)
-- PySide6 / Qt for Python (desktop frontend)
-- Dependency Injection
-- Design Patterns (SOLID, Repository Pattern, Service Layer, MVVM)
-- Refactoring sistem existing secara aman dan bertahap
-
-Tujuan Anda adalah membangun aplikasi **production-ready** yang scalable, modular, maintainable, dan aman.
+Instruksi root ini hanya berisi aturan lintas project dan routing ke agent yang sesuai folder kerja. Untuk implementasi teknis, agent **wajib membaca file agent spesifik** sesuai scope perubahan.
 
 ---
 
-## COLLABORATION FLOW (WAJIB DIIKUTI)
+## Role Umum
 
-1. Mulai dari analisis kondisi codebase saat ini.
-2. Simpan hasil analisis kondisi codebase kedalam laporan harian di `docs/milestone`.
-3. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
-4. Buat rencana implementasi bertahap (milestone) + estimasi risiko.
+Anda adalah software engineer senior yang membantu membangun dan merawat aplikasi **MAU APP** untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
+
+Keahlian utama yang wajib digunakan:
+
+- FastAPI untuk backend.
+- Astro + React untuk web frontend.
+- C# .NET MAUI untuk desktop frontend.
+- Dependency Injection.
+- SOLID, Repository Pattern, Service Layer, MVVM.
+- Refactoring sistem existing secara aman, bertahap, dan terdokumentasi.
+
+Tujuan utama pekerjaan adalah menghasilkan aplikasi **production-ready** yang modular, maintainable, aman, mudah dites, dan mudah dikembangkan ke modul operasional lain.
 
 ---
 
-## PROJECT OVERVIEW
+## Agent Routing Berdasarkan Struktur Folder Project
+
+Root project aktual:
+
+```text
+materialize-project/
+├── AGENTS.md
+├── astro/
+│   └── frontend_agent.md
+├── materialize-fastapi/
+│   └── backend_agent.md
+├── desktop-app/
+│   └── desktop_agent.md
+├── docs/
+├── email-template/
+├── docker-asset/
+├── deploy-development.sh
+├── deploy-production.sh
+└── README.md
+```
+
+| Scope pekerjaan                                                       | Folder utama                                     | File instruksi wajib                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Backend FastAPI, database, API, auth, job, integrasi CEISA/AP2/HUBNET | `materialize-fastapi/`                           | [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) |
+| Web frontend Astro + React                                            | `astro/`                                         | [`astro/frontend_agent.md`](astro/frontend_agent.md)                           |
+| Desktop frontend C# .NET MAUI                                         | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
+| Dokumentasi project/root                                              | `docs/`, `README.md`, `AGENTS.md`                | `AGENTS.md` + agent terdampak                                                  |
+| Email template                                                        | `email-template/`                                | `AGENTS.md` + `materialize-fastapi/backend_agent.md` jika dipakai backend      |
+| Docker/deployment                                                     | `docker-asset/`, `deploy-*.sh`, `.gitlab-ci.yml` | `AGENTS.md` + agent project yang dideploy                                      |
+
+---
+
+## Aturan Wajib Membaca Agent
+
+Sebelum mengubah file, tentukan scope berdasarkan path file:
+
+```text
+Path mengandung astro/                 → baca astro/frontend_agent.md
+Path mengandung materialize-fastapi/   → baca materialize-fastapi/backend_agent.md
+Path mengandung desktop-app/           → baca desktop-app/desktop_agent.md
+Path lintas project                    → baca semua agent yang terdampak
+```
+
+Jika task menyentuh lebih dari satu project, gunakan urutan kerja berikut:
+
+```text
+Analisis kebutuhan dan API contract
+   ↓
+Backend FastAPI di materialize-fastapi/
+   ↓
+Frontend Web di astro/ dan/atau Desktop di desktop-app/
+   ↓
+Dokumentasi di docs/
+   ↓
+Verifikasi lint/test/build sesuai project
+```
+
+---
+
+## Struktur Folder Aktual yang Harus Diikuti
+
+### Root Repository
+
+```text
+materialize-project/
+├── .git/
+├── .vscode/
+├── astro/
+├── desktop-app/
+├── docker-asset/
+├── docs/
+├── email-template/
+├── materialize-fastapi/
+├── .gitlab-ci.yml
+├── AGENTS.md
+├── deploy-development.sh
+├── deploy-production.sh
+├── package-lock.json
+└── README.md
+```
+
+### Backend FastAPI
+
+Project backend berada di:
+
+```text
+materialize-fastapi/
+```
+
+Struktur aktual yang harus dipertahankan:
+
+```text
+materialize-fastapi/
+├── app/
+│   ├── api/
+│   ├── db/
+│   ├── dependencies/
+│   ├── integrations/
+│   ├── job/
+│   ├── libs/
+│   ├── models/
+│   ├── report/
+│   ├── repositories/
+│   ├── schemas/
+│   ├── services/
+│   ├── storage/
+│   ├── templates/
+│   ├── utils/
+│   ├── __init__.py
+│   ├── __main__.py
+│   └── main.py
+├── logs/
+├── migrations/
+├── scripts/
+├── backend_agent.md
+├── alembic.ini
+├── docker-compose.yml
+├── Dockerfile
+├── filebeat.yml
+├── poetry.lock
+├── poetry.toml
+├── pyproject.toml
+├── README.md
+├── ruff.toml
+├── run-prod.sh
+└── start-filebeat-dev.bat
+```
+
+Catatan penting backend:
+
+- Gunakan folder aktual `app/repositories/`.
+- Gunakan folder aktual `app/job/`, bukan `app/jobs/`, kecuali ada keputusan refactor eksplisit.
+- Business logic tetap di `app/services/`.
+- Query database tetap di `app/repositories/`.
+- Integrasi pihak ketiga tetap di `app/integrations/`.
+
+### Web Frontend Astro
+
+Project frontend berada di:
+
+```text
+astro/
+```
+
+Struktur aktual yang harus dipertahankan:
+
+```text
+astro/
+├── src/
+│   ├── components/
+│   ├── fonts/
+│   ├── js/
+│   ├── layouts/
+│   ├── lib/
+│   ├── libs/
+│   ├── pages/
+│   ├── scss/
+│   ├── vendor/
+│   └── middleware.ts
+├── public/
+├── docs/
+├── frontend_agent.md
+├── astro.config.mjs
+├── minify-public-js.js
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── README.md
+```
+
+Catatan penting frontend:
+
+- Target pengembangan baru tetap **JavaScript-first**.
+- Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
+- `src/middleware.ts` dan `tsconfig.json` adalah kondisi existing. Jika disentuh, evaluasi apakah perlu migrasi bertahap ke JavaScript-compatible middleware sesuai kemampuan Astro project.
+- Ikuti struktur aktual `src/js`, `src/lib`, `src/libs`, `src/scss`, dan `src/vendor`.
+
+### Desktop App
+
+Project desktop berada di:
+
+```text
+desktop-app/
+```
+
+Desktop frontend resmi menggunakan:
+
+```text
+C# .NET MAUI
+```
+
+File instruksi desktop wajib berada di:
+
+```text
+desktop-app/desktop_agent.md
+```
+
+Catatan penting desktop:
+
+- Jangan menggunakan framework desktop Python lama untuk project desktop baru.
+- Desktop app hanya sebagai frontend/client operasional.
+- Semua data, auth, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend FastAPI.
+
+---
+
+## Project Overview
 
 ### Nama Aplikasi
 
@@ -36,368 +244,148 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 
 ### Tujuan Utama
 
-- Penambahan / perbaikan module dengan standar role yang ada.
-- Menyediakan pondasi arsitektur yang mudah dikembangkan ke modul lain.
-- Pengembangan system dengan dokumentasi lengkap.
-- Menyediakan opsi desktop frontend berbasis PySide6 untuk kebutuhan operasional internal.
+- Menambah dan memperbaiki module sesuai standar role dan permission.
+- Menyediakan pondasi arsitektur yang mudah dikembangkan.
+- Menjaga integrasi dan proses bisnis tetap berada di backend.
+- Menyediakan frontend web dan desktop sebagai client resmi ke backend FastAPI.
+- Menyediakan dokumentasi teknis dan laporan progres yang konsisten.
 
 ---
 
-## SYSTEM ARCHITECTURE
+## Collaboration Flow Wajib
 
-### Backend (materialize-fastapi)
+Sebelum melakukan perubahan kode:
 
-- Framework: FastAPI
-- ORM: SQLAlchemy 2.x
-- Schema Validation: Pydantic v2
-- Authentication: JWT (access + refresh)
-- Architecture: Simple Clean Architecture:
-  - `api/`
-  - `services/`
-  - `repositories/`
-  - `models/`
-  - `schemas/`
-  - `core/`
-  - `db/`
-  - `dependencies/`
-  - `job/`
-  - `storage/`
-  - `templates/`
-- Dependency Injection: wajib konsisten di service/repository.
-- Business logic dilarang di route/controller.
-
-### Web Frontend (astro)
-
-- Framework: Astro + React
-- UI Library: Materialize
-- Language: **JavaScript only**
-- Gunakan file: `.js`, `.jsx`, `.astro`
-- Dilarang membuat file: `.ts`, `.tsx`
-
-### Desktop Frontend (PySide6)
-
-Desktop frontend adalah project baru berbasis Python yang hanya bertindak sebagai client/UI. Semua data, autentikasi, otorisasi, validasi bisnis, query database, integrasi pihak ketiga, dan audit log tetap wajib berada di backend FastAPI.
-
-- Framework: PySide6 / Qt for Python
-- Language: Python 3.11+
-- Fungsi utama: desktop UI untuk operasional internal gudang.
-- Backend komunikasi: HTTP/HTTPS ke FastAPI API.
-- Desktop app **dilarang** konek langsung ke database produksi/internal.
-- Desktop app **dilarang** menyimpan business logic inti.
-- Desktop app hanya boleh melakukan validasi ringan untuk UX sebelum request dikirim ke API.
-- Semua create/update/delete data wajib melalui endpoint FastAPI.
-- Semua permission dan role access wajib divalidasi ulang oleh backend.
-- Gunakan API contract yang sama dengan web frontend jika memungkinkan.
-- Jika endpoint belum tersedia, tambahkan endpoint di backend, jangan bypass ke database dari desktop.
-
-#### Desktop Architecture Pattern
-
-Gunakan pola **MVVM + Service Layer + API Client** agar UI tidak tercampur dengan request API dan state aplikasi.
-
-```text
-View / Widget
-   ↓
-ViewModel
-   ↓
-Service / Use Case
-   ↓
-API Client
-   ↓
-FastAPI Backend
-```
-
-Aturan pemisahan tanggung jawab:
-
-- `views/`: hanya berisi widget, layout, event binding, dan tampilan.
-- `viewmodels/`: menyimpan state UI, command/action, validasi ringan, dan transformasi data untuk view.
-- `services/`: mengatur use case aplikasi desktop dan orkestrasi API client.
-- `api/`: wrapper HTTP client untuk komunikasi ke FastAPI.
-- `schemas/`: DTO/Pydantic model untuk request/response API.
-- `core/`: konfigurasi, session, token storage, constants, dan bootstrap aplikasi.
-- `utils/`: helper umum, formatter, notifier, dan utilitas UI.
-
-#### Recommended Desktop Structure
-
-```text
-desktop-app/
-├── app/
-│   ├── main.py
-│   ├── core/
-│   │   ├── config.py
-│   │   ├── session.py
-│   │   ├── token_store.py
-│   │   └── exceptions.py
-│   ├── api/
-│   │   ├── http_client.py
-│   │   ├── auth_api.py
-│   │   ├── user_api.py
-│   │   └── warehouse_api.py
-│   ├── services/
-│   │   ├── auth_service.py
-│   │   └── warehouse_service.py
-│   ├── viewmodels/
-│   │   ├── login_viewmodel.py
-│   │   ├── main_viewmodel.py
-│   │   └── warehouse_viewmodel.py
-│   ├── views/
-│   │   ├── login_view.py
-│   │   ├── main_window.py
-│   │   └── warehouse/
-│   │       ├── weighing_view.py
-│   │       └── buildup_view.py
-│   ├── schemas/
-│   │   ├── auth_schema.py
-│   │   └── warehouse_schema.py
-│   ├── resources/
-│   │   ├── icons/
-│   │   ├── styles/
-│   │   └── images/
-│   └── utils/
-│       ├── notifier.py
-│       └── formatter.py
-├── tests/
-├── .env.example
-├── pyproject.toml
-└── README.md
-```
-
-#### Desktop UI Rules
-
-- UI harus sederhana, cepat, dan cocok untuk input operasional gudang.
-- Untuk mempermudah maintainability, layout/frame desktop **wajib** dibuat melalui Qt Designer (`.ui`) jika screen bersifat form/page utama.
-- Simpan file `.ui` di `desktop-app/app/resources/ui/`.
-- File `views/*.py` bertugas memuat `.ui`, binding event, dan sinkronisasi state; jangan letakkan business logic atau request API langsung di view.
-- Gunakan `objectName` yang konsisten dan stabil di `.ui` agar binding Python tidak rusak saat refactor UI.
-- Untuk stabilitas default, gunakan style bawaan Qt (`Fusion`) pada runtime desktop.
-- Global QSS desktop harus dikelola terpusat di `desktop-app/app/resources/styles/app.qss` dan diregistrasi via `desktop-app/app/resources/resources.qrc`.
-- Setelah perubahan pada `.qrc`, regenerate `resources_rc.py` dengan `pyside6-rcc` agar resource path `:/...` aktif di runtime.
-- Plugin UI/styling eksternal bersifat opsional; hanya digunakan jika ada kebutuhan yang jelas dan harus diuji tidak mengganggu startup/performa.
-- Jika butuh plugin opsional yang relatif ringan/stabil:
-  - Theme sederhana: `qdarkstyle` (QSS-based).
-  - Icon konsisten: `qtawesome` (icon font).
-- Saat menambahkan icon di `.ui`, dilarang memakai path absolut OS; icon harus disimpan di `desktop-app/app/resources/icons/` dengan path project yang stabil.
-- Form harus mendukung keyboard-first workflow jika digunakan operator.
-- Untuk tabel besar, gunakan pagination/filtering dari backend, bukan load semua data ke desktop.
-- Jangan freeze UI saat request API berjalan. Gunakan worker thread, `QThread`, `QRunnable`, atau pola async yang aman untuk Qt.
-- Semua error API harus ditampilkan dengan pesan yang jelas dan tidak membocorkan stack trace ke user.
-- Tambahkan loading state/progress indicator untuk request yang lambat.
-- Tambahkan confirmation dialog untuk aksi destructive seperti void, delete, cancel, atau resend.
-- Hindari membuat window terlalu banyak; prioritaskan main window + stacked pages/dialog seperlunya.
-
-#### Desktop API Client Rules
-
-- Gunakan satu wrapper HTTP client terpusat, misalnya `httpx.Client` atau `httpx.AsyncClient`.
-- Semua base URL, timeout, dan mode environment wajib dibaca dari `.env`.
-- Timeout API wajib ditentukan eksplisit.
-- Handle status code umum: `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`.
-- Jika menerima `401`, lakukan logout lokal dan arahkan user kembali ke login.
-- Jika menerima `403`, tampilkan pesan akses ditolak.
-- Jangan menyimpan password user.
-- Simpan token/session secara aman menggunakan storage lokal yang sesuai OS jika memungkinkan.
-- Semua request yang memerlukan auth wajib menggunakan bearer token atau mekanisme auth resmi dari backend.
-
-#### Desktop Authentication Rules
-
-- Login desktop wajib menggunakan endpoint FastAPI, contoh: `POST /auth/login`.
-- Desktop tidak boleh membuat JWT sendiri.
-- Desktop tidak boleh decode token untuk mengambil keputusan permission final.
-- Permission boleh dipakai untuk menyesuaikan menu UI, tetapi backend tetap menjadi sumber kebenaran.
-- Logout harus menghapus token/session lokal.
-
-#### Desktop Testing Rules
-
-- Unit test wajib dibuat untuk service, API client wrapper, formatter, dan viewmodel.
-- UI test boleh bertahap, tetapi logic tidak boleh terkunci di view agar mudah dites.
-- Mock API response saat testing desktop; jangan test langsung ke API production.
-
-#### Desktop Packaging Rules
-
-- Packaging aplikasi desktop dapat menggunakan PyInstaller atau Nuitka.
-- File `.env` production tidak boleh dikomit.
-- Buat `.env.example` untuk konfigurasi desktop.
-- Installer/build artifact tidak boleh masuk repository kecuali disepakati.
-- Dokumentasikan cara build dan cara menjalankan aplikasi desktop di README project desktop.
+1. Analisis kondisi codebase saat ini.
+2. Identifikasi file, module, endpoint, model, schema, komponen, atau project yang terdampak.
+3. Baca agent sesuai scope path.
+4. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
+5. Buat rencana implementasi bertahap beserta risiko.
+6. Eksekusi perubahan secara kecil, aman, dan mudah direview.
+7. Verifikasi dengan test, lint, type check, build, atau minimal pemeriksaan manual yang relevan.
+8. Simpan laporan progres harian sesuai aturan dokumentasi.
 
 ---
 
-## TECHNICAL STANDARDS
+## Prinsip Arsitektur Lintas Project
 
-### Backend Standards
+### Backend Adalah Source of Truth
 
-- Repository Pattern + Service Layer wajib.
-- Type hints Python wajib jelas.
-- `__init__.py` untuk exposing module secara rapi.
-- Error response API konsisten (format terstandar).
-- Wajib ada Docstring pada class dan fungsi sebagai dokumentasi.
-- Wajib menambahkan Docstring definisi modul, fungsi, kelas, atau metode dalam Python untuk mendokumentasikan kode.
+Backend FastAPI di `materialize-fastapi/` adalah satu-satunya sumber kebenaran untuk:
 
-### Web Frontend Standards
+- Business logic inti.
+- Validasi final.
+- Otorisasi dan permission final.
+- Query database.
+- Integrasi pihak ketiga seperti CEISA, AP2, HUBNET, dan layanan eksternal lain.
+- Audit log, request log, response log, dan background job.
 
-- Auth guard/protected route wajib.
-- Penanganan unauthorized (`401/403`) konsisten di UI.
-- Pembuatan Components dan Pages wajib merujuk ke dokumentasi UI.
-- Pastikan membuat Generic Components jika memungkinkan akan digunakan kembali.
-- Wajib baca refrensi UI di `https://demos.pixinvent.com/materialize-html-admin-template/documentation/` ketika membuat komponent.
+Frontend web dan desktop hanya boleh menjadi client/UI yang mengonsumsi endpoint resmi backend.
 
-### Desktop Frontend Standards
+### Frontend dan Desktop Dilarang Bypass Backend
 
-- Desktop app menggunakan PySide6 sebagai UI framework utama.
-- Layout utama desktop direkomendasikan menggunakan Qt Designer (`.ui`) dan dimuat dari layer view.
-- Gunakan UI style native Qt untuk baseline stabil; hindari ketergantungan theme plugin sebagai default.
-- Desktop app wajib mengikuti MVVM + Service Layer + API Client.
-- Business logic inti tetap di backend FastAPI.
-- Desktop app wajib menggunakan endpoint API resmi, bukan query database langsung.
-- Gunakan reusable widgets untuk form, table, toolbar, filter, pagination, dialog, dan notification.
-- Gunakan ViewModel untuk state dan action; View tidak boleh berisi logic API.
-- Gunakan service untuk use case; API client hanya bertugas melakukan request HTTP.
-- Gunakan Pydantic model atau dataclass untuk DTO request/response.
-- Semua fungsi/class/module Python wajib memiliki docstring yang jelas.
-- Semua request API wajib memiliki error handling dan timeout.
-- Semua proses panjang wajib berjalan di worker/background thread agar UI tidak freeze.
-- Jangan commit secret, token, password, file `.env`, atau build artifact.
+Web frontend `astro/` dan desktop frontend `desktop-app/` dilarang:
+
+- Koneksi langsung ke database produksi/internal.
+- Query langsung ke database.
+- Membuat JWT/token sendiri.
+- Menentukan permission final tanpa validasi backend.
+- Mengirim data langsung ke CEISA/AP2/HUBNET atau third-party lain.
+- Menyimpan business logic inti yang seharusnya berada di backend.
+
+### API Contract Konsisten
+
+- Gunakan API contract yang sama untuk web frontend dan desktop jika memungkinkan.
+- Jika endpoint belum tersedia, tambahkan endpoint di backend, jangan membuat bypass dari frontend/desktop.
+- Request/response harus terdokumentasi melalui schema backend dan DTO frontend/desktop.
+- Error response harus konsisten agar mudah ditangani oleh web dan desktop.
 
 ---
 
-## PROGRESS REPORT FILE (WAJIB)
+## Progress Report File Wajib
 
 Setelah eksekusi perubahan kode:
 
 - Buat folder `docs/` di root project jika belum ada.
-- Simpan laporan progres eksekusi harian ke file Markdown di folder `docs/`.
-- Format nama file: `progress-YYYY-MM-DD.md` (contoh: `progress-2026-04-21.md`).
-- Isi minimal:
-  - Tanggal eksekusi (tanggal absolut)
-  - Ringkasan perubahan
-  - File yang diubah
-  - Hasil verifikasi/test
-  - Blocker/risiko
-  - Next step
+- Simpan laporan progres harian ke file Markdown di folder `docs/` root project.
+- Format nama file: `docs/progress-YYYY-MM-DD.md`.
+- Gunakan tanggal absolut, contoh: `docs/progress-2026-05-02.md`.
+
+Isi minimal:
+
+```markdown
+# Progress YYYY-MM-DD
+
+## Ringkasan Perubahan
+
+## File yang Diubah
+
+## Hasil Verifikasi/Test
+
+## Gap / Risiko
+
+## Blocker
+
+## Next Step
+```
+
+Jika perubahan besar atau bersifat milestone, tambahkan ringkasan di:
+
+```text
+docs/milestone/
+```
+
+Untuk progress yang sangat spesifik project, boleh tambahkan salinan/ringkasan di:
+
+```text
+astro/docs/
+materialize-fastapi/docs/      # hanya jika folder dibuat/tersedia
+```
+
+Namun progress utama tetap di root `docs/` agar mudah dicari.
 
 ---
 
-## DESKTOP MODULE CREATION RULES
+## Standar Keamanan Umum
 
-Setiap penambahan module desktop PySide6 wajib mengikuti alur berikut:
-
-1. Analisis endpoint backend yang sudah tersedia.
-2. Jika endpoint belum tersedia, buat/ubah endpoint di FastAPI sesuai arsitektur backend.
-3. Buat schema/DTO desktop untuk request dan response.
-4. Buat API client method khusus module.
-5. Buat service/use case desktop.
-6. Buat ViewModel.
-7. Buat View/Widget PySide6.
-8. Tambahkan error handling, loading state, dan validasi ringan.
-9. Tambahkan test untuk service/API client/viewmodel.
-10. Update dokumentasi progress harian.
-
-Template flow module desktop:
-
-```text
-User Action di PySide6
-   ↓
-ViewModel method
-   ↓
-Desktop Service
-   ↓
-API Client
-   ↓
-FastAPI Endpoint
-   ↓
-Response DTO
-   ↓
-Update ViewModel state
-   ↓
-Render ulang View
-```
-
-Contoh module yang cocok untuk desktop:
-
-- Login operator
-- Weighing input
-- Buildup cargo
-- Manifest preview
-- Print document/label
-- Scanner/barcode input
-- Monitoring transaksi operational
-- Resend/sync status melalui backend
-
-Module yang tidak boleh langsung dikerjakan di desktop:
-
-- Query database langsung
-- Integrasi CEISA/AP2/HUBNET langsung dari desktop
-- Generate JWT/token sendiri
-- Validasi permission final
-- Background job integrasi pihak ketiga
+- Jangan commit secret, token, password, private key, file `.env`, atau build artifact.
+- Gunakan `.env.example`, `appsettings.example.json`, atau dokumentasi konfigurasi tanpa nilai rahasia.
+- Jangan menampilkan stack trace mentah ke user akhir.
+- Log error detail boleh disimpan di backend log, tetapi response API harus aman.
+- Validasi input di frontend/desktop hanya untuk UX; validasi final tetap di backend.
+- Gunakan HTTPS untuk komunikasi production.
+- Timeout request wajib eksplisit.
+- Handle minimal status code: `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`.
 
 ---
 
-## THIRD-PARTY APPS
+## Standar Dokumentasi Kode
 
-### API CEISA 4.0
-
-Mengintegrasikan backend dengan API CEISA 4.0 menggunakan metode PATCH akan membangun koneksi Host-to-Host (H2H) untuk pembaruan data parsial, yang memerlukan autentikasi ketat melalui OAuth 2.0 dan kunci API. Pengembang harus mengelola komunikasi API melalui HTTPS ke gateway pengembangan atau produksi tertentu, memastikan dokumentasi dari GitBook diikuti. Untuk detail lebih lanjut, kunjungi [GitBook PIA-CEISA40](https://ceisa40.gitbook.io/pia-ceisa40).
-
-#### Alur CEISA
-
-```text
-Data internal gudang
-   ↓
-Validasi internal
-   ↓
-Mapping ke format CEISA
-   ↓
-Simpan request ke log/outbox
-   ↓
-Kirim ke CEISA via background job
-   ↓
-Simpan response CEISA
-   ↓
-Update status transaksi
-```
-
-#### Struktur CEISA
-
-```text
-app/
-├── api/
-│   └── ceisa_route.py
-├── services/
-│   ├── manifest_service.py
-│   └── ceisa_service.py
-├── integrations/
-│   └── ceisa/
-│       ├── client.py
-│       ├── schemas.py
-│       ├── mapper.py
-│       ├── exceptions.py
-│       └── signature.py
-├── jobs/
-│   └── ceisa_sync_job.py
-├── models/
-│   ├── ceisa_request_log.py
-│   └── ceisa_webhook_log.py
-└── repositories/
-    └── ceisa_log_repository.py
-```
-
-#### API CEISA module creation technical rules
-
-- Module CEISA di buat di backend.
-- Service-service yang terkait dengan CEISA di letakan pada `integrations/ceisa`.
-- Buatkan method agnostic yang dapat digunakan kembali oleh service diluar CEISA.
-- Baca dokumentasi CEISA `https://ceisa40.gitbook.io/pia-ceisa40` sebelum eksekusi.
-- Kirim data atau tarik data dari/ke CEISA harus melalui background job.
-- Buatkan `ceisa_request_log` dan `ceisa_webhook_log` untuk menyimpan log CEISA.
+- Kode Python backend wajib memiliki type hints yang jelas.
+- Class, fungsi, dan module penting wajib memiliki docstring.
+- Kode C# desktop wajib menggunakan nama class, method, property, dan interface yang jelas.
+- Komponen frontend wajib dibuat reusable jika berpotensi dipakai ulang.
+- Hindari magic string dan magic number; gunakan constants/config.
 
 ---
 
-## IMPORTANT
+## Git dan Delivery Rules
 
-- Setiap selesai eksekusi selalu commit ke remote office dan origin branch master jangan di push.
-- Beri keterangan pada commit git.
-- Setiap pembuatan modul CEISA harus agnostic dan reusable.
-- Setiap pembuatan master data CEISA harus ada migrasi dan data seedernya.
-- Tabel-tabel CEISA harus menggunakan prefix `mst_ceisa_*` untuk master dan `ceisa_*` untuk tabel transaksi.
-- Wajib buatkan log untuk request dan response ke CEISA.
-- Jangan menjaga backward compatibility lama ketika ada perubahan pada modul atau perubahan yang terkait dengan proses bisnis.
-- Untuk desktop PySide6, jangan pernah bypass backend FastAPI dengan koneksi langsung ke database atau third-party API.
+- Buat perubahan kecil dan terfokus.
+- Jangan mencampur refactor besar dengan perubahan fitur tanpa alasan jelas.
+- Commit message harus jelas menjelaskan scope dan tujuan perubahan.
+- Jangan push ke `origin/master`.
+- Push hanya ke remote/branch kerja yang disepakati oleh user atau workflow project.
+- Jika tidak memiliki akses git/remote, tuliskan file yang berubah dan rekomendasi commit message di laporan akhir.
+
+---
+
+## Important Decision Rules
+
+- Jika task backend, baca [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) terlebih dahulu.
+- Jika task web frontend, baca [`astro/frontend_agent.md`](astro/frontend_agent.md) terlebih dahulu.
+- Jika task desktop, baca [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md) terlebih dahulu.
+- Jika task integrasi CEISA/AP2/HUBNET, implementasi wajib di backend `materialize-fastapi/`.
+- Jika task membutuhkan data dari desktop hardware lokal, data boleh dibaca oleh desktop, tetapi proses bisnis dan penyimpanan tetap melalui backend API.
+- Jangan menjaga backward compatibility lama jika user secara eksplisit meminta perubahan proses bisnis baru.
+

@@ -1,1 +1,0 @@
-"""ViewModel package for desktop UI state and user actions."""

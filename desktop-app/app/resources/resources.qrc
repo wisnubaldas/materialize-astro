@@ -1,9 +1,0 @@
-<RCC>
-  <qresource prefix="/styles">
-    <file>styles/app.qss</file>
-  </qresource>
-  <qresource prefix="/icons">
-    <file>icons/.gitkeep</file>
-  </qresource>
-</RCC>
-

@@ -1,1 +1,0 @@
-"""Schemas package for request and response DTOs."""

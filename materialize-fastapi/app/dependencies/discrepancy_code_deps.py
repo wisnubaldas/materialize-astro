@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.repository.discrepancy_code_repository import DiscrepancyCodeRepository
+from app.repositories.discrepancy_code_repository import DiscrepancyCodeRepository
 from app.services.discrepancy_code_service import DiscrepancyCodeService
 
 
@@ -30,3 +30,4 @@ def get_discrepancy_code_service_w(
     repo: DiscrepancyCodeRepository = Depends(get_discrepancy_code_repo_w),
 ) -> DiscrepancyCodeService:
     return DiscrepancyCodeService(repo)
+

@@ -2,7 +2,7 @@
 
 from fastapi import HTTPException
 
-from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
+from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCatalogItem,
@@ -65,3 +65,4 @@ class CeisaReferenceCodeService:
     def _ensure_supported_reference(self, reference_slug: str) -> dict[str, str]:
         """Validasi kategori referensi harus termasuk daftar yang didukung."""
         return self.catalog_service.get_catalog_item(reference_slug)
+

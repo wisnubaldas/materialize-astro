@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
-from app.repository.ceisa_log_repository import CeisaLogRepository
-from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
+from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 
 
 class CeisaSyncJobService:
@@ -63,3 +63,4 @@ class CeisaSyncJobService:
         except Exception as exc:
             self.log_repository.mark_failed(job, str(exc))
             raise
+

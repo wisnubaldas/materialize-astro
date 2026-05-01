@@ -14,7 +14,7 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.integrations.ceisa.client import CeisaClientService
-from app.repository.ceisa_xray_photo_repository import CeisaXrayPhotoRepository
+from app.repositories.ceisa_xray_photo_repository import CeisaXrayPhotoRepository
 from app.schemas.ceisa_xray_photo_schema import CeisaXrayPhotoRequestPayload
 from app.utils.helper import BASE_DIR
 
@@ -215,3 +215,4 @@ class CeisaXrayPhotoService:
         if normalized == "ADD":
             return "/openapi/cnpibk/xray/add-foto-xray"
         return "/openapi/cnpibk/xray/kirim-foto-xray"
+

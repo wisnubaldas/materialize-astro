@@ -1,7 +1,7 @@
 import logging
 
 from app.models.BaseDB1.build_up_header import BuildUpHeader
-from app.repository.warehouse_repositrory import WarehouseRepository
+from app.repositories.warehouse_repositrory import WarehouseRepository
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
@@ -44,3 +44,4 @@ class WarehouseService:
             raise ValueError("MasterAWB wajib diisi.")
 
         return self.repository.get_masterwaybill_by_awbs(cleaned)
+

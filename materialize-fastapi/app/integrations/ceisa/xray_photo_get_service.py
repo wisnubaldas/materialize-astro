@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.integrations.ceisa.client import CeisaClientService
-from app.repository.ceisa_xray_photo_get_repository import CeisaXrayPhotoGetRepository
+from app.repositories.ceisa_xray_photo_get_repository import CeisaXrayPhotoGetRepository
 from app.schemas.ceisa_xray_photo_schema import CeisaXrayPhotoGetRequestPayload
 
 
@@ -65,4 +65,5 @@ class CeisaXrayPhotoGetService:
                 detail="Parameter request get foto X-Ray tidak valid",
             )
         return params
+
 

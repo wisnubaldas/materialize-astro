@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w, get_db2_r
-from app.repository.edi_repository import EdiRepository
+from app.repositories.edi_repository import EdiRepository
 from app.services.edi_service import EdiService
 
 
@@ -68,3 +68,4 @@ def get_manifest_mawb_service(
     repo: EdiRepository = Depends(get_manifest_mawb_repo),
 ) -> EdiService:
     return EdiService(repo)
+

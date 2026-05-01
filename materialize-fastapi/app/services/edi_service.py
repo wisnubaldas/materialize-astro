@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime
 from typing import Any
 
-from app.repository.edi_repository import EdiRepository
+from app.repositories.edi_repository import EdiRepository
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -264,3 +264,4 @@ class EdiService:
         except Exception:
             logger.exception("Sending EDI email failed to %s for %s", email, edi)
             raise
+

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.repository.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_log_repository import CeisaLogRepository
 
 
 class CeisaLogService:
@@ -113,3 +113,4 @@ class CeisaLogService:
             else:
                 masked[key] = value
         return masked
+

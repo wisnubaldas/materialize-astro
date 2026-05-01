@@ -1,5 +1,5 @@
 from app.models.BaseDB1.fsu_message import FsuMessage
-from app.repository.fsu_message_repository import FsuMessageRepository
+from app.repositories.fsu_message_repository import FsuMessageRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.fsu_message_schema import FsuMessageCreate, FsuMessageOut, FsuMessageUpdate
 
@@ -34,3 +34,4 @@ class FsuMessageService:
 
     def delete(self, record: FsuMessage) -> None:
         self.repository.delete(record)
+

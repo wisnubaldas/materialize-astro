@@ -4,8 +4,8 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.repository.ceisa_log_repository import CeisaLogRepository
-from app.repository.ceisa_reference_code_repository import CeisaReferenceCodeRepository
+from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.integrations.ceisa.log_service import CeisaLogService
 from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
@@ -62,3 +62,4 @@ def get_ceisa_oauth_service_w(
     """Dependency OAuth2 service CEISA dengan dukungan request logging."""
     log_service = CeisaLogService(CeisaLogRepository(db))
     return CeisaOAuthService(log_service=log_service)
+

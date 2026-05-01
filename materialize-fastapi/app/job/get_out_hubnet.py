@@ -61,7 +61,7 @@ def _normalized_flt_datetime(date_value, time_value) -> str:
 
 def run_outgoing():
     try:
-        query_file = "app/repository/query/get_out_hubnet.sql"
+        query_file = "app/repositories/query/get_out_hubnet.sql"
         db2 = SessionDB2R()
         query = HELPER.load_sql_query(query_file)
         param = {"date_of_flight": now_wib.strftime("%Y-%m-%d")}
@@ -140,3 +140,4 @@ def __cek_hostawb(awb):
         logger.error(f"Error : {e}")
     finally:
         db1.close()
+

@@ -9,7 +9,7 @@ from app.integrations.ceisa.log_service import CeisaLogService
 from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.xray_photo_get_service import CeisaXrayPhotoGetService
 from app.integrations.ceisa.xray_photo_service import CeisaXrayPhotoService
-from app.repository.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_log_repository import CeisaLogRepository
 
 
 def get_ceisa_client_service(
@@ -38,3 +38,4 @@ def get_ceisa_xray_photo_get_service_w(
 ) -> CeisaXrayPhotoGetService:
     """Dependency service write untuk enqueue/proses get foto X-Ray."""
     return CeisaXrayPhotoGetService(db=db, client=client)
+

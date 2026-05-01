@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 from app.models.BaseDB1.mst_ceisa_reference_origin_goods import MstCeisaReferenceOriginGoods
-from app.repository.ceisa_reference_origin_goods_repository import (
+from app.repositories.ceisa_reference_origin_goods_repository import (
     CeisaReferenceOriginGoodsRepository,
 )
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -78,3 +78,4 @@ class CeisaReferenceOriginGoodsService:
             updated=updated,
             total=len(rows),
         )
+

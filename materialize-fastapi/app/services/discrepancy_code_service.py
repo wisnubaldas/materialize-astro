@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.models.BaseDB1.mst_discrepancy_code import MstDiscrepancyCode
-from app.repository.discrepancy_code_repository import DiscrepancyCodeRepository
+from app.repositories.discrepancy_code_repository import DiscrepancyCodeRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_discrepancy_code_schema import (
     MstDiscrepancyCodeCreate,
@@ -43,3 +43,4 @@ class DiscrepancyCodeService:
 
     def delete(self, record: MstDiscrepancyCode) -> None:
         self.repository.delete(record)
+

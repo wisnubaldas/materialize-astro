@@ -60,7 +60,7 @@ def _normalized_flt_datetime(date_value, time_value) -> str:
 
 def run_breakdown():
     try:
-        qfile = "app/repository/hubnet_query/get_imp_hubnet.sql"
+        qfile = "app/repositories/hubnet_query/get_imp_hubnet.sql"
         db2 = SessionDB2R()
         query = Helper.load_sql_query(qfile)
         param = {"date_of_flight": now_wib.strftime("%Y-%m-%d")}
@@ -135,3 +135,4 @@ def __cek_hostawb(awb):
         logger.error(f"Error cek HAWB : {e}")
     finally:
         db1.close()
+

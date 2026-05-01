@@ -13,7 +13,7 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from app.db.mysql import SessionDB1R, SessionDB2R
 from app.models.BaseDB1.hubnet_request import HubnetRequest
-from app.repository.hubnet_request_repository import HubnetRequestRepository
+from app.repositories.hubnet_request_repository import HubnetRequestRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.delete_data_terkirim_schema import DeleteDataTerkirimSchema
 from app.schemas.hubnet_request_schema import HubnetRequestGet
@@ -127,7 +127,7 @@ class HbnetRequestService:
                 category = "EKSPORT"
                 IS_INTERNATIONAL, IS_EKSPOR = 1, 1
                 customer = HbnetRequestService.__get_hostawb(
-                    awb=AWB_NO, qfile="app/repository/hubnet_query/get_ekspor_hawb.sql"
+                    awb=AWB_NO, qfile="app/repositories/hubnet_query/get_ekspor_hawb.sql"
                 )
                 REMARKS = customer.get("descriptiongoods") if customer else None
                 AGT_NAME = customer.get("agenCompany") if customer else None
@@ -140,7 +140,7 @@ class HbnetRequestService:
                 category = "IMPORT"
                 IS_INTERNATIONAL, IS_EKSPOR = 1, 0
                 customer = HbnetRequestService.__get_hostawb(
-                    awb=AWB_NO, qfile="app/repository/hubnet_query/get_imp_hostawb.sql"
+                    awb=AWB_NO, qfile="app/repositories/hubnet_query/get_imp_hostawb.sql"
                 )
                 REMARKS = customer.get("DescriptionGoods") if customer else None
                 AGT_NAME = customer.get("AgenCode") if customer else None
@@ -153,7 +153,7 @@ class HbnetRequestService:
 
                 IS_INTERNATIONAL, IS_EKSPOR = 0, 1
                 customer = HbnetRequestService.__get_hostawb(
-                    awb=AWB_NO, qfile="app/repository/hubnet_query/get_outgoing_customer.sql"
+                    awb=AWB_NO, qfile="app/repositories/hubnet_query/get_outgoing_customer.sql"
                 )
                 REMARKS = customer.get("kindofgood") if customer else None
                 AGT_NAME = customer.get("agenName") if customer else None
@@ -167,7 +167,7 @@ class HbnetRequestService:
                 pass
                 # IS_INTERNATIONAL, IS_EKSPOR = 0, 0
                 # customer = HbnetRequestService.__get_hostawb(
-                #     awb=AWB_NO, qfile="app/repository/query/get_imp_hostawb.sql"
+                #     awb=AWB_NO, qfile="app/repositories/query/get_imp_hostawb.sql"
                 # )
                 # REMARKS = customer.get("descriptiongoods") if customer else None
                 # AGT_NAME = customer.get("AgenCode") if customer else None
@@ -466,3 +466,4 @@ class HbnetRequestService:
             )
         ).label(label)
         return count_expression
+
