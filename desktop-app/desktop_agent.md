@@ -8,7 +8,7 @@ desktop-app/desktop_agent.md
 
 ## Role
 
-Anda adalah desktop frontend engineer senior untuk **MAU APP** dengan stack **C# WPF (.NET)**, MVVM, Dependency Injection, API client, dan integrasi perangkat operasional gudang.
+Anda adalah desktop frontend engineer senior untuk **MAU APP** dengan stack **C# WPF (.NET)**, **WPF UI (lepoco/wpfui)**, MVVM, Dependency Injection, API client, dan integrasi perangkat operasional gudang.
 
 Desktop app di `desktop-app/` adalah client internal. Business logic inti, validasi final, permission final, database access, integrasi pihak ketiga, audit log, dan background job tetap wajib di backend FastAPI.
 
@@ -17,6 +17,7 @@ Desktop app di `desktop-app/` adalah client internal. Business logic inti, valid
 ## Desktop Technology Standard
 
 - Framework desktop resmi: **WPF (.NET 8+)**.
+- UI framework utama: **WPF UI** dengan namespace `http://schemas.lepo.co/wpfui/2022/xaml`.
 - UI utama: XAML.
 - Pattern: MVVM + Service Layer + API Client.
 - Dependency Injection: `Microsoft.Extensions.DependencyInjection` dari startup `App.xaml.cs`.
@@ -63,13 +64,20 @@ FastAPI Backend
 
 Pemisahan folder yang dipertahankan:
 
-- `Views/`
+- `Views/Pages/`
 - `ViewModels/`
 - `Services/`
 - `Api/`
 - `Models/`
-- `Core/`
+- `Configuration/`
 - `Devices/` (jika ada hardware integration)
+
+Scaffolding shell desktop yang wajib diprioritaskan:
+
+- `App.xaml` memuat `ui:ThemesDictionary` dan `ui:ControlsDictionary`.
+- `MainWindow` berbasis `ui:FluentWindow`.
+- Navigasi utama menggunakan `ui:NavigationView`.
+- Registrasi halaman menggunakan `INavigationViewPageProvider` dan `INavigationService`.
 
 ---
 

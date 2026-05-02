@@ -215,7 +215,7 @@ desktop-app/
 Desktop frontend resmi menggunakan:
 
 ```text
-C# WPF (.NET)
+C# WPF (.NET) + WPF UI (lepoco/wpfui)
 ```
 
 File instruksi desktop wajib berada di:
@@ -227,6 +227,8 @@ desktop-app/desktop_agent.md
 Catatan penting desktop:
 
 - Jangan menggunakan framework desktop Python lama untuk project desktop baru.
+- Gunakan komponen dan pola visual dari WPF UI sebagai baseline UI desktop.
+- Scaffold minimal desktop mengikuti pola `NavigationView` + `Page` + `ViewModel` + `Service` + `Api client`.
 - Desktop app hanya sebagai frontend/client operasional.
 - Semua data, auth, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend FastAPI.
 

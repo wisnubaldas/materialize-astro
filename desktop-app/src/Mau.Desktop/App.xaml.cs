@@ -1,10 +1,13 @@
 using System.Net.Http.Headers;
 using System.Windows;
 using Mau.Desktop.Api;
-using Mau.Desktop.Core;
+using Mau.Desktop.Configuration;
 using Mau.Desktop.Services;
 using Mau.Desktop.ViewModels;
+using Mau.Desktop.Views.Pages;
 using Microsoft.Extensions.DependencyInjection;
+using Wpf.Ui;
+using Wpf.Ui.Abstractions;
 
 namespace Mau.Desktop;
 
@@ -12,48 +15,53 @@ public partial class App : Application
 {
     private ServiceProvider? _serviceProvider;
 
-    protected override void OnStartup(StartupEventArgs e)
+    private void OnStartup(object sender, StartupEventArgs e)
     {
-        base.OnStartup(e);
-
         var services = new ServiceCollection();
         ConfigureServices(services);
+
         _serviceProvider = services.BuildServiceProvider();
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    private void OnExit(object sender, ExitEventArgs e)
     {
         _serviceProvider?.Dispose();
-        base.OnExit(e);
     }
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<AppConfig>();
-        services.AddSingleton<AppSession>();
+        var options = ApiOptions.FromEnvironment();
+        services.AddSingleton(options);
 
-        services.AddHttpClient<IApiClient, ApiClient>((serviceProvider, client) =>
+        services.AddHttpClient<IBackendApiClient, BackendApiClient>(client =>
         {
-            var config = serviceProvider.GetRequiredService<AppConfig>();
-            client.BaseAddress = new Uri(config.ApiBaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(config.RequestTimeoutSeconds);
+            client.BaseAddress = new Uri(options.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds);
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json")
+            );
         });
 
-        services.AddSingleton<AuthApi>();
-        services.AddSingleton<WarehouseApi>();
+        services.AddSingleton<INavigationViewPageProvider, ServiceProviderNavigationViewPageProvider>();
+        services.AddSingleton<INavigationService>(sp =>
+            new NavigationService(sp.GetRequiredService<INavigationViewPageProvider>())
+        );
 
-        services.AddSingleton<AuthService>();
-        services.AddSingleton<WarehouseService>();
-
-        services.AddSingleton<ShellViewModel>();
-        services.AddTransient<LoginViewModel>();
-        services.AddTransient<DashboardViewModel>();
+        services.AddSingleton<IAuthService, AuthService>();
 
         services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainWindowViewModel>();
+
+        services.AddSingleton<DashboardPage>();
+        services.AddSingleton<InboundWeighingPage>();
+        services.AddSingleton<SettingsPage>();
+
+        services.AddSingleton<DashboardViewModel>();
+        services.AddSingleton<InboundWeighingViewModel>();
+        services.AddSingleton<SettingsViewModel>();
     }
 }

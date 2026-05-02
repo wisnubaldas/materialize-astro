@@ -1,10 +1,10 @@
-# MAU Desktop (WPF)
+# MAU Desktop (WPF UI)
 
-Desktop application MAU APP saat ini menggunakan **WPF (.NET 8)** dengan pola MVVM, service layer, dan API client.
+Desktop application MAU APP saat ini menggunakan **WPF (.NET 8)** + **WPF UI** dengan pola MVVM, service layer, dan API client.
 
 ## Struktur
 
-- `src/Mau.Desktop/` : aplikasi desktop WPF
+- `src/Mau.Desktop/` : aplikasi desktop WPF UI
 - `src/Mau.Desktop.Core/` : library reusable untuk model/helper yang bisa dites
 - `tests/Mau.Desktop.Tests/` : unit test
 
@@ -18,6 +18,6 @@ Desktop application MAU APP saat ini menggunakan **WPF (.NET 8)** dengan pola MV
 ## Build CLI
 
 ```powershell
-dotnet build desktop-app/Mau.Desktop.sln
+dotnet build desktop-app/src/Mau.Desktop/Mau.Desktop.csproj
 dotnet test desktop-app/tests/Mau.Desktop.Tests/Mau.Desktop.Tests.csproj
 ```

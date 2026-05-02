@@ -1,11 +1,8 @@
 namespace Mau.Desktop.ViewModels;
 
-public sealed class DashboardViewModel : BaseViewModel
+public sealed class DashboardViewModel : ViewModelBase
 {
-    public DashboardViewModel(string username)
-    {
-        WelcomeMessage = $"Selamat datang, {username}. Modul WPF siap dikembangkan.";
-    }
+    public string PageTitle => "Dashboard";
 
-    public string WelcomeMessage { get; }
+    public string Description => "Halaman ringkasan operasional gudang cargo lini 1.";
 }

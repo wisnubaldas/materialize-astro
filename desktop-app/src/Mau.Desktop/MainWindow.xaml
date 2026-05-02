@@ -1,36 +1,32 @@
-<Window x:Class="Mau.Desktop.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MAU APP Desktop"
-        Height="620"
-        Width="980"
-        MinHeight="560"
-        MinWidth="900"
-        WindowStartupLocation="CenterScreen">
-    <Grid Background="#F2F4F8" Margin="0,0,0,-51">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="56" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Border Background="Coral" Padding="16,8">
-            <DockPanel LastChildFill="True">
-                <TextBlock Text="MAU APP Desktop (WPF)" Foreground="White" FontSize="18" FontWeight="SemiBold" />
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <TextBlock Margin="0,0,12,0"
-                               VerticalAlignment="Center"
-                               Foreground="White"
-                               Text="{Binding CurrentUsername, StringFormat=User: {0}}" />
-                    <Button Content="Logout"
-                            Padding="12,4"
-                            Command="{Binding LogoutCommand}" />
+<ui:FluentWindow x:Class="Mau.Desktop.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="MAU APP Desktop"
+                 Width="1200"
+                 Height="760"
+                 MinWidth="1024"
+                 MinHeight="640"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True">
+    <Grid>
+        <ui:NavigationView x:Name="RootNavigationView"
+                           MenuItemsSource="{Binding ViewModel.MenuItems}"
+                           FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems}"
+                           PaneDisplayMode="Left"
+                           IsBackButtonVisible="Visible"
+                           IsPaneToggleVisible="True"
+                           PaneTitle="{Binding ViewModel.AppTitle}">
+            <ui:NavigationView.Header>
+                <StackPanel Margin="0,8,0,8">
+                    <TextBlock FontSize="22"
+                               FontWeight="SemiBold"
+                               Text="{Binding ViewModel.AppTitle}" />
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="Gray"
+                               Text="{Binding ViewModel.OperatorState}" />
                 </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" Margin="20,20,20,20" />
+            </ui:NavigationView.Header>
+        </ui:NavigationView>
     </Grid>
-</Window>
+</ui:FluentWindow>

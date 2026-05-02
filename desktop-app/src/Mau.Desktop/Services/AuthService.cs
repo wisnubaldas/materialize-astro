@@ -1,50 +1,58 @@
-using Mau.Desktop.Core;
-using Mau.Desktop.Models.Auth;
 using Mau.Desktop.Api;
+using Mau.Desktop.Core;
+using Mau.Desktop.Models;
+using System.Net.Http;
 
 namespace Mau.Desktop.Services;
 
-public sealed class AuthService
+public sealed class AuthService : IAuthService
 {
-    private readonly AuthApi _authApi;
-    private readonly AppSession _session;
+    private readonly IBackendApiClient _backendApiClient;
 
-    public AuthService(AuthApi authApi, AppSession session)
+    public AuthService(IBackendApiClient backendApiClient)
     {
-        _authApi = authApi;
-        _session = session;
+        _backendApiClient = backendApiClient;
     }
 
-    public async Task<Result<LoginResponse>> LoginAsync(string username, string password, CancellationToken cancellationToken = default)
+    public async Task<Result<DesktopUser>> LoginAsync(
+        string username,
+        string password,
+        CancellationToken cancellationToken = default)
     {
-        var response = await _authApi.LoginAsync(new LoginRequest
+        try
         {
-            Username = username,
-            Password = password
-        }, cancellationToken);
+            var response = await _backendApiClient.PostAsync<AuthLoginRequest, AuthLoginResponse>(
+                "/auth/login",
+                new AuthLoginRequest
+                {
+                    Username = username,
+                    Password = password,
+                },
+                cancellationToken
+            );
 
-        if (response.Data is null || string.IsNullOrWhiteSpace(response.Data.AccessToken))
-        {
-            return Result<LoginResponse>.Failure(MapError(response.StatusCode, response.ErrorMessage));
+            if (response is null || string.IsNullOrWhiteSpace(response.AccessToken))
+            {
+                return Result<DesktopUser>.Failure("Respons login backend tidak valid.");
+            }
+
+            return Result<DesktopUser>.Success(new DesktopUser
+            {
+                Username = response.Username,
+                AccessToken = response.AccessToken,
+            });
         }
-
-        _session.SetSession(response.Data.AccessToken, response.Data.Username);
-        return Result<LoginResponse>.Success(response.Data);
-    }
-
-    public void Logout()
-    {
-        _session.Clear();
-    }
-
-    private static string MapError(System.Net.HttpStatusCode statusCode, string? serverMessage)
-    {
-        return statusCode switch
+        catch (HttpRequestException)
         {
-            System.Net.HttpStatusCode.Unauthorized => "Username atau password salah.",
-            System.Net.HttpStatusCode.Forbidden => "Akses ditolak.",
-            System.Net.HttpStatusCode.UnprocessableEntity => string.IsNullOrWhiteSpace(serverMessage) ? "Validasi request tidak valid." : serverMessage,
-            _ => string.IsNullOrWhiteSpace(serverMessage) ? "Gagal memproses login." : serverMessage
-        };
+            return Result<DesktopUser>.Failure("Tidak bisa terhubung ke backend.");
+        }
+        catch (TaskCanceledException)
+        {
+            return Result<DesktopUser>.Failure("Request timeout ke backend.");
+        }
+        catch (Exception)
+        {
+            return Result<DesktopUser>.Failure("Terjadi kesalahan saat proses login.");
+        }
     }
 }
