@@ -12,12 +12,17 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Mau.Desktop</RootNamespace>
     <AssemblyName>Mau.Desktop</AssemblyName>
+    <ApplicationIcon>Assets\Brand\mau-logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
     <PackageReference Include="WPF-UI" Version="4.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Brand\mau-logo.png" />
   </ItemGroup>
 
 </Project>

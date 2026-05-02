@@ -1,4 +1,4 @@
-<Page x:Class="Mau.Desktop.Views.Pages.SettingsPage"
+﻿<Page x:Class="Mau.Desktop.Views.Pages.TpsOnlineImporGateOutPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,20 +15,6 @@
                            FontSize="15"
                            TextWrapping="Wrap"
                            Text="{Binding ViewModel.Description}" />
-                <TextBlock Margin="0,24,0,8"
-                           FontSize="14"
-                           FontWeight="SemiBold"
-                           Text="Theme" />
-                <WrapPanel>
-                    <ui:Button Margin="0,0,8,0"
-                               Content="Light"
-                               Click="OnLightThemeClick" />
-                    <ui:Button Margin="0,0,8,0"
-                               Content="Dark"
-                               Click="OnDarkThemeClick" />
-                    <ui:Button Content="System"
-                               Click="OnSystemThemeClick" />
-                </WrapPanel>
             </StackPanel>
         </ui:Card>
     </Grid>

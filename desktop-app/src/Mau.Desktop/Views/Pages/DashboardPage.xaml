@@ -5,17 +5,184 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       mc:Ignorable="d">
-    <Grid Margin="20">
-        <ui:Card Padding="20">
-            <StackPanel>
-                <TextBlock FontSize="28"
-                           FontWeight="SemiBold"
-                           Text="{Binding ViewModel.PageTitle}" />
-                <TextBlock Margin="0,12,0,0"
-                           FontSize="15"
-                           TextWrapping="Wrap"
-                           Text="{Binding ViewModel.Description}" />
-            </StackPanel>
-        </ui:Card>
-    </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Padding="28"
+                    CornerRadius="14"
+                    MinHeight="180">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF22577A" Offset="0" />
+                        <GradientStop Color="#FF1B3A4B" Offset="0.55" />
+                        <GradientStop Color="#FF0B1F2A" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock FontSize="34"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               Text="{Binding ViewModel.PageTitle}" />
+                    <TextBlock Grid.Row="1"
+                               Margin="0,8,0,0"
+                               FontSize="18"
+                               Foreground="#FFE8EEF2"
+                               Text="{Binding ViewModel.Description}" />
+                    <TextBlock Grid.Row="2"
+                               Margin="0,16,0,0"
+                               VerticalAlignment="Bottom"
+                               FontSize="13"
+                               Foreground="#FFD2DEE5"
+                               Text="{Binding ViewModel.HeroFootnote}" />
+                </Grid>
+            </Border>
+
+            <UniformGrid Grid.Row="1"
+                         Margin="0,16,0,0"
+                         Columns="3">
+                <ui:Card Margin="0,0,8,0"
+                         Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="14"
+                                   Foreground="Gray"
+                                   Text="Inbound Today" />
+                        <TextBlock Margin="0,6,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding ViewModel.InboundToday}" />
+                        <TextBlock Margin="0,8,0,0"
+                                   FontSize="12"
+                                   Foreground="Gray"
+                                   Text="Dokumen inbound yang sudah diproses" />
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="8,0"
+                         Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="14"
+                                   Foreground="Gray"
+                                   Text="Outbound Today" />
+                        <TextBlock Margin="0,6,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding ViewModel.OutboundToday}" />
+                        <TextBlock Margin="0,8,0,0"
+                                   FontSize="12"
+                                   Foreground="Gray"
+                                   Text="Dokumen outbound yang sudah diproses" />
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="8,0,0,0"
+                         Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="14"
+                                   Foreground="Gray"
+                                   Text="Pending Approval" />
+                        <TextBlock Margin="0,6,0,0"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding ViewModel.PendingApproval}" />
+                        <TextBlock Margin="0,8,0,0"
+                                   FontSize="12"
+                                   Foreground="Gray"
+                                   Text="Menunggu verifikasi supervisor" />
+                    </StackPanel>
+                </ui:Card>
+            </UniformGrid>
+
+            <Grid Grid.Row="2"
+                  Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <ui:Card Grid.Column="0"
+                         Padding="16"
+                         Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock FontSize="24"
+                                   FontWeight="SemiBold"
+                                   Text="Aktivitas Terakhir" />
+                        <TextBlock Margin="0,6,0,14"
+                                   FontSize="13"
+                                   Foreground="Gray"
+                                   Text="Ringkasan event operasional terbaru dari backend." />
+
+                        <Border Margin="0,0,0,8"
+                                Padding="10"
+                                CornerRadius="8"
+                                Background="#11000000">
+                            <DockPanel>
+                                <ui:SymbolIcon DockPanel.Dock="Left"
+                                               Margin="0,0,8,0"
+                                               Symbol="CheckmarkCircle24" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Text="{Binding ViewModel.ActivityOne}" />
+                            </DockPanel>
+                        </Border>
+
+                        <Border Margin="0,0,0,8"
+                                Padding="10"
+                                CornerRadius="8"
+                                Background="#11000000">
+                            <DockPanel>
+                                <ui:SymbolIcon DockPanel.Dock="Left"
+                                               Margin="0,0,8,0"
+                                               Symbol="VehicleTruckCube24" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Text="{Binding ViewModel.ActivityTwo}" />
+                            </DockPanel>
+                        </Border>
+
+                        <Border Padding="10"
+                                CornerRadius="8"
+                                Background="#11000000">
+                            <DockPanel>
+                                <ui:SymbolIcon DockPanel.Dock="Left"
+                                               Margin="0,0,8,0"
+                                               Symbol="Warning24" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Text="{Binding ViewModel.ActivityThree}" />
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Grid.Column="1"
+                         Padding="16"
+                         Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock FontSize="24"
+                                   FontWeight="SemiBold"
+                                   Text="Quick Link" />
+                        <TextBlock Margin="0,6,0,14"
+                                   FontSize="13"
+                                   Foreground="Gray"
+                                   Text="Akses cepat modul utama." />
+
+                        <ui:Button Margin="0,0,0,8"
+                                   Appearance="Primary"
+                                   Content="Buka Inbound Weighing" />
+                        <ui:Button Margin="0,0,0,8"
+                                   Content="Buka Settings" />
+                        <ui:Button Content="Refresh Dashboard" />
+                    </StackPanel>
+                </ui:Card>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
 </Page>

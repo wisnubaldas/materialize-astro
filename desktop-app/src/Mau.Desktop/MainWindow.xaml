@@ -7,10 +7,98 @@
                  Height="760"
                  MinWidth="1024"
                  MinHeight="640"
+                 WindowStyle="SingleBorderWindow"
+                 ResizeMode="CanResize"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True">
+    <ui:FluentWindow.Resources>
+        <Style x:Key="CaptionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#F3F3F3" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#33FFFFFF" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#44FFFFFF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CloseCaptionButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#C50F1F" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:FluentWindow.Resources>
+
     <Grid>
-        <ui:NavigationView x:Name="RootNavigationView"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="#1F1F1F" MouseLeftButtonDown="OnWindowTitleBarMouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                <Image Width="22"
+                       Height="22"
+                       Margin="0,0,8,0"
+                       Source="Assets/Brand/mau-logo.png" />
+                <TextBlock VerticalAlignment="Center"
+                           Foreground="#F3F3F3"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Text="{Binding ViewModel.AppTitle}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource CaptionButtonStyle}"
+                        ToolTip="Minimize"
+                        Click="OnMinimizeWindowClick">
+                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                               FontSize="10"
+                               Text="&#xE921;" />
+                </Button>
+                <Button x:Name="MaximizeRestoreWindowButton"
+                        Style="{StaticResource CaptionButtonStyle}"
+                        ToolTip="Maximize"
+                        Click="OnMaximizeRestoreWindowClick">
+                    <TextBlock x:Name="MaximizeRestoreIcon"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="10"
+                               Text="&#xE922;" />
+                </Button>
+                <Button Style="{StaticResource CloseCaptionButtonStyle}"
+                        ToolTip="Close"
+                        Click="OnCloseWindowClick">
+                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                               FontSize="10"
+                               Text="&#xE8BB;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <ui:NavigationView Grid.Row="1"
+                           x:Name="RootNavigationView"
                            MenuItemsSource="{Binding ViewModel.MenuItems}"
                            FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems}"
                            PaneDisplayMode="Left"
@@ -18,7 +106,7 @@
                            IsPaneToggleVisible="True"
                            PaneTitle="{Binding ViewModel.AppTitle}">
             <ui:NavigationView.Header>
-                <StackPanel Margin="0,8,0,8">
+                <StackPanel Margin="25">
                     <TextBlock FontSize="22"
                                FontWeight="SemiBold"
                                Text="{Binding ViewModel.AppTitle}" />

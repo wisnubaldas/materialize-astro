@@ -58,10 +58,33 @@ public partial class App : Application
 
         services.AddSingleton<DashboardPage>();
         services.AddSingleton<InboundWeighingPage>();
+        services.AddSingleton<StockOpnamePage>();
+        services.AddSingleton<StockOpnamePreviewRackSystemPage>();
+        services.AddSingleton<ScanXrayCheckInPage>();
+        services.AddSingleton<ScanXrayInScanningXrayPage>();
+        services.AddSingleton<ScanXrayPostScreeningPage>();
+        services.AddSingleton<TpsOnlineEksporGateInPage>();
+        services.AddSingleton<TpsOnlineEksporGateOutPage>();
+        services.AddSingleton<TpsOnlineEksporInventoryPage>();
+        services.AddSingleton<TpsOnlineImporGateInPage>();
+        services.AddSingleton<TpsOnlineImporGateOutPage>();
+        services.AddSingleton<TpsOnlineImporInventoryPage>();
+        services.AddSingleton<TpsOnlineMonitoringPage>();
         services.AddSingleton<SettingsPage>();
 
         services.AddSingleton<DashboardViewModel>();
         services.AddSingleton<InboundWeighingViewModel>();
+        services.AddSingleton<StockOpnameViewModel>();
+        services.AddSingleton<ScanXrayCheckInViewModel>();
+        services.AddSingleton<ScanXrayInScanningXrayViewModel>();
+        services.AddSingleton<ScanXrayPostScreeningViewModel>();
+        services.AddSingleton<TpsOnlineEksporGateInViewModel>();
+        services.AddSingleton<TpsOnlineEksporGateOutViewModel>();
+        services.AddSingleton<TpsOnlineEksporInventoryViewModel>();
+        services.AddSingleton<TpsOnlineImporGateInViewModel>();
+        services.AddSingleton<TpsOnlineImporGateOutViewModel>();
+        services.AddSingleton<TpsOnlineImporInventoryViewModel>();
+        services.AddSingleton<TpsOnlineMonitoringViewModel>();
         services.AddSingleton<SettingsViewModel>();
     }
 }
