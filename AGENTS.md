@@ -18,7 +18,7 @@ Keahlian utama yang wajib digunakan:
 
 - FastAPI untuk backend.
 - Astro + React untuk web frontend.
-- C# .NET MAUI untuk desktop frontend.
+- C# WPF (.NET) untuk desktop frontend.
 - Dependency Injection.
 - SOLID, Repository Pattern, Service Layer, MVVM.
 - Refactoring sistem existing secara aman, bertahap, dan terdokumentasi.
@@ -52,7 +52,7 @@ materialize-project/
 | --------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
 | Backend FastAPI, database, API, auth, job, integrasi CEISA/AP2/HUBNET | `materialize-fastapi/`                           | [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) |
 | Web frontend Astro + React                                            | `astro/`                                         | [`astro/frontend_agent.md`](astro/frontend_agent.md)                           |
-| Desktop frontend C# .NET MAUI                                         | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
+| Desktop frontend C# WPF (.NET)                                        | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
 | Dokumentasi project/root                                              | `docs/`, `README.md`, `AGENTS.md`                | `AGENTS.md` + agent terdampak                                                  |
 | Email template                                                        | `email-template/`                                | `AGENTS.md` + `materialize-fastapi/backend_agent.md` jika dipakai backend      |
 | Docker/deployment                                                     | `docker-asset/`, `deploy-*.sh`, `.gitlab-ci.yml` | `AGENTS.md` + agent project yang dideploy                                      |
@@ -215,7 +215,7 @@ desktop-app/
 Desktop frontend resmi menggunakan:
 
 ```text
-C# .NET MAUI
+C# WPF (.NET)
 ```
 
 File instruksi desktop wajib berada di:
@@ -388,4 +388,5 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Jika task integrasi CEISA/AP2/HUBNET, implementasi wajib di backend `materialize-fastapi/`.
 - Jika task membutuhkan data dari desktop hardware lokal, data boleh dibaca oleh desktop, tetapi proses bisnis dan penyimpanan tetap melalui backend API.
 - Jangan menjaga backward compatibility lama jika user secara eksplisit meminta perubahan proses bisnis baru.
+
 

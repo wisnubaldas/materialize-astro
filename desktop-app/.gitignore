@@ -1,0 +1,27 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+
+# Logs and coverage
+*.log
+TestResults/
+coverage/
+
+# Local config / secrets
+.env
+.env.*
+appsettings*.json
+!appsettings.example.json
+
+# OS files
+Thumbs.db
+.DS_Store

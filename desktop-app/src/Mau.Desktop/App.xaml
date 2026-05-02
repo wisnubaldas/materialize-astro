@@ -1,0 +1,14 @@
+<Application x:Class="Mau.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:Mau.Desktop.ViewModels"
+             xmlns:views="clr-namespace:Mau.Desktop.Views">
+    <Application.Resources>
+        <DataTemplate DataType="{x:Type viewModels:LoginViewModel}">
+            <views:LoginView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+    </Application.Resources>
+</Application>
