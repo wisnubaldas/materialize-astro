@@ -18,6 +18,7 @@ Desktop app di `desktop-app/` adalah client internal. Business logic inti, valid
 
 - Framework desktop resmi: **WPF (.NET 8+)**.
 - UI framework utama: **WPF UI** dengan namespace `http://schemas.lepo.co/wpfui/2022/xaml`.
+- Referensi implementasi UI/table resmi WPF: `https://github.com/microsoft/WPF-Samples`.
 - UI utama: XAML.
 - Pattern: MVVM + Service Layer + API Client.
 - Dependency Injection: `Microsoft.Extensions.DependencyInjection` dari startup `App.xaml.cs`.
@@ -79,6 +80,25 @@ Scaffolding shell desktop yang wajib diprioritaskan:
 - Navigasi utama menggunakan `ui:NavigationView`.
 - Registrasi halaman menggunakan `INavigationViewPageProvider` dan `INavigationService`.
 
+## Grid/Table UI Rules (WPF)
+
+- Gunakan `DataGrid` WPF sebagai baseline untuk tampilan tabel operasional.
+- Set `AutoGenerateColumns="False"` dan definisikan kolom secara eksplisit sesuai kontrak DTO/API.
+- Utamakan binding koleksi dari ViewModel (`ObservableCollection<T>`), bukan manipulasi baris dari code-behind.
+- Aktifkan sorting pada kolom yang relevan dan jaga lebar kolom dengan `Width="*"`/`Width="Auto"` sesuai pola di WPF Samples.
+- Untuk data read-only operasional, set `IsReadOnly="True"` dan `CanUserAddRows="False"` kecuali flow memang butuh inline edit.
+- Layout halaman tabel harus memakai `Grid` dengan pembagian area jelas (filter/header/action/table/pagination) agar konsisten dengan contoh WPF.
+
+## UI Visual Rules (Colors, Typography, Icons)
+
+- Gunakan resource dictionary dan `DynamicResource` untuk warna; hindari hard-coded hex color di XAML page.
+- Ikuti semantic color token: `Primary`, `Success`, `Warning`, `Danger`, `Info`, dan `Neutral` agar status operasional konsisten di seluruh halaman.
+- Kontras warna wajib cukup untuk teks, badge status, dan aksi utama/sekunder; jangan hanya mengandalkan warna tanpa label teks.
+- Tipografi harus konsisten per hierarchy: `PageTitle`, `SectionTitle`, `Body`, `Caption`; hindari pengacakan `FontSize` antar halaman.
+- Gunakan keluarga font UI sistem Windows/default WPF UI secara konsisten, dan batasi variasi weight agar keterbacaan stabil di layar operasional.
+- Ikon wajib memakai set yang konsisten dengan WPF UI/Fluent (`SymbolIcon`/icon element setara), dengan makna ikon yang jelas terhadap aksi.
+- Ukuran ikon menyesuaikan konteks: navigasi (lebih besar), action button/table row (lebih kecil), dan selalu dipasangkan tooltip/label bila ambigu.
+
 ---
 
 ## MVVM Rules
@@ -109,7 +129,7 @@ Prioritas unit test:
 - ViewModel
 - Service/use case
 - API client wrapper
-- Helper/domain ringan di `Mau.Desktop.Core`
+- Helper/domain ringan di module core internal desktop (`src/Mau.Desktop/Core/`)
 
 Jangan hit API production dari unit test.
 

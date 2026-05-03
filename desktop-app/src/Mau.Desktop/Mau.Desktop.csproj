@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Mau.Desktop.Core\Mau.Desktop.Core.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -23,6 +19,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\Brand\mau-logo.png" />
+    <Resource Include="Assets\Brand\mau-logo-ori.png" />
+    <Resource Include="Assets\Brand\login-background.jpg" />
   </ItemGroup>
 
 </Project>

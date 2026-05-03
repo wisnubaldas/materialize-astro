@@ -1,6 +1,6 @@
-namespace Mau.Desktop.Models;
+namespace Mau.Desktop.Api;
 
-public sealed class DesktopUser
+public sealed class AuthProfileResponse
 {
     public required int Id { get; init; }
 
@@ -9,6 +9,4 @@ public sealed class DesktopUser
     public required string Email { get; init; }
 
     public required IReadOnlyList<string> Roles { get; init; }
-
-    public required string AccessToken { get; init; }
 }

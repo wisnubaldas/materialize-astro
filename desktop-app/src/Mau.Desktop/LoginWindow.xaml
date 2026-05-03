@@ -1,0 +1,360 @@
+<ui:FluentWindow x:Class="Mau.Desktop.LoginWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+
+                 Title="Login - MAU APP Desktop"
+
+                 Width="600"
+                 Height="750"
+                 MinWidth="520"
+                 MinHeight="620"
+
+                 WindowStartupLocation="CenterScreen"
+                 ResizeMode="CanResize"
+                 WindowStyle="SingleBorderWindow"
+
+                 ExtendsContentIntoTitleBar="True">
+
+    <!--
+        DEBUG:
+        - Jangan pakai SizeToContent="WidthAndHeight" di halaman ini.
+        - SizeToContent membuat ukuran window mengikuti isi konten.
+        - Akibatnya Width/Height sering seperti tidak bekerja dan layout bisa sulit dikontrol.
+    -->
+
+    <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <!-- Warna utama halaman -->
+        <SolidColorBrush x:Key="LoginPageBackgroundBrush" Color="#FFF3F4F6" />
+        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFFFFFFF" />
+
+        <!-- Warna input -->
+        <SolidColorBrush x:Key="InputBorderBrush" Color="#FF9CA3AF" />
+        <SolidColorBrush x:Key="HintTextBrush" Color="#FF6B7280" />
+
+        <!-- Warna alert / error -->
+        <SolidColorBrush x:Key="ErrorTextBrush" Color="#FFB42318" />
+
+        <!-- Warna tombol -->
+        <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#FF1D8CF8" />
+        <SolidColorBrush x:Key="PrimaryButtonDisabledBrush" Color="#FF9ECBF8" />
+
+        <Style x:Key="LoginPrimaryActionButtonStyle"
+               TargetType="{x:Type ui:Button}">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryButtonBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBrush}" />
+            <Setter Property="Opacity" Value="1" />
+
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Background" Value="{DynamicResource PrimaryButtonDisabledBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonDisabledBrush}" />
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Warna progress bar -->
+        <SolidColorBrush x:Key="ProgressNormalBrush" Color="#FF1FA6B8" />
+        <SolidColorBrush x:Key="ProgressErrorBrush" Color="#FFDC2626" />
+    </ui:FluentWindow.Resources>
+
+    <Grid Background="{DynamicResource LoginPageBackgroundBrush}">
+
+        <!--
+            Struktur utama halaman:
+            Row 0 = custom title bar WPF UI
+            Row 1 = hero/banner background image
+            Row 2 = form login
+            Row 3 = progress/status area
+        -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36" />
+            <RowDefinition Height="200" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="86" />
+        </Grid.RowDefinitions>
+
+        <!--
+            TITLE BAR WPF UI
+
+            DEBUG:
+            - Karena ExtendsContentIntoTitleBar="True",
+              title bar bawaan Windows disembunyikan.
+            - Maka ui:TitleBar ini wajib ada.
+            - Kalau tombol minimize/maximize/close tidak muncul,
+              cek ShowMinimize, ShowMaximize, dan ShowClose.
+        -->
+        <ui:TitleBar Grid.Row="0"
+                     Title="Login - MAU APP Desktop"
+                     Height="36"
+                     ShowMinimize="True"
+                     ShowMaximize="True"
+                     ShowClose="True" />
+
+        <!--
+            HERO / BACKGROUND IMAGE
+
+            DEBUG IMAGE:
+            - Pastikan file ada di:
+              Assets/Brand/login-background.jpg
+
+            - Klik file image di Visual Studio, lalu pastikan:
+              Build Action = Resource
+              Copy to Output Directory = Do not copy
+
+            - Jika image belum muncul, ganti ImageSource menjadi:
+              pack://application:,,,/Assets/Brand/login-background.jpg
+        -->
+        <Border Grid.Row="1"
+                Margin="16,12,16,0"
+                CornerRadius="12,12,0,0"
+                ClipToBounds="True"
+                SnapsToDevicePixels="True">
+
+            <Border.Background>
+                <ImageBrush ImageSource="/Assets/Brand/login-background.jpg"
+                            Stretch="UniformToFill"
+                            AlignmentY="Top" />
+            </Border.Background>
+
+            <Grid>
+                <!-- Overlay gelap agar teks tetap terbaca -->
+                <Border CornerRadius="12,12,0,0"
+                        Background="#80111827" />
+                <!--
+                        DEBUG LOGO:
+                        - Pastikan file ada di:
+                          Assets/Brand/mau-logo-ori.png
+
+                        - Jika logo belum muncul, ganti Source menjadi:
+                          pack://application:,,,/Assets/Brand/mau-logo-ori.png
+                        - Logo terpisah dari stack panel
+                    -->
+                <Image Width="150"
+                           Height="150"
+                           Margin="0,16,20,0"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Top"
+                           Source="/Assets/Brand/mau-logo-ori.png"
+                           Stretch="Uniform" 
+                           Panel.ZIndex="10" />
+                
+                <StackPanel Margin="28,22,28,20"
+                            VerticalAlignment="Bottom">
+
+
+
+                    <TextBlock Margin="0,0,0,0"
+                               FontSize="38"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               Text="MAU APP" />
+
+                    <TextBlock Margin="0,0,0,0"
+                               FontSize="18"
+                               Foreground="#F3F4F6"
+                               TextWrapping="Wrap"
+                               Text="Aplikasi Desktop Untuk Support Gudang" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--
+            FORM LOGIN
+
+            DEBUG:
+            - Di kode sebelumnya, bagian ini memakai Grid.RowSpan="2".
+            - Itu bisa membuat panel form menumpuk dengan progress/footer.
+            - Di versi ini Grid.RowSpan dihapus supaya form berada khusus di Row 2.
+        -->
+        <Border Grid.Row="2"
+                Margin="16,0,16,0"
+                Background="{DynamicResource PanelBackgroundBrush}">
+
+            <Grid Margin="40,24,40,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Text="Sign In" />
+
+                <TextBlock Grid.Row="1"
+                           Margin="0,16,0,6"
+                           FontSize="18"
+                           Text="Email" />
+
+                <TextBox Grid.Row="2"
+                         Height="42"
+                         Padding="10,6"
+                         FontSize="16"
+                         BorderBrush="{DynamicResource InputBorderBrush}"
+                         BorderThickness="2"
+                         Text="{Binding ViewModel.Email, UpdateSourceTrigger=PropertyChanged}" />
+
+                <!--
+                    DEBUG BINDING:
+                    - Kalau pesan error email tidak muncul,
+                      cek property ViewModel.HasEmailErrorMessage.
+                    - Nilainya harus true agar TextBlock ini visible.
+                -->
+                <TextBlock Grid.Row="3"
+                           Margin="4,6,0,0"
+                           FontSize="13"
+                           Foreground="{DynamicResource ErrorTextBrush}"
+                           Visibility="{Binding ViewModel.HasEmailErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           Text="{Binding ViewModel.EmailErrorMessage}" />
+
+                <TextBlock Grid.Row="4"
+                           Margin="0,16,0,6"
+                           FontSize="18"
+                           Text="Password" />
+
+                <!--
+                    DEBUG PASSWORD:
+                    - PasswordBox tidak bisa binding langsung seperti TextBox.
+                    - Karena itu tetap gunakan event PasswordChanged.
+                    - Pastikan method OnPasswordInputChanged ada di LoginWindow.xaml.cs.
+                -->
+                <PasswordBox x:Name="PasswordInput"
+                             Grid.Row="5"
+                             Height="42"
+                             Padding="10,6"
+                             FontSize="16"
+                             BorderBrush="{DynamicResource InputBorderBrush}"
+                             BorderThickness="2"
+                             PasswordChanged="OnPasswordInputChanged" />
+
+                <StackPanel Grid.Row="6"
+                            Margin="4,6,0,0"
+                            Orientation="Vertical">
+
+                    <TextBlock FontSize="12"
+                               Foreground="{DynamicResource HintTextBrush}"
+                               Text="Password harus 8-20 karakter." />
+
+                    <TextBlock Margin="0,6,0,0"
+                               FontSize="13"
+                               Foreground="{DynamicResource ErrorTextBrush}"
+                               Visibility="{Binding ViewModel.HasPasswordErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Text="{Binding ViewModel.PasswordErrorMessage}" />
+
+                    <TextBlock Margin="0,6,0,0"
+                               FontSize="13"
+                               Foreground="{DynamicResource ErrorTextBrush}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding ViewModel.HasErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Text="{Binding ViewModel.ErrorMessage}" />
+                </StackPanel>
+
+                <!-- Spacer agar tombol turun ke bawah area form -->
+                <Grid Grid.Row="7" />
+
+                <Grid Grid.Row="8"
+                      Margin="0,20,0,0"
+                      HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--
+                        DEBUG:
+                        - Pastikan method OnExitButtonClick ada di code-behind.
+                    -->
+                    <ui:Button Grid.Column="0"
+                               Appearance="Danger"
+                               Foreground="White"
+                               Height="44"
+                               MinWidth="150"
+                               FontSize="18"
+                               Content="Close"
+                               Click="OnExitButtonClick" />
+
+                    <!--
+                        DEBUG:
+                        - Pastikan method OnLoginButtonClick ada di code-behind.
+                        - Pastikan ViewModel.LoginButtonText punya nilai default,
+                          misalnya "Login".
+                    -->
+                    <ui:Button x:Name="LoginButton"
+                               Appearance="Primary"
+                               Grid.Column="2"
+                               Height="44"
+                               MinWidth="150"
+                               Style="{StaticResource LoginPrimaryActionButtonStyle}"
+                               FontSize="18"
+                               IsDefault="True"
+                               Content="{Binding ViewModel.LoginButtonText, FallbackValue=Sign In, TargetNullValue=Sign In}"
+                               Click="OnLoginButtonClick" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!--
+            PROGRESS / STATUS AREA
+
+            DEBUG:
+            - Area ini sekarang hanya berada di Row 3.
+            - Tidak lagi tertimpa oleh panel form.
+        -->
+        <Border Grid.Row="3"
+                Margin="16,0,16,16"
+                Background="{DynamicResource PanelBackgroundBrush}"
+                CornerRadius="0,0,12,12">
+
+            <StackPanel Margin="18,8,18,12"
+                        VerticalAlignment="Center">
+
+                <TextBlock Margin="0,0,0,6"
+                           FontSize="12"
+                           Foreground="{DynamicResource ErrorTextBrush}"
+                           TextWrapping="Wrap"
+                           Visibility="{Binding ViewModel.HasProgressAlertMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           Text="{Binding ViewModel.ProgressAlertMessage}" />
+
+                <ProgressBar Height="18"
+                             Minimum="0"
+                             Maximum="100"
+                             Value="{Binding ViewModel.ProgressValue, Mode=OneWay}"
+                             IsIndeterminate="{Binding ViewModel.IsProgressIndeterminate, Mode=OneWay}">
+
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Foreground" Value="{DynamicResource ProgressNormalBrush}" />
+
+                            <Style.Triggers>
+                                <!--
+                                    DEBUG:
+                                    - Jika ViewModel.IsProgressError = true,
+                                      progress bar berubah ke warna merah.
+                                -->
+                                <DataTrigger Binding="{Binding ViewModel.IsProgressError}"
+                                             Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource ProgressErrorBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

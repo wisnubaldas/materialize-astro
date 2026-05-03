@@ -4,7 +4,7 @@ public sealed class ApiOptions
 {
     public const string SectionName = "Api";
 
-    public string BaseUrl { get; set; } = "https://localhost:8000";
+    public string BaseUrl { get; set; } = "http://localhost:8000";
 
     public int RequestTimeoutSeconds { get; set; } = 30;
 
@@ -17,7 +17,11 @@ public sealed class ApiOptions
 
         if (!string.IsNullOrWhiteSpace(configuredBaseUrl))
         {
-            options.BaseUrl = configuredBaseUrl;
+            options.BaseUrl = NormalizeBaseUrl(configuredBaseUrl);
+        }
+        else
+        {
+            options.BaseUrl = NormalizeBaseUrl(options.BaseUrl);
         }
 
         if (int.TryParse(configuredTimeout, out var timeoutSeconds) && timeoutSeconds > 0)
@@ -26,5 +30,39 @@ public sealed class ApiOptions
         }
 
         return options;
+    }
+
+    private static string NormalizeBaseUrl(string rawBaseUrl)
+    {
+        var normalizedBaseUrl = rawBaseUrl.Trim();
+
+        if (!normalizedBaseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            && !normalizedBaseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedBaseUrl = $"http://{normalizedBaseUrl}";
+        }
+
+        if (Uri.TryCreate(normalizedBaseUrl, UriKind.Absolute, out var uri))
+        {
+            var uriBuilder = new UriBuilder(uri)
+            {
+                Path = string.Empty,
+                Query = string.Empty,
+                Fragment = string.Empty,
+            };
+
+            // Backend lokal default MAU APP berjalan HTTP pada port 8000.
+            if (uriBuilder.Port == 8000
+                && uriBuilder.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                && (uriBuilder.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                    || uriBuilder.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)))
+            {
+                uriBuilder.Scheme = Uri.UriSchemeHttp;
+            }
+
+            normalizedBaseUrl = uriBuilder.Uri.AbsoluteUri.TrimEnd('/');
+        }
+
+        return normalizedBaseUrl;
     }
 }

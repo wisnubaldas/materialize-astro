@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Mau.Desktop.Services;
 using Mau.Desktop.Views.Pages;
 using Wpf.Ui.Controls;
 
@@ -6,13 +7,20 @@ namespace Mau.Desktop.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
-    public MainWindowViewModel()
+    private readonly IAuthService _authService;
+    private string _operatorState = "Belum login.";
+    private string _operatorIdentity = "-";
+
+    public MainWindowViewModel(IAuthService authService)
     {
+        _authService = authService;
+        _authService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
         var stockOpnameMenu = new NavigationViewItem
         {
             Content = "Stock Opname",
             Icon = new SymbolIcon(SymbolRegular.Box24),
-            IsExpanded = true,
+            IsExpanded = false,
             TargetPageType = typeof(StockOpnamePage),
         };
 
@@ -36,7 +44,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             Content = "Scan X-Ray",
             Icon = new SymbolIcon(SymbolRegular.ScanText24),
-            IsExpanded = true,
+            IsExpanded = false,
             TargetPageType = typeof(ScanXrayCheckInPage),
         };
 
@@ -68,7 +76,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             Content = "TPS Online",
             Icon = new SymbolIcon(SymbolRegular.Globe24),
-            IsExpanded = true,
+            IsExpanded = false,
             TargetPageType = typeof(TpsOnlineEksporGateInPage),
         };
 
@@ -141,13 +149,47 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             new NavigationViewItem("Settings", SymbolRegular.Settings24, typeof(SettingsPage)),
         };
+
+        RefreshAuthenticationState();
     }
 
     public string AppTitle => "MAU APP Desktop";
 
-    public string OperatorState => "Scaffolding WPF UI aktif - siap integrasi endpoint backend.";
+    public string OperatorState
+    {
+        get => _operatorState;
+        private set => SetProperty(ref _operatorState, value);
+    }
+
+    public string OperatorIdentity
+    {
+        get => _operatorIdentity;
+        private set => SetProperty(ref _operatorIdentity, value);
+    }
 
     public IReadOnlyCollection<object> MenuItems { get; }
 
     public IReadOnlyCollection<object> FooterMenuItems { get; }
+
+    private void OnAuthenticationStateChanged(object? sender, EventArgs e)
+    {
+        RefreshAuthenticationState();
+    }
+
+    private void RefreshAuthenticationState()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            OperatorState = "Session belum aktif.";
+            OperatorIdentity = "Operator: -";
+            return;
+        }
+
+        var roleSummary = _authService.CurrentUser.Roles.Count > 0
+            ? string.Join(", ", _authService.CurrentUser.Roles)
+            : "Tanpa role";
+
+        OperatorState = $"Session aktif - role: {roleSummary}";
+        OperatorIdentity = $"Operator: {_authService.CurrentUser.Username} ({_authService.CurrentUser.Email})";
+    }
 }

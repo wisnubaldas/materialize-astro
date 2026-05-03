@@ -7,12 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B2DB22C7-0AD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mau.Desktop", "src\Mau.Desktop\Mau.Desktop.csproj", "{33FC28EA-1841-4210-AF24-4413734B36B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mau.Desktop.Core", "src\Mau.Desktop.Core\Mau.Desktop.Core.csproj", "{BFC5BF79-2BCC-4B50-BF66-CCF288115646}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BE3EAD22-F0B8-401C-ACEE-340154F134C3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mau.Desktop.Tests", "tests\Mau.Desktop.Tests\Mau.Desktop.Tests.csproj", "{11185910-F849-4E77-A209-A6F4E6D3713C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,18 +20,8 @@ Global
 		{33FC28EA-1841-4210-AF24-4413734B36B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33FC28EA-1841-4210-AF24-4413734B36B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33FC28EA-1841-4210-AF24-4413734B36B4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BFC5BF79-2BCC-4B50-BF66-CCF288115646}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BFC5BF79-2BCC-4B50-BF66-CCF288115646}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BFC5BF79-2BCC-4B50-BF66-CCF288115646}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BFC5BF79-2BCC-4B50-BF66-CCF288115646}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11185910-F849-4E77-A209-A6F4E6D3713C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11185910-F849-4E77-A209-A6F4E6D3713C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11185910-F849-4E77-A209-A6F4E6D3713C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11185910-F849-4E77-A209-A6F4E6D3713C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{33FC28EA-1841-4210-AF24-4413734B36B4} = {B2DB22C7-0AD2-42FF-BB64-C1D9459482C0}
-		{BFC5BF79-2BCC-4B50-BF66-CCF288115646} = {B2DB22C7-0AD2-42FF-BB64-C1D9459482C0}
-		{11185910-F849-4E77-A209-A6F4E6D3713C} = {BE3EAD22-F0B8-401C-ACEE-340154F134C3}
 	EndGlobalSection
 EndGlobal

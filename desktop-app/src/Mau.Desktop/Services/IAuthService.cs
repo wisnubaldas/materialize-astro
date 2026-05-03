@@ -5,5 +5,13 @@ namespace Mau.Desktop.Services;
 
 public interface IAuthService
 {
-    Task<Result<DesktopUser>> LoginAsync(string username, string password, CancellationToken cancellationToken = default);
+    event EventHandler? AuthenticationStateChanged;
+
+    bool IsAuthenticated { get; }
+
+    DesktopUser? CurrentUser { get; }
+
+    Task<Result<DesktopUser>> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
+
+    Task LogoutAsync(CancellationToken cancellationToken = default);
 }

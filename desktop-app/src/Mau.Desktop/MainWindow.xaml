@@ -111,8 +111,19 @@
                                FontWeight="SemiBold"
                                Text="{Binding ViewModel.AppTitle}" />
                     <TextBlock Margin="0,4,0,0"
+                               FontSize="13"
+                               Foreground="DimGray"
+                               Text="{Binding ViewModel.OperatorIdentity}" />
+                    <TextBlock Margin="0,4,0,0"
                                Foreground="Gray"
                                Text="{Binding ViewModel.OperatorState}" />
+                    <ui:Button Width="130"
+                               Height="34"
+                               Margin="0,14,0,0"
+                               HorizontalAlignment="Left"
+                               Appearance="Secondary"
+                               Content="Logout"
+                               Click="OnLogoutClick" />
                 </StackPanel>
             </ui:NavigationView.Header>
         </ui:NavigationView>

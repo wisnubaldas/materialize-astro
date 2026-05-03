@@ -5,8 +5,7 @@ Desktop application MAU APP saat ini menggunakan **WPF (.NET 8)** + **WPF UI** d
 ## Struktur
 
 - `src/Mau.Desktop/` : aplikasi desktop WPF UI
-- `src/Mau.Desktop.Core/` : library reusable untuk model/helper yang bisa dites
-- `tests/Mau.Desktop.Tests/` : unit test
+- `src/Mau.Desktop/Core/` : helper/core utilities internal project desktop
 
 ## Jalankan Lokal
 
@@ -19,5 +18,4 @@ Desktop application MAU APP saat ini menggunakan **WPF (.NET 8)** + **WPF UI** d
 
 ```powershell
 dotnet build desktop-app/src/Mau.Desktop/Mau.Desktop.csproj
-dotnet test desktop-app/tests/Mau.Desktop.Tests/Mau.Desktop.Tests.csproj
 ```
