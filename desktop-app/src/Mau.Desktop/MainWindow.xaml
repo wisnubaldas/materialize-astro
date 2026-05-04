@@ -18,15 +18,15 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#F3F3F3" />
+            <Setter Property="Foreground" Value="{DynamicResource TitleBarForegroundBrush}" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#33FFFFFF" />
+                    <Setter Property="Background" Value="{DynamicResource TitleBarHoverBrush}" />
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#44FFFFFF" />
+                    <Setter Property="Background" Value="{DynamicResource TitleBarPressedBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -34,11 +34,11 @@
         <Style x:Key="CloseCaptionButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E81123" />
+                    <Setter Property="Background" Value="{DynamicResource TitleBarCloseHoverBrush}" />
                     <Setter Property="Foreground" Value="White" />
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#C50F1F" />
+                    <Setter Property="Background" Value="{DynamicResource TitleBarClosePressedBrush}" />
                     <Setter Property="Foreground" Value="White" />
                 </Trigger>
             </Style.Triggers>
@@ -51,7 +51,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Background="#1F1F1F" MouseLeftButtonDown="OnWindowTitleBarMouseLeftButtonDown">
+        <Grid Grid.Row="0"
+              Background="{DynamicResource TitleBarBackgroundBrush}"
+              MouseLeftButtonDown="OnWindowTitleBarMouseLeftButtonDown">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -64,7 +66,7 @@
                        Margin="0,0,8,0"
                        Source="Assets/Brand/mau-logo.png" />
                 <TextBlock VerticalAlignment="Center"
-                           Foreground="#F3F3F3"
+                           Foreground="{DynamicResource TitleBarForegroundBrush}"
                            FontSize="13"
                            FontWeight="SemiBold"
                            Text="{Binding ViewModel.AppTitle}" />
@@ -112,10 +114,10 @@
                                Text="{Binding ViewModel.AppTitle}" />
                     <TextBlock Margin="0,4,0,0"
                                FontSize="13"
-                               Foreground="DimGray"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
                                Text="{Binding ViewModel.OperatorIdentity}" />
                     <TextBlock Margin="0,4,0,0"
-                               Foreground="Gray"
+                               Foreground="{DynamicResource TertiaryTextBrush}"
                                Text="{Binding ViewModel.OperatorState}" />
                     <ui:Button Width="130"
                                Height="34"
@@ -123,7 +125,7 @@
                                HorizontalAlignment="Left"
                                Appearance="Secondary"
                                Content="Logout"
-                               Click="OnLogoutClick" />
+                               Command="{Binding ViewModel.LogoutCommand}" />
                 </StackPanel>
             </ui:NavigationView.Header>
         </ui:NavigationView>

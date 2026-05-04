@@ -26,21 +26,6 @@
     <ui:FluentWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
-        <!-- Warna utama halaman -->
-        <SolidColorBrush x:Key="LoginPageBackgroundBrush" Color="#FFF3F4F6" />
-        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFFFFFFF" />
-
-        <!-- Warna input -->
-        <SolidColorBrush x:Key="InputBorderBrush" Color="#FF9CA3AF" />
-        <SolidColorBrush x:Key="HintTextBrush" Color="#FF6B7280" />
-
-        <!-- Warna alert / error -->
-        <SolidColorBrush x:Key="ErrorTextBrush" Color="#FFB42318" />
-
-        <!-- Warna tombol -->
-        <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#FF1D8CF8" />
-        <SolidColorBrush x:Key="PrimaryButtonDisabledBrush" Color="#FF9ECBF8" />
-
         <Style x:Key="LoginPrimaryActionButtonStyle"
                TargetType="{x:Type ui:Button}">
             <Setter Property="Foreground" Value="White" />
@@ -57,10 +42,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
-        <!-- Warna progress bar -->
-        <SolidColorBrush x:Key="ProgressNormalBrush" Color="#FF1FA6B8" />
-        <SolidColorBrush x:Key="ProgressErrorBrush" Color="#FFDC2626" />
     </ui:FluentWindow.Resources>
 
     <Grid Background="{DynamicResource LoginPageBackgroundBrush}">
@@ -125,7 +106,7 @@
             <Grid>
                 <!-- Overlay gelap agar teks tetap terbaca -->
                 <Border CornerRadius="12,12,0,0"
-                        Background="#80111827" />
+                        Background="{DynamicResource HeroOverlayBrush}" />
                 <!--
                         DEBUG LOGO:
                         - Pastikan file ada di:
@@ -302,8 +283,10 @@
                                Style="{StaticResource LoginPrimaryActionButtonStyle}"
                                FontSize="18"
                                IsDefault="True"
+                               Command="{Binding ViewModel.LoginCommand}"
+                               CommandParameter="{Binding ElementName=PasswordInput, Path=Password}"
                                Content="{Binding ViewModel.LoginButtonText, FallbackValue=Sign In, TargetNullValue=Sign In}"
-                               Click="OnLoginButtonClick" />
+                               />
                 </Grid>
             </Grid>
         </Border>

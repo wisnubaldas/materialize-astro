@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
+using Mau.Desktop.Commands;
 using Mau.Desktop.Services;
 using Mau.Desktop.Views.Pages;
 using Wpf.Ui.Controls;
@@ -15,6 +17,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     {
         _authService = authService;
         _authService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        LogoutCommand = new AsyncRelayCommand(ExecuteLogoutAsync);
 
         var stockOpnameMenu = new NavigationViewItem
         {
@@ -153,6 +156,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         RefreshAuthenticationState();
     }
 
+    public event EventHandler? LogoutRequested;
+
     public string AppTitle => "MAU APP Desktop";
 
     public string OperatorState
@@ -170,6 +175,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     public IReadOnlyCollection<object> MenuItems { get; }
 
     public IReadOnlyCollection<object> FooterMenuItems { get; }
+
+    public ICommand LogoutCommand { get; }
 
     private void OnAuthenticationStateChanged(object? sender, EventArgs e)
     {
@@ -191,5 +198,11 @@ public sealed class MainWindowViewModel : ViewModelBase
 
         OperatorState = $"Session aktif - role: {roleSummary}";
         OperatorIdentity = $"Operator: {_authService.CurrentUser.Username} ({_authService.CurrentUser.Email})";
+    }
+
+    private Task ExecuteLogoutAsync(object? _)
+    {
+        LogoutRequested?.Invoke(this, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 }

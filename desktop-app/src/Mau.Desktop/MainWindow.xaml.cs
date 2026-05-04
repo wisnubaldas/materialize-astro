@@ -34,6 +34,7 @@ public partial class MainWindow : FluentWindow
         _authService = authService;
         _serviceProvider = serviceProvider;
         _navigationService = navigationService;
+        ViewModel.LogoutRequested += OnLogoutRequested;
 
         DataContext = this;
         InitializeComponent();
@@ -46,6 +47,7 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => _navigationService.Navigate(typeof(DashboardPage));
         StateChanged += (_, _) => UpdateMaximizeRestoreButtonState();
         Loaded += (_, _) => UpdateMaximizeRestoreButtonState();
+        Closed += (_, _) => ViewModel.LogoutRequested -= OnLogoutRequested;
     }
 
     public void SetTheme(ApplicationTheme theme)
@@ -189,7 +191,7 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private async void OnLogoutClick(object sender, RoutedEventArgs e)
+    private async void OnLogoutRequested(object? sender, EventArgs e)
     {
         var confirmationResult = System.Windows.MessageBox.Show(
             "Logout dari sesi saat ini?",
@@ -218,5 +220,4 @@ public partial class MainWindow : FluentWindow
 
         Close();
     }
-
 }

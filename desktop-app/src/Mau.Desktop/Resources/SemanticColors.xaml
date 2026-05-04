@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#FF1F1F1F" />
+    <SolidColorBrush x:Key="TitleBarForegroundBrush" Color="#FFF3F3F3" />
+    <SolidColorBrush x:Key="TitleBarHoverBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="TitleBarPressedBrush" Color="#44FFFFFF" />
+    <SolidColorBrush x:Key="TitleBarCloseHoverBrush" Color="#FFE81123" />
+    <SolidColorBrush x:Key="TitleBarClosePressedBrush" Color="#FFC50F1F" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#FF696969" />
+    <SolidColorBrush x:Key="TertiaryTextBrush" Color="#FF808080" />
+
+    <SolidColorBrush x:Key="LoginPageBackgroundBrush" Color="#FFF3F4F6" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#FF9CA3AF" />
+    <SolidColorBrush x:Key="HintTextBrush" Color="#FF6B7280" />
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FFB42318" />
+    <SolidColorBrush x:Key="PrimaryButtonBrush" Color="#FF1D8CF8" />
+    <SolidColorBrush x:Key="PrimaryButtonDisabledBrush" Color="#FF9ECBF8" />
+    <SolidColorBrush x:Key="ProgressNormalBrush" Color="#FF1FA6B8" />
+    <SolidColorBrush x:Key="ProgressErrorBrush" Color="#FFDC2626" />
+    <SolidColorBrush x:Key="HeroOverlayBrush" Color="#80111827" />
+</ResourceDictionary>

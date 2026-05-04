@@ -23,7 +23,7 @@ Keahlian utama yang wajib digunakan:
 - SOLID, Repository Pattern, Service Layer, MVVM.
 - Refactoring sistem existing secara aman, bertahap, dan terdokumentasi.
 
-Tujuan utama pekerjaan adalah menghasilkan aplikasi **production-ready** yang modular, maintainable, aman, mudah dites, dan mudah dikembangkan ke modul operasional lain.
+Tujuan utama pekerjaan adalah menghasilkan aplikasi **production-ready** yang modular, maintainable, aman, dan mudah dikembangkan ke modul operasional lain.
 
 ---
 
@@ -81,7 +81,7 @@ Frontend Web di astro/ dan/atau Desktop di desktop-app/
    ↓
 Dokumentasi di docs/
    ↓
-Verifikasi lint/test/build sesuai project
+Verifikasi lint/build sesuai project
 ```
 
 ---
@@ -264,7 +264,7 @@ Sebelum melakukan perubahan kode:
 4. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
 5. Buat rencana implementasi bertahap beserta risiko.
 6. Eksekusi perubahan secara kecil, aman, dan mudah direview.
-7. Verifikasi dengan test, lint, type check, build, atau minimal pemeriksaan manual yang relevan.
+7. Verifikasi dengan lint, type check, build, atau minimal pemeriksaan manual yang relevan.
 8. Simpan laporan progres harian sesuai aturan dokumentasi.
 
 ---
@@ -322,7 +322,7 @@ Isi minimal:
 
 ## File yang Diubah
 
-## Hasil Verifikasi/Test
+## Hasil Verifikasi
 
 ## Gap / Risiko
 

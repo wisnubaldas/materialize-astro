@@ -1,8 +1,8 @@
 using Mau.Desktop.Api;
 using Mau.Desktop.Core;
 using Mau.Desktop.Models;
-using System.Net.Http;
 using System.Net;
+using System.Net.Http;
 
 namespace Mau.Desktop.Services;
 
@@ -70,15 +70,54 @@ public sealed class AuthService : IAuthService
             AuthenticationStateChanged?.Invoke(this, EventArgs.Empty);
             return Result<DesktopUser>.Success(user);
         }
-        catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.BadRequest)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Request login tidak valid.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
         {
             _authSessionState.ClearSession();
             return Result<DesktopUser>.Failure("Email atau password tidak valid.");
         }
-        catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.Forbidden)
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.Forbidden)
         {
             _authSessionState.ClearSession();
             return Result<DesktopUser>.Failure("Akses ditolak oleh backend.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Endpoint login backend tidak ditemukan.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.Conflict)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Terjadi konflik data sesi. Silakan login ulang.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.UnprocessableEntity)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Input login tidak lolos validasi backend.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Terlalu banyak percobaan login. Coba lagi beberapa saat.");
+        }
+        catch (BackendApiException exception) when (exception.StatusCode == HttpStatusCode.InternalServerError)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure("Backend mengalami gangguan internal.");
+        }
+        catch (BackendApiException exception)
+        {
+            _authSessionState.ClearSession();
+            return Result<DesktopUser>.Failure(
+                string.IsNullOrWhiteSpace(exception.ResponseMessage)
+                    ? "Backend mengembalikan respons error."
+                    : exception.ResponseMessage
+            );
         }
         catch (HttpRequestException)
         {

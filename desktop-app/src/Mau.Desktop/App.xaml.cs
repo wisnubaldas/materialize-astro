@@ -194,7 +194,7 @@ public partial class App : Application
         WriteStartupLog($"ShowStartupErrorAndShutdown: {title} | {exception.Message}");
 
         System.Windows.MessageBox.Show(
-            $"{title}\n\n{exception.Message}\n\n{exception.StackTrace}",
+            $"{title}\n\n{exception.Message}\n\nDetail teknis sudah dicatat di startup log lokal.",
             "MAU APP Desktop - Startup Error",
             System.Windows.MessageBoxButton.OK,
             System.Windows.MessageBoxImage.Error
