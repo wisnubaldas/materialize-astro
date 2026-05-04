@@ -21,6 +21,9 @@ coverage/
 .env.*
 appsettings*.json
 !appsettings.example.json
+!src/Mau.Desktop/appsettings.json
+!src/Mau.Desktop/appsettings.Development.json
+!src/Mau.Desktop/appsettings.Production.json
 
 # OS files
 Thumbs.db

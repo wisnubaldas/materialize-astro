@@ -6,6 +6,7 @@ using Mau.Desktop.Configuration;
 using Mau.Desktop.Services;
 using Mau.Desktop.ViewModels;
 using Mau.Desktop.Views.Pages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions;
@@ -96,7 +97,12 @@ public partial class App : Application
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        var options = ApiOptions.FromEnvironment();
+        var environmentName = ResolveEnvironmentName();
+        var configuration = BuildConfiguration(environmentName);
+        var options = ApiOptions.FromConfiguration(configuration);
+
+        WriteStartupLog($"Configuration environment: {environmentName}");
+        WriteStartupLog($"API base URL resolved: {options.BaseUrl}");
         services.AddSingleton(options);
 
         services.AddHttpClient<IBackendApiClient, BackendApiClient>(client =>
@@ -155,6 +161,33 @@ public partial class App : Application
         services.AddSingleton<TpsOnlineImporInventoryViewModel>();
         services.AddSingleton<TpsOnlineMonitoringViewModel>();
         services.AddSingleton<SettingsViewModel>();
+    }
+
+    private static IConfiguration BuildConfiguration(string environmentName)
+    {
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .Build();
+    }
+
+    private static string ResolveEnvironmentName()
+    {
+        var mauDesktopEnvironment = Environment.GetEnvironmentVariable("MAU_DESKTOP_ENVIRONMENT");
+        if (!string.IsNullOrWhiteSpace(mauDesktopEnvironment))
+        {
+            return mauDesktopEnvironment.Trim();
+        }
+
+        var dotnetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+        if (!string.IsNullOrWhiteSpace(dotnetEnvironment))
+        {
+            return dotnetEnvironment.Trim();
+        }
+
+        return "Development";
     }
 
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)

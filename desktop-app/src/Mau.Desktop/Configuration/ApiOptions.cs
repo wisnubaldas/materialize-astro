@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 namespace Mau.Desktop.Configuration;
 
 public sealed class ApiOptions
@@ -8,13 +10,12 @@ public sealed class ApiOptions
 
     public int RequestTimeoutSeconds { get; set; } = 30;
 
-    public static ApiOptions FromEnvironment()
+    public static ApiOptions FromConfiguration(IConfiguration configuration)
     {
-        var configuredBaseUrl = Environment.GetEnvironmentVariable("MAU_DESKTOP_API_BASE_URL");
-        var configuredTimeout = Environment.GetEnvironmentVariable("MAU_DESKTOP_API_TIMEOUT_SECONDS");
-
         var options = new ApiOptions();
+        configuration.GetSection(SectionName).Bind(options);
 
+        var configuredBaseUrl = configuration["MAU_DESKTOP_API_BASE_URL"];
         if (!string.IsNullOrWhiteSpace(configuredBaseUrl))
         {
             options.BaseUrl = NormalizeBaseUrl(configuredBaseUrl);
@@ -24,6 +25,7 @@ public sealed class ApiOptions
             options.BaseUrl = NormalizeBaseUrl(options.BaseUrl);
         }
 
+        var configuredTimeout = configuration["MAU_DESKTOP_API_TIMEOUT_SECONDS"];
         if (int.TryParse(configuredTimeout, out var timeoutSeconds) && timeoutSeconds > 0)
         {
             options.RequestTimeoutSeconds = timeoutSeconds;
