@@ -9,6 +9,7 @@
                  MinHeight="640"
                  WindowStyle="SingleBorderWindow"
                  ResizeMode="CanResize"
+                 WindowState="Maximized"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True">
     <ui:FluentWindow.Resources>
@@ -72,31 +73,47 @@
                            Text="{Binding ViewModel.AppTitle}" />
             </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Style="{StaticResource CaptionButtonStyle}"
-                        ToolTip="Minimize"
-                        Click="OnMinimizeWindowClick">
-                    <TextBlock FontFamily="Segoe MDL2 Assets"
-                               FontSize="10"
-                               Text="&#xE921;" />
-                </Button>
-                <Button x:Name="MaximizeRestoreWindowButton"
-                        Style="{StaticResource CaptionButtonStyle}"
-                        ToolTip="Maximize"
-                        Click="OnMaximizeRestoreWindowClick">
-                    <TextBlock x:Name="MaximizeRestoreIcon"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="10"
-                               Text="&#xE922;" />
-                </Button>
-                <Button Style="{StaticResource CloseCaptionButtonStyle}"
-                        ToolTip="Close"
-                        Click="OnCloseWindowClick">
-                    <TextBlock FontFamily="Segoe MDL2 Assets"
-                               FontSize="10"
-                               Text="&#xE8BB;" />
-                </Button>
-            </StackPanel>
+            <Grid Grid.Column="2" HorizontalAlignment="Right">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ui:Button Grid.Column="0"
+                           Height="28"
+                           MinWidth="92"
+                           VerticalAlignment="Center"
+                           Appearance="Danger"
+                           Content="Logout"
+                           Command="{Binding ViewModel.LogoutCommand}" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource CaptionButtonStyle}"
+                            ToolTip="Minimize"
+                            Click="OnMinimizeWindowClick">
+                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   FontSize="10"
+                                   Text="&#xE921;" />
+                    </Button>
+                    <Button x:Name="MaximizeRestoreWindowButton"
+                            Style="{StaticResource CaptionButtonStyle}"
+                            ToolTip="Maximize"
+                            Click="OnMaximizeRestoreWindowClick">
+                        <TextBlock x:Name="MaximizeRestoreIcon"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="10"
+                                   Text="&#xE922;" />
+                    </Button>
+                    <Button Style="{StaticResource CloseCaptionButtonStyle}"
+                            ToolTip="Close"
+                            Click="OnCloseWindowClick">
+                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   FontSize="10"
+                                   Text="&#xE8BB;" />
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
 
         <ui:NavigationView Grid.Row="1"
@@ -119,13 +136,6 @@
                     <TextBlock Margin="0,4,0,0"
                                Foreground="{DynamicResource TertiaryTextBrush}"
                                Text="{Binding ViewModel.OperatorState}" />
-                    <ui:Button Width="130"
-                               Height="34"
-                               Margin="0,14,0,0"
-                               HorizontalAlignment="Left"
-                               Appearance="Secondary"
-                               Content="Logout"
-                               Command="{Binding ViewModel.LogoutCommand}" />
                 </StackPanel>
             </ui:NavigationView.Header>
         </ui:NavigationView>
