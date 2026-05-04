@@ -9,6 +9,7 @@ public sealed class LoginWindowViewModel : ViewModelBase
 {
     private readonly IAuthService _authService;
     private string _email = string.Empty;
+    private string _latestPasswordInput = string.Empty;
     private string _errorMessage = string.Empty;
     private string _emailErrorMessage = string.Empty;
     private string _passwordErrorMessage = string.Empty;
@@ -134,10 +135,17 @@ public sealed class LoginWindowViewModel : ViewModelBase
 
     public void OnPasswordChanged(string password)
     {
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            return;
-        }
+        /*
+         * DEBUG FIX (LOGIN PASSWORD FLOW):
+         * PasswordBox.Password pada WPF tidak selalu reliable saat dipakai langsung
+         * sebagai CommandParameter. Agar request login tetap terkirim, setiap perubahan
+         * password disimpan dulu di cache lokal ViewModel ini.
+         *
+         * Saat debug:
+         * - Pastikan method ini terpanggil setiap user mengetik.
+         * - Cek nilai _latestPasswordInput terisi sesuai input terakhir user.
+         */
+        _latestPasswordInput = password ?? string.Empty;
 
         PasswordErrorMessage = string.Empty;
         ErrorMessage = string.Empty;
@@ -151,10 +159,19 @@ public sealed class LoginWindowViewModel : ViewModelBase
 
     private async Task LoginAsync(object? parameter)
     {
-        if (parameter is not string password)
-        {
-            return;
-        }
+        /*
+         * DEBUG FIX (LOGIN REQUEST TRIGGER):
+         * Sumber password prioritas:
+         * 1) CommandParameter dari binding PasswordBox.Password.
+         * 2) Cache _latestPasswordInput dari event PasswordChanged.
+         *
+         * Tujuan: mencegah kasus UI menampilkan error lokal dan request tidak pernah
+         * dikirim ke backend karena CommandParameter kosong/null walau user sudah input.
+         */
+        var passwordFromParameter = parameter as string;
+        var password = !string.IsNullOrWhiteSpace(passwordFromParameter)
+            ? passwordFromParameter
+            : _latestPasswordInput;
 
         if (!ValidateInputs(password))
         {
@@ -175,7 +192,7 @@ public sealed class LoginWindowViewModel : ViewModelBase
 
         if (!result.IsSuccess)
         {
-            ErrorMessage = "Email atau password salah, atau backend tidak dapat diakses.";
+            ErrorMessage = result.ErrorMessage ?? "Email atau password salah, atau backend tidak dapat diakses.";
             IsProgressError = true;
             ProgressValue = 100;
             ProgressAlertMessage = result.ErrorMessage ?? "Login gagal.";
