@@ -3,10 +3,12 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:converters="clr-namespace:Mau.Desktop.Converters"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       mc:Ignorable="d">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:SafeImagePathToImageSourceConverter x:Key="SafeImagePathToImageSourceConverter" />
     </Page.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -63,7 +65,7 @@
                                 <Border Background="#FFF0F0F0"
                                         BorderBrush="#FFCBCBCB"
                                         BorderThickness="1">
-                                    <Image Source="{Binding ImagePath}"
+                                    <Image Source="{Binding ImagePath, Converter={StaticResource SafeImagePathToImageSourceConverter}}"
                                            Stretch="UniformToFill">
                                         <Image.Style>
                                             <Style TargetType="Image">

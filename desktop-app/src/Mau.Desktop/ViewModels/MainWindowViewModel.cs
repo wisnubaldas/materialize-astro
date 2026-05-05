@@ -24,7 +24,6 @@ public sealed class MainWindowViewModel : ViewModelBase
             Content = "Stock Opname",
             Icon = new SymbolIcon(SymbolRegular.Box24),
             IsExpanded = false,
-            TargetPageType = typeof(StockOpnamePage),
         };
 
         stockOpnameMenu.MenuItems.Add(
@@ -48,7 +47,6 @@ public sealed class MainWindowViewModel : ViewModelBase
             Content = "Scan X-Ray",
             Icon = new SymbolIcon(SymbolRegular.ScanText24),
             IsExpanded = false,
-            TargetPageType = typeof(ScanXrayCheckInPage),
         };
 
         scanXrayMenu.MenuItems.Add(
@@ -80,7 +78,6 @@ public sealed class MainWindowViewModel : ViewModelBase
             Content = "TPS Online",
             Icon = new SymbolIcon(SymbolRegular.Globe24),
             IsExpanded = false,
-            TargetPageType = typeof(TpsOnlineEksporGateInPage),
         };
 
         tpsOnlineMenu.MenuItems.Add(
