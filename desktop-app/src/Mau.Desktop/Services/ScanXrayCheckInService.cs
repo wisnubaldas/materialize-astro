@@ -9,6 +9,7 @@ namespace Mau.Desktop.Services;
 
 public sealed class ScanXrayCheckInService : IScanXrayCheckInService
 {
+    private const string PreferredXrayAssetsDirectory = @"C:\Users\wisnu\Documents\Belajar\materialize-project\desktop-app\src\Mau.Desktop\Assets\X-Ray";
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"];
     private readonly IBackendApiClient _backendApiClient;
 
@@ -95,25 +96,18 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
             return Array.Empty<string>();
         }
 
-        var assetsDirectory = ResolveAssetsDirectory();
+        var assetsDirectory = ResolveXrayAssetsDirectory();
         if (string.IsNullOrWhiteSpace(assetsDirectory) || !Directory.Exists(assetsDirectory))
         {
             return Array.Empty<string>();
         }
 
         var imagePaths = Directory
-            .EnumerateFiles(assetsDirectory, "*.*", SearchOption.AllDirectories)
+            .EnumerateFiles(assetsDirectory, "*.*", SearchOption.TopDirectoryOnly)
             .Where(path =>
             {
                 var extension = Path.GetExtension(path);
-                if (!ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-
-                var fileName = Path.GetFileName(path);
-                return fileName.Contains("xray", StringComparison.OrdinalIgnoreCase)
-                    || fileName.Contains("x-ray", StringComparison.OrdinalIgnoreCase);
+                return ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
             })
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
             .Take(maxCount)
@@ -122,12 +116,17 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
         return imagePaths;
     }
 
-    private static string ResolveAssetsDirectory()
+    private static string ResolveXrayAssetsDirectory()
     {
+        if (Directory.Exists(PreferredXrayAssetsDirectory))
+        {
+            return PreferredXrayAssetsDirectory;
+        }
+
         var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
         while (currentDirectory is not null)
         {
-            var candidate = Path.Combine(currentDirectory.FullName, "Assets");
+            var candidate = Path.Combine(currentDirectory.FullName, "Assets", "X-Ray");
             if (Directory.Exists(candidate))
             {
                 return candidate;
