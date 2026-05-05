@@ -8,7 +8,7 @@ public partial class ScanXrayCheckInPage : INavigableView<ScanXrayCheckInViewMod
     public ScanXrayCheckInPage(ScanXrayCheckInViewModel viewModel)
     {
         ViewModel = viewModel;
-        DataContext = this;
+        DataContext = ViewModel;
         InitializeComponent();
     }
 

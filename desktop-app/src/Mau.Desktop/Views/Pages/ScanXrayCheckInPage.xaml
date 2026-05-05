@@ -33,10 +33,10 @@
                                  FontWeight="SemiBold"
                                  HorizontalContentAlignment="Center"
                                  VerticalContentAlignment="Center"
-                                 Text="{Binding ViewModel.Mawb, UpdateSourceTrigger=PropertyChanged}">
+                                 Text="{Binding Mawb, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Enter"
-                                            Command="{Binding ViewModel.LookupNowCommand}" />
+                                            Command="{Binding LookupNowCommand}" />
                             </TextBox.InputBindings>
                         </TextBox>
 
@@ -51,12 +51,12 @@
                                VerticalAlignment="Top"
                                Appearance="Primary"
                                Content="Lookup"
-                               Command="{Binding ViewModel.LookupNowCommand}" HorizontalAlignment="Center" Margin="0,51,0,0" />
+                               Command="{Binding LookupNowCommand}" HorizontalAlignment="Center" Margin="0,51,0,0" />
                 </Grid>
             </ui:Card>
 
             <ItemsControl Margin="0,18,0,0"
-                          ItemsSource="{Binding ViewModel.XrayImageCards}">
+                          ItemsSource="{Binding XrayImageCards}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="2" />
@@ -138,22 +138,22 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" FontWeight="SemiBold" Text="no_bl_awb" />
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding ViewModel.NoBlAwb}" />
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding NoBlAwb}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,8,0,0" FontWeight="SemiBold" Text="tgl_bl_awb" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Margin="0,8,0,0" Text="{Binding ViewModel.TglBlAwb}" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Margin="0,8,0,0" Text="{Binding TglBlAwb}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,8,0,0" FontWeight="SemiBold" Text="ref_num" />
-                        <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,8,0,0" Text="{Binding ViewModel.RefNum}" />
+                        <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,8,0,0" Text="{Binding RefNum}" />
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,8,0,0" FontWeight="SemiBold" Text="nm_angkut" />
-                        <TextBlock Grid.Row="3" Grid.Column="2" Margin="0,8,0,0" Text="{Binding ViewModel.NmAngkut}" />
+                        <TextBlock Grid.Row="3" Grid.Column="2" Margin="0,8,0,0" Text="{Binding NmAngkut}" />
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,8,0,0" FontWeight="SemiBold" Text="no_voy_flight" />
-                        <TextBlock Grid.Row="4" Grid.Column="2" Margin="0,8,0,0" Text="{Binding ViewModel.NoVoyFlight}" />
+                        <TextBlock Grid.Row="4" Grid.Column="2" Margin="0,8,0,0" Text="{Binding NoVoyFlight}" />
 
                         <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,8,0,0" FontWeight="SemiBold" Text="uraian_brg" />
-                        <TextBlock Grid.Row="5" Grid.Column="2" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding ViewModel.UraianBrg}" />
+                        <TextBlock Grid.Row="5" Grid.Column="2" Margin="0,8,0,0" TextWrapping="Wrap" Text="{Binding UraianBrg}" />
                     </Grid>
                 </StackPanel>
             </ui:Card>
@@ -165,19 +165,19 @@
                     <TextBlock HorizontalAlignment="Center"
                                FontSize="15"
                                FontWeight="SemiBold"
-                               Text="{Binding ViewModel.StatusMessage}" />
+                               Text="{Binding StatusMessage}" />
 
                     <ProgressBar Margin="0,10,0,0"
                                  Height="24"
                                  Minimum="0"
                                  Maximum="100"
-                                 Value="{Binding ViewModel.ProgressValue, Mode=OneWay}"
-                                 IsIndeterminate="{Binding ViewModel.IsProgressIndeterminate, Mode=OneWay}">
+                                 Value="{Binding ProgressValue, Mode=OneWay}"
+                                 IsIndeterminate="{Binding IsProgressIndeterminate, Mode=OneWay}">
                         <ProgressBar.Style>
                             <Style TargetType="ProgressBar">
                                 <Setter Property="Foreground" Value="{DynamicResource ProgressNormalBrush}" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ViewModel.IsProgressError}" Value="True">
+                                    <DataTrigger Binding="{Binding IsProgressError}" Value="True">
                                         <Setter Property="Foreground" Value="{DynamicResource ProgressErrorBrush}" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -188,8 +188,8 @@
                     <TextBlock Margin="0,8,0,0"
                                Foreground="{DynamicResource ErrorTextBrush}"
                                TextWrapping="Wrap"
-                               Visibility="{Binding ViewModel.HasErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
-                               Text="{Binding ViewModel.ErrorMessage}" />
+                               Visibility="{Binding HasErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Text="{Binding ErrorMessage}" />
                 </StackPanel>
             </ui:Card>
         </StackPanel>
