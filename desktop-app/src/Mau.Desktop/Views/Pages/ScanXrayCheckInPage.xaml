@@ -13,7 +13,7 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
-            <ui:Card Padding="18">
+            <ui:Card Padding="18" Background="Azure">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -33,7 +33,12 @@
                                  FontWeight="SemiBold"
                                  HorizontalContentAlignment="Center"
                                  VerticalContentAlignment="Center"
-                                 Text="{Binding ViewModel.Mawb, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding ViewModel.Mawb, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter"
+                                            Command="{Binding ViewModel.LookupNowCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
 
                         <TextBlock Margin="0,8,0,0"
                                    Foreground="{DynamicResource TertiaryTextBrush}"
@@ -43,10 +48,10 @@
                     <ui:Button Grid.Column="2"
                                Height="54"
                                MinWidth="110"
-                               VerticalAlignment="Bottom"
+                               VerticalAlignment="Top"
                                Appearance="Primary"
                                Content="Lookup"
-                               Command="{Binding ViewModel.LookupNowCommand}" />
+                               Command="{Binding ViewModel.LookupNowCommand}" HorizontalAlignment="Center" Margin="0,51,0,0" />
                 </Grid>
             </ui:Card>
 

@@ -10,6 +10,7 @@ public sealed class ScanXrayCheckInViewModel : ViewModelBase
 {
     private readonly IScanXrayCheckInService _scanXrayCheckInService;
     private CancellationTokenSource? _lookupCancellationTokenSource;
+    private long _lookupRequestVersion;
     private string _mawb = string.Empty;
     private string _statusMessage = "Siap scan MAWB.";
     private string _errorMessage = string.Empty;
@@ -49,7 +50,10 @@ public sealed class ScanXrayCheckInViewModel : ViewModelBase
             }
 
             ErrorMessage = string.Empty;
-            _ = LookupByMawbDebouncedAsync();
+            if (_mawb.Trim().Length >= 8)
+            {
+                _ = LookupByMawbDebouncedAsync();
+            }
         }
     }
 
@@ -145,6 +149,7 @@ public sealed class ScanXrayCheckInViewModel : ViewModelBase
 
     private async Task LookupByMawbAsync(string rawMawb, bool useDebounce)
     {
+        var currentRequestVersion = Interlocked.Increment(ref _lookupRequestVersion);
         _lookupCancellationTokenSource?.Cancel();
         _lookupCancellationTokenSource?.Dispose();
         _lookupCancellationTokenSource = new CancellationTokenSource();
@@ -175,6 +180,12 @@ public sealed class ScanXrayCheckInViewModel : ViewModelBase
             StatusMessage = $"Mengambil data TPS Online untuk MAWB: {cleanedMawb}";
 
             var result = await _scanXrayCheckInService.FindImpInByMawbAsync(cleanedMawb, cancellationToken);
+
+            if (currentRequestVersion != _lookupRequestVersion)
+            {
+                return;
+            }
+
             IsProgressIndeterminate = false;
             IsBusy = false;
 
@@ -190,7 +201,7 @@ public sealed class ScanXrayCheckInViewModel : ViewModelBase
 
             ApplyResponseFields(result.Data);
             ErrorMessage = string.Empty;
-            StatusMessage = $"Data TPS Online ditemukan untuk MAWB: {cleanedMawb}";
+            StatusMessage = $"Data TPS Online ditemukan untuk MAWB: {cleanedMawb} | Ref: {GetDisplayValue(result.Data.RefNum)}";
             IsProgressError = false;
             ProgressValue = 100;
         }
