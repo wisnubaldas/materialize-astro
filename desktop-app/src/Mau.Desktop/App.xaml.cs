@@ -124,6 +124,7 @@ public partial class App : Application
         services.AddSingleton<IAuthSession>(sp => sp.GetRequiredService<AuthSessionState>());
         services.AddSingleton<AuthService>();
         services.AddSingleton<IAuthService>(sp => sp.GetRequiredService<AuthService>());
+        services.AddSingleton<IScanXrayCheckInService, ScanXrayCheckInService>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<LoginWindowViewModel>();
