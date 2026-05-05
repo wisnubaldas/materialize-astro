@@ -164,8 +164,8 @@
                                  Height="24"
                                  Minimum="0"
                                  Maximum="100"
-                                 Value="{Binding ViewModel.ProgressValue}"
-                                 IsIndeterminate="{Binding ViewModel.IsProgressIndeterminate}">
+                                 Value="{Binding ViewModel.ProgressValue, Mode=OneWay}"
+                                 IsIndeterminate="{Binding ViewModel.IsProgressIndeterminate, Mode=OneWay}">
                         <ProgressBar.Style>
                             <Style TargetType="ProgressBar">
                                 <Setter Property="Foreground" Value="{DynamicResource ProgressNormalBrush}" />
