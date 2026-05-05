@@ -55,66 +55,6 @@
                 </Grid>
             </ui:Card>
 
-            <ItemsControl Margin="0,18,0,0"
-                          ItemsSource="{Binding XrayImageCards}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="2" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <ui:Card Margin="8"
-                                 Padding="0">
-                            <Grid Height="410">
-                                <Border Background="#FFF0F0F0"
-                                        BorderBrush="#FFCBCBCB"
-                                        BorderThickness="1">
-                                    <Image Source="{Binding ImagePath, Converter={StaticResource SafeImagePathToImageSourceConverter}}"
-                                           Stretch="UniformToFill">
-                                        <Image.Style>
-                                            <Style TargetType="Image">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding HasImage}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Image.Style>
-                                    </Image>
-                                </Border>
-
-                                <TextBlock FontSize="42"
-                                           Foreground="#705A5A5A"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           Text="X-Ray Image">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasImage}" Value="False">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-
-                                <Border VerticalAlignment="Bottom"
-                                        Background="#9A111827"
-                                        Padding="10,8">
-                                    <TextBlock Foreground="White"
-                                               FontWeight="SemiBold"
-                                               Text="{Binding Title}" />
-                                </Border>
-                            </Grid>
-                        </ui:Card>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
             <ui:Card Margin="0,18,0,0"
                      Padding="24">
                 <StackPanel>
@@ -192,6 +132,66 @@
                                Text="{Binding ErrorMessage}" />
                 </StackPanel>
             </ui:Card>
+
+            <ItemsControl Margin="0,18,0,0"
+                          ItemsSource="{Binding XrayImageCards}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ui:Card Margin="8"
+                                 Padding="0">
+                            <Grid Height="320">
+                                <Border Background="#FFF0F0F0"
+                                        BorderBrush="#FFCBCBCB"
+                                        BorderThickness="1">
+                                    <Image Source="{Binding ImagePath, Converter={StaticResource SafeImagePathToImageSourceConverter}}"
+                                           Stretch="UniformToFill">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
+                                </Border>
+
+                                <TextBlock FontSize="42"
+                                           Foreground="#705A5A5A"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Text="X-Ray Image">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <Border VerticalAlignment="Bottom"
+                                        Background="#9A111827"
+                                        Padding="10,8">
+                                    <TextBlock Foreground="White"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding Title}" />
+                                </Border>
+                            </Grid>
+                        </ui:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
     </ScrollViewer>
 </Page>
