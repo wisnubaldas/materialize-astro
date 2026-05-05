@@ -4,11 +4,13 @@ using Mau.Desktop.Models;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace Mau.Desktop.Services;
 
 public sealed class ScanXrayCheckInService : IScanXrayCheckInService
 {
+    // konfigurasi image untuk x-ray
     private const string PreferredXrayAssetsDirectory = @"C:\Users\wisnu\Documents\Belajar\materialize-project\desktop-app\src\Mau.Desktop\Assets\X-Ray";
     private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"];
     private readonly IBackendApiClient _backendApiClient;
@@ -31,9 +33,10 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
         try
         {
             var endpoint = $"/tpsonline/imp-in?no_bl_awb={Uri.EscapeDataString(cleanedMawb)}";
-            var records = await _backendApiClient.GetAsync<List<TpsOnlineImpInRecordResponse>>(endpoint, cancellationToken);
+            var payload = await _backendApiClient.GetAsync<JsonElement>(endpoint, cancellationToken);
+            var records = ExtractRecords(payload);
 
-            if (records is null || records.Count == 0)
+            if (records.Count == 0)
             {
                 return Result<ScanXrayCheckInResult>.Failure("Data TPS Online tidak ditemukan.");
             }
@@ -42,12 +45,12 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
             return Result<ScanXrayCheckInResult>.Success(
                 new ScanXrayCheckInResult
                 {
-                    NoBlAwb = firstRecord.NoBlAwb ?? string.Empty,
-                    TglBlAwb = firstRecord.TglBlAwb ?? string.Empty,
-                    RefNum = firstRecord.RefNum ?? string.Empty,
-                    NmAngkut = firstRecord.NmAngkut ?? string.Empty,
-                    NoVoyFlight = firstRecord.NoVoyFlight ?? string.Empty,
-                    UraianBrg = firstRecord.UraianBrg ?? string.Empty,
+                    NoBlAwb = ReadStringValue(firstRecord, "no_bl_awb"),
+                    TglBlAwb = ReadStringValue(firstRecord, "tgl_bl_awb"),
+                    RefNum = ReadStringValue(firstRecord, "ref_num"),
+                    NmAngkut = ReadStringValue(firstRecord, "nm_angkut"),
+                    NoVoyFlight = ReadStringValue(firstRecord, "no_voy_flight"),
+                    UraianBrg = ReadStringValue(firstRecord, "uraian_brg"),
                 }
             );
         }
@@ -87,6 +90,10 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
         {
             return Result<ScanXrayCheckInResult>.Failure("Request ke backend timeout.");
         }
+        catch (JsonException)
+        {
+            return Result<ScanXrayCheckInResult>.Failure("Format respons backend tidak sesuai.");
+        }
     }
 
     public IReadOnlyList<string> GetXrayImagePaths(int maxCount = 2)
@@ -114,6 +121,68 @@ public sealed class ScanXrayCheckInService : IScanXrayCheckInService
             .ToList();
 
         return imagePaths;
+    }
+
+    private static List<JsonElement> ExtractRecords(JsonElement payload)
+    {
+        if (payload.ValueKind == JsonValueKind.Array)
+        {
+            return payload
+                .EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.Object)
+                .ToList();
+        }
+
+        if (payload.ValueKind == JsonValueKind.Object
+            && payload.TryGetProperty("data", out var dataElement)
+            && dataElement.ValueKind == JsonValueKind.Array)
+        {
+            return dataElement
+                .EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.Object)
+                .ToList();
+        }
+
+        return [];
+    }
+
+    private static string ReadStringValue(JsonElement record, string fieldName)
+    {
+        if (!TryGetPropertyIgnoreCase(record, fieldName, out var valueElement))
+        {
+            return string.Empty;
+        }
+
+        return valueElement.ValueKind switch
+        {
+            JsonValueKind.String => valueElement.GetString() ?? string.Empty,
+            JsonValueKind.Number => valueElement.ToString(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            JsonValueKind.Null => string.Empty,
+            JsonValueKind.Undefined => string.Empty,
+            _ => valueElement.ToString(),
+        };
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement record, string propertyName, out JsonElement valueElement)
+    {
+        if (record.TryGetProperty(propertyName, out valueElement))
+        {
+            return true;
+        }
+
+        foreach (var property in record.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                valueElement = property.Value;
+                return true;
+            }
+        }
+
+        valueElement = default;
+        return false;
     }
 
     private static string ResolveXrayAssetsDirectory()
