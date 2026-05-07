@@ -33,8 +33,11 @@ Key folders used in this Astro app:
 astro/
   public/
   src/
+    assets/
     components/
-    fonts/
+      astro/
+      react/
+    hooks/
     js/
     layouts/
     lib/
@@ -45,9 +48,13 @@ astro/
         sse.js
         warehouse.js
     pages/
+    utils/
     scss/
+    libs/
     vendor/
 ```
+
+Legacy folders (`src/js`, `src/scss`, `src/libs`, `src/vendor`) masih dipertahankan untuk kompatibilitas bertahap, tetapi modul baru diprioritaskan ke struktur target di atas.
 
 ## 🧞 Commands
 

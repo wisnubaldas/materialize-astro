@@ -3,215 +3,194 @@ import fs from 'fs';
 import path from 'path';
 import { minify } from 'terser';
 
-// Folder hasil build yang akan diproses
-const distFolders = ['dist/client/js', 'dist/client/_astro'];
-const cssDir = 'dist/client/assets';
+const JS_DIRECTORIES = ['dist/client/js', 'dist/client/_astro'];
+const CSS_DIRECTORY = 'dist/client/assets';
 
-const cssTotals = {
-  files: 0,
-  before: 0,
-  after: 0,
+const totals = {
+  css: { files: 0, before: 0, after: 0 },
+  js: { files: 0, before: 0, after: 0 },
 };
 
-const jsTotals = {
-  files: 0,
-  before: 0,
-  after: 0,
+const formatKB = (bytes) => `${(bytes / 1024).toFixed(2)}KB`;
+
+const calcSavedPercent = (before, after) => {
+  if (before <= 0) {
+    return '0.0';
+  }
+  return ((1 - after / before) * 100).toFixed(1);
 };
 
-function collectCssFiles(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+const walkFiles = (directory, extension) => {
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
+    const fullPath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      files.push(...collectCssFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.css')) {
+      files.push(...walkFiles(fullPath, extension));
+      continue;
+    }
+
+    if (entry.isFile() && entry.name.endsWith(extension)) {
       files.push(fullPath);
     }
   }
 
+  files.sort((a, b) => a.localeCompare(b));
   return files;
-}
+};
 
-function minifyCssFiles() {
-  const absCssDir = path.resolve(cssDir);
-  if (!fs.existsSync(absCssDir)) {
-    console.log(`??  Folder CSS ${cssDir} tidak ditemukan - lewati.`);
+const minifyCssFile = (filePath) => {
+  const originalCss = fs.readFileSync(filePath, 'utf-8');
+  const sizeBefore = Buffer.byteLength(originalCss, 'utf8');
+
+  const cleanCss = new CleanCSS({
+    level: 2,
+    inline: false,
+    rebaseTo: path.dirname(filePath),
+  });
+
+  const result = cleanCss.minify({
+    [filePath]: {
+      styles: originalCss,
+    },
+  });
+
+  if (result.errors.length > 0) {
+    throw new Error(result.errors.join(', '));
+  }
+
+  const minifiedCss = result.styles;
+  fs.writeFileSync(filePath, minifiedCss, 'utf-8');
+
+  const sizeAfter = Buffer.byteLength(minifiedCss, 'utf8');
+  totals.css.files += 1;
+  totals.css.before += sizeBefore;
+  totals.css.after += sizeAfter;
+
+  console.log(
+    `[minify][css] ${path.relative(process.cwd(), filePath)}: ${formatKB(sizeBefore)} -> ${formatKB(
+      sizeAfter
+    )} (${calcSavedPercent(sizeBefore, sizeAfter)}% smaller)`
+  );
+};
+
+const processCssDirectory = () => {
+  const absoluteCssDirectory = path.resolve(CSS_DIRECTORY);
+  if (!fs.existsSync(absoluteCssDirectory)) {
+    console.log(`[minify][css] Skip: folder not found (${CSS_DIRECTORY})`);
     return;
   }
 
-  console.log(`\n?? Memproses file CSS di ${cssDir}...\n`);
-
-  const cssFiles = collectCssFiles(absCssDir);
-
+  const cssFiles = walkFiles(absoluteCssDirectory, '.css');
   if (cssFiles.length === 0) {
-    console.log('??  Tidak ada file CSS yang diproses.');
+    console.log('[minify][css] No CSS files found.');
     return;
   }
+
+  console.log(`\n[minify][css] Processing ${cssFiles.length} file(s) from ${CSS_DIRECTORY}`);
 
   for (const filePath of cssFiles) {
     try {
-      const originalCss = fs.readFileSync(filePath, 'utf-8');
-      const sizeBefore = Buffer.byteLength(originalCss, 'utf8');
-
-      const cleanCss = new CleanCSS({
-        level: 2,
-        inline: false,
-        rebaseTo: path.dirname(filePath),
-      });
-      const result = cleanCss.minify({
-        [filePath]: {
-          styles: originalCss,
-        },
-      });
-
-      if (result.errors.length > 0) {
-        console.error(
-          `? Gagal minify CSS ${path.relative(process.cwd(), filePath)}: ${result.errors.join(
-            ', '
-          )}`
-        );
-        continue;
-      }
-
-      const minifiedCss = result.styles;
-      fs.writeFileSync(filePath, minifiedCss, 'utf-8');
-
-      const sizeAfter = Buffer.byteLength(minifiedCss, 'utf8');
-      cssTotals.files += 1;
-      cssTotals.before += sizeBefore;
-      cssTotals.after += sizeAfter;
-
-      const saved = sizeBefore === 0 ? '0.0' : ((1 - sizeAfter / sizeBefore) * 100).toFixed(1);
-      const sizeBeforeKB = (sizeBefore / 1024).toFixed(2);
-      const sizeAfterKB = (sizeAfter / 1024).toFixed(2);
-
-      console.log(
-        `? ${path.relative(
-          process.cwd(),
-          filePath
-        )}: ${sizeBeforeKB}KB  ${sizeAfterKB}KB (${saved}% lebih kecil)`
+      minifyCssFile(filePath);
+    } catch (error) {
+      console.error(
+        `[minify][css] Failed: ${path.relative(process.cwd(), filePath)} | ${error.message}`
       );
-    } catch (err) {
-      console.error(`? Gagal membaca CSS ${filePath}: ${err.message}`);
     }
   }
-}
+};
 
-async function processJsFile(filePath) {
-  const code = fs.readFileSync(filePath, 'utf-8');
-  const sizeBefore = Buffer.byteLength(code, 'utf8');
-  jsTotals.before += sizeBefore;
+const minifyJsFile = async (filePath) => {
+  const originalJs = fs.readFileSync(filePath, 'utf-8');
+  const sizeBefore = Buffer.byteLength(originalJs, 'utf8');
 
   try {
-    const result = await minify(code, {
+    const result = await minify(originalJs, {
       ecma: 2020,
       compress: {
-        drop_console: true, // hapus semua console.log
-        drop_debugger: true, // hapus debugger
+        drop_console: true,
+        drop_debugger: true,
         pure_funcs: ['console.info', 'console.debug', 'console.warn'],
-        passes: 3, // optimasi berulang
+        passes: 3,
       },
       format: {
-        comments: false, // hapus semua komentar
+        comments: false,
       },
       mangle: {
-        toplevel: true, // ubah nama variabel jadi pendek
+        toplevel: true,
       },
     });
 
-    const minifiedCode = result.code ?? code;
-    fs.writeFileSync(filePath, minifiedCode, 'utf-8');
+    const minifiedJs = result.code ?? originalJs;
+    fs.writeFileSync(filePath, minifiedJs, 'utf-8');
 
-    const sizeAfter = Buffer.byteLength(minifiedCode, 'utf8');
-    jsTotals.after += sizeAfter;
-    jsTotals.files += 1;
-
-    const saved = sizeBefore === 0 ? '0.0' : ((1 - sizeAfter / sizeBefore) * 100).toFixed(1);
-    const sizeBeforeKB = (sizeBefore / 1024).toFixed(2);
-    const sizeAfterKB = (sizeAfter / 1024).toFixed(2);
+    const sizeAfter = Buffer.byteLength(minifiedJs, 'utf8');
+    totals.js.files += 1;
+    totals.js.before += sizeBefore;
+    totals.js.after += sizeAfter;
 
     console.log(
-      `? ${path.relative(
-        process.cwd(),
-        filePath
-      )}: ${sizeBeforeKB}KB  ${sizeAfterKB}KB (${saved}% lebih kecil)`
+      `[minify][js] ${path.relative(process.cwd(), filePath)}: ${formatKB(sizeBefore)} -> ${formatKB(
+        sizeAfter
+      )} (${calcSavedPercent(sizeBefore, sizeAfter)}% smaller)`
     );
-  } catch (err) {
-    console.error(`? Gagal minify JS ${filePath}: ${err.message}`);
+  } catch (error) {
+    console.error(`[minify][js] Failed: ${path.relative(process.cwd(), filePath)} | ${error.message}`);
   }
-}
+};
 
-async function processJsFolder(folder) {
-  const absPath = path.resolve(folder);
-  if (!fs.existsSync(absPath)) {
-    console.log(`??  Folder ${folder} tidak ditemukan - lewati.`);
+const processJsDirectory = async (directory) => {
+  const absoluteDirectory = path.resolve(directory);
+  if (!fs.existsSync(absoluteDirectory)) {
+    console.log(`[minify][js] Skip: folder not found (${directory})`);
     return;
   }
 
-  console.log(`\n?? Memproses file JS di ${folder}...\n`);
-
-  const jsFiles = [];
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.name.endsWith('.js')) {
-        jsFiles.push(fullPath);
-      }
-    }
-  };
-
-  walk(absPath);
-
-  await Promise.all(jsFiles.map((file) => processJsFile(file)));
-}
-
-async function main() {
-  minifyCssFiles();
-  for (const folder of distFolders) {
-    await processJsFolder(folder);
+  const jsFiles = walkFiles(absoluteDirectory, '.js');
+  if (jsFiles.length === 0) {
+    console.log(`[minify][js] Skip: no JS files in ${directory}`);
+    return;
   }
-}
 
-main().catch((err) => {
-  console.error(`? Proses minify berhenti dengan error: ${err.message}`);
-  process.exit(1);
-});
+  console.log(`\n[minify][js] Processing ${jsFiles.length} file(s) from ${directory}`);
 
-process.on('beforeExit', () => {
-  if (cssTotals.files > 0) {
-    const savedCss =
-      cssTotals.before === 0 ? '0.0' : ((1 - cssTotals.after / cssTotals.before) * 100).toFixed(1);
-    const cssBeforeKB = (cssTotals.before / 1024).toFixed(2);
-    const cssAfterKB = (cssTotals.after / 1024).toFixed(2);
+  for (const filePath of jsFiles) {
+    await minifyJsFile(filePath);
+  }
+};
 
-    console.log(`\n?? Ringkasan Minify CSS:`);
-    console.log(`    File diproses : ${cssTotals.files}`);
-    console.log(`    Total sebelum : ${cssBeforeKB} KB`);
-    console.log(`    Total sesudah : ${cssAfterKB} KB`);
-    console.log(`    Penghematan   : ${savedCss}%`);
+const printSummary = () => {
+  if (totals.css.files > 0) {
+    console.log('\n[minify][summary] CSS');
+    console.log(`  files   : ${totals.css.files}`);
+    console.log(`  before  : ${formatKB(totals.css.before)}`);
+    console.log(`  after   : ${formatKB(totals.css.after)}`);
+    console.log(`  saving  : ${calcSavedPercent(totals.css.before, totals.css.after)}%`);
   } else {
-    console.log('??  Tidak ada file CSS yang diproses.');
+    console.log('\n[minify][summary] CSS: no files processed');
   }
 
-  if (jsTotals.files === 0) {
-    console.log('??  Tidak ada file JS yang diproses.');
-    return;
+  if (totals.js.files > 0) {
+    console.log('[minify][summary] JS');
+    console.log(`  files   : ${totals.js.files}`);
+    console.log(`  before  : ${formatKB(totals.js.before)}`);
+    console.log(`  after   : ${formatKB(totals.js.after)}`);
+    console.log(`  saving  : ${calcSavedPercent(totals.js.before, totals.js.after)}%`);
+  } else {
+    console.log('[minify][summary] JS: no files processed');
   }
+};
 
-  const savedJs =
-    jsTotals.before === 0 ? '0.0' : ((1 - jsTotals.after / jsTotals.before) * 100).toFixed(1);
-  const jsBeforeKB = (jsTotals.before / 1024).toFixed(2);
-  const jsAfterKB = (jsTotals.after / 1024).toFixed(2);
+const main = async () => {
+  processCssDirectory();
+  for (const directory of JS_DIRECTORIES) {
+    await processJsDirectory(directory);
+  }
+  printSummary();
+};
 
-  console.log(`\n?? Ringkasan Minify JS:`);
-  console.log(`    File diproses : ${jsTotals.files}`);
-  console.log(`    Total sebelum : ${jsBeforeKB} KB`);
-  console.log(`    Total sesudah : ${jsAfterKB} KB`);
-  console.log(`    Penghematan   : ${savedJs}%`);
-  console.log(`\n? Semua file JS selesai di-minify & dibersihkan!\n`);
+main().catch((error) => {
+  console.error(`[minify] Fatal error: ${error.message}`);
+  process.exit(1);
 });

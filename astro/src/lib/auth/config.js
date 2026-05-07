@@ -25,6 +25,7 @@ export const AUTH_COOKIE_MAX_AGE = Object.freeze({
 
 export const LOGIN_REDIRECT_PATH = '/';
 export const LOGIN_ROUTE = '/auth/login';
+export const LOGIN_NEXT_PARAM = 'next';
 
 export const PUBLIC_PATHS = [LOGIN_ROUTE];
 

@@ -1,5 +1,5 @@
-import { AUTH_ERRORS, getAccessToken, login } from '../../js/auth.js';
-import { LOGIN_REDIRECT_PATH } from '../../lib/auth/config';
+import { AUTH_ERRORS, login } from '../../js/auth.js';
+import { LOGIN_NEXT_PARAM, LOGIN_REDIRECT_PATH, LOGIN_ROUTE } from '../../lib/auth/config';
 
 const run = () => {
   const form = document.getElementById('formAuthentication');
@@ -13,8 +13,19 @@ const run = () => {
   const defaultButtonContent = submitButton?.innerHTML ?? '';
   let hasRedirected = false;
 
+  const getRedirectTarget = () => {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get(LOGIN_NEXT_PARAM);
+    if (next && next.startsWith('/') && !next.startsWith('//') && !next.includes('://')) {
+      if (next !== LOGIN_ROUTE && !next.startsWith(`${LOGIN_ROUTE}/`)) {
+        return next;
+      }
+    }
+    return LOGIN_REDIRECT_PATH || '/';
+  };
+
   const redirectToApp = () => {
-    const target = LOGIN_REDIRECT_PATH || '/';
+    const target = getRedirectTarget();
     hasRedirected = true;
     window.location.replace(target);
   };
@@ -37,12 +48,6 @@ const run = () => {
     submitButton.classList.toggle('disabled', submitting);
     submitButton.innerHTML = submitting ? 'Signing in...' : defaultButtonContent;
   };
-
-  const token = getAccessToken();
-  if (token) {
-    redirectToApp();
-    return;
-  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();

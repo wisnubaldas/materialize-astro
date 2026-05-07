@@ -212,6 +212,20 @@ Untuk tabel besar:
 
 ---
 
+## Web Performance Optimization (WPO) Rules
+
+WPO adalah kewajiban pada semua task frontend, termasuk refactor:
+
+- Wajib gunakan code-splitting untuk modul berat (dynamic import, route-level split, atau `manualChunks`).
+- Hindari bundle awal memuat dependency yang hanya dipakai di fitur tertentu.
+- Prioritaskan lazy loading untuk komponen/chart/table berat yang tidak dibutuhkan saat first paint.
+- Hindari duplikasi library antar `src/libs`, `src/vendor`, dan package manager dependencies.
+- Hapus file/asset/script yang tidak dipakai untuk menurunkan beban build dan ukuran deploy.
+- Setiap perubahan besar frontend wajib menyertakan verifikasi ukuran chunk build (sebelum vs sesudah) dan catatan dampaknya.
+- Jika masih ada chunk besar, jelaskan penyebabnya dan rencana mitigasi bertahap di laporan progress.
+
+---
+
 ## Frontend Module Creation Flow
 
 Setiap membuat module frontend baru:
@@ -253,6 +267,10 @@ Update UI State
 - Pastikan form menampilkan error validasi backend.
 - Pastikan tabel besar memakai server-side pagination.
 - Pastikan tidak ada error SSR seperti `window is not defined`.
+- Pastikan WPO baseline terjaga:
+  - cek warning ukuran chunk pada hasil build;
+  - catat modul/dependency terbesar;
+  - pastikan tidak ada asset tak terpakai yang ikut ter-bundle.
 - Update progress report di root `docs/progress-YYYY-MM-DD.md`.
 
 ---

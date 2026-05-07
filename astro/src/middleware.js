@@ -2,6 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import {
   AUTH_COOKIE_NAME,
   AUTH_ENDPOINTS,
+  LOGIN_NEXT_PARAM,
   LOGIN_REDIRECT_PATH,
   LOGIN_ROUTE,
   PUBLIC_PATHS,
@@ -43,6 +44,53 @@ const isStaticAsset = (pathname) =>
 
 const isPublicPath = (pathname) =>
   PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
+const isSafeInternalPath = (value) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  if (!value.startsWith('/')) {
+    return false;
+  }
+
+  if (value.startsWith('//')) {
+    return false;
+  }
+
+  return !value.includes('://');
+};
+
+const normalizeRedirectPath = (value, fallback) => (isSafeInternalPath(value) ? value : fallback);
+
+const getLoginNextDestination = (url) => {
+  const next = url.searchParams.get(LOGIN_NEXT_PARAM);
+  if (!next) {
+    return null;
+  }
+  if (!isSafeInternalPath(next)) {
+    return null;
+  }
+  if (next === LOGIN_ROUTE || next.startsWith(`${LOGIN_ROUTE}/`)) {
+    return null;
+  }
+  return next;
+};
+
+const buildLoginRedirectPath = (requestUrl, method) => {
+  const loginUrl = new URL(LOGIN_ROUTE, requestUrl);
+  if (method === 'GET') {
+    const currentPath = `${requestUrl.pathname}${requestUrl.search}`;
+    if (
+      isSafeInternalPath(currentPath) &&
+      currentPath !== LOGIN_ROUTE &&
+      !currentPath.startsWith(`${LOGIN_ROUTE}/`)
+    ) {
+      loginUrl.searchParams.set(LOGIN_NEXT_PARAM, currentPath);
+    }
+  }
+  return loginUrl.pathname + loginUrl.search;
+};
 
 const resolvePositiveInt = (value, fallback) => {
   const parsed = Number(value);
@@ -146,7 +194,10 @@ const attachUser = async (token, locals) => {
   locals.user = profile;
 };
 
-const clearAuthCookie = (cookies) => {
+const clearAuthCookie = (cookies, token) => {
+  if (token) {
+    profileCache.delete(token);
+  }
   cookies.delete(AUTH_COOKIE_NAME, { path: '/' });
 };
 
@@ -173,10 +224,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
       try {
         await attachUser(token, locals);
-        response = redirect(LOGIN_REDIRECT_PATH);
+        const requestedNext = getLoginNextDestination(url);
+        const target = normalizeRedirectPath(requestedNext, LOGIN_REDIRECT_PATH);
+        response = redirect(target);
         return response;
       } catch (error) {
-        clearAuthCookie(cookies);
+        clearAuthCookie(cookies, token);
         response = await next();
         return response;
       }
@@ -188,7 +241,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     if (!token) {
-      response = redirect(LOGIN_ROUTE);
+      response = redirect(buildLoginRedirectPath(url, context.request.method));
       return response;
     }
 
@@ -197,8 +250,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       response = await next();
       return response;
     } catch (error) {
-      clearAuthCookie(cookies);
-      response = redirect(LOGIN_ROUTE);
+      clearAuthCookie(cookies, token);
+      response = redirect(buildLoginRedirectPath(url, context.request.method));
       return response;
     }
   } finally {

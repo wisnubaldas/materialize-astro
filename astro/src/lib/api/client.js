@@ -1,4 +1,4 @@
-import { getAccessToken } from '@js/auth.js';
+import { clearAccessToken, getAccessToken } from '@lib/auth/token.js';
 
 // Fallback host saat env PUBLIC_BACKEND_PATH belum di-set.
 const DEFAULT_BACKEND_BASE_URL = 'http://127.0.0.1:8000';
@@ -243,6 +243,7 @@ const handleUnauthorized = (endpoint) => {
     return;
   }
 
+  clearAccessToken();
   window.location.replace('/auth/login');
 };
 
