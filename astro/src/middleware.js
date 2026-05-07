@@ -1,6 +1,11 @@
 import { defineMiddleware } from 'astro:middleware';
-import { AUTH_COOKIE_NAME, AUTH_ENDPOINTS, LOGIN_REDIRECT_PATH, LOGIN_ROUTE, PUBLIC_PATHS } from '@lib/auth/config';
-import { verifyAccessTokenLocally } from '@lib/auth/token';
+import {
+  AUTH_COOKIE_NAME,
+  AUTH_ENDPOINTS,
+  LOGIN_REDIRECT_PATH,
+  LOGIN_ROUTE,
+  PUBLIC_PATHS,
+} from '@lib/auth/config';
 
 const STATIC_PATH_PREFIXES = [
   '/assets',
@@ -32,16 +37,14 @@ const STATIC_EXTENSIONS = [
   '.txt',
 ];
 
-const isStaticAsset = (pathname: string) =>
+const isStaticAsset = (pathname) =>
   STATIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
   STATIC_EXTENSIONS.some((ext) => pathname.endsWith(ext));
 
-const isPublicPath = (pathname: string) =>
+const isPublicPath = (pathname) =>
   PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
-const verifyAccessToken = (token: string) => verifyAccessTokenLocally(token).payload;
-
-const resolvePositiveInt = (value: unknown, fallback: number) => {
+const resolvePositiveInt = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
@@ -49,14 +52,9 @@ const resolvePositiveInt = (value: unknown, fallback: number) => {
 const PROFILE_CACHE_TTL_MS = resolvePositiveInt(import.meta.env.AUTH_PROFILE_CACHE_TTL_MS, 5 * 60 * 1000);
 const MAX_PROFILE_CACHE_ENTRIES = resolvePositiveInt(import.meta.env.AUTH_PROFILE_CACHE_MAX_ENTRIES, 300);
 
-type ProfileCacheValue = {
-  expiresAt: number;
-  profile: Record<string, unknown>;
-};
+const profileCache = new Map();
 
-const profileCache = new Map<string, ProfileCacheValue>();
-
-const logSsr = (event: string, payload: Record<string, unknown>) => {
+const logSsr = (event, payload) => {
   if (!import.meta.env.SSR) {
     return;
   }
@@ -73,7 +71,7 @@ const trimCache = () => {
   }
 };
 
-const getCachedProfile = (token: string) => {
+const getCachedProfile = (token) => {
   const cached = profileCache.get(token);
   if (!cached) {
     return null;
@@ -87,7 +85,7 @@ const getCachedProfile = (token: string) => {
   return cached.profile;
 };
 
-const setCachedProfile = (token: string, profile: Record<string, unknown>) => {
+const setCachedProfile = (token, profile) => {
   profileCache.set(token, {
     profile,
     expiresAt: Date.now() + PROFILE_CACHE_TTL_MS,
@@ -95,9 +93,9 @@ const setCachedProfile = (token: string, profile: Record<string, unknown>) => {
   trimCache();
 };
 
-const fetchUserProfile = async (token: string) => {
+const fetchUserProfile = async (token) => {
   const startedAt = Date.now();
-  let response: Response | null = null;
+  let response = null;
   try {
     response = await fetch(AUTH_ENDPOINTS.me, {
       headers: {
@@ -127,31 +125,29 @@ const fetchUserProfile = async (token: string) => {
 
   if (!response.ok) {
     const message = await response.text().catch(() => 'Failed to fetch profile');
-    throw new Error(message || 'Failed to fetch profile');
+    const error = new Error(message || 'Failed to fetch profile');
+    error.status = response.status;
+    throw error;
   }
 
-  const profile = (await response.json()) as Record<string, unknown>;
+  const profile = await response.json();
   setCachedProfile(token, profile);
   return profile;
 };
 
-const attachUser = async (token: string, locals: Record<string, unknown>) => {
-  const payload = verifyAccessToken(token);
-  locals.user = payload;
-
+const attachUser = async (token, locals) => {
   const cachedProfile = getCachedProfile(token);
   if (cachedProfile) {
-    locals.user = { ...payload, ...cachedProfile };
+    locals.user = cachedProfile;
     return;
   }
 
-  try {
-    const profile = await fetchUserProfile(token);
-    locals.user = { ...payload, ...profile };
-  } catch (error) {
-    console.warn('[auth] gagal mengambil profil user:', error);
-    locals.user = payload;
-  }
+  const profile = await fetchUserProfile(token);
+  locals.user = profile;
+};
+
+const clearAuthCookie = (cookies) => {
+  cookies.delete(AUTH_COOKIE_NAME, { path: '/' });
 };
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -159,7 +155,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = url.pathname;
   const isStatic = isStaticAsset(pathname);
   const startedAt = Date.now();
-  let response: Response | undefined;
+  let response;
 
   try {
     if (isStatic) {
@@ -176,12 +172,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
 
       try {
-        await attachUser(token, locals as Record<string, unknown>);
+        await attachUser(token, locals);
         response = redirect(LOGIN_REDIRECT_PATH);
         return response;
       } catch (error) {
-        cookies.delete(AUTH_COOKIE_NAME, { path: '/' });
-        console.warn('[auth] gagal verifikasi token untuk halaman login:', error);
+        clearAuthCookie(cookies);
         response = await next();
         return response;
       }
@@ -198,12 +193,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     try {
-      await attachUser(token, locals as Record<string, unknown>);
+      await attachUser(token, locals);
       response = await next();
       return response;
     } catch (error) {
-      cookies.delete(AUTH_COOKIE_NAME, { path: '/' });
-      console.warn('[auth] verifikasi token gagal:', error);
+      clearAuthCookie(cookies);
       response = redirect(LOGIN_ROUTE);
       return response;
     }

@@ -1,10 +1,8 @@
 import { getAccessToken } from '@js/auth.js';
-import type { ApiRequestOptions, QueryParamValue, SseRequestOptions } from './types/client';
-
-// ==== Konfigurasi dasar =====
 
 // Fallback host saat env PUBLIC_BACKEND_PATH belum di-set.
 const DEFAULT_BACKEND_BASE_URL = 'http://127.0.0.1:8000';
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 
 const rawBackendBaseUrl =
   typeof import.meta.env.PUBLIC_BACKEND_PATH === 'string' &&
@@ -15,25 +13,27 @@ const rawBackendBaseUrl =
 // Hilangkan trailing slash agar join endpoint jadi bersih.
 const API_BASE_URL = rawBackendBaseUrl.replace(/\/+$/, '');
 
-// Tipe utilitas untuk method dan query.
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+const resolvePositiveInt = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
-const logSsrFetch = (payload: Record<string, unknown>) => {
+const REQUEST_TIMEOUT_MS = resolvePositiveInt(
+  import.meta.env.PUBLIC_API_TIMEOUT_MS,
+  DEFAULT_REQUEST_TIMEOUT_MS
+);
+
+const logSsrFetch = (payload) => {
   if (!import.meta.env.SSR) {
     return;
   }
   console.info(`[astro:ssr:fetch] ${JSON.stringify(payload)}`);
 };
 
-// ==== Helper pemeriksaan tipe body ====
-const isFormData = (value: unknown): value is FormData =>
-  typeof FormData !== 'undefined' && value instanceof FormData;
+const isFormData = (value) => typeof FormData !== 'undefined' && value instanceof FormData;
+const isURLSearchParams = (value) => typeof URLSearchParams !== 'undefined' && value instanceof URLSearchParams;
 
-const isURLSearchParams = (value: unknown): value is URLSearchParams =>
-  typeof URLSearchParams !== 'undefined' && value instanceof URLSearchParams;
-
-// Pastikan kita hanya melewatkan body yang valid menurut fetch.
-const isBodyInit = (value: unknown): value is BodyInit => {
+const isBodyInit = (value) => {
   if (typeof value === 'string') {
     return true;
   }
@@ -46,7 +46,7 @@ const isBodyInit = (value: unknown): value is BodyInit => {
     return true;
   }
 
-  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(value as ArrayBufferView)) {
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(value)) {
     return true;
   }
 
@@ -57,8 +57,7 @@ const isBodyInit = (value: unknown): value is BodyInit => {
   return false;
 };
 
-// Serialisasi params object jadi query string.
-const toQueryString = (params: Record<string, QueryParamValue>) => {
+const toQueryString = (params) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -72,14 +71,15 @@ const toQueryString = (params: Record<string, QueryParamValue>) => {
   return query.length > 0 ? `?${query}` : '';
 };
 
-// Gabungkan base URL, path endpoint, dan query string.
-const buildUrl = (endpoint: string, params?: Record<string, QueryParamValue>) => {
+const buildUrl = (endpoint, params) => {
   const base = endpoint.startsWith('http')
     ? endpoint
     : `${API_BASE_URL}/${endpoint.replace(/^\/+/, '')}`;
+
   if (!params || Object.keys(params).length === 0) {
     return base;
   }
+
   const queryString = toQueryString(params);
   if (!queryString) {
     return base;
@@ -88,8 +88,7 @@ const buildUrl = (endpoint: string, params?: Record<string, QueryParamValue>) =>
   return base.includes('?') ? `${base}&${queryString.slice(1)}` : `${base}${queryString}`;
 };
 
-// Bentuk body final, otomatis set header JSON jika perlu.
-const normalizeBody = (body: unknown, headers: Headers): BodyInit | null => {
+const normalizeBody = (body, headers) => {
   if (body === undefined || body === null) {
     return null;
   }
@@ -105,8 +104,7 @@ const normalizeBody = (body: unknown, headers: Headers): BodyInit | null => {
   return JSON.stringify(body);
 };
 
-// Parser response serbaguna: JSON diprioritaskan, sisanya text.
-const parseResponse = async (response: Response) => {
+const parseResponse = async (response) => {
   const contentType = response.headers.get('content-type') || '';
 
   if (response.status === 204 || response.status === 205) {
@@ -120,8 +118,7 @@ const parseResponse = async (response: Response) => {
   return response.text();
 };
 
-// Coba keluarkan pesan error paling bermakna dari response gagal.
-const extractErrorMessage = async (response: Response) => {
+const extractErrorMessage = async (response) => {
   try {
     const payload = await response.clone().json();
     if (payload?.detail) {
@@ -154,15 +151,105 @@ const extractErrorMessage = async (response: Response) => {
   return `Request failed with status ${response.status}`;
 };
 
-// ==== Fungsi utama eksekusi fetch ====
-export async function request<T = unknown>(
-  method: HttpMethod,
-  endpoint: string,
-  options: ApiRequestOptions = {}
-): Promise<T> {
-  const { params, raw, token, headers: initHeaders, body: requestBody, ...rest } = options;
+const extractErrorPayload = async (response) => {
+  try {
+    const payload = await response.clone().json();
+    return payload;
+  } catch (error) {
+    // Fallback ke text bila body bukan JSON.
+  }
 
-  // Susun URL lengkap + query parameter jika ada.
+  try {
+    return await response.clone().text();
+  } catch (error) {
+    return null;
+  }
+};
+
+const logClientApiError = (payload) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  console.error('[frontend][api-error]', payload);
+};
+
+const createRequestSignal = (sourceSignal, timeoutMs) => {
+  const hasTimeout = Number.isFinite(timeoutMs) && timeoutMs > 0;
+
+  if (!hasTimeout && !sourceSignal) {
+    return {
+      signal: undefined,
+      cleanup: () => {},
+    };
+  }
+
+  const controller = new AbortController();
+  let timeoutId;
+
+  const onAbort = () => {
+    if (!controller.signal.aborted) {
+      controller.abort();
+    }
+  };
+
+  if (sourceSignal) {
+    if (sourceSignal.aborted) {
+      controller.abort();
+    } else {
+      sourceSignal.addEventListener('abort', onAbort);
+    }
+  }
+
+  if (hasTimeout) {
+    timeoutId = setTimeout(() => {
+      if (!controller.signal.aborted) {
+        controller.abort(new Error('Request timeout exceeded'));
+      }
+    }, timeoutMs);
+  }
+
+  const cleanup = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    if (sourceSignal) {
+      sourceSignal.removeEventListener('abort', onAbort);
+    }
+  };
+
+  return {
+    signal: controller.signal,
+    cleanup,
+  };
+};
+
+const shouldSkipUnauthorizedRedirect = (endpoint) => {
+  if (typeof endpoint !== 'string') {
+    return false;
+  }
+  return endpoint.includes('/auth/login') || endpoint.includes('/auth/logout');
+};
+
+const handleUnauthorized = (endpoint) => {
+  if (import.meta.env.SSR || typeof window === 'undefined') {
+    return;
+  }
+
+  if (window.location.pathname === '/auth/login') {
+    return;
+  }
+
+  if (shouldSkipUnauthorizedRedirect(endpoint)) {
+    return;
+  }
+
+  window.location.replace('/auth/login');
+};
+
+export async function request(method, endpoint, options = {}) {
+  const { params, raw, token, headers: initHeaders, body: requestBody, timeoutMs, signal, ...rest } =
+    options;
+
   const url = buildUrl(endpoint, params);
   const headers = new Headers(initHeaders ?? {});
 
@@ -170,18 +257,18 @@ export async function request<T = unknown>(
     headers.set('Accept', 'application/json');
   }
 
-  // Ambil bearer token otomatis, tapi izinkan override manual.
   const resolvedToken = token ?? getAccessToken();
   if (resolvedToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${resolvedToken}`);
   }
 
-  // Pastikan body sesuai format (JSON bila object biasa).
   const body = normalizeBody(requestBody, headers);
 
+  const effectiveTimeout = resolvePositiveInt(timeoutMs, REQUEST_TIMEOUT_MS);
+  const requestSignal = createRequestSignal(signal, effectiveTimeout);
+
   const startedAt = Date.now();
-  let response: Response;
-  // Eksekusi fetch dengan default credentials include supaya cookie ikut.
+  let response;
   try {
     response = await fetch(url, {
       ...rest,
@@ -189,6 +276,7 @@ export async function request<T = unknown>(
       headers,
       body: body ?? undefined,
       credentials: rest.credentials ?? 'include',
+      signal: requestSignal.signal,
     });
   } catch (error) {
     logSsrFetch({
@@ -198,7 +286,17 @@ export async function request<T = unknown>(
       durationMs: Date.now() - startedAt,
       error: String(error),
     });
+    logClientApiError({
+      type: 'network',
+      method,
+      endpoint,
+      url,
+      durationMs: Date.now() - startedAt,
+      error: String(error),
+    });
     throw error;
+  } finally {
+    requestSignal.cleanup();
   }
 
   logSsrFetch({
@@ -210,20 +308,36 @@ export async function request<T = unknown>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorized(endpoint);
+    }
+
+    const serverPayload = await extractErrorPayload(response);
     const message = await extractErrorMessage(response);
+    logClientApiError({
+      type: 'http',
+      method,
+      endpoint,
+      url,
+      status: response.status,
+      statusText: response.statusText,
+      serverPayload,
+      message,
+    });
     const error = new Error(message);
-    (error as Error & { status?: number }).status = response.status;
+    error.status = response.status;
+    error.serverPayload = serverPayload;
     throw error;
   }
 
   if (raw) {
-    return response as unknown as T;
+    return response;
   }
 
-  return (await parseResponse(response)) as T;
+  return parseResponse(response);
 }
 
-export function requestSSE(endpoint: string, options: SseRequestOptions = {}) {
+export function requestSSE(endpoint, options = {}) {
   if (typeof globalThis === 'undefined' || typeof globalThis.EventSource === 'undefined') {
     throw new Error('SSE requests require a browser environment that provides EventSource');
   }
@@ -248,22 +362,14 @@ export function requestSSE(endpoint: string, options: SseRequestOptions = {}) {
   return eventSource;
 }
 
-// ==== Wrapper singkat untuk method umum ====
 export const apiClient = {
   request,
-  sse: (endpoint: string, options?: SseRequestOptions) => requestSSE(endpoint, options),
-  get: <T = unknown>(endpoint: string, options?: ApiRequestOptions) =>
-    request<T>('GET', endpoint, options),
-  post: <T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions) =>
-    request<T>('POST', endpoint, { ...options, body }),
-  put: <T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions) =>
-    request<T>('PUT', endpoint, { ...options, body }),
-  patch: <T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions) =>
-    request<T>('PATCH', endpoint, { ...options, body }),
-  delete: <T = unknown>(endpoint: string, options?: ApiRequestOptions) =>
-    request<T>('DELETE', endpoint, options),
+  sse: (endpoint, options) => requestSSE(endpoint, options),
+  get: (endpoint, options) => request('GET', endpoint, options),
+  post: (endpoint, body, options) => request('POST', endpoint, { ...options, body }),
+  put: (endpoint, body, options) => request('PUT', endpoint, { ...options, body }),
+  patch: (endpoint, body, options) => request('PATCH', endpoint, { ...options, body }),
+  delete: (endpoint, options) => request('DELETE', endpoint, options),
 };
 
-// Ekspos base URL agar bisa dipakai di tempat lain bila perlu.
-export { API_BASE_URL };
-export type { ApiRequestOptions, SseRequestOptions } from './types/client';
+export { API_BASE_URL, REQUEST_TIMEOUT_MS };

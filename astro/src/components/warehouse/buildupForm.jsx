@@ -425,11 +425,11 @@ const mapRowsToManifestPayload = (rows) => {
   };
 };
 
-export default function BuildupForm() {
+export default function BuildupForm({ onSaveDraft = async () => {} }) {
   const [inputValue, setInputValue] = useState('');
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -569,12 +569,12 @@ export default function BuildupForm() {
     );
   };
 
-  const handleSubmitManifest = async () => {
+  const handleSaveDraft = async () => {
     if (!rows.length) {
       showToast({
         type: 'warning',
-        title: 'Manifest',
-        message: 'Data Master AWB belum ada untuk disubmit.',
+        title: 'Draft Manifest',
+        message: 'Data Master AWB belum ada untuk disimpan.',
       });
       return;
     }
@@ -583,49 +583,50 @@ export default function BuildupForm() {
     if (!payload.flight_manifest.length || !payload.uld.length || !payload.mawb.length) {
       showToast({
         type: 'warning',
-        title: 'Manifest',
+        title: 'Draft Manifest',
         message:
-          'Data belum memenuhi kriteria submit. Pastikan flight, ULD, dan MAWB terisi dengan benar.',
+          'Data belum memenuhi kriteria draft. Pastikan flight, ULD, dan MAWB terisi dengan benar.',
       });
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSavingDraft(true);
     try {
-      const formData = new FormData();
-      formData.append('payload_json', JSON.stringify(payload));
-      const response = await warehouseClient.submitFedexManifest(formData);
-      const successMessage =
-        response && typeof response === 'object' && 'message' in response
-          ? response.message
-          : 'Submit manifest berhasil.';
+      const draft = {
+        rows,
+        payload,
+        ignored,
+        masterAwbs: rows
+          .map((row) => toText(row?.mawb))
+          .filter(Boolean),
+      };
+      await onSaveDraft(draft);
 
       showToast({
         type: 'success',
-        title: 'Manifest',
-        message: successMessage,
+        title: 'Draft Manifest',
+        message: 'Draft manifest berhasil disimpan.',
       });
 
       if (ignored.masters || ignored.details) {
         showToast({
           type: 'warning',
-          title: 'Manifest',
+          title: 'Draft Manifest',
           message: `${ignored.masters} master dan ${ignored.details} detail diabaikan karena tidak sesuai format.`,
         });
       }
 
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('manifest-uploaded', { detail: { response } }));
-      }
+      setRows([]);
+      setInputValue('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal submit manifest.';
+      const message = err instanceof Error ? err.message : 'Gagal menyimpan draft manifest.';
       showToast({
         type: 'danger',
-        title: 'Manifest',
+        title: 'Draft Manifest',
         message,
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSavingDraft(false);
     }
   };
 
@@ -692,10 +693,10 @@ export default function BuildupForm() {
             <button
               type="button"
               className="btn btn-success"
-              onClick={handleSubmitManifest}
-              disabled={isSubmitting}
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Manifest'}
+              {isSavingDraft ? 'Menyimpan...' : 'Simpan Draft'}
             </button>
           </div>
 

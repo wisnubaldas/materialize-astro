@@ -1,5 +1,5 @@
-import { logout } from '../js/auth.js';
-import Breadcrumb from './Breadcrumb.jsx';
+import Breadcrumb from '@components/Breadcrumb.jsx';
+import { logout } from '@js/auth.js';
 
 const clearStorageAndCookies = () => {
   localStorage.clear();

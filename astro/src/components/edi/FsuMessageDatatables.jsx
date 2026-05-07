@@ -3,7 +3,7 @@ import InputField from '@components/parsial/InputField';
 import { showToast } from '@js/utils';
 import ediClient, { EDI_FSU_MESSAGE_DATATABLE_ENDPOINT } from '@lib/api/edi';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
+import Swal from 'sweetalert2';
 
 const defaultForm = {
   code: '',
@@ -385,4 +385,5 @@ export default function FsuMessageDatatables() {
     </div>
   );
 }
+
 

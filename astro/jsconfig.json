@@ -1,9 +1,7 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "src/**/*"],
-  "exclude": ["dist"],
   "compilerOptions": {
     "baseUrl": ".",
+    "checkJs": false,
     "paths": {
       "@components/*": ["src/components/*"],
       "@layouts/*": ["src/layouts/*"],
@@ -13,5 +11,7 @@
       "@lib/*": ["src/lib/*"],
       "@libs/*": ["src/libs/*"]
     }
-  }
+  },
+  "include": ["src/**/*", "astro.config.mjs"],
+  "exclude": ["dist", "node_modules"]
 }

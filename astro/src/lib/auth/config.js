@@ -10,25 +10,25 @@ const AUTH_API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 export const AUTH_COOKIE_NAME = 'access_token';
 
-export const AUTH_ENDPOINTS = {
+export const AUTH_ENDPOINTS = Object.freeze({
   login: `${AUTH_API_BASE_URL}/auth/login`,
   me: `${AUTH_API_BASE_URL}/auth/me`,
   logout: `${AUTH_API_BASE_URL}/auth/logout`,
-} as const;
+});
 
 export { AUTH_API_BASE_URL };
 
-export const AUTH_COOKIE_MAX_AGE = {
-  default: 60 * 60 * 24, // 1 day
-  remember: 60 * 60 * 24 * 30, // 30 days
-} as const;
+export const AUTH_COOKIE_MAX_AGE = Object.freeze({
+  default: 60 * 60 * 24,
+  remember: 60 * 60 * 24 * 30,
+});
 
 export const LOGIN_REDIRECT_PATH = '/';
 export const LOGIN_ROUTE = '/auth/login';
 
 export const PUBLIC_PATHS = [LOGIN_ROUTE];
 
-export const AUTH_ERRORS = {
+export const AUTH_ERRORS = Object.freeze({
   invalidCredentials: 'Email atau password salah.',
   generic: 'Gagal masuk, silakan coba kembali.',
-} as const;
+});

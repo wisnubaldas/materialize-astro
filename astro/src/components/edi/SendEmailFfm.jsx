@@ -3,7 +3,7 @@ import formatFfmMessage from '@components/edi/ffmGenerator';
 import ediClient from '@lib/api/edi';
 import { showToast } from '@js/utils';
 import { useEffect, useMemo, useState } from 'react';
-import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
+import Swal from 'sweetalert2';
 
 const numberRenderer = (value, type, fractionDigits = 0) => {
   if (type !== 'display' && type !== 'filter') {
@@ -250,4 +250,5 @@ export default function SendEmailFfm({ slug }) {
     </>
   );
 }
+
 

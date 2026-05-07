@@ -25,6 +25,12 @@ const normalizeText = (value) => {
  * Normalisasi + uppercase untuk field yang wajib uppercase di Cargo-IMP.
  */
 const toUpper = (value) => normalizeText(value).toUpperCase();
+const truncateText = (value, maxLength) => {
+  const text = normalizeText(value);
+  if (!text) return '';
+  if (!maxLength || text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim();
+};
 
 /**
  * Batas maksimum 1 baris alamat (sesuai standar segment ADR).
@@ -195,8 +201,9 @@ const getVolume = (item) => item?.Volume ?? item?.VolumeCargo ?? 0;
 const buildPartySegments = (prefix, info, fallbackCode) => {
   const lines = [];
   const name = toUpper(info?.name || fallbackCode || '');
+  lines.push(prefix);
   if (name) {
-    lines.push(`${prefix}NAM/${name}`);
+    lines.push(`NAM/${name}`);
   }
 
   const addressLines = buildAddressLines(info?.address1, info?.address2, [
@@ -214,15 +221,12 @@ const buildPartySegments = (prefix, info, fallbackCode) => {
   const city = toUpper(info?.city);
   const country = toUpper(info?.country);
   if (city || country) {
-    lines.push(`LOC/${city || 'UNKNOWN'}/${country || 'XX'}`);
+    lines.push(`LOC/${city || 'UNKNOWN'}`);
+    lines.push(`/${country || 'XX'}`);
   }
 
   if (info?.postal) {
     lines.push(`ZIP/${toUpper(info.postal)}`);
-  }
-
-  if (info?.tax) {
-    lines.push(`TAX/${toUpper(info.tax)}`);
   }
 
   return lines;
@@ -275,40 +279,19 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const totalWeight = toNumberOr(fwb?.gross_weight, baseTotalWeight);
   const totalVolume = toNumberOr(fwb?.volume, baseTotalVolume);
 
-  const goods = toUpper(
-    fwb?.goods_description ||
-      master?.KindOfGood ||
-      primaryHost?.descriptiongoods ||
-      primaryHost?.KindOfNature ||
-      'GENERAL CARGO'
+  const goods = truncateText(
+    toUpper(
+      fwb?.goods_description ||
+        master?.KindOfGood ||
+        primaryHost?.descriptiongoods ||
+        primaryHost?.KindOfNature ||
+        'GENERAL CARGO'
+    ),
+    20
   );
   const rateClass = toUpper(
     fwb?.rate_class || master?.KindOfCode || primaryHost?.kd_kemasan || primaryHost?.KindOfCode || ''
   );
-
-  const flightNumber = toUpper(
-    fwb?.flight_number ||
-      master?.FlightNo ||
-      header?.FlightNumber ||
-      primaryHost?.FlightNo ||
-      primaryHost?.FlightNumber ||
-      ''
-  );
-  const carrier = toUpper(
-    fwb?.flight_carrier ||
-      master?.AirlinesCode ||
-      header?.AirlinesCode ||
-      primaryHost?.airlinescode ||
-      primaryHost?.AirlinesCode ||
-      ''
-  );
-  const flightDesignator = `${carrier}${flightNumber}`;
-  const flightDateRaw =
-    fwb?.flight_date || master?.DateOfFlight || header?.DateOfFlight || primaryHost?.DateOfFlight || '';
-  const flightDate =
-    flightDateRaw && dayjs(flightDateRaw).isValid()
-      ? dayjs(flightDateRaw).format('DDMMM').toUpperCase()
-      : '';
 
   const slac = toNumberOr(
     fwb?.slac,
@@ -347,6 +330,12 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const agentCode =
     fwb?.agent_account || payload?.agen?.CustomerCode || master?.AgenCode || header?.AgenCode || '';
   const agentCity = toUpper(fwb?.agent_city || origin);
+  const agentNumericCode = (() => {
+    const digits = String(agentCode || '').replace(/\D/g, '');
+    if (!digits) return '0000000';
+    if (digits.length >= 7) return digits.slice(0, 7);
+    return digits.padStart(7, '0');
+  })();
 
   const issueDateRaw = fwb?.issue_date || master?.DateEntry || header?.DateOfEntry || '';
   const issueDate =
@@ -371,15 +360,22 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const rateLineNo = normalizeText(fwb?.rate_line_no || '1');
   const ratePieces = toNumberOr(fwb?.pieces, slac || totalPieces || 0);
   const rateWeight = toNumberOr(fwb?.weight, totalWeight);
+  const chargeableWeight = toNumberOr(fwb?.chargeable_weight, totalWeight);
+  const rateCharge = toNumberOr(fwb?.rate, 0);
+  const totalCharge = toNumberOr(fwb?.total_charge, 0);
+  const rateClassCode = (() => {
+    const code = toUpper(rateClass || '');
+    return /^[A-Z]$/.test(code) ? code : 'M';
+  })();
 
   const lines = [];
 
   lines.push(`${messageType}/${messageVersion}`);
-  const headerParts = [
-    `${formattedMawb}${origin}${destination}`,
-    `${shipmentDescriptionCode}${totalPieces || 0}`,
-    `${weightUnit}${formatNumber(totalWeight, 1)}`,
-  ];
+  const shipmentQuantityWeight = `${shipmentDescriptionCode}${formatNumber(
+    totalPieces,
+    0
+  )}${weightUnit}${formatNumber(totalWeight, 1)}`;
+  const headerParts = [`${formattedMawb}${origin}${destination}`, shipmentQuantityWeight];
   if (totalVolume) {
     headerParts.push(`MC${formatNumber(totalVolume, 3)}`);
   }
@@ -391,15 +387,13 @@ const formatFwbMessage = (payload, fallbackMawb) => {
     lines.push(`RTG/${destination}II`);
   }
 
-  if (flightDesignator || flightDate) {
-    lines.push(`FLT/${flightDesignator || 'UNKNOWN'}${flightDate ? `/${flightDate}` : ''}`);
-  }
-
   lines.push(...buildPartySegments('SHP', shipperInfo, master?.ShipperCode));
   lines.push(...buildPartySegments('CNE', consigneeInfo, master?.ConsigneeCode));
 
   if (agentCode || agentName) {
-    lines.push(`AGT//${agentCode || '0000000'}/${agentName}/${agentCity || origin}`);
+    lines.push(`AGT//${agentNumericCode}`);
+    lines.push(`/${agentName || 'AGENT'}`);
+    lines.push(`/${agentCity || origin}`);
   }
 
   lines.push(
@@ -411,42 +405,41 @@ const formatFwbMessage = (payload, fallbackMawb) => {
     rateLineNo || '1',
     `P${ratePieces}`,
     `K${formatNumber(rateWeight, 1)}`,
+    `C${rateClassCode}`,
+    `W${formatNumber(chargeableWeight, 1)}`,
+    `R${formatNumber(rateCharge, 2)}`,
+    `T${formatNumber(totalCharge, 2)}`,
   ];
 
-  if (rateClass) {
-    rateParts.push(`NC/${rateClass}`);
-  }
-
-  rateParts.push(`NG/${goods}`);
-
-  if (slac) {
-    rateParts.push(`SLAC${slac}`);
-  }
-
-  if (totalVolume) {
-    rateParts.push(`MC${formatNumber(totalVolume, 3)}`);
-  }
-
   lines.push(rateParts.join('/'));
+  lines.push(`/NG/${goods}`);
+  lines.push(`PPD/WT${formatNumber(prepaidWeight, 1)}`);
   lines.push(
-    `PPD/WT${formatNumber(prepaidWeight, 1)}/OC${formatNumber(
-      prepaidOther,
+    `/OA${formatNumber(prepaidOther, 1)}/OC${formatNumber(prepaidOther, 1)}/CT${formatNumber(
+      totalPrepaid,
       1
-    )}/CT${formatNumber(totalPrepaid, 1)}`
+    )}`
   );
   if (collectCharge) {
     lines.push(`COL/CT${formatNumber(collectCharge, 1)}`);
   }
 
-  const certificationName = toUpper(fwb?.shipper_certification || shipperInfo?.name || '');
+  const certificationName = truncateText(
+    toUpper(fwb?.shipper_certification || shipperInfo?.name || ''),
+    20
+  );
   if (certificationName) {
     lines.push(`CER/${certificationName}`);
   }
 
   const issuePlace = toUpper(fwb?.issue_place || origin);
-  const issuedBy = toUpper(fwb?.issued_by || agentName);
+  const issuedBy = truncateText(toUpper(fwb?.issued_by || agentName), 20);
+  const refParticipantCode = truncateText(
+    String(toUpper(fwb?.agent_account || agentCode || agentName || 'AGENT')).replace(/[^A-Z0-9]/g, ''),
+    17
+  );
   lines.push(`ISU/${issueDate.format('DDMMMYY').toUpperCase()}/${issuePlace}/${issuedBy}`);
-  lines.push(`REF///MAWB/${formattedMawb}`);
+  lines.push(`REF///AGT/${refParticipantCode || 'AGENT'}/${origin}`);
 
   return lines.filter(Boolean).join('\n');
 };

@@ -185,15 +185,15 @@ astro/
 │   ├── pages/
 │   ├── scss/
 │   ├── vendor/
-│   └── middleware.ts
+│   └── middleware.js
 ├── public/
 ├── docs/
 ├── frontend_agent.md
 ├── astro.config.mjs
+├── jsconfig.json
 ├── minify-public-js.js
 ├── package.json
 ├── package-lock.json
-├── tsconfig.json
 └── README.md
 ```
 
@@ -201,7 +201,16 @@ Catatan penting frontend:
 
 - Target pengembangan baru tetap **JavaScript-first**.
 - Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
-- `src/middleware.ts` dan `tsconfig.json` adalah kondisi existing. Jika disentuh, evaluasi apakah perlu migrasi bertahap ke JavaScript-compatible middleware sesuai kemampuan Astro project.
+- Gunakan baseline existing `src/middleware.js` dan `jsconfig.json`; jangan mengembalikan TypeScript tanpa instruksi eksplisit.
+- Desain UI wajib merujuk dokumentasi Materialize resmi: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
+- Asset utama yang boleh dipakai saat membangun UI frontend berada di:
+  - `astro/src/libs`
+  - `astro/src/scss`
+  - `astro/src/vendor`
+  - `astro/src/js`
+  - `astro/src/fonts`
+  - `astro/public/assets`
+- Khusus pengerjaan modul EDI di `astro/src/pages/edi`, jika ada perubahan format/flow Cargo-IMP, lakukan validasi sintaks pesan di `https://www.parse2.com/service-cargoimp.shtml` (gunakan tipe pesan yang sesuai, misalnya `FWB/17` untuk FWB).
 - Ikuti struktur aktual `src/js`, `src/lib`, `src/libs`, `src/scss`, dan `src/vendor`.
 
 ### Desktop App
@@ -354,6 +363,7 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Gunakan `.env.example`, `appsettings.example.json`, atau dokumentasi konfigurasi tanpa nilai rahasia.
 - Jangan menampilkan stack trace mentah ke user akhir.
 - Log error detail boleh disimpan di backend log, tetapi response API harus aman.
+- Untuk eksekusi frontend `astro/`: setiap kegagalan `fetch`/request API wajib menampilkan detail error response server ke console developer browser (`console.error`) untuk kebutuhan debugging.
 - Validasi input di frontend/desktop hanya untuk UX; validasi final tetap di backend.
 - Gunakan HTTPS untuk komunikasi production.
 - Timeout request wajib eksplisit.

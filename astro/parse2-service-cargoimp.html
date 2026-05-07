@@ -1,0 +1,1134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<meta name="description" content="Augmented BNF Parser Generator" />
+<meta name="keywords" content="ABNF,XML,CARGO-IMP,parser,generator,java,c++,c#,augmented,parsing,conversion,translation" />
+<meta name="copyright" content="2007, parse2/prime dimension limited" />
+<link rel="stylesheet" type="text/css" href="styles/parse2.css" />
+<!--[if IE 6]><link rel="stylesheet" type="text/css" href="styles/ie6.css" /><![endif]-->
+<title>com.parse2.aparse.Parser - Java/C++ ABNF Parser Generator</title>
+</head>
+<body>
+<div id="page">
+<div id="header"><!-- 
+NOTHING TO SEE HERE
+--></div>
+<div id="sidebarL"><div class="menubox">
+<h2>parse2</h2>
+<ul>
+	<li><a href="index.shtml">Home</a></li>
+	<li><a href="news.shtml">News</a></li>
+	<li class="last"><a href="contact.shtml">Contact</a></li>
+</ul>
+<div class="menuboxbottom"></div>
+</div>
+<br/>
+<div class="menubox">
+<h2>aParse</h2>
+<ul>
+	<li><a href="download.shtml">Download</a></li>
+	<li><a href="abnf.shtml">ABNF</a></li>
+	<li><a href="manual-java.shtml">User Manual (Java)</a></li>
+	<li><a href="manual-cpp.shtml">User Manual (C++)</a></li>
+	<li><a href="manual-cs.shtml">User Manual (C#)</a></li>
+	<li class="last"><a href="examples.shtml">Examples</a></li>
+</ul>
+<div class="menuboxbottom"></div>
+</div>
+<br/>
+<div class="menubox">
+<h2>Services</h2>
+<ul>
+<li><a href="service-cargoimp.shtml">Cargo-IMP Validation</a></li>
+<li class="last"><a href="service-cargoxml.shtml">Cargo-XML Conversion</a></li>
+</ul>
+<div class="menuboxbottom"></div>
+</div>
+</div>
+<div class="centrebox">
+<h1>Cargo-IMP Validation</h1>
+<div id="content">
+
+<p>This provides the means by which 29th Edition   
+<a href="https://www.iata.org">IATA</a>/<a href="https://www.airlines.org">ATA</a> 
+Cargo-IMP messages may be syntactically validated.</p>
+
+<p>Select the message type, enter the message and then press the 
+<strong>Validate</strong> button. Valid messages will simply be reflected back 
+in the output box whereas an error, highlighting the location of a structural 
+problem, will be shown for invalid messages.</p>
+
+<h2 id="Messages">Message Selection</h2>
+
+<p class="arrow"><a href="#FBL3">FBL/3 - Freight Booked List</a> (Added March 14, 2011)</p> 
+<p class="arrow"><a href="#FBR2">FBR/2 - Freight Booked List Request</a> (Added March 14, 2011)</p> 
+<p class="arrow"><a href="#FFA4">FFA/4 - AWB Space Allocation Answer</a></p> 
+<p class="arrow"><a href="#FFM8">FFM/8 - Airline Flight Manifest</a> (Updated November 10, 2013)</p> 
+<p class="arrow"><a href="#FFR6">FFR/6 - AWB Space Allocation Request</a></p> 
+<p class="arrow"><a href="#FHL4">FHL/4 - Consolidation List</a></p> 
+<p class="arrow"><a href="#FHL5">FHL/5 - Consolidation List</a> (Added November 6, 2021)</p> 
+<p class="arrow"><a href="#FMA0">FMA - Message Acknowledgement</a></p> 
+<p class="arrow"><a href="#FNA1">FNA/1 - Error</a></p> 
+<p class="arrow"><a href="#FPA3">FPA/3 - Piece Status Answer</a> (Added October 16, 2011)</p> 
+<p class="arrow"><a href="#FPM1">FPM/1 - Piece Manifest</a> (Added October 16, 2011)</p> 
+<p class="arrow"><a href="#FPR1">FPR/1 - Piece Status Request</a> (Added October 16, 2011)</p> 
+<p class="arrow"><a href="#FSA12">FSA/12 - Status Answer</a></p>
+<p class="arrow"><a href="#FSR0">FSR - Status Request</a></p>
+<p class="arrow"><a href="#FSU12">FSU/12 - Status Update</a> (Updated November 21, 2011)</p>
+<p class="arrow"><a href="#FUA1">FUA/1 - ULD Space Allocation Answer</a> (Added April 16, 2011)</p>
+<p class="arrow"><a href="#FUM6">FUM/6 - ULD Manifest</a> (Added October 16, 2011)</p>
+<p class="arrow"><a href="#FUR3">FUR/3 - ULD Space Allocation Request</a> (Added April 16, 2011)</p>
+<p class="arrow"><a href="#FVA2">FVA/2 - Schedule and Availability Information Answer</a> (Updated September 25, 2014)</p>
+<p class="arrow"><a href="#FVR1">FVR/1 - Schedule and Availability Information Request</a> (Updated September 25, 2014)</p>
+<p class="arrow"><a href="#FWB16">FWB/16 - Air Waybill Data</a> (Updated February 4, 2013)</p> 
+<p class="arrow"><a href="#FWB17">FWB/17 - Air Waybill Data</a> (Added November 2, 2021)</p> 
+<p class="arrow"><a href="#FWC2">FWC/2 - Air Waybill Charges Collect</a></p>
+<p class="arrow"><a href="#FWR3">FWR/3 - Air Waybill Data Request</a></p>
+<p class="arrow"><a href="#FXX2">FXX/2 - Cancellation</a></p>
+<p class="arrow"><a href="#FYT1">FYT/1 - Free Text</a></p>
+<p class="arrow"><a href="#FZA1">FZA/1 - House Waybill Data Request</a></p>
+<p class="arrow"><a href="#FZB5">FZB/5 - House Waybill Data</a> (Updated November 10, 2013)</p>
+<p class="arrow"><a href="#FZC1">FZC/1 - House Waybill Status Request</a></p>
+<p class="arrow"><a href="#FZD5">FZD/5 - House Waybill Status Answer</a> (Added April 9, 2011)</p>
+<p class="arrow"><a href="#FZE5">FZE/5 - House Waybill Status Update</a> (Added April 9, 2011)</p>
+
+<h2 id="FBL3">FBL/3 - Freight Booked List</h2>
+<div class="servicesForm">
+<form target="FBL3result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FBL3" />
+<input type="hidden" name="rule"    value="FBL3" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FBL/3
+1/KL791/19MAR/ZRH
+LIS
+074-71421280ZRHLIS/T20K54MC0.08/WATCHES
+074-73542906GVALIS/T4K15MC0.18/SPORTS EQUIP
+074-92070521ZRHLIS/T1K1MC0.01/SHIPPING DOCS
+074-42751741ZRHMVD/T1K8MC0.02/NEWSPAPERS
+074-43512184ATHMVD/T1K25MC0.06/DIESEL ENG SPS
+074-73045641BOMMVD/T15K600MC2.73/CARPETS
+LAST
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FBL3result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FBR2">FBR/2 - Freight Booked List</h2>
+<div class="servicesForm">
+<form target="FBR2result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FBR2" />
+<input type="hidden" name="rule"    value="FBR2" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FBR/2
+FLT/KL791/19MAR/ZRHLIS
+REF/ZRHFZSR
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FBR2result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FFA4">FFA/4 - AWB Space Allocation Answer</h2>
+<div class="servicesForm">
+<form target="FFA4result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FFA4" />
+<input type="hidden" name="rule"    value="FFA4" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FFA/4
+125-12345675FRAPHL/T12K950/BOOKS
+/VAL
+BA171/19MAR/LHRJFK/KK
+REF/FRAFCBA
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FFA4result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FFM8">FFM/8 - Airline Flight Manifest</h2>
+<div class="servicesForm">
+<form target="FFM8result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FFM8" />
+<input type="hidden" name="rule"    value="FFM8" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FFM/8
+1/BR864/19MAR/LGW
+BRU
+121-42751741LGWBRU/T5K46MC0.12/NEWSPAPERS
+121-73023521LGWBRU/T1K4MC0.05/ACFT INST
+LAST
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FFM8result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FFR6">FFR/6 - AWB Space Allocation Request</h2>
+<div class="servicesForm">
+<form target="FFR6result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FFR6" />
+<input type="hidden" name="rule"    value="FFR6" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FFR/6
+125-12345675FRAPHL/T12K950/CLOTHING
+BA171/19MAR/LHRJFK/NN
+REF/FRAFCBA
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FFR6result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FHL4">FHL/4 - Consolidation List</h2>
+<div class="servicesForm">
+<form target="FHL4result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FHL4" />
+<input type="hidden" name="rule"    value="FHL4" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FHL/4
+MBI/220-12345675FRAJFK/T1234K10000
+HBS/11AA11111111/FRABOS/1000/K8000//NUTS
+HBS/22AA12121212/FRAJFK/200/K1800//BOLTS
+HBS/33AA13131313/FRAORD/34/K200//SCREWS
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FHL4result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FHL5">FHL/5 - Consolidation List</h2>
+<div class="servicesForm">
+<form target="FHL5result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FHL5" />
+<input type="hidden" name="rule"    value="FHL5" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FHL/5
+MBI/220-12345675FRAJFK/T1234K10000
+HBS/11AA11111111/FRABOS/1000/K8000//NUTS
+HBS/22AA12121212/FRAJFK/200/K1800//BOLTS
+HBS/33AA13131313/FRAORD/34/K200//SCREWS
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FHL5result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FMA0">FMA - Message Acknowledgement</h2>
+<div class="servicesForm">
+<form target="FMA0result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FMA0" />
+<input type="hidden" name="rule"    value="FMA0" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FMA
+ACK/FFR RCVD 30 JUN 1009 - WILL CONFIRM HEA BOOKING ASAP
+FFR/4
+014-26488125YMXGVA/T1K950/COMPUTER
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FMA0result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FNA1">FNA/1 - Error</h2>
+<div class="servicesForm">
+<form target="FNA1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FNA1" />
+<input type="hidden" name="rule"    value="FNA1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FNA/1
+ACK/INVALID AWB NO
+/INVALID STATUS CODE
+FFR/4
+125-92345675FRAPHL/T12K950/CLOTHING
+BA171/19MAR/LHRJFK/UN
+REF/FRAFCBA
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FNA1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FPA3">FPA/3 - Piece Status Answer</h2>
+<div class="servicesForm">
+<form target="FPA3result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FPA3" />
+<input type="hidden" name="rule"    value="FPA3" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FPA/3
+STS/DEP/AAA005/22MAR/JFKLHR
+SSI/A2045/E0900-N
+API/001-12345675
+UPI/37612345123456789
+UPI/37612345123456790
+STS/BKD/AAA006/22MAR/JFKLHR
+SSI/S2245/S1100-N
+API/001-12345675
+UPI/37612345123456791
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FPA3result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FPM1">FPM/1 - Piece Manifest</h2>
+<div class="servicesForm">
+<form target="FPM1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FPM1" />
+<input type="hidden" name="rule"    value="FPM1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FPM/1
+ULD/AKE1234BA
+API/777-12345675
+HPI/EXP123456789
+UPI/I/37612345123456799
+/37612345123456800
+/37612345123456801
+/37612345123456802
+/37612345123456803
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FPM1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FPR1">FPR/1 - Piece Status Request</h2>
+<div class="servicesForm">
+<form target="FPR1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FPR1" />
+<input type="hidden" name="rule"    value="FPR1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FPR/1
+API/001-12345675
+UPI/37612345123456789
+UPI/37612345123456790
+UPI/37612345123456791
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FPR1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FSA12">FSA/12 - Status Answer</h2>
+<div class="servicesForm">
+<form target="FSA12result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FSA12" />
+<input type="hidden" name="rule"    value="FSA12" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FSA/12
+125-22230003BHXTUL/T13
+RCS/15FEB1800/BHX/T13/SHIPPERNAME
+BKD/BA999/16FEB/LHRORD/T13/S1200/E1600
+TRM/AA/ORD/T13
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FSA12result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FSR0">FSR - Status Request</h2>
+<div class="servicesForm">
+<form target="FSR0result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FSR0" />
+<input type="hidden" name="rule"    value="FSR" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FSR
+057-12345675CDGLAX/T10K500/BOOKS
+AF099/20MAR/CDGJFK
+AA1234/22MAR/JFKLAX
+OSI/CONSIGNEE IS LOOKING FOR THE TENTH PIECE
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FSR0result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FSU12">FSU/12 - Status Update</h2>
+<div class="servicesForm">
+<form target="FSU12result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FSU12" />
+<input type="hidden" name="rule"    value="FSU12" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FSU/12
+077-12345675BOGNCE/T10K350
+DLV/03NOV1615/NCE/T10K350/MICLARK
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FSU12result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FUA1">FUA/1 - ULD Space Allocation Answer</h2>
+<div class="servicesForm">
+<form target="FUA1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FUA1" />
+<input type="hidden" name="rule"    value="FUA1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FUA/1
+8203190155/1/K1000
+LH444/22MAR/FRAYMX/KK
+REF/NBOFQKQ
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FUA1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FUM6">FUM/6 - ULD Manifest</h2>
+<div class="servicesForm">
+<form target="FUM6result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FUM6" />
+<input type="hidden" name="rule"    value="FUM6" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FUM/6
+MSU/1/LUX/20FEB1615
+ULD/PMC02323CV-M/S6/K3604
+UMI/SINCV7941/21FEB
+UDI/SIN
+UCI/PMC06800CV
+ACD/172-87654343LUXSIN/T5K1320MC7.0/SPARE PARTS
+ULD/XYX00962CV-L/PLD
+UMI/SINCV7941/21FEB
+UDI/JKT
+UII/PMC02323CV
+ACD/172-87654354LUXJKT/T320K1000MC0.85/PHOTO CAMERAS
+ULD/XYX00963CV-L/PLD
+UMI/SINCV7941/21FEB
+UDI/JKT
+UII/PMC02323CV
+ACD/172-87654365LUXJKT/T315K984MC0.8/PHOTO CAMERAS
+ULD/PMC06800CV-M/S6/K1300
+UMI/SINCV7941/21FEB
+UDI/SIN
+UCI/PMC02323CV
+EIC/PMC03688CV/PMC02123CV/PMC08564CV/PMC06432CV/PMC03520CV
+EIC/PMC03388CV/PMC03680CV/PMC03321CV/PMC08770CV/XPC01900CV
+EIC/XPC01950CV
+LAST
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FUM6result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FUR3">FUR/3 - ULD Space Allocation Request</h2>
+<div class="servicesForm">
+<form target="FUR3result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FUR3" />
+<input type="hidden" name="rule"    value="FUR3" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FUR/3
+/1/K1400/VEGETABLES
+LH621/18MAR/CAIFRA/NN
+LH9910/19MAR/FRABRU/NA
+ULD/1/UAB4567ET/K1400
+REF/ADDFFET
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FUR3result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FVA2">FVA/2 - Schedule and Availability Information Answer</h2>
+<div class="servicesForm">
+<form target="FVA2result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FVA2" />
+<input type="hidden" name="rule"    value="FVA2" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FVA/2
+SAR/YMXAMS/26MAR/KLA678
+SKH/1
+SAA/26MAR/KLA678/YMXAMS/1810/0705-N/PPQ/0
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FVA2result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FVR1">FVR/1 - Schedule and Availability Information Request</h2>
+<div class="servicesForm">
+<form target="FVR1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FVR1" />
+<input type="hidden" name="rule"    value="FVR1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FVR/1
+SAR/YMXAMS/26MAR/KLA678
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FVR1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FWB16">FWB/16 - Air Waybill Data</h2>
+<div class="servicesForm">
+<form target="FWB16result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FWB16" />
+<input type="hidden" name="rule"    value="FWB16" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FWB/16
+777-12345675BOMSUV/T1K3.5
+RTG/SUVII
+SHP
+/T. ULSIDAS LTD.
+/105 VEER TAMAN ROAD
+/MUMBAI
+/IN
+CNE
+/J. JONES IMPORTERS
+/.
+/SUVA
+/FJ
+AGT//1430288
+/SPEEDAIR SERVICES
+/MUMBAI
+CVD/INR//PP/NVD/1500.00/XXX
+RTD/1/P1/K3.5/CM/W3.5/R800.00/T800.00
+/NG/CLOTH SAMPLES
+/2/ND//NDA
+PPD/WT800.00
+/CT800.00
+CER/T.ULSIDAS LTD.
+ISU/01OCT05/MUMBAI/SPEEDAIR SERVICES
+REF///AGT/SPEEDAIRSERVICES/BOM
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FWB16result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FWB17">FWB/17 - Air Waybill Data</h2>
+<div class="servicesForm">
+<form target="FWB17result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FWB17" />
+<input type="hidden" name="rule"    value="FWB17" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FWB/17
+777-12345675BOMSUV/T1K3.5
+RTG/SUVII
+SHP
+NAM/T. ULSIDAS LTD.
+ADR/105 VEER TAMAN ROAD
+LOC/MUMBAI
+/IN
+CNE
+NAM/J. JONES IMPORTERS
+ADR/.
+LOC/SUVA
+/FJ
+AGT//1430288
+/SPEEDAIR SERVICES
+/MUMBAI
+CVD/INR//PP/NVD/1500.00/XXX
+RTD/1/P1/K3.5/CM/W3.5/R800.00/T800.00
+/NG/CLOTH SAMPLES
+/2/ND//NDA
+PPD/WT800.00
+/CT800.00
+CER/T.ULSIDAS LTD.
+ISU/01OCT05/MUMBAI/SPEEDAIR SERVICES
+REF///AGT/SPEEDAIRSERVICES/BOM
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FWB17result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FWC2">FWC/2 - Air Waybill Charges Collect</h2>
+<div class="servicesForm">
+<form target="FWC2result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FWC2" />
+<input type="hidden" name="rule"    value="FWC2" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FWC/2
+ACD/001-12345675LHRFCO/T10K200
+CVD/ITL/CP
+OTH/C/FCA200GTA100VAC50
+COL/TX200
+/CT550
+REF/FCOFRAZ
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FWC2result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+	
+<h2 id="FWR3">FWR/3 - Air Waybill Data Request</h2>
+<div class="servicesForm">
+<form target="FWR3result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FWR3" />
+<input type="hidden" name="rule"    value="FWR3" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FWR/3
+125-12345675
+REF/YMXFRBA
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FWR3result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FXX2">FXX/2 - Cancellation</h2>
+<div class="servicesForm">
+<form target="FXX2result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FXX2" />
+<input type="hidden" name="rule"    value="FXX2" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FXX/2
+ACD/085-13288026
+REF/QIFFMEK
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FXX2result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FYT1">FYT/1 - Cancellation</h2>
+<div class="servicesForm">
+<form target="FYT1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FYT1" />
+<input type="hidden" name="rule"    value="FYT1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FYT/1
+TXT/ING
+/THIS IS AN EXAMPLE OF A PURE FREE TEXT MESSAGE
+/COMPRISING MORE THAN ONE LINE OF TEXT
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FYT1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FZA1">FZA/1 - House Waybill Data Request</h2>
+<div class="servicesForm">
+<form target="FZA1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FZA1" />
+<input type="hidden" name="rule"    value="FZA1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FZA/1
+HCD/125-12345675/1123456789
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FZA1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FZB5">FZB/5 - House Waybill Data</h2>
+<div class="servicesForm">
+<form target="FZB5result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FZB5" />
+<input type="hidden" name="rule"    value="FZB5" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FZB/5
+HCD/057-12345675/123456789/CDGBOS/T1K20
+RTG/BOSSR
+SHP
+/RENAULT
+/12 RUE MOZART
+/ORLEANS
+/FR/45000
+CNE
+/TRANE CORP
+/11207 MEDOWS
+/BOSTON
+/US/52601
+AGT/1234567
+/MALISSART
+/ORLEANS
+CVD/FRF//PP/NVD/NCV/XXX
+RTD/1/P1/K20/CM/R250/T250
+/NG/BOOKS
+/2/ND//NDA0-0-0/0
+OTH/P/AWA20
+PPD/WT250
+/OA20/CT270
+ISU/10FEB94/ORLEANS
+HAH/MALISSART
+/12 RUE ROYALE
+/ORLEANS/LOIRET
+/FR/45000
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FZB5result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FZC1">FZC/1 - House Waybill Status Request</h2>
+<div class="servicesForm">
+<form target="FZC1result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FZC1" />
+<input type="hidden" name="rule"    value="FZC1" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FZC/1
+HCD/085-22110001/123456789
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FZC1result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FZD5">FZD/5 - House Waybill Status Answer</h2>
+<div class="servicesForm">
+<form target="FZD5result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FZD5" />
+<input type="hidden" name="rule"    value="FZD5" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FZD/5
+HCD/057-12345675/123456789/JFKBKK/T20
+RCS/10JUL/JFK/T20
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FZD5result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+<h2 id="FZE5">FZE/5 - House Waybill Status Update</h2>
+<div class="servicesForm">
+<form target="FZE5result" action="cargo-imp/cargo-imp.php" method="post">
+<input type="hidden" name="message" value="FZE5" />
+<input type="hidden" name="rule"    value="FZE5" />
+<input type="hidden" name="visitor" value="parser.Displayer" />
+<div class="group">
+<textarea name="input" rows="13">
+FZE/5
+HCD/085-22210005/123456789/BSLBKK/T20
+DEP/SR172/23MAR/BSLKHI/T20/A1930/E0530-N
+</textarea>
+</div>
+<input class="parse" type="submit" value="Validate" />
+</form>
+</div>
+
+<p class="resultBlock">
+<iframe height="200" 
+        frameborder="0" 
+        name="FZE5result">
+<p>NOT SUPPORTED</p>
+</iframe>
+</p>
+
+<p style="text-align:right"><a href="#Messages">Message Selection</a></p>
+
+</div> <!-- content -->
+<div class="centreboxbottom"></div>
+</div> <!-- centrebox -->
+<div id="sidebarR"><div class="sidebox">
+<h2>Changes</h2>
+<ul>
+	<li>
+	<span class="code">November 6, 2021</span><br />
+	FHL/5 and FWB/17 added to the Cargo-IMP validation service. 
+	</li>
+	<li>
+	<span class="code">March 21, 2015</span><br />
+	XFHL and XFZB added to the Cargo-XML conversion service. 
+	</li>
+	<li>
+	<span class="code">November 22, 2014</span><br />
+	XFFR added to the Cargo-XML conversion service. 
+	</li>
+	<li>
+	<span class="code">September 23, 2014</span><br />
+	XFWB added to the Cargo-XML conversion service. 
+	</li>
+	<li>
+	<span class="code">May 17, 2014</span><br />
+	<strong>aParse</strong> 2.5 released. 
+	</li>
+	<li>
+	<span class="code">Nov 10, 2013</span><br />
+	<strong>aParse</strong> 2.4 released. 
+	</li>
+	<li>
+	<span class="code">Nov 25, 2012</span><br />
+	<strong>aParse</strong> 2.3 released. C# support added. 
+	</li>
+	<li>
+	<span class="code">May 10, 2012</span><br />
+	<strong>aParse</strong> 2.2 released. 
+	</li>
+	<li>
+	<span class="code">February 8, 2012</span><br />
+	Cargo-XML conversion service added. 
+	</li>
+	<li>
+	<span class="code">September 11, 2011</span><br />
+	<strong>aParse</strong> 2.1 released. C++ support added.
+	</li>
+	<li>
+	<span class="code">March 26, 2011</span><br />
+	<strong>aParse</strong> 2.0 released. 
+	</li>
+	<li class="last">
+	<span class="code">December 18, 2010</span><br />
+	Cargo-IMP validation service added. 
+	</li>
+</ul>
+<div class="menuboxbottom"></div>
+</div>
+</div>
+<div id="footer">Copyright &copy; 2007 - 2024 : <a href="https:index.shtml">parse2</a>
+</div>
+</div>
+</body>
+</html>

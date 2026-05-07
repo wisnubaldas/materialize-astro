@@ -4,7 +4,7 @@ import Spinner from '@components/parsial/Spinner';
 import settingClient from '@lib/api/setting';
 import { showToast } from '@js/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
+import Swal from 'sweetalert2';
 
 const emptyCreateForm = {
   username: '',
@@ -537,4 +537,5 @@ export default function UserManagement() {
     </div>
   );
 }
+
 

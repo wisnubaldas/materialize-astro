@@ -39,17 +39,11 @@ astro/
     layouts/
     lib/
       api/
-        client.ts
-        edi.ts
-        hubnetApi.ts
-        sse.ts
-        warehouse.ts
-        types/
-          client.ts
-          datatable.ts
-          edi.ts
-          hubnet.ts
-          warehouse.ts
+        client.js
+        edi.js
+        hubnetApi.js
+        sse.js
+        warehouse.js
     pages/
     scss/
     vendor/
@@ -95,9 +89,9 @@ Integrated React into the SSR build and wired up a default layout plus component
 Menerapkan alur masuk yang didukung FastAPI ditambah perlindungan SSR.
 
 - [src/js/auth.js:1-123](src\js\auth.js) now provides cookie-based auth helpers (login, logout, getAccessToken) with localized error messaging that call the FastAPI /auth endpoints.
-- [src/lib/auth/config.ts:1-31](src\lib\auth\config.ts) centralizes auth configuration (API base URL, cookie name/max-age, redirect targets, shared error copy).
+- [src/lib/auth/config.js:1-35](src\lib\auth\config.js) centralizes auth configuration (API base URL, cookie name/max-age, redirect targets, shared error copy).
 - [src/pages/auth/login.astro:1-292](src\pages\auth\login.astro) updates the form to submit email/password, shows inline errors, and adds a module script that calls the new helpers and redirects on success.
-- [src/middleware.ts:1-105](src\middleware.ts) introduces an Astro middleware that skips static assets, verifies the JWT via /auth/verify, redirects unauthenticated users to /auth/login, and keeps logged-in users away from the login page.
+- [src/middleware.js:1-232](src\middleware.js) introduces an Astro middleware that skips static assets, validates auth via `/auth/me`, redirects unauthenticated users to `/auth/login`, and keeps logged-in users away from the login page.
 
 Tested with npm run build.
 
@@ -110,12 +104,12 @@ Next steps:
 
 Added a reusable API client so every request automatically carries the bearer token:
 
-- [src/lib/api/client.ts](src\lib\api\client.ts) centralizes the backend base URL (resolved from PUBLIC_BACKEND_PATH with a 127.0.0.1 fallback) and exports apiClient helpers for get, post, put, patch, delete, plus the lower-level request.
+- [src/lib/api/client.js](src\lib\api\client.js) centralizes the backend base URL (resolved from PUBLIC_BACKEND_PATH with a 127.0.0.1 fallback), exports apiClient helpers (get/post/put/patch/delete), and now includes explicit request timeout support.
 - Each call merges custom headers with defaults, attaches Authorization: Bearer <token> using getAccessToken() from [@js/auth.js](src\js\auth.js), sets Accept: application/json, stringifies non-FormData bodies, includes cookies by default, and turns non-2xx responses into typed Errors.
 - Supports params for query strings, token overrides, and raw: true when you need the raw Response.
   Example usage:
 
-```ts
+```js
 import { apiClient } from '@lib/api/client';
 
 const invoices = await apiClient.get('/angkasapura/datatables', {
@@ -184,20 +178,13 @@ DataTable.use(DataTablesCore);
 
 ```bash
 # .env
-AUTH_JWT_SECRET=supersecretkey
-AUTH_JWT_ALGORITHM=HS256
-AUTH_JWT_EXPIRATION_MINUTES=60
-# Environment overrides for dev/prod live in .env.development and .env.production
-
-```
-
-```bash
-# .env.development
-# Development-only environment variables
-# Values prefixed with PUBLIC_ are exposed to client code.
-
-PUBLIC_BACKEND_PATH=http://localhost:8000
+PUBLIC_BACKEND_PATH=http://127.0.0.1:8000
 PUBLIC_AUTH_API_BASE_URL=http://127.0.0.1:8000
-PUBLIC_SSE_KEY=92a936af44d2c94d919c0d0800f6617b008c4d1817a1981aeb0ecf3cad3373fa
+PUBLIC_SSE_KEY=<set_hex_key_here>
+PUBLIC_API_TIMEOUT_MS=15000
+AUTH_PROFILE_CACHE_TTL_MS=300000
+AUTH_PROFILE_CACHE_MAX_ENTRIES=300
 
 ```
+
+Gunakan `astro/.env.example` sebagai template lokal. Jangan commit nilai secret nyata ke repository.

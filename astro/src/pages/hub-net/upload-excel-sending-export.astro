@@ -1,10 +1,10 @@
 ---
-import UploadExcel from '@components/hubnet/UploadExcel';
+import { UploadExcelSendingExport } from '@components/hubnet';
 import AdminLayout from '@layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="HUBNET | Upload Excel" , description="List data tracking hubnet">
+<AdminLayout title="HUBNET | Upload Excel" description="List data tracking hubnet">
   <div class="m-3">
-    <UploadExcel client:only />
+    <UploadExcelSendingExport client:only />
   </div>
 </AdminLayout>

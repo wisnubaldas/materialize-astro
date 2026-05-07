@@ -2,6 +2,7 @@
 import node from '@astrojs/node';
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
+import { fileURLToPath } from 'node:url';
 
 // @ts-ignore
 
@@ -16,13 +17,13 @@ export default defineConfig({
     resolve: {
       dedupe: ['react', 'react-dom'],
       alias: {
-        '@components': '/src/components',
-        '@layouts': '/src/layouts',
-        '@js': '/src/js',
-        '@scss': '/src/scss',
-        '@vendor': '/src/vendor',
-        '@lib': '/src/lib',
-        '@libs': '/src/libs',
+        '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+        '@layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
+        '@js': fileURLToPath(new URL('./src/js', import.meta.url)),
+        '@scss': fileURLToPath(new URL('./src/scss', import.meta.url)),
+        '@vendor': fileURLToPath(new URL('./src/vendor', import.meta.url)),
+        '@lib': fileURLToPath(new URL('./src/lib', import.meta.url)),
+        '@libs': fileURLToPath(new URL('./src/libs', import.meta.url)),
       },
     },
     optimizeDeps: {

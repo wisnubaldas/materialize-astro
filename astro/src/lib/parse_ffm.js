@@ -1,18 +1,18 @@
-export type FfmPayload = Record<string, string | number | boolean | null | undefined>;
-
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
-const normalizeString = (value: unknown, fallback = ''): string => {
-  if (value === null || value === undefined) return fallback;
+const normalizeString = (value, fallback = '') => {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
   return String(value).trim();
 };
 
-const toInteger = (value: unknown, fallback = 0): number => {
+const toInteger = (value, fallback = 0) => {
   const num = parseInt(String(value ?? ''), 10);
   return Number.isFinite(num) ? num : fallback;
 };
 
-const toDecimal = (value: unknown, fractionDigits: number, fallback = 0): string => {
+const toDecimal = (value, fractionDigits, fallback = 0) => {
   const num = Number(String(value ?? '').replace(',', '.'));
   if (Number.isNaN(num)) {
     return fallback.toFixed(fractionDigits);
@@ -20,16 +20,16 @@ const toDecimal = (value: unknown, fractionDigits: number, fallback = 0): string
   return num.toFixed(fractionDigits);
 };
 
-const formatFfmDate = (value: unknown): string => {
+const formatFfmDate = (value) => {
   const raw = normalizeString(value);
-  if (!raw) return '01JAN';
+  if (!raw) {
+    return '01JAN';
+  }
 
-  // If already like 19MAR or 19MAR24 just return uppercase.
   if (/^[0-3]?\d[A-Z]{3}(\d{2})?$/i.test(raw)) {
     return raw.toUpperCase();
   }
 
-  // Try parse YYYY-MM-DD.
   const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(raw);
   if (match) {
     const [, yearStr, monthStr, dayStr] = match;
@@ -43,7 +43,7 @@ const formatFfmDate = (value: unknown): string => {
   return raw.toUpperCase();
 };
 
-export const buildFfmMessage = (payload: FfmPayload): string => {
+export const buildFfmMessage = (payload) => {
   const version = normalizeString(payload.version ?? payload.ffmVersion, '8');
 
   const origin =
@@ -74,23 +74,19 @@ export const buildFfmMessage = (payload: FfmPayload): string => {
   const uldCard = normalizeString(payload.UldCardNumber);
   const buildUpNumber = normalizeString(payload.BuildUpNumber);
 
-  const lines: string[] = [];
+  const lines = [];
 
-  // Message header + flight leg.
   lines.push(`FFM/${version}`);
   lines.push(`1/${flightNumber}/${date}/${origin}`);
   lines.push(destination);
 
-  // AWB details line.
   lines.push(`${awb}${origin}${destination}/T${pieces}K${weight}MC${volume}/${goods}`);
 
-  // Optional ULD/BuildUp reference.
   if (uldCard || buildUpNumber) {
     const suffix = [uldCard, buildUpNumber].filter(Boolean).join('/');
     lines.push(`ULD/${suffix}`);
   }
 
-  // End marker.
   lines.push('LAST');
 
   return lines.filter(Boolean).join('\n');

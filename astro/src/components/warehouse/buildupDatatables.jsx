@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const loadSwal = async () => {
-  const module = await import('sweetalert2/dist/sweetalert2.esm.all.js');
+  const module = await import('sweetalert2');
   return module.default ?? module;
 };
 
@@ -518,3 +518,4 @@ export default function BuildupDatatables() {
     </div>
   );
 }
+

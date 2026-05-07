@@ -53,7 +53,7 @@ const mergeAlertOptions = (options = {}) => ({
 
 export const getSwal = async () => {
   if (!swalPromise) {
-    swalPromise = import('sweetalert2/dist/sweetalert2.esm.all.js').then(
+    swalPromise = import('sweetalert2').then(
       (module) => module.default
     );
   }
@@ -89,3 +89,4 @@ export const showConfirmAlert = async (options = {}) => {
 
   return Boolean(result?.isConfirmed);
 };
+

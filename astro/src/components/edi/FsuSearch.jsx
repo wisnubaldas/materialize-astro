@@ -1,7 +1,7 @@
 import { showToast } from '@js/utils';
 import ediClient from '@lib/api/edi';
 import { Fragment, useMemo, useState } from 'react';
-import Swal from 'sweetalert2/dist/sweetalert2.esm.all.js';
+import Swal from 'sweetalert2';
 
 const dataColumns = [
   { key: 'MasterAWB', label: 'Master AWB' },
@@ -528,4 +528,5 @@ export default function FsuSearch() {
     </div>
   );
 }
+
 

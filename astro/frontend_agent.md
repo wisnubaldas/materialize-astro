@@ -20,8 +20,9 @@ Frontend web berada di `astro/` dan hanya bertindak sebagai client/UI. Business 
 - Language target: **JavaScript-first**.
 - File baru yang boleh digunakan: `.js`, `.jsx`, `.astro`, `.css`, `.scss` sesuai struktur project.
 - File baru yang dilarang dibuat: `.ts`, `.tsx`, kecuali user meminta eksplisit.
-- Catatan existing: repository masih memiliki `src/middleware.ts` dan `tsconfig.json`. Perlakukan sebagai legacy/existing; jangan memperluas TypeScript tanpa instruksi eksplisit.
+- Catatan existing: repository menggunakan `src/middleware.js` dan `jsconfig.json`; jangan memperluas TypeScript tanpa instruksi eksplisit.
 - UI Library: Materialize sesuai template project.
+- Referensi UI wajib: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
 - API communication: `fetch` atau wrapper API client resmi project.
 - Auth: mengikuti mekanisme backend FastAPI.
 
@@ -47,18 +48,18 @@ astro/
 │   ├── pages/
 │   ├── scss/
 │   ├── vendor/
-│   └── middleware.ts
+│   └── middleware.js
 ├── .env
-├── .env.development
+├── .env.example
 ├── .env.production
 ├── .gitignore
 ├── astro.config.mjs
 ├── frontend_agent.md
+├── jsconfig.json
 ├── minify-public-js.js
 ├── package-lock.json
 ├── package.json
-├── README.md
-└── tsconfig.json
+└── README.md
 ```
 
 Aturan struktur aktual:
@@ -68,7 +69,31 @@ Aturan struktur aktual:
 - Gunakan `astro/src/pages/` untuk route/page Astro.
 - Gunakan `astro/src/lib/` dan/atau `astro/src/libs/` sesuai pola existing project; jangan membuat folder paralel baru tanpa alasan jelas.
 - Gunakan `astro/src/js/`, `astro/src/scss/`, dan `astro/src/vendor/` sesuai pola template Materialize existing.
+- Asset UI yang boleh dipakai dan diprioritaskan: `astro/src/libs/`, `astro/src/scss/`, `astro/src/vendor/`, `astro/src/js/`, `astro/src/fonts/`, `astro/public/assets/`.
 - Simpan dokumentasi frontend di `astro/docs/` jika khusus frontend, tetapi progress utama tetap di root `docs/`.
+
+---
+
+## Folder Governance dan Maintainability
+
+Untuk mencegah struktur makin tidak teratur, gunakan aturan ini:
+
+- `src/components`: komponen UI reusable berbasis domain/fitur.
+- `src/pages`: route Astro dan orchestration level halaman.
+- `src/lib`: kode aplikasi internal (API client wrapper, auth, helper bisnis frontend, constants).
+- `src/js`: script bootstrap/initializer template dan page-entry script yang tidak cocok sebagai komponen React.
+- `src/libs`: third-party library source/copy yang memang harus dipaketkan lokal (legacy/template dependency).
+- `src/vendor`: vendor asset yang bersifat statis dan jarang berubah.
+- `src/scss`: design tokens, custom variables, dan style override terpusat.
+- `src/fonts`: font lokal project.
+- `public/assets`: static asset final yang di-serve langsung (img, icon, css hasil build template, js publik).
+
+Aturan tambahan:
+
+- Dilarang menaruh business rule ke `src/js`, `src/libs`, atau `src/vendor`; business rule frontend tetap di `src/lib`.
+- Untuk library baru, prioritas 1: install via `package.json`; prioritas 2: `src/libs` hanya jika package tidak memungkinkan.
+- Hindari duplikasi antara `src/libs` dan `src/vendor`; satu library hanya boleh punya satu source of truth.
+- Jika perlu rapikan besar-besaran asset, lakukan bertahap per modul dan wajib update import path + uji build setiap batch kecil.
 
 ---
 
@@ -77,9 +102,9 @@ Aturan struktur aktual:
 - Jangan membuat file TypeScript baru.
 - Jangan membuat type declaration manual kecuali sudah ada kebutuhan project yang jelas dan disetujui.
 - Gunakan JSDoc jika butuh dokumentasi shape object.
-- Pastikan import path sesuai alias project yang tersedia di `astro.config.mjs` dan/atau `tsconfig.json` existing.
+- Pastikan import path sesuai alias project yang tersedia di `astro.config.mjs` dan/atau `jsconfig.json` existing.
 - Jangan menambahkan dependency TypeScript tanpa instruksi eksplisit.
-- Jika harus mengubah `astro/src/middleware.ts`, jaga perubahan minimal dan pertimbangkan migrasi bertahap ke JavaScript bila kompatibel dengan konfigurasi Astro project.
+- Jika harus mengubah `astro/src/middleware.js`, jaga perubahan minimal dan pastikan tetap kompatibel dengan SSR flow Astro.
 
 ---
 
@@ -117,6 +142,7 @@ Frontend dilarang:
 - Jika `401`, arahkan user ke login atau jalankan flow refresh token jika tersedia.
 - Jika `403`, tampilkan pesan akses ditolak.
 - Jangan tampilkan stack trace mentah ke user.
+- Setiap request API yang gagal wajib mencetak log error detail dari server ke browser console (`console.error`) agar debugging cepat (status code, endpoint, payload/message dari backend).
 
 Contoh struktur wrapper:
 
@@ -154,7 +180,8 @@ astro/src/lib/api/
 ## UI and Component Rules
 
 - Pembuatan component dan page wajib merujuk ke dokumentasi UI template project.
-- Untuk Materialize, baca referensi UI pada dokumentasi template yang dipakai project sebelum membuat komponen baru.
+- Untuk Materialize, baca referensi UI pada dokumentasi resmi: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
+- Untuk modul EDI (`astro/src/pages/edi`) yang menghasilkan atau mengubah payload Cargo-IMP, validasi sintaks pesan wajib dilakukan di `https://www.parse2.com/service-cargoimp.shtml` sebelum dianggap selesai.
 - Buat generic/reusable component jika pola akan dipakai ulang.
 - Pisahkan component display, form, table, filter, pagination, modal, dan notification.
 - Hindari duplikasi markup besar.
@@ -222,6 +249,7 @@ Update UI State
 ## Testing and Verification Rules
 
 - Jalankan lint/build sesuai script project jika tersedia.
+- Untuk perubahan Cargo-IMP pada modul EDI, lampirkan hasil validasi parse2 (`message type`, ringkasan hasil valid/error, dan titik error jika ada).
 - Pastikan route protected tidak bisa diakses tanpa auth.
 - Pastikan `401/403` tertangani.
 - Pastikan form menampilkan error validasi backend.

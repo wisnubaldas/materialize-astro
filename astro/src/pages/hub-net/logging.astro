@@ -1,9 +1,9 @@
 ---
-import SseDataTracking from '@components/hubnet/SseDataTracking';
+import { SseDataTracking } from '@components/hubnet';
 import AdminLayout from '@layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="HUBNET | Logging" , description="List data tracking hubnet">
+<AdminLayout title="HUBNET | Logging" description="List data tracking hubnet">
   <div class="m-3">
     <SseDataTracking client:only />
   </div>
