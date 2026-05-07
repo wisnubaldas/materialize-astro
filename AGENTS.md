@@ -211,6 +211,11 @@ Catatan penting frontend:
   - logic reusable React -> `src/hooks`
 - Khusus pengerjaan modul EDI di `astro/src/pages/edi`, jika ada perubahan format/flow Cargo-IMP, lakukan validasi sintaks pesan di `https://www.parse2.com/service-cargoimp.shtml` (gunakan tipe pesan yang sesuai, misalnya `FWB/17` untuk FWB).
 - Hindari membuat folder paralel baru di luar struktur target tanpa alasan arsitektur yang jelas.
+- Web Performance Optimization (WPO) bersifat wajib pada setiap pengembangan frontend:
+  - lakukan code-splitting untuk modul berat (`dynamic import`, `manualChunks`) agar initial bundle tidak membengkak;
+  - minimalkan dependency duplikat/legacy yang overlap fungsi;
+  - optimalkan asset (CSS/JS/image/font) dan hindari asset yang tidak dipakai;
+  - setiap perubahan besar frontend wajib diverifikasi melalui hasil build serta evaluasi ukuran chunk utama.
 
 ### Desktop App
 
