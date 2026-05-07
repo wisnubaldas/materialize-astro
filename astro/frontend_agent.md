@@ -28,49 +28,43 @@ Frontend web berada di `astro/` dan hanya bertindak sebagai client/UI. Business 
 
 ---
 
-## Struktur Frontend Aktual
+## Struktur Frontend Target (Best Practice Astro)
 
 ```text
 astro/
-├── .astro/
-├── .vscode/
-├── dist/
-├── docs/
-├── node_modules/
 ├── public/
 ├── src/
+│   ├── assets/
 │   ├── components/
-│   ├── fonts/
-│   ├── js/
+│   │   ├── react/
+│   │   └── astro/
 │   ├── layouts/
-│   ├── lib/
-│   ├── libs/
 │   ├── pages/
-│   ├── scss/
-│   ├── vendor/
+│   ├── utils/
+│   ├── hooks/
+│   ├── lib/
 │   └── middleware.js
-├── .env
-├── .env.example
-├── .env.production
-├── .gitignore
+├── docs/
 ├── astro.config.mjs
 ├── frontend_agent.md
 ├── jsconfig.json
-├── minify-public-js.js
-├── package-lock.json
 ├── package.json
 └── README.md
 ```
 
-Aturan struktur aktual:
+Aturan struktur target:
 
-- Gunakan `astro/src/components/` untuk komponen reusable.
-- Gunakan `astro/src/layouts/` untuk layout.
-- Gunakan `astro/src/pages/` untuk route/page Astro.
-- Gunakan `astro/src/lib/` dan/atau `astro/src/libs/` sesuai pola existing project; jangan membuat folder paralel baru tanpa alasan jelas.
-- Gunakan `astro/src/js/`, `astro/src/scss/`, dan `astro/src/vendor/` sesuai pola template Materialize existing.
-- Asset UI yang boleh dipakai dan diprioritaskan: `astro/src/libs/`, `astro/src/scss/`, `astro/src/vendor/`, `astro/src/js/`, `astro/src/fonts/`, `astro/public/assets/`.
+- Gunakan `astro/src/components/react/` untuk komponen React reusable.
+- Gunakan `astro/src/components/astro/` untuk komponen UI berbasis `.astro`.
+- Gunakan `astro/src/layouts/` untuk template/layout page.
+- Gunakan `astro/src/pages/` untuk route Astro berbasis file.
+- Gunakan `astro/src/lib/` untuk API client, config, adapter, dan integrasi library.
+- Gunakan `astro/src/utils/` untuk helper murni dan constants lintas modul.
+- Gunakan `astro/src/hooks/` untuk custom React hooks.
+- Gunakan `astro/src/assets/` untuk asset yang diproses bundler (image, font, style global).
+- Gunakan `astro/public/` untuk static file yang di-serve langsung.
 - Simpan dokumentasi frontend di `astro/docs/` jika khusus frontend, tetapi progress utama tetap di root `docs/`.
+- Jangan buat folder paralel baru tanpa alasan arsitektur yang jelas dan terdokumentasi.
 
 ---
 
@@ -78,22 +72,26 @@ Aturan struktur aktual:
 
 Untuk mencegah struktur makin tidak teratur, gunakan aturan ini:
 
-- `src/components`: komponen UI reusable berbasis domain/fitur.
+- `src/components/react`: komponen React reusable berbasis domain/fitur.
+- `src/components/astro`: komponen presentasional/layout yang cocok untuk SSR Astro.
 - `src/pages`: route Astro dan orchestration level halaman.
-- `src/lib`: kode aplikasi internal (API client wrapper, auth, helper bisnis frontend, constants).
-- `src/js`: script bootstrap/initializer template dan page-entry script yang tidak cocok sebagai komponen React.
-- `src/libs`: third-party library source/copy yang memang harus dipaketkan lokal (legacy/template dependency).
-- `src/vendor`: vendor asset yang bersifat statis dan jarang berubah.
-- `src/scss`: design tokens, custom variables, dan style override terpusat.
-- `src/fonts`: font lokal project.
-- `public/assets`: static asset final yang di-serve langsung (img, icon, css hasil build template, js publik).
+- `src/layouts`: layout utama dan wrapper halaman.
+- `src/lib`: kode aplikasi internal (API client wrapper, auth, adapter, integration facade).
+- `src/utils`: helper pure function, formatter, parser ringan, dan constants.
+- `src/hooks`: custom hooks React yang reusable.
+- `src/assets`: gambar, font, dan style global yang diproses pipeline Astro/Vite.
+- `public/`: static asset final yang di-serve langsung.
 
 Aturan tambahan:
 
-- Dilarang menaruh business rule ke `src/js`, `src/libs`, atau `src/vendor`; business rule frontend tetap di `src/lib`.
-- Untuk library baru, prioritas 1: install via `package.json`; prioritas 2: `src/libs` hanya jika package tidak memungkinkan.
-- Hindari duplikasi antara `src/libs` dan `src/vendor`; satu library hanya boleh punya satu source of truth.
+- Dilarang menaruh business rule ke `src/assets` atau `public`; business rule frontend tetap di `src/lib`.
+- Untuk library baru, prioritas utama adalah install via `package.json`; hindari copy manual vendor kecuali ada justifikasi teknis kuat.
+- Pisahkan jelas domain UI (components/pages) dari logic infra (lib/utils/hooks).
 - Jika perlu rapikan besar-besaran asset, lakukan bertahap per modul dan wajib update import path + uji build setiap batch kecil.
+- Selama masa transisi dari struktur legacy, folder `src/js`, `src/libs`, `src/vendor`, `src/scss`, `src/fonts` boleh tetap ada, tetapi:
+  - modul baru wajib masuk struktur target;
+  - modul lama dipindah bertahap saat disentuh/refactor;
+  - setiap batch migrasi wajib lolos verifikasi build.
 
 ---
 

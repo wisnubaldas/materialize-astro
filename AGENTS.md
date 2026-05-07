@@ -171,22 +171,22 @@ Project frontend berada di:
 astro/
 ```
 
-Struktur aktual yang harus dipertahankan:
+Struktur target frontend (best practice Astro) yang menjadi acuan refactor:
 
 ```text
 astro/
+├── public/                # Aset statis (ikon, file publik, robots.txt)
 ├── src/
+│   ├── assets/            # Asset yang diproses bundler (img/css/font)
 │   ├── components/
-│   ├── fonts/
-│   ├── js/
+│   │   ├── react/         # Komponen React (.jsx)
+│   │   └── astro/         # Komponen Astro (.astro)
 │   ├── layouts/
+│   ├── hooks/
+│   ├── utils/
 │   ├── lib/
-│   ├── libs/
 │   ├── pages/
-│   ├── scss/
-│   ├── vendor/
 │   └── middleware.js
-├── public/
 ├── docs/
 ├── frontend_agent.md
 ├── astro.config.mjs
@@ -203,15 +203,14 @@ Catatan penting frontend:
 - Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
 - Gunakan baseline existing `src/middleware.js` dan `jsconfig.json`; jangan mengembalikan TypeScript tanpa instruksi eksplisit.
 - Desain UI wajib merujuk dokumentasi Materialize resmi: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
-- Asset utama yang boleh dipakai saat membangun UI frontend berada di:
-  - `astro/src/libs`
-  - `astro/src/scss`
-  - `astro/src/vendor`
-  - `astro/src/js`
-  - `astro/src/fonts`
-  - `astro/public/assets`
+- Selama masa migrasi, folder legacy (`src/js`, `src/libs`, `src/scss`, `src/vendor`, `src/fonts`) boleh tetap dipakai, tetapi penambahan modul baru wajib mengikuti struktur target.
+- Mapping migrasi bertahap:
+  - `src/fonts` + asset gambar/style global lama -> `src/assets`
+  - `src/components` lama -> pecah ke `src/components/react` atau `src/components/astro`
+  - helper umum di `src/lib` yang bukan API/config -> pindahkan bertahap ke `src/utils`
+  - logic reusable React -> `src/hooks`
 - Khusus pengerjaan modul EDI di `astro/src/pages/edi`, jika ada perubahan format/flow Cargo-IMP, lakukan validasi sintaks pesan di `https://www.parse2.com/service-cargoimp.shtml` (gunakan tipe pesan yang sesuai, misalnya `FWB/17` untuk FWB).
-- Ikuti struktur aktual `src/js`, `src/lib`, `src/libs`, `src/scss`, dan `src/vendor`.
+- Hindari membuat folder paralel baru di luar struktur target tanpa alasan arsitektur yang jelas.
 
 ### Desktop App
 
