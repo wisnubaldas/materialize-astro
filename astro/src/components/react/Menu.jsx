@@ -1,7 +1,13 @@
 const isExternal = (url) => /^https?:\/\//i.test(url ?? '');
 const isVoidLink = (url) => {
   const value = typeof url === 'string' ? url : '';
-  return !value || value.trim() === '' || value.trim().toLowerCase() === 'javascript:void(0)';
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized === '' ||
+    normalized === '#' ||
+    normalized === 'javascript:void(0)' ||
+    normalized === 'javascript:void(0);'
+  );
 };
 
 const hasChildren = (item) => Array.isArray(item?.subItems) && item.subItems.length > 0;
@@ -69,14 +75,25 @@ const Menu = ({ menuData = [], currentPath = '/' }) => {
         linkClasses.push('menu-toggle');
       }
 
-      const href = isVoidLink(item.url) ? 'javascript:void(0);' : item.url;
+      const href = isVoidLink(item.url) ? '#' : item.url;
       const target = isExternal(href) ? '_blank' : undefined;
       const rel = target === '_blank' ? 'noopener noreferrer' : undefined;
       const iconDescriptor = depth === 0 ? getIconDescriptor(item.icon) : null;
+      const handleMenuLinkClick = (event) => {
+        if (isVoidLink(item.url)) {
+          event.preventDefault();
+        }
+      };
 
       return (
         <li key={key} className={liClasses.join(' ')} data-key={key}>
-          <a href={href} className={linkClasses.join(' ')} target={target} rel={rel}>
+          <a
+            href={href}
+            className={linkClasses.join(' ')}
+            target={target}
+            rel={rel}
+            onClick={handleMenuLinkClick}
+          >
             {iconDescriptor?.type === 'iconify' ? (
               <span className="menu-icon iconify iconify-inline" data-icon={iconDescriptor.value} />
             ) : iconDescriptor?.type === 'class' ? (
@@ -102,7 +119,11 @@ const Menu = ({ menuData = [], currentPath = '/' }) => {
           <span className="app-brand-text demo menu-text fw-semibold ms-2">MAU APP</span>
         </a>
 
-        <a href="javascript:void(0);" className="layout-menu-toggle menu-link text-large ms-auto">
+        <a
+          href="#"
+          className="layout-menu-toggle menu-link text-large ms-auto"
+          onClick={(event) => event.preventDefault()}
+        >
           <svg
             width="24"
             height="24"

@@ -73,8 +73,9 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
 
         <div class="menu-mobile-toggler d-xl-none rounded-1">
           <a
-            href="javascript:void(0);"
+            href="#"
             class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1"
+            onclick="event.preventDefault();"
           >
             <i class="ri ri-menu-line icon-base"></i>
             <i class="ri ri-arrow-right-s-line icon-base"></i>
@@ -93,7 +94,9 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
               >
                 <div class="mb-2 mb-md-0">
                   &#169; 2025, made with ❤️ by
-                  <a href="javascript::void(0)" class="footer-link fw-medium"> Wisnu Baldas </a>
+                  <a href="#" class="footer-link fw-medium" onclick="event.preventDefault();">
+                    Wisnu Baldas
+                  </a>
                 </div>
                 <div class="d-none d-lg-inline-block">
                   <a

@@ -54,7 +54,11 @@ const Nav = ({ username = '', menuData = [], currentPath = '/' }) => {
       id="layout-navbar"
     >
       <div className="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
-        <a className="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+        <a
+          className="nav-item nav-link px-0 me-xl-6"
+          href="#"
+          onClick={(event) => event.preventDefault()}
+        >
           <i className="icon-base ri ri-menu-line icon-22px"></i>
         </a>
       </div>
@@ -73,7 +77,8 @@ const Nav = ({ username = '', menuData = [], currentPath = '/' }) => {
           <li className="nav-item navbar-dropdown dropdown-user dropdown">
             <a
               className="nav-link dropdown-toggle hide-arrow p-0"
-              href="javascript:void(0);"
+              href="#"
+              onClick={(event) => event.preventDefault()}
               data-bs-toggle="dropdown"
             >
               <div className="avatar avatar-online">

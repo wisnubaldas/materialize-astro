@@ -7,7 +7,7 @@
     "build": "astro build && node minify-public-js.js",
     "preview": "astro preview",
     "astro": "astro",
-    "css:build": "sass src/scss/core.scss public/assets/css/core.css --load-path=node_modules && node -e \"const fs=require('fs');const path=require('path');const dest=path.resolve('public/assets/vendor');fs.rmSync(dest,{recursive:true,force:true});fs.cpSync(path.resolve('src/vendor'),dest,{recursive:true});\""
+    "css:build": "sass src/assets/scss/core.scss public/assets/css/core.css --load-path=node_modules && node -e \"const fs=require('fs');const path=require('path');const dest=path.resolve('public/assets/vendor');fs.rmSync(dest,{recursive:true,force:true});fs.cpSync(path.resolve('src/assets/vendor'),dest,{recursive:true});\""
   },
   "dependencies": {
     "@algolia/autocomplete-js": "^1.19.4",

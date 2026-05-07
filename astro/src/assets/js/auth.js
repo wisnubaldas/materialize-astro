@@ -1,8 +1,8 @@
 import {
   AUTH_ENDPOINTS,
   AUTH_ERRORS,
-} from '../lib/auth/config';
-import { clearAccessToken, getAccessToken, setAccessToken } from '../lib/auth/token.js';
+} from '@lib/auth/config';
+import { clearAccessToken, getAccessToken, setAccessToken } from '@lib/auth/token.js';
 
 const resolveAuthErrorMessage = (payload) => {
   if (!payload) {

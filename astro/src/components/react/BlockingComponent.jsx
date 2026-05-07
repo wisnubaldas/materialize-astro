@@ -9,7 +9,7 @@ export default function BlockingComponent({ message = 'Loading...' }) {
       </div>
       {/* === CSS langsung di dalam komponen === */}
       <style>{`
-        /* Buat file: src/scss/block-ui.css */
+        /* Buat file: src/assets/scss/block-ui.css */
         .ns-block-ui-overlay {
           background-color: rgba(var(--bs-dark-rgb), 0.5);
           backdrop-filter: blur(2px);

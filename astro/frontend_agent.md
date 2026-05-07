@@ -35,6 +35,11 @@ astro/
 ├── public/
 ├── src/
 │   ├── assets/
+│   │   ├── fonts/
+│   │   ├── js/
+│   │   ├── libs/
+│   │   ├── scss/
+│   │   └── vendor/
 │   ├── components/
 │   │   ├── react/
 │   │   └── astro/
@@ -61,7 +66,11 @@ Aturan struktur target:
 - Gunakan `astro/src/lib/` untuk API client, config, adapter, dan integrasi library.
 - Gunakan `astro/src/utils/` untuk helper murni dan constants lintas modul.
 - Gunakan `astro/src/hooks/` untuk custom React hooks.
-- Gunakan `astro/src/assets/` untuk asset yang diproses bundler (image, font, style global).
+- Gunakan `astro/src/assets/js/` untuk script JavaScript frontend.
+- Gunakan `astro/src/assets/libs/` untuk library asset internal/non-npm yang diproses bundler.
+- Gunakan `astro/src/assets/scss/` untuk style global berbasis SCSS.
+- Gunakan `astro/src/assets/vendor/` untuk vendor asset yang diproses pipeline frontend.
+- Gunakan `astro/src/assets/fonts/` untuk font yang diproses bundler.
 - Gunakan `astro/public/` untuk static file yang di-serve langsung.
 - Simpan dokumentasi frontend di `astro/docs/` jika khusus frontend, tetapi progress utama tetap di root `docs/`.
 - Jangan buat folder paralel baru tanpa alasan arsitektur yang jelas dan terdokumentasi.
@@ -79,7 +88,11 @@ Untuk mencegah struktur makin tidak teratur, gunakan aturan ini:
 - `src/lib`: kode aplikasi internal (API client wrapper, auth, adapter, integration facade).
 - `src/utils`: helper pure function, formatter, parser ringan, dan constants.
 - `src/hooks`: custom hooks React yang reusable.
-- `src/assets`: gambar, font, dan style global yang diproses pipeline Astro/Vite.
+- `src/assets/js`: script JavaScript frontend.
+- `src/assets/libs`: library asset internal/non-npm yang diproses bundler.
+- `src/assets/scss`: source style global berbasis SCSS.
+- `src/assets/vendor`: vendor asset frontend yang diproses pipeline.
+- `src/assets/fonts`: font yang diproses bundler.
 - `public/`: static asset final yang di-serve langsung.
 
 Aturan tambahan:
@@ -88,10 +101,10 @@ Aturan tambahan:
 - Untuk library baru, prioritas utama adalah install via `package.json`; hindari copy manual vendor kecuali ada justifikasi teknis kuat.
 - Pisahkan jelas domain UI (components/pages) dari logic infra (lib/utils/hooks).
 - Jika perlu rapikan besar-besaran asset, lakukan bertahap per modul dan wajib update import path + uji build setiap batch kecil.
-- Selama masa transisi dari struktur legacy, folder `src/js`, `src/libs`, `src/vendor`, `src/scss`, `src/fonts` boleh tetap ada, tetapi:
-  - modul baru wajib masuk struktur target;
-  - modul lama dipindah bertahap saat disentuh/refactor;
-  - setiap batch migrasi wajib lolos verifikasi build.
+- Struktur legacy di level `src/` (`src/js`, `src/libs`, `src/vendor`, `src/scss`, `src/fonts`) dianggap deprecated penuh:
+  - dilarang membuat ulang folder tersebut;
+  - seluruh modul baru wajib berada di `src/assets/*` atau folder target lain sesuai peruntukan;
+  - jika menemukan referensi path lama, wajib langsung diperbarui pada batch perubahan yang sama.
 
 ---
 
@@ -101,6 +114,7 @@ Aturan tambahan:
 - Jangan membuat type declaration manual kecuali sudah ada kebutuhan project yang jelas dan disetujui.
 - Gunakan JSDoc jika butuh dokumentasi shape object.
 - Pastikan import path sesuai alias project yang tersedia di `astro.config.mjs` dan/atau `jsconfig.json` existing.
+- Alias `@js`, `@libs`, `@scss`, dan `@vendor` wajib mengarah ke `src/assets/js`, `src/assets/libs`, `src/assets/scss`, dan `src/assets/vendor`; jangan kembalikan ke path legacy.
 - Jangan menambahkan dependency TypeScript tanpa instruksi eksplisit.
 - Jika harus mengubah `astro/src/middleware.js`, jaga perubahan minimal dan pastikan tetap kompatibel dengan SSR flow Astro.
 

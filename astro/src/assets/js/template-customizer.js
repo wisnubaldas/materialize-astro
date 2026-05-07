@@ -1,5 +1,5 @@
 // import "./_template-customizer/_template-customizer.scss";
-import customizerMarkup from '/src/js/_template-customizer/_template-customizer.html';
+import customizerMarkup from '/src/assets/js/_template-customizer/_template-customizer.html';
 
 const DOC_AVAILABLE = typeof document !== 'undefined';
 const DOC = DOC_AVAILABLE ? document : null;

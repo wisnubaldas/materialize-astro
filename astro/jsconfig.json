@@ -16,11 +16,11 @@
       "@hooks/*": ["src/hooks/*"],
       "@utils": ["src/utils/index.js"],
       "@utils/*": ["src/utils/*"],
-      "@js/*": ["src/js/*"],
-      "@scss/*": ["src/scss/*"],
-      "@vendor/*": ["src/vendor/*"],
+      "@js/*": ["src/assets/js/*"],
+      "@scss/*": ["src/assets/scss/*"],
+      "@vendor/*": ["src/assets/vendor/*"],
       "@lib/*": ["src/lib/*"],
-      "@libs/*": ["src/libs/*"]
+      "@libs/*": ["src/assets/libs/*"]
     }
   },
   "include": ["src/**/*", "astro.config.mjs"],

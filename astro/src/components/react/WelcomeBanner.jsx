@@ -2,14 +2,22 @@ import { getMenuData } from '@components/MenuData.js';
 import '@vendor/css/pages/page-faq.css';
 import { useEffect, useMemo, useState } from 'react';
 
-const VOID_URL = 'javascript:void(0)';
+const isVoidUrl = (url) => {
+  const value = typeof url === 'string' ? url.trim().toLowerCase() : '';
+  return (
+    value === '' ||
+    value === '#' ||
+    value === 'javascript:void(0)' ||
+    value === 'javascript:void(0);'
+  );
+};
 // Builds a flat option list from the nested menu structure.
 const buildSelectOptions = (items, trail = []) =>
   items.reduce((acc, item) => {
     const currentTrail = [...trail, item.name];
     const hasChildren = Array.isArray(item.subItems) && item.subItems.length > 0;
 
-    if (item.url && item.url !== VOID_URL) {
+    if (!isVoidUrl(item.url)) {
       acc.push({
         value: item.url,
         label: currentTrail.join(' 👉 '),

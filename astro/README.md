@@ -33,12 +33,10 @@ Key folders used in this Astro app:
 astro/
   public/
   src/
-    assets/
     components/
       astro/
       react/
     hooks/
-    js/
     layouts/
     lib/
       api/
@@ -49,12 +47,14 @@ astro/
         warehouse.js
     pages/
     utils/
-    scss/
-    libs/
-    vendor/
+    assets/
+      js/
+      libs/
+      scss/
+      vendor/
 ```
 
-Legacy folders (`src/js`, `src/scss`, `src/libs`, `src/vendor`) masih dipertahankan untuk kompatibilitas bertahap, tetapi modul baru diprioritaskan ke struktur target di atas.
+Legacy folders (`src/js`, `src/scss`, `src/libs`, `src/vendor`) sudah dipindahkan ke `src/assets/*` untuk konsistensi struktur.
 
 ## 🧞 Commands
 
@@ -95,7 +95,7 @@ Integrated React into the SSR build and wired up a default layout plus component
 
 Menerapkan alur masuk yang didukung FastAPI ditambah perlindungan SSR.
 
-- [src/js/auth.js:1-123](src\js\auth.js) now provides cookie-based auth helpers (login, logout, getAccessToken) with localized error messaging that call the FastAPI /auth endpoints.
+- [src/assets/js/auth.js:1-123](src\assets\js\auth.js) now provides cookie-based auth helpers (login, logout, getAccessToken) with localized error messaging that call the FastAPI /auth endpoints.
 - [src/lib/auth/config.js:1-35](src\lib\auth\config.js) centralizes auth configuration (API base URL, cookie name/max-age, redirect targets, shared error copy).
 - [src/pages/auth/login.astro:1-292](src\pages\auth\login.astro) updates the form to submit email/password, shows inline errors, and adds a module script that calls the new helpers and redirects on success.
 - [src/middleware.js:1-232](src\middleware.js) introduces an Astro middleware that skips static assets, validates auth via `/auth/me`, redirects unauthenticated users to `/auth/login`, and keeps logged-in users away from the login page.
@@ -112,7 +112,7 @@ Next steps:
 Added a reusable API client so every request automatically carries the bearer token:
 
 - [src/lib/api/client.js](src\lib\api\client.js) centralizes the backend base URL (resolved from PUBLIC_BACKEND_PATH with a 127.0.0.1 fallback), exports apiClient helpers (get/post/put/patch/delete), and now includes explicit request timeout support.
-- Each call merges custom headers with defaults, attaches Authorization: Bearer <token> using getAccessToken() from [@js/auth.js](src\js\auth.js), sets Accept: application/json, stringifies non-FormData bodies, includes cookies by default, and turns non-2xx responses into typed Errors.
+- Each call merges custom headers with defaults, attaches Authorization: Bearer <token> using getAccessToken() from [@js/auth.js](src\assets\js\auth.js), sets Accept: application/json, stringifies non-FormData bodies, includes cookies by default, and turns non-2xx responses into typed Errors.
 - Supports params for query strings, token overrides, and raw: true when you need the raw Response.
   Example usage:
 

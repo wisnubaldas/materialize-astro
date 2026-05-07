@@ -1,5 +1,5 @@
-import { AUTH_ERRORS, login } from '../../js/auth.js';
-import { LOGIN_NEXT_PARAM, LOGIN_REDIRECT_PATH, LOGIN_ROUTE } from '../../lib/auth/config';
+import { AUTH_ERRORS, login } from '@js/auth.js';
+import { LOGIN_NEXT_PARAM, LOGIN_REDIRECT_PATH, LOGIN_ROUTE } from '@lib/auth/config';
 
 const run = () => {
   const form = document.getElementById('formAuthentication');

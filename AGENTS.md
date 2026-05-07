@@ -203,12 +203,13 @@ Catatan penting frontend:
 - Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
 - Gunakan baseline existing `src/middleware.js` dan `jsconfig.json`; jangan mengembalikan TypeScript tanpa instruksi eksplisit.
 - Desain UI wajib merujuk dokumentasi Materialize resmi: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
-- Selama masa migrasi, folder legacy (`src/js`, `src/libs`, `src/scss`, `src/vendor`, `src/fonts`) boleh tetap dipakai, tetapi penambahan modul baru wajib mengikuti struktur target.
-- Mapping migrasi bertahap:
-  - `src/fonts` + asset gambar/style global lama -> `src/assets`
-  - `src/components` lama -> pecah ke `src/components/react` atau `src/components/astro`
-  - helper umum di `src/lib` yang bukan API/config -> pindahkan bertahap ke `src/utils`
-  - logic reusable React -> `src/hooks`
+- Seluruh pengembangan frontend wajib mengikuti struktur hasil refactor:
+  - `src/assets/js` untuk script JS frontend.
+  - `src/assets/libs` untuk library asset internal/non-npm yang dipakai bundler.
+  - `src/assets/scss` untuk SCSS global/theme.
+  - `src/assets/vendor` untuk vendor asset yang diproses pipeline.
+  - `src/assets/fonts` untuk font yang diproses bundler.
+- Dilarang membuat kembali folder legacy `src/js`, `src/libs`, `src/scss`, `src/vendor`, atau `src/fonts` di level `src/`.
 - Khusus pengerjaan modul EDI di `astro/src/pages/edi`, jika ada perubahan format/flow Cargo-IMP, lakukan validasi sintaks pesan di `https://www.parse2.com/service-cargoimp.shtml` (gunakan tipe pesan yang sesuai, misalnya `FWB/17` untuk FWB).
 - Hindari membuat folder paralel baru di luar struktur target tanpa alasan arsitektur yang jelas.
 - Web Performance Optimization (WPO) bersifat wajib pada setiap pengembangan frontend:
