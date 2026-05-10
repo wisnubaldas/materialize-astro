@@ -193,6 +193,10 @@ astro/src/lib/api/
 
 - Pembuatan component dan page wajib merujuk ke dokumentasi UI template project.
 - Untuk Materialize, baca referensi UI pada dokumentasi resmi: `https://demos.pixinvent.com/materialize-html-admin-template/documentation/`.
+- Standar komponen interaksi UI wajib konsisten:
+  - Modal/alert yang berisi **form** atau **detail data table** wajib menggunakan **Bootstrap modal bawaan template UI** (mengikuti dokumentasi Materialize/Bootstrap pada template).
+  - Alert untuk **konfirmasi aksi** (contoh: delete/cancel/destructive confirmation) boleh menggunakan **SweetAlert2**.
+  - Notifikasi hasil aksi (success/error/info/warning) wajib menggunakan **Toasts** project.
 - Untuk modul EDI (`astro/src/pages/edi`) yang menghasilkan atau mengubah payload Cargo-IMP, validasi sintaks pesan wajib dilakukan di `https://www.parse2.com/service-cargoimp.shtml` sebelum dianggap selesai.
 - Buat generic/reusable component jika pola akan dipakai ulang.
 - Pisahkan component display, form, table, filter, pagination, modal, dan notification.

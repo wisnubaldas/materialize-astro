@@ -12,7 +12,6 @@ const loadSwal = async () => {
 };
 
 const SWEET_ALERT_Z_INDEX = 3000;
-
 const getSwalBaseOptions = () => ({
   zIndex: SWEET_ALERT_Z_INDEX,
   target: typeof document !== 'undefined' ? document.body : undefined,
@@ -94,55 +93,25 @@ const createDefaultFilters = () => ({
   dest: '',
 });
 
-const renderDetailHtml = (details) => {
-  if (!Array.isArray(details) || !details.length) {
-    return '<p class="mb-0 text-muted">Detail tidak ditemukan.</p>';
-  }
-
-  const rows = details
-    .map((item, index) => {
-      const pieces = Number.isFinite(Number(item?.pieces)) ? Number(item.pieces).toLocaleString('id-ID') : '-';
-      const weight = Number.isFinite(Number(item?.weight))
-        ? Number(item.weight).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        : '-';
-
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml(item?.mawb || '-')}</td>
-          <td>${escapeHtml(item?.uld_type || '-')}</td>
-          <td>${escapeHtml(item?.uld_number || '-')}</td>
-          <td class="text-end">${pieces}</td>
-          <td class="text-end">${weight}</td>
-          <td>${escapeHtml(item?.nature_of_goods || '-')}</td>
-          <td>${escapeHtml(item?.remark || '-')}</td>
-        </tr>
-      `;
-    })
-    .join('');
-
-  return `
-    <div class="table-responsive">
-      <table class="table table-sm table-striped table-bordered align-middle mb-0">
-        <thead>
-          <tr>
-            <th style="width:48px">No</th>
-            <th>MAWB</th>
-            <th>ULD Type</th>
-            <th>ULD Number</th>
-            <th class="text-end">Pieces</th>
-            <th class="text-end">Weight</th>
-            <th>Nature Of Goods</th>
-            <th>Remark</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </div>
-  `;
+const formatPieces = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toLocaleString('id-ID') : '-';
 };
+
+const formatWeight = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric)
+    ? numeric.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '-';
+};
+
+const createInitialDetailModal = () => ({
+  isOpen: false,
+  isLoading: false,
+  headerId: null,
+  numberBuildUp: '',
+  details: [],
+});
 
 export default function BuildupDatatables() {
   const tableRef = useRef(null);
@@ -150,6 +119,7 @@ export default function BuildupDatatables() {
 
   const [formFilters, setFormFilters] = useState(createDefaultFilters);
   const [activeFilters, setActiveFilters] = useState(createDefaultFilters);
+  const [detailModal, setDetailModal] = useState(createInitialDetailModal);
 
   useEffect(() => {
     const api = tableRef.current;
@@ -181,6 +151,34 @@ export default function BuildupDatatables() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isBrowser()) {
+      return undefined;
+    }
+
+    if (!detailModal.isOpen) {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      return undefined;
+    }
+
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+
+    const onEscape = (event) => {
+      if (event.key === 'Escape') {
+        setDetailModal(createInitialDetailModal());
+      }
+    };
+    window.addEventListener('keydown', onEscape);
+
+    return () => {
+      window.removeEventListener('keydown', onEscape);
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [detailModal.isOpen]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormFilters((prev) => ({
@@ -205,20 +203,25 @@ export default function BuildupDatatables() {
       return;
     }
 
+    setDetailModal({
+      isOpen: true,
+      isLoading: true,
+      headerId,
+      numberBuildUp: numberBuildUp || '',
+      details: [],
+    });
+
     try {
       const details = await warehouseClient.manifestFlightDetail(headerId);
-      const Swal = await loadSwal();
-      await Swal.fire({
-        ...getSwalBaseOptions(),
-        title: `Detail Build Up ${numberBuildUp || ''}`,
-        html: renderDetailHtml(details),
-        width: '1100px',
-        confirmButtonText: 'Tutup',
-        customClass: {
-          htmlContainer: 'text-start',
-        },
+      setDetailModal({
+        isOpen: true,
+        isLoading: false,
+        headerId,
+        numberBuildUp: numberBuildUp || '',
+        details: Array.isArray(details) ? details : [],
       });
     } catch (error) {
+      setDetailModal(createInitialDetailModal());
       const message = resolveErrorMessage(error, 'Gagal memuat detail build up.');
       showToast({
         type: 'danger',
@@ -226,6 +229,10 @@ export default function BuildupDatatables() {
         message,
       });
     }
+  }, []);
+
+  const handleCloseDetailModal = useCallback(() => {
+    setDetailModal(createInitialDetailModal());
   }, []);
 
   const handleDeleteManifest = useCallback(async (headerId, numberBuildUp) => {
@@ -520,6 +527,86 @@ export default function BuildupDatatables() {
           className="table-bordered table-striped align-middle"
         />
       </div>
+
+      {detailModal.isOpen ? (
+        <>
+          <div
+            className="modal fade show d-block"
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            style={{ zIndex: 2000 }}
+            onClick={handleCloseDetailModal}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-scrollable"
+              role="document"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    Detail Build Up {detailModal.numberBuildUp || ''}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Close"
+                    onClick={handleCloseDetailModal}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {detailModal.isLoading ? (
+                    <div className="d-flex align-items-center gap-2 text-muted">
+                      <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                      Memuat detail...
+                    </div>
+                  ) : detailModal.details.length ? (
+                    <div className="table-responsive">
+                      <table className="table table-sm table-striped table-bordered align-middle mb-0">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '48px' }}>No</th>
+                            <th>MAWB</th>
+                            <th>ULD Type</th>
+                            <th>ULD Number</th>
+                            <th className="text-end">Pieces</th>
+                            <th className="text-end">Weight</th>
+                            <th>Nature Of Goods</th>
+                            <th>Remark</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailModal.details.map((item, index) => (
+                            <tr key={`${item?.mawb || 'mawb'}-${item?.uld_number || 'uld'}-${index}`}>
+                              <td>{index + 1}</td>
+                              <td>{item?.mawb || '-'}</td>
+                              <td>{item?.uld_type || '-'}</td>
+                              <td>{item?.uld_number || '-'}</td>
+                              <td className="text-end">{formatPieces(item?.pieces)}</td>
+                              <td className="text-end">{formatWeight(item?.weight)}</td>
+                              <td>{item?.nature_of_goods || '-'}</td>
+                              <td>{item?.remark || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="mb-0 text-muted">Detail tidak ditemukan.</p>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-primary" onClick={handleCloseDetailModal}>
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1990 }}></div>
+        </>
+      ) : null}
     </div>
   );
 }

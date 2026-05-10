@@ -1,12 +1,12 @@
 ---
-import { Buildup } from '@components/warehouse';
+import { Buildup as WarehouseBuildup } from '@components/warehouse';
 import AdminLayout from '@layouts/BaseLayout.astro';
 ---
 
 <AdminLayout title="Warehouse | Buildup" description="Warehouse | Buildup">
   <div class="row">
     <div class="col-md-12 col-xl-12">
-      <Buildup client:only />
+      <WarehouseBuildup client:only />
     </div>
   </div>
 </AdminLayout>

@@ -1,7 +1,9 @@
-import { showToast } from '@utils';
 import warehouseClient from '@lib/api/warehouse';
-import { useState } from 'react';
+import { showToast } from '@utils';
+import { useEffect, useState } from 'react';
 import { resolveErrorMessage } from './shared';
+
+const EMPTY_LIST = Object.freeze([]);
 
 const normalizeAwbKey = (value) =>
   String(value ?? '')
@@ -193,6 +195,38 @@ const createDetailFromItem = (_item, defaultOwner = '') => ({
   uld_owner: defaultOwner || 'FX',
 });
 
+const cloneRows = (rows) =>
+  (Array.isArray(rows) ? rows : []).map((row) => {
+    const details = Array.isArray(row?.details) ? row.details : EMPTY_LIST;
+    return {
+      ...row,
+      details: details.length
+        ? details.map((detail) => ({ ...detail }))
+        : [createEmptyDetail(row?.airlines_code)],
+    };
+  });
+
+const mergeMasterRows = (existingRows, incomingRows) => {
+  const mergedRows = [...(Array.isArray(existingRows) ? existingRows : EMPTY_LIST)];
+  const seenAwb = new Set(mergedRows.map((row) => normalizeAwbKey(row?.mawb)).filter(Boolean));
+
+  let duplicates = 0;
+  (Array.isArray(incomingRows) ? incomingRows : EMPTY_LIST).forEach((row) => {
+    const awbKey = normalizeAwbKey(row?.mawb);
+    if (awbKey && seenAwb.has(awbKey)) {
+      duplicates += 1;
+      return;
+    }
+
+    mergedRows.push(row);
+    if (awbKey) {
+      seenAwb.add(awbKey);
+    }
+  });
+
+  return { mergedRows, duplicates };
+};
+
 const mapMasterRows = (data) => {
   const groups = new Map();
 
@@ -370,21 +404,21 @@ const mapRowsToManifestPayload = (rows) => {
 
       const mawbKey = `${uldKey}|${mawbInfo.mawb_prefix}|${mawbInfo.mawb_number}`;
       if (!mawbMap.has(mawbKey)) {
-          mawbMap.set(mawbKey, {
-            flight_number: flightNumber,
-            flight_date: flightDate,
-            uld_type: uldType,
-            uld_number: uldNumber,
-            mawb_prefix: mawbInfo.mawb_prefix,
-            mawb_number: mawbInfo.mawb_number,
-            pieces: toNumericString(detailPieces),
-            total_pieces: toNumericString(fallbackTotalPieces),
-            total_weight_kg: toNumericString(fallbackTotalWeight),
-            weight_kg: toNumericString(detailWeight),
-            nature_of_goods: natureOfGoods,
-            route: route,
-            transit_flag: 0,
-          });
+        mawbMap.set(mawbKey, {
+          flight_number: flightNumber,
+          flight_date: flightDate,
+          uld_type: uldType,
+          uld_number: uldNumber,
+          mawb_prefix: mawbInfo.mawb_prefix,
+          mawb_number: mawbInfo.mawb_number,
+          pieces: toNumericString(detailPieces),
+          total_pieces: toNumericString(fallbackTotalPieces),
+          total_weight_kg: toNumericString(fallbackTotalWeight),
+          weight_kg: toNumericString(detailWeight),
+          nature_of_goods: natureOfGoods,
+          route: route,
+          transit_flag: 0,
+        });
       } else {
         const existing = mawbMap.get(mawbKey);
         const nextPieces = (parseNumeric(existing.pieces) ?? 0) + detailPieces;
@@ -426,18 +460,37 @@ const mapRowsToManifestPayload = (rows) => {
   };
 };
 
-export default function BuildupForm({ onSaveDraft = async () => {} }) {
+export default function BuildupForm({
+  onSaveDraft = async () => {},
+  initialRows = EMPTY_LIST,
+  initialMasterAwbs = EMPTY_LIST,
+  heading = 'Pencarian Master AWB',
+  description = 'Masukkan lebih dari satu Master AWB. Pisahkan dengan koma, spasi, atau baris baru.',
+  saveButtonLabel = 'Simpan Draft',
+  saveToastMessage = 'Draft manifest berhasil disimpan.',
+  onCancel = null,
+}) {
   const [inputValue, setInputValue] = useState('');
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  useEffect(() => {
+    setRows(cloneRows(initialRows));
+    setInputValue(
+      Array.isArray(initialMasterAwbs) && initialMasterAwbs.length
+        ? initialMasterAwbs.join('\n')
+        : ''
+    );
+  }, [initialRows, initialMasterAwbs]);
+
+  const runSearchMasterAwb = async ({ append = false } = {}) => {
     const masterAwbs = splitAwbInput(inputValue);
 
     if (!masterAwbs.length) {
-      setRows([]);
+      if (!append) {
+        setRows([]);
+      }
       showToast({
         type: 'warning',
         title: 'Master AWB',
@@ -447,24 +500,46 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
     }
 
     setIsLoading(true);
-    setRows([]);
+    if (!append) {
+      setRows([]);
+    }
 
     try {
       const data = await warehouseClient.masterwaybillBulk({ MasterAWB: masterAwbs });
       const result = mapMasterRows(data);
-      setRows(result);
+      let duplicateCount = 0;
+      let nextRows = result;
+
+      if (append) {
+        const merged = mergeMasterRows(rows, result);
+        nextRows = merged.mergedRows;
+        duplicateCount = merged.duplicates;
+      }
+
+      setRows(nextRows);
 
       if (result.length) {
+        const successMessage = append
+          ? `Berhasil menambahkan ${result.length - duplicateCount} data Master AWB.`
+          : `Ditemukan ${result.length} data Master AWB.`;
         showToast({
           type: 'success',
           title: 'Master AWB',
-          message: `Ditemukan ${result.length} data Master AWB.`,
+          message: successMessage,
         });
       } else {
         showToast({
           type: 'warning',
           title: 'Master AWB',
           message: 'Data Master AWB tidak ditemukan.',
+        });
+      }
+
+      if (append && duplicateCount > 0) {
+        showToast({
+          type: 'warning',
+          title: 'Master AWB',
+          message: `${duplicateCount} Master AWB dilewati karena sudah ada di draft.`,
         });
       }
 
@@ -477,9 +552,15 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
           message: `Master AWB tidak ditemukan: ${missing.join(', ')}`,
         });
       }
+
+      if (append) {
+        setInputValue('');
+      }
     } catch (err) {
       const message = resolveErrorMessage(err, 'Gagal mengambil data Master AWB.');
-      setRows([]);
+      if (!append) {
+        setRows([]);
+      }
       showToast({
         type: 'danger',
         title: 'Master AWB',
@@ -488,6 +569,15 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await runSearchMasterAwb({ append: false });
+  };
+
+  const handleAppendMasterAwb = async () => {
+    await runSearchMasterAwb({ append: true });
   };
 
   const handleReset = () => {
@@ -597,16 +687,14 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
         rows,
         payload,
         ignored,
-        masterAwbs: rows
-          .map((row) => toText(row?.mawb))
-          .filter(Boolean),
+        masterAwbs: rows.map((row) => toText(row?.mawb)).filter(Boolean),
       };
       await onSaveDraft(draft);
 
       showToast({
         type: 'success',
         title: 'Draft Manifest',
-        message: 'Draft manifest berhasil disimpan.',
+        message: saveToastMessage,
       });
 
       if (ignored.masters || ignored.details) {
@@ -634,14 +722,14 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
   return (
     <div className="card shadow-none border-0 mb-3">
       <div className="card-body">
-        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
-          <div>
-            <h5 className="mb-1 fw-bold text-uppercase">Pencarian Master AWB</h5>
-            <p className="mb-0 text-muted">
-              Masukkan lebih dari satu Master AWB. Pisahkan dengan koma, spasi, atau baris baru.
-            </p>
+        {heading || description ? (
+          <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+              {heading ? <h5 className="mb-1 fw-bold text-uppercase">{heading}</h5> : null}
+              {description ? <p className="mb-0 text-muted">{description}</p> : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <form onSubmit={handleSubmit} name="form-serch">
           <div className="row g-3 align-items-end">
@@ -677,6 +765,15 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
                 </button>
                 <button
                   type="button"
+                  className="btn btn-outline-primary flex-fill"
+                  onClick={handleAppendMasterAwb}
+                  disabled={isLoading || !rows.length}
+                  title={rows.length ? 'Tambah hasil Master AWB ke data draft saat ini' : ''}
+                >
+                  Tambah AWB
+                </button>
+                <button
+                  type="button"
                   className="btn btn-outline-secondary flex-fill"
                   onClick={handleReset}
                 >
@@ -690,14 +787,19 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
 
       {rows.length ? (
         <div className="px-3 pb-3">
-          <div className="d-flex justify-content-end mb-3">
+          <div className="d-flex justify-content-end gap-2 mb-3">
+            {typeof onCancel === 'function' ? (
+              <button type="button" className="btn btn-outline-secondary" onClick={onCancel}>
+                Batal
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn btn-success"
               onClick={handleSaveDraft}
               disabled={isSavingDraft}
             >
-              {isSavingDraft ? 'Menyimpan...' : 'Simpan Draft'}
+              {isSavingDraft ? 'Menyimpan...' : saveButtonLabel}
             </button>
           </div>
 
@@ -858,4 +960,3 @@ export default function BuildupForm({ onSaveDraft = async () => {} }) {
     </div>
   );
 }
-

@@ -35,6 +35,24 @@ export default function Buildup() {
     setDrafts((prevDrafts) => prevDrafts.filter((draft) => draft.id !== draftId));
   };
 
+  const handleUpdateDraft = async (draftId, draftPayload) => {
+    const updatedAt = new Date().toISOString();
+    setDrafts((prevDrafts) =>
+      prevDrafts.map((draft) =>
+        draft.id === draftId
+          ? {
+              ...draft,
+              updatedAt,
+              rows: draftPayload?.rows ?? [],
+              payload: draftPayload?.payload ?? null,
+              ignored: draftPayload?.ignored ?? { masters: 0, details: 0 },
+              masterAwbs: draftPayload?.masterAwbs ?? [],
+            }
+          : draft
+      )
+    );
+  };
+
   const handleSubmittedAllDrafts = () => {
     setDrafts([]);
     setActiveTab('data');
@@ -59,6 +77,7 @@ export default function Buildup() {
           <BuildupDrafts
             drafts={drafts}
             onRemoveDraft={handleRemoveDraft}
+            onUpdateDraft={handleUpdateDraft}
             onSubmittedAllDrafts={handleSubmittedAllDrafts}
           />
         ),

@@ -1,6 +1,7 @@
-import { formatDateTime, showToast } from '@utils';
 import warehouseClient from '@lib/api/warehouse';
+import { formatDateTime, showToast } from '@utils';
 import { useMemo, useState } from 'react';
+import BuildupForm from './buildupForm';
 import { emitManifestUploaded, isBrowser, resolveErrorMessage } from './shared';
 
 const hasValidPayload = (payload) => {
@@ -52,10 +53,16 @@ const mergeDraftPayloads = (drafts) => {
 export default function BuildupDrafts({
   drafts = [],
   onRemoveDraft = () => {},
+  onUpdateDraft = async () => {},
   onSubmittedAllDrafts = () => {},
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingDraftId, setEditingDraftId] = useState(null);
   const aggregateSummary = useMemo(() => mergeDraftPayloads(drafts), [drafts]);
+  const editingDraft = useMemo(
+    () => drafts.find((draft) => draft.id === editingDraftId) ?? null,
+    [drafts, editingDraftId]
+  );
 
   const handleSubmitAllDrafts = async () => {
     if (!drafts.length) {
@@ -133,6 +140,23 @@ export default function BuildupDrafts({
     });
   };
 
+  const handleStartEdit = (draftId) => {
+    setEditingDraftId(draftId);
+  };
+
+  const handleCloseEdit = () => {
+    setEditingDraftId(null);
+  };
+
+  const handleUpdateDraft = async (nextDraftPayload) => {
+    if (!editingDraftId) {
+      return;
+    }
+
+    await onUpdateDraft(editingDraftId, nextDraftPayload);
+    setEditingDraftId(null);
+  };
+
   if (!drafts.length) {
     return (
       <div className="alert alert-info mb-0" role="alert">
@@ -171,14 +195,24 @@ export default function BuildupDrafts({
                   <div className="small text-muted">Dibuat: {createdAtLabel}</div>
                   <div className="small text-muted">{buildSummaryText(draft)}</div>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-outline-danger btn-sm"
-                  onClick={() => handleDeleteDraft(draft.id)}
-                  disabled={isSubmitting}
-                >
-                  Hapus Draft
-                </button>
+                <div className="d-flex align-items-center gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => handleStartEdit(draft.id)}
+                    disabled={isSubmitting}
+                  >
+                    Edit Draft
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => handleDeleteDraft(draft.id)}
+                    disabled={isSubmitting}
+                  >
+                    Hapus Draft
+                  </button>
+                </div>
               </div>
 
               <div className="small text-muted">
@@ -191,7 +225,37 @@ export default function BuildupDrafts({
           </div>
         );
       })}
+
+      {editingDraft ? (
+        <div
+          className="modal fade show d-block"
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          style={{ backgroundColor: 'rgba(17, 24, 39, 0.55)' }}
+        >
+          <div className="modal-dialog modal-xl modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Draft Manifest</h5>
+                <button type="button" className="btn-close" onClick={handleCloseEdit}></button>
+              </div>
+              <div className="modal-body p-0">
+                <BuildupForm
+                  onSaveDraft={handleUpdateDraft}
+                  initialRows={editingDraft.rows ?? []}
+                  initialMasterAwbs={editingDraft.masterAwbs ?? []}
+                  heading={null}
+                  description={null}
+                  saveButtonLabel="Update Draft"
+                  saveToastMessage="Draft berhasil diperbarui."
+                  onCancel={handleCloseEdit}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
-
