@@ -33,6 +33,7 @@ class BuildUpDetail(BaseDB1):
     uld_type = Column(String(50), nullable=True)
     pieces = Column(Integer, nullable=True)
     weight = Column(Float, nullable=True)
+    volume = Column(Float, nullable=True)
     nature_of_goods = Column(Text, nullable=True)
     remark = Column(Text, nullable=True)
     create_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)

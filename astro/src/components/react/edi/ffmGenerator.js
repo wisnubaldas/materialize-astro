@@ -24,10 +24,14 @@ const formatMawb = (mawb) => {
   return [prefix, serial].filter(Boolean).join('-').toUpperCase();
 };
 
-const formatNumber = (value, fractionDigits = 0) => {
+const formatNumber = (value, fractionDigits = 0, keepTrailingZero = false) => {
   const num = Number(value);
   if (!Number.isFinite(num)) return '0';
-  return num.toFixed(fractionDigits).replace(/\.?0+$/, '');
+  const rendered = num.toFixed(fractionDigits);
+  if (keepTrailingZero) {
+    return rendered;
+  }
+  return rendered.replace(/\.?0+$/, '');
 };
 
 const selectFirst = (...values) => {
@@ -49,6 +53,36 @@ const parseRoute = (value) => {
     .split(/[-/>\s]+/)
     .map((part) => normalizeText(part))
     .filter(Boolean);
+};
+
+const buildUldIdentifier = ({ uldType, uldNumber, uldOwner, fallbackOwner }) => {
+  const typeCode = toUpper(uldType).replace(/[^A-Z0-9]/g, '').slice(0, 3);
+  if (typeCode.length !== 3) {
+    return '';
+  }
+
+  const numberToken = toUpper(uldNumber).replace(/[^A-Z0-9]/g, '');
+  const serialMatch = numberToken.match(/(\d+)/);
+  if (!serialMatch) {
+    return '';
+  }
+
+  let serial = serialMatch[1];
+  if (serial.length < 4) {
+    serial = serial.padStart(4, '0');
+  } else if (serial.length > 5) {
+    serial = serial.slice(-5);
+  }
+
+  const numberOwnerMatch = numberToken.match(/([A-Z]{2,3})$/);
+  const ownerSeedFromData = toUpper(selectFirst(numberOwnerMatch?.[1], uldOwner)).replace(
+    /[^A-Z]/g,
+    ''
+  );
+  const ownerFallback = toUpper(selectFirst(fallbackOwner, 'XX')).replace(/[^A-Z]/g, '');
+  const ownerCode = `${ownerSeedFromData}${ownerFallback}XX`.slice(0, 2);
+
+  return `${typeCode}${serial}${ownerCode}`;
 };
 
 const formatFfmMessage = (payload, fallbackBuildup) => {
@@ -80,7 +114,7 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
     lines.push(destination);
 
     let currentUldKey = null;
-    details.forEach((item) => {
+    details.forEach((item, index) => {
       const mawbSeed = selectFirst(
         item?.MasterAWB,
         item?.mawb,
@@ -91,16 +125,15 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
         ? `${item?.uld_type ?? ''}|${item?.uld_number ?? ''}|${item?.uld_owner ?? ''}`
         : null;
       if (hasUldId && uldKey !== currentUldKey && (mawbSeed || item?.remarks)) {
-        const uldId = [
-          toUpper(item?.uld_type),
-          toUpper(item?.uld_number),
-          toUpper(item?.uld_owner),
-        ]
-          .filter(Boolean)
-          .join('');
-        const remarks = toUpper(sanitizeSegmentText(item?.remarks));
-        const uldLine = remarks ? `ULD/${uldId}/${remarks}` : `ULD/${uldId}`;
-        lines.push(uldLine);
+        const uldId = buildUldIdentifier({
+          uldType: item?.uld_type,
+          uldNumber: item?.uld_number,
+          uldOwner: item?.uld_owner,
+          fallbackOwner: carrier,
+        });
+        if (uldId) {
+          lines.push(`ULD/${uldId}`);
+        }
         currentUldKey = uldKey;
       }
       if (!mawbSeed) {
@@ -128,9 +161,12 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
         )
       );
       const pieces = formatNumber(selectFirst(item?.pieces, item?.Pieces, 0));
-      const weight = formatNumber(selectFirst(item?.weight_kg, item?.Netto, 0), 1);
-      const volumeVal = selectFirst(item?.volume, item?.Volume);
-      const volume = volumeVal ? `MC${formatNumber(volumeVal, 2)}` : '';
+      const weight = formatNumber(selectFirst(item?.weight_kg, item?.Netto, 0), 1, true);
+      const volumeVal = Number(selectFirst(item?.volume, item?.Volume, ''));
+      if (!Number.isFinite(volumeVal) || volumeVal <= 0) {
+        throw new Error(`volume wajib > 0 pada detail ke-${index + 1}`);
+      }
+      const volume = `MC${formatNumber(volumeVal, 2, true)}`;
       const goods = toUpper(
         sanitizeSegmentText(selectFirst(item?.nature_of_goods, item?.KindOfGood, 'GENERAL CARGO'))
       );
@@ -165,12 +201,19 @@ const formatFfmMessage = (payload, fallbackBuildup) => {
   lines.push(`1/${carrier}${flightNo}/${flightDate}/${origin}`);
   lines.push(destination);
 
-  details.forEach((item) => {
+  details.forEach((item, index) => {
     const mawb = formatMawb(selectFirst(item.MasterAWB, master.MasterAWB, fallbackBuildup));
     const pieces = formatNumber(selectFirst(item.Pieces, item.PartPieces, master.Pieces, 0));
-    const weight = formatNumber(selectFirst(item.Netto, item.PartNetto, master.Weight, 0), 1);
-    const volumeVal = selectFirst(item.Volume, master.Volume);
-    const volume = volumeVal ? `MC${formatNumber(volumeVal, 2)}` : '';
+    const weight = formatNumber(
+      selectFirst(item.Netto, item.PartNetto, master.Weight, 0),
+      1,
+      true
+    );
+    const volumeVal = Number(selectFirst(item.Volume, item.volume, master.Volume, ''));
+    if (!Number.isFinite(volumeVal) || volumeVal <= 0) {
+      throw new Error(`volume wajib > 0 pada detail ke-${index + 1}`);
+    }
+    const volume = `MC${formatNumber(volumeVal, 2, true)}`;
     const goods = toUpper(
       sanitizeSegmentText(selectFirst(item.KindOfGood, master.KindOfGood, 'GENERAL CARGO'))
     );

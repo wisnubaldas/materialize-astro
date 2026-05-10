@@ -111,6 +111,15 @@ class WarehouseRepository:
             .all()
         )
 
+    def get_manifest_flight_with_details(
+        self, header_id: int
+    ) -> tuple[BuildUpHeader | None, list[BuildUpDetail]]:
+        header = self.get_manifest_flight_by_id(header_id)
+        if not header:
+            return None, []
+        details = self.get_manifest_flight_details(header_id)
+        return header, details
+
     def get_manifest_flight_by_id(self, header_id: int) -> BuildUpHeader | None:
         return self.db.query(BuildUpHeader).filter(BuildUpHeader.id == header_id).first()
 

@@ -9,6 +9,8 @@ const warehouseClient = {
     apiClient.post(WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT, params),
   manifestFlightDetail: (headerId) =>
     apiClient.get(`${WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}/${headerId}/details`),
+  manifestFlightFfmPreview: (headerId) =>
+    apiClient.get(`${WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}/${headerId}/ffm-preview`),
   manifestFlightDelete: (headerId) =>
     apiClient.delete(`${WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}/${headerId}`),
   submitFedexManifest: (formData) => apiClient.post(WAREHOUSE_FEDEX_MANIFEST_SUBMIT_ENDPOINT, formData),

@@ -1,26 +1,8 @@
 import GridData from '@components/GridData';
-import { Icon } from '@iconify-icon/react';
-import { API_BASE_URL } from '@lib/api/client';
-import { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
+import warehouseClient, { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
+import { showToast } from '@utils';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-
-const numberRenderer = (value, type, fractionDigits = 0) => {
-  if (type !== 'display' && type !== 'filter') {
-    return value ?? null;
-  }
-
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return '';
-  }
-
-  return numeric.toLocaleString('id-ID', {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  });
-};
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   if (type !== 'display' && type !== 'filter') {
@@ -32,33 +14,6 @@ const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   return parsed.isValid() ? parsed.format(format) : value;
 };
 
-const buildPublicUrl = (value) => {
-  if (!value) {
-    return '';
-  }
-
-  if (typeof value === 'string' && /^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  const base = API_BASE_URL?.replace(/\/+$/, '') ?? '';
-  const path = String(value).replace(/^\/+/, '');
-  return base ? `${base}/${path}` : `/${path}`;
-};
-
-const linkRenderer = (value, type, label = 'View') => {
-  if (type !== 'display') {
-    return value ?? '';
-  }
-
-  const url = buildPublicUrl(value);
-  if (!url) {
-    return '';
-  }
-
-  return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-};
-
 const createDefaultFilters = () => ({
   number: '',
   mawb: '',
@@ -68,12 +23,57 @@ const createDefaultFilters = () => ({
   dest: '',
 });
 
+const createEmptyDetail = () => ({
+  number: '',
+  mawb: '',
+  airlines_code: '',
+  flight_date: '',
+  uld_type: '',
+  uld_number: '',
+});
+const createInitialFfmPreview = () => ({
+  headerId: null,
+  buildupNumber: '',
+  loading: false,
+  generated: false,
+  cargoImp: '',
+  missingFields: [],
+  warnings: [],
+});
+
+const encodeDataValue = (value) => encodeURIComponent(String(value ?? ''));
+const decodeDataValue = (value) => decodeURIComponent(value ?? '');
+const getRowValue = (row, keys) => {
+  for (const key of keys) {
+    const value = row?.[key];
+    if (value !== undefined && value !== null && value !== '') {
+      return value;
+    }
+  }
+  return '';
+};
+const formatSummary = (values) => {
+  const unique = [...new Set((values ?? []).filter(Boolean).map((value) => String(value).trim()))];
+  if (!unique.length) {
+    return '';
+  }
+  return unique.join(', ');
+};
+
 export default function FfmDatatables() {
   const tableRef = useRef(null);
   const mountedRef = useRef(false);
+  const detailModalRef = useRef(null);
+  const ffmPreviewModalRef = useRef(null);
+  const detailPreviewRef = useRef({});
+  const detailLoadingRef = useRef(new Set());
+  const ffmPreviewCacheRef = useRef({});
 
   const [formFilters, setFormFilters] = useState(createDefaultFilters);
   const [activeFilters, setActiveFilters] = useState(createDefaultFilters);
+  const [detailData, setDetailData] = useState(createEmptyDetail);
+  const [detailPreviewMap, setDetailPreviewMap] = useState({});
+  const [ffmPreview, setFfmPreview] = useState(createInitialFfmPreview);
 
   useEffect(() => {
     const api = tableRef.current;
@@ -104,114 +104,339 @@ export default function FfmDatatables() {
     const reset = createDefaultFilters();
     setFormFilters(reset);
     setActiveFilters(reset);
+    setDetailPreviewMap({});
+    detailPreviewRef.current = {};
+    detailLoadingRef.current.clear();
+    ffmPreviewCacheRef.current = {};
+    setFfmPreview(createInitialFfmPreview());
   };
+
+  const loadDetailPreview = useCallback(async (headerId) => {
+    if (!Number.isFinite(headerId) || headerId <= 0) {
+      return;
+    }
+
+    if (detailPreviewRef.current[headerId] || detailLoadingRef.current.has(headerId)) {
+      return;
+    }
+
+    detailLoadingRef.current.add(headerId);
+    try {
+      const details = await warehouseClient.manifestFlightDetail(headerId);
+      const rows = Array.isArray(details) ? details : [];
+      const preview = {
+        mawb: formatSummary(rows.map((item) => item?.mawb)),
+        uld_type: formatSummary(rows.map((item) => item?.uld_type)),
+        uld_number: formatSummary(rows.map((item) => item?.uld_number)),
+      };
+
+      setDetailPreviewMap((prev) => {
+        const next = { ...prev, [headerId]: preview };
+        detailPreviewRef.current = next;
+        return next;
+      });
+    } catch (error) {
+      console.error('Gagal memuat preview detail build up:', error);
+      setDetailPreviewMap((prev) => {
+        const next = { ...prev, [headerId]: { mawb: '', uld_type: '', uld_number: '' } };
+        detailPreviewRef.current = next;
+        return next;
+      });
+    } finally {
+      detailLoadingRef.current.delete(headerId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let tableApi = null;
+    let pollTimer = null;
+
+    const requestCurrentPagePreview = () => {
+      const api = tableRef.current?.dt?.();
+      if (!api?.rows) {
+        return false;
+      }
+
+      tableApi = api;
+      const rows = api.rows({ page: 'current' }).data()?.toArray?.() ?? [];
+      rows.forEach((row) => {
+        const headerId = Number(row?.id);
+        if (Number.isFinite(headerId)) {
+          void loadDetailPreview(headerId);
+        }
+      });
+      return true;
+    };
+
+    if (!requestCurrentPagePreview()) {
+      pollTimer = window.setInterval(() => {
+        if (requestCurrentPagePreview() && pollTimer) {
+          window.clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }, 250);
+    }
+
+    const handleDraw = () => {
+      requestCurrentPagePreview();
+    };
+
+    if (tableApi?.on) {
+      tableApi.on('draw', handleDraw);
+    }
+
+    return () => {
+      if (pollTimer) {
+        window.clearInterval(pollTimer);
+      }
+      if (tableApi?.off) {
+        tableApi.off('draw', handleDraw);
+      }
+    };
+  }, [loadDetailPreview, activeFilters]);
+
+  useEffect(() => {
+    const api = tableRef.current?.dt?.();
+    if (api?.rows) {
+      api.rows({ page: 'current' }).invalidate('data').draw('page');
+    }
+  }, [detailPreviewMap]);
+
+  useEffect(() => {
+    const modalElement = ffmPreviewModalRef.current;
+    if (!modalElement) {
+      return undefined;
+    }
+
+    const openPreview = async (headerId, buildupNumber) => {
+      if (!Number.isFinite(headerId) || headerId <= 0) {
+        showToast({
+          type: 'danger',
+          title: 'FFM Cargo-IMP',
+          message: 'Header build up tidak valid.',
+        });
+        setFfmPreview(createInitialFfmPreview());
+        return;
+      }
+
+      const cached = ffmPreviewCacheRef.current?.[headerId];
+      if (cached) {
+        setFfmPreview({
+          headerId,
+          buildupNumber,
+          loading: false,
+          generated: Boolean(cached.generated && cached.cargo_imp),
+          cargoImp: cached.cargo_imp || '',
+          missingFields: Array.isArray(cached.missing_fields) ? cached.missing_fields : [],
+          warnings: Array.isArray(cached.warnings) ? cached.warnings : [],
+        });
+        return;
+      }
+
+      setFfmPreview({
+        headerId,
+        buildupNumber,
+        loading: true,
+        generated: false,
+        cargoImp: '',
+        missingFields: [],
+        warnings: [],
+      });
+
+      try {
+        const response = await warehouseClient.manifestFlightFfmPreview(headerId);
+        ffmPreviewCacheRef.current = {
+          ...ffmPreviewCacheRef.current,
+          [headerId]: response,
+        };
+        setFfmPreview({
+          headerId,
+          buildupNumber: response?.buildup_number || buildupNumber,
+          loading: false,
+          generated: Boolean(response?.generated && response?.cargo_imp),
+          cargoImp: response?.cargo_imp || '',
+          missingFields: Array.isArray(response?.missing_fields) ? response.missing_fields : [],
+          warnings: Array.isArray(response?.warnings) ? response.warnings : [],
+        });
+      } catch (error) {
+        console.error('Gagal memuat preview FFM Cargo-IMP:', error);
+        showToast({
+          type: 'danger',
+          title: 'FFM Cargo-IMP',
+          message: error?.response?.data?.detail || error?.message || 'Gagal memuat preview FFM.',
+        });
+        setFfmPreview(createInitialFfmPreview());
+      }
+    };
+
+    const handleShow = (event) => {
+      const button = event?.relatedTarget;
+      const headerId = Number(button?.getAttribute('data-header-id'));
+      const buildupNumber = decodeDataValue(button?.getAttribute('data-number'));
+      void openPreview(headerId, buildupNumber);
+    };
+
+    const handleHidden = () => {
+      setFfmPreview(createInitialFfmPreview());
+    };
+
+    modalElement.addEventListener('show.bs.modal', handleShow);
+    modalElement.addEventListener('hidden.bs.modal', handleHidden);
+
+    return () => {
+      modalElement.removeEventListener('show.bs.modal', handleShow);
+      modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+    };
+  }, []);
+
+  useEffect(() => {
+    const modalElement = detailModalRef.current;
+    if (!modalElement) {
+      return undefined;
+    }
+
+    const handleShow = (event) => {
+      const button = event?.relatedTarget;
+      if (!button) {
+        setDetailData(createEmptyDetail());
+        return;
+      }
+
+      setDetailData({
+        number: decodeDataValue(button.getAttribute('data-number')),
+        mawb: decodeDataValue(button.getAttribute('data-mawb')),
+        airlines_code: decodeDataValue(button.getAttribute('data-airlines-code')),
+        flight_date: decodeDataValue(button.getAttribute('data-flight-date')),
+        uld_type: decodeDataValue(button.getAttribute('data-uld-type')),
+        uld_number: decodeDataValue(button.getAttribute('data-uld-number')),
+      });
+    };
+
+    const handleHidden = () => {
+      setDetailData(createEmptyDetail());
+    };
+
+    modalElement.addEventListener('show.bs.modal', handleShow);
+    modalElement.addEventListener('hidden.bs.modal', handleHidden);
+
+    return () => {
+      modalElement.removeEventListener('show.bs.modal', handleShow);
+      modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+    };
+  }, []);
 
   const columns = useMemo(
     () => [
       {
         data: null,
-        title: '',
-        defaultContent: '',
-        className: 'dtr-control control text-center cursor-pointer',
-        orderable: false,
-        searchable: false,
+        title: 'BuildUp No',
+        className: 'text-uppercase',
         responsivePriority: 1,
-        render: (_value, type) => {
-          if (type !== 'display') return '';
-          const markup = renderToStaticMarkup(
-            <Icon icon="line-md:check-list-3-filled" width="24" height="24" />
-          );
-          return (
-            markup ||
-            '<span class="text-primary fw-bold" aria-label="Toggle details">&#9662;</span>'
-          );
+        render: (_value, type, row) => getRowValue(row, ['number', 'number_build_up']),
+      },
+      {
+        data: null,
+        title: 'MAWB',
+        className: 'text-uppercase',
+        render: (_value, type, row) => {
+          const headerId = Number(row?.id);
+          const value = detailPreviewRef.current?.[headerId]?.mawb ?? '';
+          return value || (type === 'display' ? '-' : '');
         },
       },
-      { data: 'airlines_code', title: 'Airline', className: 'text-uppercase', responsivePriority: 2 },
-      { data: 'number', title: 'Build Up No', className: 'text-uppercase', responsivePriority: 3 },
-      { data: 'mawb', title: 'MAWB', className: 'text-uppercase' },
       {
-        data: 'number',
-        title: 'Detail',
-        className: 'text-center',
+        data: null,
+        title: 'airlines',
+        className: 'text-uppercase',
+        render: (_value, type, row) => getRowValue(row, ['airlines_code', 'airline_code', 'airline']),
+      },
+      {
+        data: null,
+        title: 'flight date',
+        className: 'text-nowrap',
+        render: (_value, type, row) => dateRenderer(getRowValue(row, ['flight_date']), type),
+      },
+      {
+        data: null,
+        title: 'ULD Type',
+        className: 'text-uppercase',
+        render: (_value, type, row) => {
+          const headerId = Number(row?.id);
+          const value = detailPreviewRef.current?.[headerId]?.uld_type ?? '';
+          return value || (type === 'display' ? '-' : '');
+        },
+      },
+      {
+        data: null,
+        title: 'ULD Number',
+        className: 'text-uppercase',
+        render: (_value, type, row) => {
+          const headerId = Number(row?.id);
+          const value = detailPreviewRef.current?.[headerId]?.uld_number ?? '';
+          return value || (type === 'display' ? '-' : '');
+        },
+      },
+      {
+        data: null,
+        title: 'Actions',
+        className: 'text-center text-nowrap',
         orderable: false,
         searchable: false,
-        render: (value, type) => {
+        render: (_value, type, row) => {
           if (type !== 'display') {
-            return value ?? '';
-          }
-          const linkValue = value ?? '';
-          if (!linkValue) {
             return '';
           }
-          return `<a class="btn btn-sm btn-primary" href="/edi/send-email/ffm@${linkValue}">Detail</a>`;
+          const headerId = Number(row?.id);
+          const preview = detailPreviewRef.current?.[headerId] ?? {};
+          return `
+            <div class="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#ffmDetailModal"
+                data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+                data-mawb="${encodeDataValue(preview?.mawb)}"
+                data-airlines-code="${encodeDataValue(
+                  getRowValue(row, ['airlines_code', 'airline_code', 'airline'])
+                )}"
+                data-flight-date="${encodeDataValue(getRowValue(row, ['flight_date']))}"
+                data-uld-type="${encodeDataValue(preview?.uld_type)}"
+                data-uld-number="${encodeDataValue(preview?.uld_number)}"
+              >
+                Detail
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-success"
+                data-bs-toggle="modal"
+                data-bs-target="#ffmCargoImpModal"
+                data-header-id="${Number.isFinite(headerId) ? headerId : ''}"
+                data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+              >
+                Cargo-IMP
+              </button>
+            </div>
+          `;
         },
-      },
-      {
-        data: 'flight_date',
-        title: 'Flight Date',
-        className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type),
-      },
-      { data: 'origin', title: 'Origin', className: 'text-uppercase' },
-      { data: 'dest', title: 'Destination', className: 'text-uppercase' },
-      { data: 'uld_type', title: 'ULD Type', className: 'text-uppercase' },
-      { data: 'uld_number', title: 'ULD Number', className: 'text-uppercase' },
-      {
-        data: 'total_pieces',
-        title: 'Total Pieces',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type),
-      },
-      {
-        data: 'total_weight',
-        title: 'Total Weight',
-        className: 'text-end',
-        render: (value, type) => numberRenderer(value, type, 2),
-      },
-      {
-        data: 'link_pdf',
-        title: 'PDF',
-        className: 'text-nowrap',
-        render: (value, type) => linkRenderer(value, type, 'PDF'),
-      },
-      {
-        data: 'create_at',
-        title: 'Dibuat',
-        className: 'text-nowrap',
-        render: (value, type) => dateRenderer(value, type, 'DD MMM YYYY HH:mm'),
       },
     ],
     []
   );
 
   const tableOptions = useMemo(() => {
-    const findIndex = (key) => columns.findIndex((col) => col.data === key);
-    const createdIdx = findIndex('create_at');
-    const numberTargets = ['total_pieces', 'total_weight'].map(findIndex).filter((idx) => idx >= 0);
-
     const defs = [];
-    const controlIndex = findIndex(null);
-    const detailIndex = columns.findIndex((col) => col.title === 'Detail');
-    if (controlIndex >= 0) {
-      defs.push({
-        targets: controlIndex,
-        className: 'dtr-control control text-center',
-        orderable: false,
-        searchable: false,
-      });
-    }
-
+    const detailIndex = columns.findIndex((col) => col.title === 'Actions');
     if (detailIndex >= 0) {
       defs.push({ targets: detailIndex, orderable: false, searchable: false });
     }
 
-    if (numberTargets.length) {
-      defs.push({ targets: numberTargets, className: 'text-end' });
-    }
-
     return {
-      order: [[createdIdx >= 0 ? createdIdx : 1, 'desc']],
+      order: [[3, 'desc']],
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       autoWidth: false,
@@ -226,7 +451,7 @@ export default function FfmDatatables() {
           <div>
             <h5 className="mb-1 fw-bold text-uppercase">Data Build Up (FFM)</h5>
             <p className="mb-0 text-muted">
-              Filter berdasarkan build up number, MAWB, route, dan flight date.
+              Data table disesuaikan untuk BuildUp No, MAWB, airline, flight date, dan ULD.
             </p>
           </div>
           <div className="text-muted small">
@@ -323,6 +548,128 @@ export default function FfmDatatables() {
           options={tableOptions}
           className="table-bordered table-striped align-middle"
         />
+      </div>
+
+      <div
+        className="modal fade"
+        id="ffmDetailModal"
+        tabIndex={-1}
+        aria-labelledby="ffmDetailModalLabel"
+        aria-hidden="true"
+        ref={detailModalRef}
+      >
+        <div className="modal-dialog modal-lg modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="ffmDetailModalLabel">
+                Detail BuildUp {detailData.number ? ` ${detailData.number}` : ''}
+              </h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <div className="table-responsive">
+                <table className="table table-sm table-bordered align-middle mb-0">
+                  <tbody>
+                    <tr>
+                      <th style={{ width: '180px' }}>BuildUp No</th>
+                      <td>{detailData.number || '-'}</td>
+                    </tr>
+                    <tr>
+                      <th>MAWB</th>
+                      <td>{detailData.mawb || '-'}</td>
+                    </tr>
+                    <tr>
+                      <th>airlines</th>
+                      <td>{detailData.airlines_code || '-'}</td>
+                    </tr>
+                    <tr>
+                      <th>flight date</th>
+                      <td>{dateRenderer(detailData.flight_date, 'display') || '-'}</td>
+                    </tr>
+                    <tr>
+                      <th>ULD Type</th>
+                      <td>{detailData.uld_type || '-'}</td>
+                    </tr>
+                    <tr>
+                      <th>ULD Number</th>
+                      <td>{detailData.uld_number || '-'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="modal fade"
+        id="ffmCargoImpModal"
+        tabIndex={-1}
+        aria-labelledby="ffmCargoImpModalLabel"
+        aria-hidden="true"
+        ref={ffmPreviewModalRef}
+      >
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="ffmCargoImpModalLabel">
+                FFM Cargo-IMP {ffmPreview.buildupNumber ? `- ${ffmPreview.buildupNumber}` : ''}
+              </h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              {ffmPreview.loading ? (
+                <div className="d-flex align-items-center gap-2 text-muted">
+                  <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                  Memuat preview FFM...
+                </div>
+              ) : (
+                <>
+                  {ffmPreview.missingFields.length ? (
+                    <div className="alert alert-warning" role="alert">
+                      <div className="fw-semibold mb-1">Data belum lengkap untuk FFM:</div>
+                      <ul className="mb-0 ps-3">
+                        {ffmPreview.missingFields.map((field) => (
+                          <li key={field}>{field}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {ffmPreview.warnings.length ? (
+                    <div className="alert alert-info" role="alert">
+                      <div className="fw-semibold mb-1">Catatan generator:</div>
+                      <ul className="mb-0 ps-3">
+                        {ffmPreview.warnings.map((warning, idx) => (
+                          <li key={`${warning}-${idx}`}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {ffmPreview.generated && ffmPreview.cargoImp ? (
+                    <pre className="bg-light border rounded p-3 small mb-0" style={{ whiteSpace: 'pre-wrap' }}>
+                      {ffmPreview.cargoImp}
+                    </pre>
+                  ) : (
+                    <p className="mb-0 text-muted">
+                      Cargo-IMP belum dapat digenerate. Lengkapi data yang ditandai terlebih dahulu.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

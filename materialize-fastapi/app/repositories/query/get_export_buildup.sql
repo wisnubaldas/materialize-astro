@@ -6,6 +6,7 @@ SELECT
   MAX(a.Destination) AS dest,
   MAX(a.DateOfFlight) AS flight_date,
   SUM(COALESCE(a.TotalPieces, 0)) AS total_pieces,
+  SUM(COALESCE(a.TotalVolume, 0)) AS total_volume,
   SUM(COALESCE(a.TotalNetto, 0)) AS total_weight,
   (
     SELECT h.descriptiongoods

@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 import { resolveErrorMessage } from './shared';
 
 const EMPTY_LIST = Object.freeze([]);
+const AIRLINE_CODE_RE = /^[A-Z0-9]{2,3}$/;
+const FLIGHT_NUMBER_RE = /^[A-Z0-9]{2,8}$/;
+const AIRPORT_CODE_RE = /^[A-Z]{3}$/;
+const MAWB_RE = /^\d{3}-?\d{8}$/;
+const ULD_TYPE_RE = /^[A-Z0-9]{3}$/;
+const ULD_OWNER_RE = /^[A-Z]{2}$/;
+const AIRCRAFT_REG_RE = /^[A-Z0-9-]{2,20}$/;
 
 const normalizeAwbKey = (value) =>
   String(value ?? '')
@@ -67,6 +74,13 @@ const MASTER_FIELDS = [
     readOnly: true,
   },
   {
+    key: 'total_volume',
+    label: 'Total Volume',
+    type: 'text',
+    className: 'text-end',
+    readOnly: true,
+  },
+  {
     key: 'flight_number',
     label: 'Flight No',
     type: 'text',
@@ -94,6 +108,7 @@ const DETAIL_FIELDS = [
   { key: 'uld_number', label: 'ULD Number', type: 'text', className: 'text-nowrap' },
   { key: 'pieces', label: 'Pieces', type: 'text', className: 'text-end' },
   { key: 'weight', label: 'Weight', type: 'text', className: 'text-end' },
+  { key: 'volume', label: 'Volume (MC)', type: 'text', className: 'text-end' },
   { key: 'uld_owner', label: 'ULD Owner', type: 'text', className: 'text-nowrap' },
 ];
 
@@ -136,6 +151,14 @@ const toNumericString = (value, fallback = '0') => {
   return Number.isInteger(parsed) ? String(parsed) : String(parsed);
 };
 
+const toFixedNumericString = (value, fractionDigits = 2, fallback = '0.00') => {
+  const parsed = parseNumeric(value);
+  if (parsed === null) {
+    return fallback;
+  }
+  return Number(parsed).toFixed(fractionDigits);
+};
+
 const isBlank = (value) => value === null || value === undefined || value === '';
 
 const getTotalPiecesFromDetails = (details) => {
@@ -164,6 +187,19 @@ const getTotalWeightFromDetails = (details) => {
   return Number.isInteger(sum) ? String(sum) : String(sum);
 };
 
+const getTotalVolumeFromDetails = (details) => {
+  const numericVolume = details
+    .map((detail) => parseNumeric(detail?.volume))
+    .filter((value) => value !== null);
+
+  if (!numericVolume.length) {
+    return details[0]?.volume ?? '';
+  }
+
+  const sum = numericVolume.reduce((acc, value) => acc + value, 0);
+  return Number.isInteger(sum) ? String(sum) : String(sum);
+};
+
 const getRemainingFromDetails = (totalValue, details, detailField) => {
   const total = parseNumeric(totalValue);
   if (total === null) {
@@ -184,14 +220,16 @@ const createEmptyDetail = (defaultOwner = '') => ({
   uld_number: '',
   pieces: '',
   weight: '',
+  volume: '',
   uld_owner: defaultOwner || 'FX',
 });
 
-const createDetailFromItem = (_item, defaultOwner = '') => ({
+const createDetailFromItem = (item, defaultOwner = '') => ({
   uld_type: '',
   uld_number: '',
   pieces: '',
   weight: '',
+  volume: item?.total_volume ?? item?.volume ?? '',
   uld_owner: defaultOwner || 'FX',
 });
 
@@ -239,6 +277,7 @@ const mapMasterRows = (data) => {
     const defaultRoute = origin && dest ? `${origin}-${dest}` : '';
     const totalPieces = item?.total_pieces ?? '';
     const totalWeight = item?.total_weight ?? '';
+    const totalVolume = item?.total_volume ?? item?.volume ?? '';
 
     if (!groups.has(groupKey)) {
       groups.set(groupKey, {
@@ -250,8 +289,10 @@ const mapMasterRows = (data) => {
         flight_date: normalizeDateText(item?.flight_date),
         total_pieces: totalPieces,
         total_weight: totalWeight,
+        total_volume: totalVolume,
         initial_total_pieces: totalPieces,
         initial_total_weight: totalWeight,
+        initial_total_volume: totalVolume,
         nature_of_goods: toText(item?.nature_of_goods),
         aircraft_registration: '',
         route: defaultRoute,
@@ -275,6 +316,10 @@ const mapMasterRows = (data) => {
       row.total_weight = totalWeight;
       row.initial_total_weight = totalWeight;
     }
+    if (isBlank(row.total_volume) && totalVolume !== '') {
+      row.total_volume = totalVolume;
+      row.initial_total_volume = totalVolume;
+    }
   });
 
   return Array.from(groups.values()).map((row) => {
@@ -287,6 +332,9 @@ const mapMasterRows = (data) => {
       total_weight: isBlank(row.total_weight)
         ? getTotalWeightFromDetails(details)
         : row.total_weight,
+      total_volume: isBlank(row.total_volume)
+        ? getTotalVolumeFromDetails(details)
+        : row.total_volume,
       details,
     };
   });
@@ -316,6 +364,209 @@ const isAcceptedFlightDate = (value) => {
   return /^\d{4}[-/]\d{2}[-/]\d{2}$/.test(text) || /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(text);
 };
 
+const sanitizeCargoText = (value) => toText(value).replace(/\s+/g, ' ').toUpperCase();
+
+const normalizeUldNumber = (value) => sanitizeCargoText(value).replace(/[^A-Z0-9]/g, '');
+
+const validateRowsForCargoImp = (rows) => {
+  const errors = [];
+  const rowErrors = {};
+  const safeRows = Array.isArray(rows) ? rows : [];
+
+  const setRowFieldError = (rowIndex, field, message) => {
+    if (!rowErrors[rowIndex]) {
+      rowErrors[rowIndex] = { fields: {}, details: {} };
+    }
+    rowErrors[rowIndex].fields[field] = message;
+    errors.push(`MAWB #${rowIndex + 1}: ${message}`);
+  };
+
+  const setDetailFieldError = (rowIndex, detailIndex, field, message) => {
+    if (!rowErrors[rowIndex]) {
+      rowErrors[rowIndex] = { fields: {}, details: {} };
+    }
+    if (!rowErrors[rowIndex].details[detailIndex]) {
+      rowErrors[rowIndex].details[detailIndex] = {};
+    }
+    rowErrors[rowIndex].details[detailIndex][field] = message;
+    errors.push(`MAWB #${rowIndex + 1}, ULD #${detailIndex + 1}: ${message}`);
+  };
+
+  safeRows.forEach((row, rowIndex) => {
+    const mawb = sanitizeCargoText(row?.mawb);
+    const airlineCode = sanitizeCargoText(row?.airlines_code);
+    const flightNumber = sanitizeCargoText(row?.flight_number);
+    const origin = sanitizeCargoText(row?.origin);
+    const dest = sanitizeCargoText(row?.dest);
+    const flightDate = toText(row?.flight_date);
+    const aircraftRegistration = sanitizeCargoText(row?.aircraft_registration);
+    const details = Array.isArray(row?.details) ? row.details : [];
+
+    if (!MAWB_RE.test(mawb)) {
+      setRowFieldError(
+        rowIndex,
+        'mawb',
+        'Format MAWB harus 3 digit prefix + 8 digit serial (contoh: 023-47922604).'
+      );
+    }
+    if (!AIRLINE_CODE_RE.test(airlineCode)) {
+      setRowFieldError(
+        rowIndex,
+        'airlines_code',
+        'Airline code harus 2-3 karakter alfanumerik (contoh: FX).'
+      );
+    }
+    if (!FLIGHT_NUMBER_RE.test(flightNumber)) {
+      setRowFieldError(
+        rowIndex,
+        'flight_number',
+        'Flight number harus 2-8 karakter alfanumerik tanpa spasi.'
+      );
+    }
+    if (!AIRPORT_CODE_RE.test(origin)) {
+      setRowFieldError(rowIndex, 'origin', 'Origin harus 3 huruf kode bandara IATA (contoh: CGK).');
+    }
+    if (!AIRPORT_CODE_RE.test(dest)) {
+      setRowFieldError(rowIndex, 'dest', 'Destination harus 3 huruf kode bandara IATA (contoh: SIN).');
+    }
+    if (!isAcceptedFlightDate(flightDate)) {
+      setRowFieldError(rowIndex, 'flight_date', 'Flight date harus format YYYY-MM-DD atau DD-MM-YYYY.');
+    }
+    if (aircraftRegistration && !AIRCRAFT_REG_RE.test(aircraftRegistration)) {
+      setRowFieldError(
+        rowIndex,
+        'aircraft_registration',
+        'Aircraft registration hanya boleh huruf/angka/tanda minus (2-20 karakter).'
+      );
+    }
+    if (!details.length) {
+      setRowFieldError(rowIndex, 'details', 'Minimal harus ada 1 detail ULD.');
+      return;
+    }
+
+    const uldKeySet = new Set();
+    let detailPiecesTotal = 0;
+    let detailWeightTotal = 0;
+    let detailVolumeTotal = 0;
+
+    details.forEach((detail, detailIndex) => {
+      const uldType = sanitizeCargoText(detail?.uld_type);
+      const uldNumberRaw = normalizeUldNumber(detail?.uld_number);
+      const uldOwner = sanitizeCargoText(detail?.uld_owner);
+      const pieces = parseNumeric(detail?.pieces);
+      const weight = parseNumeric(detail?.weight);
+      const volume = parseNumeric(detail?.volume);
+      const serialMatch = uldNumberRaw.match(/(\d{4,5})/);
+
+      if (!ULD_TYPE_RE.test(uldType)) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'uld_type',
+          'ULD Type harus 3 karakter alfanumerik (contoh: PMC, AKE).'
+        );
+      }
+      if (!serialMatch) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'uld_number',
+          'ULD Number harus mengandung serial numerik 4-5 digit.'
+        );
+      }
+      if (!ULD_OWNER_RE.test(uldOwner)) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'uld_owner',
+          'ULD Owner harus tepat 2 huruf (contoh: FX).'
+        );
+      }
+      if (pieces === null || !Number.isInteger(pieces) || pieces <= 0) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'pieces',
+          'Pieces harus bilangan bulat lebih dari 0.'
+        );
+      }
+      if (weight === null || weight <= 0) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'weight',
+          'Weight harus angka lebih dari 0.'
+        );
+      }
+      if (volume === null || volume < 0) {
+        setDetailFieldError(
+          rowIndex,
+          detailIndex,
+          'volume',
+          'Volume harus angka 0 atau lebih (nilai 0 otomatis dikonversi menjadi 1.00).'
+        );
+      }
+
+      if (serialMatch && ULD_TYPE_RE.test(uldType)) {
+        const uldKey = `${uldType}|${serialMatch[1]}|${uldOwner}`;
+        if (uldKeySet.has(uldKey)) {
+          setDetailFieldError(
+            rowIndex,
+            detailIndex,
+            'uld_number',
+            'Kombinasi ULD Type, serial, dan owner duplikat.'
+          );
+        } else {
+          uldKeySet.add(uldKey);
+        }
+      }
+
+      if (Number.isFinite(pieces)) {
+        detailPiecesTotal += pieces;
+      }
+      if (Number.isFinite(weight)) {
+        detailWeightTotal += weight;
+      }
+      if (Number.isFinite(volume)) {
+        detailVolumeTotal += volume <= 0 ? 1 : volume;
+      }
+    });
+
+    const rowTotalPieces = parseNumeric(row?.total_pieces);
+    if (rowTotalPieces !== null && detailPiecesTotal > rowTotalPieces) {
+      setRowFieldError(
+        rowIndex,
+        'total_pieces',
+        `Total pieces detail (${detailPiecesTotal}) melebihi total pieces MAWB (${rowTotalPieces}).`
+      );
+    }
+
+    const rowTotalWeight = parseNumeric(row?.total_weight);
+    if (rowTotalWeight !== null && detailWeightTotal > rowTotalWeight) {
+      setRowFieldError(
+        rowIndex,
+        'total_weight',
+        `Total weight detail (${detailWeightTotal}) melebihi total weight MAWB (${rowTotalWeight}).`
+      );
+    }
+
+    const rowTotalVolume = parseNumeric(row?.total_volume);
+    if (rowTotalVolume !== null && rowTotalVolume > 0 && detailVolumeTotal > rowTotalVolume) {
+      setRowFieldError(
+        rowIndex,
+        'total_volume',
+        `Total volume detail (${detailVolumeTotal}) melebihi total volume MAWB (${rowTotalVolume}).`
+      );
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    rowErrors,
+  };
+};
+
 const mapRowsToManifestPayload = (rows) => {
   const flightMap = new Map();
   const uldMap = new Map();
@@ -324,14 +575,14 @@ const mapRowsToManifestPayload = (rows) => {
   let ignoredDetails = 0;
 
   (Array.isArray(rows) ? rows : []).forEach((row) => {
-    const airlineCode = toText(row?.airlines_code);
-    const flightNumber = toText(row?.flight_number);
-    const flightDate = toText(row?.flight_date);
-    const pointOfLoading = toText(row?.origin);
-    const pointOfUnloading = toText(row?.dest);
-    const aircraftRegistration = toText(row?.aircraft_registration);
-    const route = toText(row?.route);
-    const natureOfGoods = toText(row?.nature_of_goods);
+    const airlineCode = sanitizeCargoText(row?.airlines_code);
+    const flightNumber = sanitizeCargoText(row?.flight_number);
+    const flightDate = normalizeDateText(row?.flight_date);
+    const pointOfLoading = sanitizeCargoText(row?.origin);
+    const pointOfUnloading = sanitizeCargoText(row?.dest);
+    const aircraftRegistration = sanitizeCargoText(row?.aircraft_registration);
+    const route = sanitizeCargoText(row?.route);
+    const natureOfGoods = sanitizeCargoText(row?.nature_of_goods);
 
     if (
       !airlineCode ||
@@ -358,6 +609,7 @@ const mapRowsToManifestPayload = (rows) => {
     const rowTotalWeight = parseNumeric(row?.total_weight);
     const fallbackTotalWeight =
       rowTotalWeight ?? parseNumeric(getTotalWeightFromDetails(details)) ?? 0;
+    const rowTotalVolume = parseNumeric(row?.total_volume);
 
     const flightKey = `${flightNumber}|${flightDate}`;
     if (!flightMap.has(flightKey)) {
@@ -370,6 +622,7 @@ const mapRowsToManifestPayload = (rows) => {
         point_of_unloading: pointOfUnloading,
         total_pieces: 0,
         total_weight_kg: 0,
+        total_volume: 0,
         source_document: 'manual-form',
         raw_text: '',
       });
@@ -377,9 +630,9 @@ const mapRowsToManifestPayload = (rows) => {
 
     let masterPiecesAccumulated = 0;
     details.forEach((detail) => {
-      const uldType = toText(detail?.uld_type);
-      const uldNumber = toText(detail?.uld_number);
-      const uldOwner = toText(detail?.uld_owner) || airlineCode || 'FX';
+      const uldType = sanitizeCargoText(detail?.uld_type);
+      const uldNumber = normalizeUldNumber(detail?.uld_number);
+      const uldOwner = sanitizeCargoText(detail?.uld_owner) || airlineCode || 'FX';
       if (!uldType || !uldNumber || !pointOfUnloading) {
         ignoredDetails += 1;
         return;
@@ -400,6 +653,8 @@ const mapRowsToManifestPayload = (rows) => {
 
       const detailPieces = parseNumeric(detail?.pieces) ?? 0;
       const detailWeight = parseNumeric(detail?.weight) ?? 0;
+      const detailVolumeSeed = parseNumeric(detail?.volume) ?? 0;
+      const detailVolume = detailVolumeSeed <= 0 ? 1 : detailVolumeSeed;
       masterPiecesAccumulated += detailPieces;
 
       const mawbKey = `${uldKey}|${mawbInfo.mawb_prefix}|${mawbInfo.mawb_number}`;
@@ -415,6 +670,7 @@ const mapRowsToManifestPayload = (rows) => {
           total_pieces: toNumericString(fallbackTotalPieces),
           total_weight_kg: toNumericString(fallbackTotalWeight),
           weight_kg: toNumericString(detailWeight),
+          volume: toFixedNumericString(detailVolume, 2, '0.00'),
           nature_of_goods: natureOfGoods,
           route: route,
           transit_flag: 0,
@@ -423,8 +679,10 @@ const mapRowsToManifestPayload = (rows) => {
         const existing = mawbMap.get(mawbKey);
         const nextPieces = (parseNumeric(existing.pieces) ?? 0) + detailPieces;
         const nextWeight = (parseNumeric(existing.weight_kg) ?? 0) + detailWeight;
+        const nextVolume = (parseNumeric(existing.volume) ?? 0) + detailVolume;
         existing.pieces = toNumericString(nextPieces);
         existing.weight_kg = toNumericString(nextWeight);
+        existing.volume = toFixedNumericString(nextVolume, 2, '0.00');
         if (!existing.nature_of_goods && natureOfGoods) {
           existing.nature_of_goods = natureOfGoods;
         }
@@ -435,16 +693,23 @@ const mapRowsToManifestPayload = (rows) => {
 
       const flightRow = flightMap.get(flightKey);
       flightRow.total_weight_kg += detailWeight;
+      flightRow.total_volume += detailVolume;
     });
 
     const flightRow = flightMap.get(flightKey);
     flightRow.total_pieces += rowTotalPieces ?? masterPiecesAccumulated;
+    if ((rowTotalVolume ?? 0) <= 0 && flightRow.total_volume === 0) {
+      flightRow.total_volume += 1;
+    } else if ((rowTotalVolume ?? 0) > 0 && flightRow.total_volume === 0) {
+      flightRow.total_volume += rowTotalVolume ?? 0;
+    }
   });
 
   const flight_manifest = Array.from(flightMap.values()).map((flight) => ({
     ...flight,
     total_pieces: toNumericString(flight.total_pieces),
     total_weight_kg: toNumericString(flight.total_weight_kg),
+    total_volume: toFixedNumericString(flight.total_volume, 2, '0.00'),
   }));
 
   return {
@@ -474,6 +739,7 @@ export default function BuildupForm({
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [validationResult, setValidationResult] = useState({ isValid: true, errors: [], rowErrors: {} });
 
   useEffect(() => {
     setRows(cloneRows(initialRows));
@@ -482,7 +748,20 @@ export default function BuildupForm({
         ? initialMasterAwbs.join('\n')
         : ''
     );
+    setValidationResult({ isValid: true, errors: [], rowErrors: {} });
   }, [initialRows, initialMasterAwbs]);
+
+  const revalidateRows = (nextRows) => {
+    const result = validateRowsForCargoImp(nextRows);
+    setValidationResult(result);
+    return result;
+  };
+
+  const getRowFieldError = (rowIndex, field) =>
+    validationResult?.rowErrors?.[rowIndex]?.fields?.[field] ?? '';
+
+  const getDetailFieldError = (rowIndex, detailIndex, field) =>
+    validationResult?.rowErrors?.[rowIndex]?.details?.[detailIndex]?.[field] ?? '';
 
   const runSearchMasterAwb = async ({ append = false } = {}) => {
     const masterAwbs = splitAwbInput(inputValue);
@@ -517,6 +796,7 @@ export default function BuildupForm({
       }
 
       setRows(nextRows);
+      revalidateRows(nextRows);
 
       if (result.length) {
         const successMessage = append
@@ -560,6 +840,7 @@ export default function BuildupForm({
       const message = resolveErrorMessage(err, 'Gagal mengambil data Master AWB.');
       if (!append) {
         setRows([]);
+        setValidationResult({ isValid: true, errors: [], rowErrors: {} });
       }
       showToast({
         type: 'danger',
@@ -583,24 +864,28 @@ export default function BuildupForm({
   const handleReset = () => {
     setInputValue('');
     setRows([]);
+    setValidationResult({ isValid: true, errors: [], rowErrors: {} });
   };
 
   const handleMasterFieldChange = (rowIndex, fieldKey, nextValue) => {
-    setRows((prevRows) =>
-      prevRows.map((row, index) =>
+    setRows((prevRows) => {
+      const nextRows = prevRows.map((row, index) =>
         index === rowIndex
           ? {
               ...row,
-              [fieldKey]: nextValue,
+              [fieldKey]:
+                fieldKey === 'aircraft_registration' ? sanitizeCargoText(nextValue) : nextValue,
             }
           : row
-      )
-    );
+      );
+      revalidateRows(nextRows);
+      return nextRows;
+    });
   };
 
   const handleDetailFieldChange = (rowIndex, detailIndex, fieldKey, nextValue) => {
-    setRows((prevRows) =>
-      prevRows.map((row, index) => {
+    setRows((prevRows) => {
+      const nextRows = prevRows.map((row, index) => {
         if (index !== rowIndex) {
           return row;
         }
@@ -609,7 +894,10 @@ export default function BuildupForm({
           currentDetailIndex === detailIndex
             ? {
                 ...detail,
-                [fieldKey]: nextValue,
+                [fieldKey]:
+                  fieldKey === 'pieces' || fieldKey === 'weight' || fieldKey === 'volume'
+                    ? nextValue
+                    : sanitizeCargoText(nextValue),
               }
             : detail
         );
@@ -618,13 +906,15 @@ export default function BuildupForm({
           ...row,
           details: nextDetails,
         };
-      })
-    );
+      });
+      revalidateRows(nextRows);
+      return nextRows;
+    });
   };
 
   const handleAddDetail = (rowIndex) => {
-    setRows((prevRows) =>
-      prevRows.map((row, index) => {
+    setRows((prevRows) => {
+      const nextRows = prevRows.map((row, index) => {
         if (index !== rowIndex) {
           return row;
         }
@@ -634,13 +924,15 @@ export default function BuildupForm({
           ...row,
           details: nextDetails,
         };
-      })
-    );
+      });
+      revalidateRows(nextRows);
+      return nextRows;
+    });
   };
 
   const handleRemoveDetail = (rowIndex, detailIndex) => {
-    setRows((prevRows) =>
-      prevRows.map((row, index) => {
+    setRows((prevRows) => {
+      const nextRows = prevRows.map((row, index) => {
         if (index !== rowIndex) {
           return row;
         }
@@ -656,8 +948,10 @@ export default function BuildupForm({
           ...row,
           details: detailsOrFallback,
         };
-      })
-    );
+      });
+      revalidateRows(nextRows);
+      return nextRows;
+    });
   };
 
   const handleSaveDraft = async () => {
@@ -666,6 +960,20 @@ export default function BuildupForm({
         type: 'warning',
         title: 'Draft Manifest',
         message: 'Data Master AWB belum ada untuk disimpan.',
+      });
+      return;
+    }
+
+    const validation = revalidateRows(rows);
+    if (!validation.isValid) {
+      const previewErrors = validation.errors.slice(0, 3).join(' | ');
+      showToast({
+        type: 'warning',
+        title: 'Validasi Cargo-IMP',
+        message:
+          validation.errors.length > 3
+            ? `${previewErrors} | +${validation.errors.length - 3} error lainnya.`
+            : previewErrors,
       });
       return;
     }
@@ -787,6 +1095,12 @@ export default function BuildupForm({
 
       {rows.length ? (
         <div className="px-3 pb-3">
+          {!validationResult.isValid ? (
+            <div className="alert alert-warning mb-3" role="alert">
+              Ditemukan {validationResult.errors.length} masalah validasi Cargo-IMP. Perbaiki field
+              yang ditandai merah sebelum menyimpan draft.
+            </div>
+          ) : null}
           <div className="d-flex justify-content-end gap-2 mb-3">
             {typeof onCancel === 'function' ? (
               <button type="button" className="btn btn-outline-secondary" onClick={onCancel}>
@@ -820,6 +1134,11 @@ export default function BuildupForm({
                 row.details,
                 'weight'
               );
+              const remainingVolume = getRemainingFromDetails(
+                row.total_volume,
+                row.details,
+                'volume'
+              );
 
               return (
                 <div className="accordion-item" key={rowKey}>
@@ -847,11 +1166,15 @@ export default function BuildupForm({
                         {MASTER_FIELDS.map((field) => (
                           <div key={field.key} className="col-12 col-md-6 col-xl-4">
                             <label className="form-label mb-1">{field.label}</label>
+                            {(() => {
+                              const fieldError = getRowFieldError(rowIndex, field.key);
+                              return (
+                                <>
                             <input
                               type={field.type}
                               className={`form-control form-control-sm ${field.className || ''} ${
                                 field.readOnly ? 'bg-light' : ''
-                              }`}
+                              } ${fieldError ? 'is-invalid' : ''}`}
                               value={row[field.key] ?? ''}
                               readOnly={Boolean(field.readOnly)}
                               onChange={
@@ -865,6 +1188,10 @@ export default function BuildupForm({
                                       )
                               }
                             />
+                                  {fieldError ? <div className="invalid-feedback">{fieldError}</div> : null}
+                                </>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>
@@ -891,11 +1218,21 @@ export default function BuildupForm({
                                 {DETAIL_FIELDS.map((field) => (
                                   <div key={field.key} className="col-12 col-md-6 col-xl-2">
                                     <label className="form-label mb-1">{field.label}</label>
-                                    {field.key === 'pieces' || field.key === 'weight' ? (
+                                    {(() => {
+                                      const fieldError = getDetailFieldError(
+                                        rowIndex,
+                                        detailIndex,
+                                        field.key
+                                      );
+                                      return (
+                                        <>
+                                    {field.key === 'pieces' || field.key === 'weight' || field.key === 'volume' ? (
                                       <div className="input-group input-group-sm">
                                         <input
                                           type={field.type}
-                                          className={`form-control ${field.className || ''}`}
+                                          className={`form-control ${field.className || ''} ${
+                                            fieldError ? 'is-invalid' : ''
+                                          }`}
                                           value={detail[field.key] ?? ''}
                                           aria-describedby={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
                                           onChange={(event) =>
@@ -913,13 +1250,17 @@ export default function BuildupForm({
                                         >
                                           {field.key === 'pieces'
                                             ? `Sisa: ${remainingPieces || '-'}`
-                                            : `Sisa: ${remainingWeight || '-'}`}
+                                            : field.key === 'weight'
+                                            ? `Sisa: ${remainingWeight || '-'}`
+                                            : `Sisa: ${remainingVolume || '-'}`}
                                         </span>
                                       </div>
                                     ) : (
                                       <input
                                         type={field.type}
-                                        className={`form-control form-control-sm ${field.className || ''}`}
+                                        className={`form-control form-control-sm ${field.className || ''} ${
+                                          fieldError ? 'is-invalid' : ''
+                                        }`}
                                         value={detail[field.key] ?? ''}
                                         onChange={(event) =>
                                           handleDetailFieldChange(
@@ -931,6 +1272,12 @@ export default function BuildupForm({
                                         }
                                       />
                                     )}
+                                          {fieldError ? (
+                                            <div className="invalid-feedback d-block">{fieldError}</div>
+                                          ) : null}
+                                        </>
+                                      );
+                                    })()}
                                   </div>
                                 ))}
 

@@ -1,13 +1,21 @@
 const formatMawb = (mawb) => {
-  if (!mawb) return '';
-  if (mawb.includes('-')) return mawb;
-  if (mawb.length >= 11) {
-    const prefix = mawb.slice(0, 3);
-    const serial = mawb.slice(3);
+  const cleaned = sanitizeCargoImpText(mawb).replace(/[^A-Z0-9]/g, '');
+  if (!cleaned) return '';
+
+  if (cleaned.length >= 11) {
+    const prefix = cleaned.slice(0, 3);
+    const serial = cleaned.slice(3, 11);
     return `${prefix}-${serial}`;
   }
-  return mawb;
+
+  if (cleaned.length > 3) {
+    return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+  }
+
+  return cleaned;
 };
+
+const isValidMawb = (value) => /^[A-Z0-9]{3}-[A-Z0-9]{1,8}$/.test(value);
 
 const formatWeight = (value) => {
   const num = Number(value);
@@ -23,11 +31,30 @@ const normalizeText = (value) => {
 
 const toUpper = (value) => normalizeText(value).toUpperCase();
 
+const sanitizeCargoImpText = (value, maxLength = 0) => {
+  if (!value) return '';
+  let text = toUpper(value)
+    .replace(/[\/\\]/g, ' ')
+    .replace(/[^A-Z0-9 .-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (maxLength > 0) {
+    text = text.slice(0, maxLength).trim();
+  }
+
+  return text;
+};
+
+const normalizeIataCode = (value) => sanitizeCargoImpText(value).replace(/[^A-Z]/g, '').slice(0, 3);
+const isValidIataCode = (value) => /^[A-Z]{3}$/.test(value);
+const normalizeHawb = (value) => sanitizeCargoImpText(value).replace(/[^A-Z0-9.-]/g, '').slice(0, 20);
+
 const ADDRESS_LINE_LIMIT = 35;
 
 const normalizeAddressLine = (value) => {
   if (!value) return '';
-  const cleaned = toUpper(value)
+  const cleaned = sanitizeCargoImpText(value)
     .replace(/\s*-\s*/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
@@ -169,7 +196,7 @@ const extractHostParty = (item, type) => {
 const buildPartyBlock = (tag, party, fallbackCode) => {
   const lines = [];
   const normalized = normalizePartyData(party, fallbackCode);
-  const name = toUpper(normalized?.name ?? '');
+  const name = sanitizeCargoImpText(normalized?.name ?? '', 35);
   if (!name) {
     return lines;
   }
@@ -190,8 +217,8 @@ const buildPartyBlock = (tag, party, fallbackCode) => {
     }
   }
 
-  const city = toUpper(normalized?.city);
-  const country = toUpper(normalized?.country);
+  const city = sanitizeCargoImpText(normalized?.city ?? '', 35);
+  const country = sanitizeCargoImpText(normalized?.country ?? '').replace(/[^A-Z]/g, '').slice(0, 2);
   if (city || country) {
     lines.push(`LOC/${city || 'UNKNOWN'}/${country || 'ID'}`);
   }
@@ -223,20 +250,20 @@ const getTxtLines = (item, header) => {
 
   if (Array.isArray(raw)) {
     raw.forEach((text) => {
-      const cleaned = normalizeText(text);
+      const cleaned = sanitizeCargoImpText(text, 65);
       if (cleaned) {
         lines.push(cleaned);
       }
     });
   } else if (raw) {
-    const cleaned = normalizeText(raw);
+    const cleaned = sanitizeCargoImpText(raw, 65);
     if (cleaned) {
       lines.push(cleaned);
     }
   }
 
   if (!lines.length) {
-    const fallback = normalizeText(item?.KindOfNature ?? header?.KindOfGood ?? '');
+    const fallback = sanitizeCargoImpText(item?.KindOfNature ?? header?.KindOfGood ?? '', 65);
     if (fallback) {
       lines.push(fallback);
     }
@@ -252,9 +279,8 @@ const formatFhlMessage = (payload, fallbackMawb) => {
   const hosts = Array.isArray(payload?.host_awbs) ? payload.host_awbs : [];
 
   const mawb = formatMawb(master?.MasterAWB ?? header?.MasterAWB ?? fallbackMawb);
-  const origin = (master?.Origin ?? header?.Origin ?? '').trim().toUpperCase() || 'XXX';
-  const destination =
-    (master?.Destination ?? header?.Destination ?? '').trim().toUpperCase() || 'XXX';
+  const origin = normalizeIataCode(master?.Origin ?? header?.Origin ?? '') || 'XXX';
+  const destination = normalizeIataCode(master?.Destination ?? header?.Destination ?? '') || 'XXX';
   const airlinesCode = toUpper(
     master?.AirlinesCode ?? master?.airlinescode ?? hosts[0]?.airlinescode
   );
@@ -274,25 +300,27 @@ const formatFhlMessage = (payload, fallbackMawb) => {
         ];
 
   const normalizedHouses = houses.map((item) => {
-    const hawb =
+    const hawb = normalizeHawb(
       item?.HostAWB ??
-      item?.ProofNumber ??
-      master?.MasterAWB ??
-      header?.MasterAWB ??
-      fallbackMawb ??
-      '';
+        item?.ProofNumber ??
+        master?.MasterAWB ??
+        header?.MasterAWB ??
+        fallbackMawb ??
+        ''
+    );
     const pieces = toNumber(item?.Quantity ?? item?.Pieces ?? item?.pieces ?? 0);
     const weight = toNumber(
       item?.Weight ?? item?.GrossWeight ?? item?.NettoWeight ?? item?.Netto ?? 0
     );
-    const nature = String(
+    const nature = sanitizeCargoImpText(
       item?.descriptiongoods ??
         item?.KindOfNature ??
         item?.KindOfCode ??
         master?.KindOfGood ??
         header?.KindOfGood ??
-        'GENERAL CARGO'
-    ).trim();
+        'GENERAL CARGO',
+      65
+    );
     const txtLines = getTxtLines(item, master ?? header ?? {});
     const shipper =
       extractHostParty(item, 'shipper') ?? payload?.shipper ?? header?.shipper ?? null;
@@ -323,6 +351,37 @@ const formatFhlMessage = (payload, fallbackMawb) => {
     { pieces: 0, weight: 0 }
   );
 
+  const validationErrors = [];
+  if (!isValidMawb(mawb)) {
+    validationErrors.push(
+      'MAWB tidak valid. Gunakan format AWB (prefix 3 karakter dan serial, contoh: 220-12345675).'
+    );
+  }
+
+  if (!isValidIataCode(origin) || !isValidIataCode(destination)) {
+    validationErrors.push('Origin dan Destination wajib kode IATA 3 huruf.');
+  }
+
+  if (!normalizedHouses.length) {
+    validationErrors.push('Data HAWB tidak ditemukan.');
+  }
+
+  normalizedHouses.forEach((item, index) => {
+    if (!item.hawb) {
+      validationErrors.push(`HAWB pada baris ${index + 1} kosong atau tidak valid.`);
+    }
+    if (item.pieces <= 0) {
+      validationErrors.push(`Pieces pada HAWB ${item.hawb || `baris ${index + 1}`} harus lebih dari 0.`);
+    }
+    if (item.weight < 0) {
+      validationErrors.push(`Weight pada HAWB ${item.hawb || `baris ${index + 1}`} tidak boleh negatif.`);
+    }
+  });
+
+  if (validationErrors.length) {
+    throw new Error(`Validasi FHL gagal: ${validationErrors.join(' ')}`);
+  }
+
   const lines = [];
   lines.push('FHL/5');
   lines.push(
@@ -330,7 +389,7 @@ const formatFhlMessage = (payload, fallbackMawb) => {
   );
 
   normalizedHouses.forEach((item) => {
-    const hbsNature = normalizeText(item.nature);
+    const hbsNature = sanitizeCargoImpText(item.nature, 65);
     const txtLines = item.txtLines.slice();
     let hbsText = hbsNature;
     let hbsRemainder = '';
@@ -343,7 +402,7 @@ const formatFhlMessage = (payload, fallbackMawb) => {
     const uniqueTxtLines = [];
     const seenTxt = new Set();
     txtLines.forEach((text) => {
-      const cleaned = normalizeText(text);
+      const cleaned = sanitizeCargoImpText(text, 65);
       if (!cleaned) return;
       const key = toUpper(cleaned);
       if (seenTxt.has(key)) return;
@@ -364,7 +423,7 @@ const formatFhlMessage = (payload, fallbackMawb) => {
       )}//${hbsText}`
     );
     uniqueTxtLines.forEach((text) => {
-      lines.push(`TXT/${text.slice(0, Math.min(40, text.length))}`);
+      lines.push(`TXT/${text.slice(0, Math.min(65, text.length))}`);
     });
     if (includeParties) {
       lines.push(...buildPartyBlock('SHP', item.shipper, item.shipperCode));

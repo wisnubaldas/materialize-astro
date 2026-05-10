@@ -12,6 +12,8 @@ class ExportBuildupOut(BaseModel):
     flight_date: date | None = None
     pieces: int | None = None
     total_pieces: int | None = None
+    volume: float | None = None
+    total_volume: float | None = None
     weight: float | None = None
     total_weight: float | None = None
     nature_of_goods: str | None = None

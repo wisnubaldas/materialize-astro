@@ -13,6 +13,7 @@ class ExpManifestFlightOut(BaseModel):
     for_official_use: str | None = None
     total_pieces: int | None = None
     total_weight: float | None = None
+    total_volume: float | None = None
     pdf_link: str | None = None
     create_at: datetime | None = None
     update_at: datetime | None = None

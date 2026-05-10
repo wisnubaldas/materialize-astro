@@ -14,6 +14,7 @@ from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
+from app.schemas.ffm_preview_schema import FfmPreviewOut
 from app.schemas.warehouse_masterwaybill_schema import WarehouseMasterWaybillRequest
 from app.services.buildup_service import BuildupService
 from app.services.warehouse_service import WarehouseService
@@ -71,6 +72,21 @@ def delete_manifest_flight(
                     logger.warning("Gagal menghapus file PDF build up: %s", pdf_path)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/manifest-flight/{header_id}/ffm-preview",
+    summary="Generate preview FFM Cargo-IMP dari data build_up_header + build_up_detail",
+    response_model=FfmPreviewOut,
+)
+def manifest_flight_ffm_preview(
+    header_id: int,
+    manifest_service: WarehouseService = Depends(get_warehouse_manifest_service),
+):
+    try:
+        return manifest_service.generate_ffm_preview(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/submit-fedex-manifest", summary="Submit manifest Fedex dari payload")

@@ -28,6 +28,20 @@ FLIGHT_HEADERS = [
     "point_of_unloading",
     "total_pieces",
     "total_weight_kg",
+    "total_volume",
+    "source_document",
+    "raw_text",
+]
+
+FLIGHT_HEADERS_WITHOUT_TOTAL_VOLUME = [
+    "airline_code",
+    "flight_number",
+    "flight_date",
+    "aircraft_registration",
+    "point_of_loading",
+    "point_of_unloading",
+    "total_pieces",
+    "total_weight_kg",
     "source_document",
     "raw_text",
 ]
@@ -53,6 +67,7 @@ MAWB_HEADERS = [
     "total_pieces",
     "total_weight_kg",
     "weight_kg",
+    "volume",
     "nature_of_goods",
     "route",
     "transit_flag",
@@ -68,6 +83,7 @@ MAWB_HEADERS_WITHOUT_TOTAL_WEIGHT = [
     "pieces",
     "total_pieces",
     "weight_kg",
+    "volume",
     "nature_of_goods",
     "route",
     "transit_flag",
@@ -82,6 +98,7 @@ MAWB_HEADERS_LEGACY = [
     "mawb_number",
     "pieces",
     "weight_kg",
+    "volume",
     "nature_of_goods",
     "route",
     "transit_flag",
@@ -246,6 +263,20 @@ def _format_decimal(value: Decimal) -> str:
         return str(value)
 
 
+def _compose_detail_remark(
+    base_remark: str | None,
+    transit_marker: str | None,
+) -> str | None:
+    parts: list[str] = []
+    cleaned_base = (base_remark or "").strip()
+    cleaned_transit = (transit_marker or "").strip()
+    if cleaned_base:
+        parts.append(cleaned_base)
+    if cleaned_transit:
+        parts.append(cleaned_transit)
+    return " | ".join(parts) if parts else None
+
+
 class BuildupService:
     @staticmethod
     def _build_manifest_payload(flights: list[dict]) -> dict | None:
@@ -373,7 +404,11 @@ class BuildupService:
         ws_uld = wb["uld"]
         ws_mawb = wb["mawb"]
 
-        _read_headers(ws_flight, FLIGHT_HEADERS, "flight_manifest")
+        flight_headers = _read_headers_any(
+            ws_flight,
+            [FLIGHT_HEADERS, FLIGHT_HEADERS_WITHOUT_TOTAL_VOLUME],
+            "flight_manifest",
+        )
         _read_headers(ws_uld, ULD_HEADERS, "uld")
         mawb_headers = _read_headers_any(
             ws_mawb,
@@ -389,7 +424,7 @@ class BuildupService:
                 continue
 
             values = dict(
-                zip(FLIGHT_HEADERS, list(row) + [None] * len(FLIGHT_HEADERS), strict=False)
+                zip(flight_headers, list(row) + [None] * len(flight_headers), strict=False)
             )
 
             airline_code = _normalize_identifier(values.get("airline_code"))
@@ -409,6 +444,7 @@ class BuildupService:
 
             total_pieces = _to_int(values.get("total_pieces"), "total_pieces", idx)
             total_weight = _to_decimal(values.get("total_weight_kg"), "total_weight_kg", idx)
+            total_volume = _to_decimal(values.get("total_volume"), "total_volume", idx)
 
             flight_entries[flight_key] = {
                 "airline_code": airline_code,
@@ -419,6 +455,8 @@ class BuildupService:
                 "point_of_unloading": point_of_unloading,
                 "total_pieces": total_pieces,
                 "total_weight": total_weight,
+                "total_volume": total_volume,
+                "calculated_total_volume": Decimal("0"),
                 "source_document": _normalize_identifier(values.get("source_document"))
                 or "manual-form",
                 "raw_text": _normalize_identifier(values.get("raw_text")),
@@ -499,6 +537,9 @@ class BuildupService:
 
             pieces = _to_int(values.get("pieces"), "pieces", idx)
             weight = _to_decimal(values.get("weight_kg"), "weight_kg", idx)
+            volume = _to_decimal(values.get("volume"), "volume", idx)
+            if volume <= 0:
+                volume = Decimal("1")
             total_pieces = (
                 _to_int(values.get("total_pieces"), "total_pieces", idx, default=pieces)
                 if supports_total_pieces
@@ -541,6 +582,9 @@ class BuildupService:
 
             mawb_dead_stock_tracker[mawb_key]["input_pieces"] += pieces
             mawb_dead_stock_tracker[mawb_key]["input_weight"] += weight
+            flight_entry = flight_entries.get((flight_number, flight_date))
+            if flight_entry:
+                flight_entry["calculated_total_volume"] += volume
 
             uld_entry["mawbs"].append(
                 {
@@ -552,6 +596,7 @@ class BuildupService:
                     if total_weight is not None
                     else None,
                     "weight_kg": _format_decimal(weight),
+                    "volume": _format_decimal(volume),
                     "nature_of_goods": _normalize_identifier(values.get("nature_of_goods")),
                     "route": _normalize_identifier(values.get("route")),
                     "transit_flag": "TRANSIT" if transit_flag else "",
@@ -559,6 +604,13 @@ class BuildupService:
             )
 
         flight_items = list(flight_entries.values())
+        for entry in flight_items:
+            if entry["total_volume"] <= 0:
+                if entry["calculated_total_volume"] > 0:
+                    entry["total_volume"] = entry["calculated_total_volume"]
+                else:
+                    entry["total_volume"] = Decimal("1")
+
         flights_payload: list[dict] = []
         for entry in flight_items:
             flights_payload.append(
@@ -571,6 +623,7 @@ class BuildupService:
                     "point_of_unloading": entry["point_of_unloading"],
                     "total_pieces": entry["total_pieces"],
                     "total_weight_kg": _format_decimal(entry["total_weight"]),
+                    "total_volume": _format_decimal(entry["total_volume"]),
                     "source_document": entry["source_document"],
                     "raw_text": entry["raw_text"],
                     "ulds": entry["ulds"],
@@ -619,6 +672,7 @@ class BuildupService:
                     for_official_use=official_use,
                     total_pieces=entry["total_pieces"],
                     total_weight=float(entry["total_weight"]),
+                    total_volume=float(entry["total_volume"]),
                     pdf_link=pdf_url,
                 )
                 db.add(header_obj)
@@ -636,8 +690,12 @@ class BuildupService:
                                 uld_type=uld["uld_type"],
                                 pieces=mawb["pieces"],
                                 weight=float(mawb["weight_kg"]),
+                                volume=float(mawb["volume"]),
                                 nature_of_goods=mawb.get("nature_of_goods"),
-                                remark=uld.get("remarks") or mawb.get("transit_flag") or None,
+                                remark=_compose_detail_remark(
+                                    base_remark=uld.get("remarks"),
+                                    transit_marker=mawb.get("transit_flag"),
+                                ),
                             )
                             db.add(detail_obj)
                             db.flush()

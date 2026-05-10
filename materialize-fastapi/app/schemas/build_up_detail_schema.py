@@ -11,6 +11,7 @@ class BuildUpDetailOut(BaseModel):
     uld_type: str | None = None
     pieces: int | None = None
     weight: float | None = None
+    volume: float | None = None
     nature_of_goods: str | None = None
     remark: str | None = None
     create_at: datetime | None = None

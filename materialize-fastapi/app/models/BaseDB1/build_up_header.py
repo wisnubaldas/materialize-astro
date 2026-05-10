@@ -30,6 +30,7 @@ class BuildUpHeader(BaseDB1):
     for_official_use = Column(String(255), nullable=True)
     total_pieces = Column(Integer, nullable=True)
     total_weight = Column(Float, nullable=True)
+    total_volume = Column(Float, nullable=True)
     pdf_link = Column(String(255), nullable=True)
     create_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     update_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
