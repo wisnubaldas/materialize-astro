@@ -1,63 +1,34 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.security import HTTPBearer
-from sqlalchemy import or_
-from sqlalchemy.orm import Session
 
-from app.db.mysql import get_db1_r
-from app.models.BaseDB1.role import Role
-from app.models.BaseDB1.user import User
-from app.models.BaseDB1.user_role import UserRole
+from app.dependencies.auth_deps import get_auth_service
 from app.schemas.user_schema import LoginSchema, TokenSchema, UserProfileSchema
-from app.utils.auth_util import clear_jwt_cookie, create_token, set_jwt_cookie, verify_password
+from app.services.auth_service import AuthService
+from app.utils.auth_util import clear_jwt_cookie, set_jwt_cookie
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
 
 
 @router.post("/login", response_model=TokenSchema)
-def login(payload: LoginSchema, response: Response, db: Session = Depends(get_db1_r)):
+def login(
+    payload: LoginSchema,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+):
     """prameter menggunakan username `fmorrison@example.org` dan password `password123` untuk login"""
-    # Cari user berdasarkan username
-
-    user = db.query(User).filter(User.email == payload.email).first()
-    # Kalau user tidak ada atau password tidak cocok
-    if not user or not verify_password(payload.password, user.password):  # type: ignore
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    token = create_token(user.email)  # type: ignore
+    token = auth_service.login(payload)
     set_jwt_cookie(response, token)
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserProfileSchema)
-def get_profile(request: Request, db: Session = Depends(get_db1_r)):
+def get_profile(
+    request: Request,
+    auth_service: AuthService = Depends(get_auth_service),
+):
     subject = request.scope.get("user", {}).get("username")
-    if not subject:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
-
-    user = (
-        db.query(User)
-        .filter(or_(User.email == subject, User.username == subject))
-        .first()
-    )
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User tidak ditemukan")
-
-    # RBAC: ambil daftar role user untuk kebutuhan frontend (menu & izin).
-    roles = (
-        db.query(Role.role_name)
-        .join(UserRole, UserRole.role_id == Role.id)
-        .filter(UserRole.user_id == user.id)
-        .order_by(Role.role_name.asc())
-        .all()
-    )
-    role_names = [item.role_name for item in roles]
-
-    return {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "roles": role_names,
-    }
+    return auth_service.get_profile(subject)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

@@ -12,6 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.api import routes
 from app.api.middleware.auth_middleware import JWTMiddleware
+from app.api.middleware.exception_handler import register_exception_handlers
 from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.utils.env import ENV
 from app.utils.helper import EMAIL_TEMPLATE_DIR, PDF_DIR
@@ -111,6 +112,7 @@ app.add_middleware(
 
 app.add_middleware(JWTMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
+register_exception_handlers(app)
 
 
 # Header keamanan & Vary

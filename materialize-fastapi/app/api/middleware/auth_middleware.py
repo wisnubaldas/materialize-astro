@@ -4,6 +4,7 @@ from jose import JWTError, jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from app.utils.api_response import build_error_response
 from app.utils.env import ENV
 
 # Daftar path yang tidak dicek token-nya
@@ -40,7 +41,10 @@ class JWTMiddleware(BaseHTTPMiddleware):
         # Ambil token dari header Authorization
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+            return JSONResponse(
+                build_error_response(message="Unauthorized"),
+                status_code=401,
+            )
 
         token = auth_header.replace("Bearer ", "")
         try:
@@ -48,6 +52,9 @@ class JWTMiddleware(BaseHTTPMiddleware):
             # Inject ke scope (bisa diakses di route sebagai request.scope["user"])
             request.scope["user"] = {"username": payload.get("sub")}
         except Exception as e:
-            return JSONResponse({"detail": str(e)}, status_code=401)
+            return JSONResponse(
+                build_error_response(message=str(e)),
+                status_code=401,
+            )
 
         return await call_next(request)
