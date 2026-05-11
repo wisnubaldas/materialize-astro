@@ -25,6 +25,33 @@ const normalizeText = (value) => {
  * Normalisasi + uppercase untuk field yang wajib uppercase di Cargo-IMP.
  */
 const toUpper = (value) => normalizeText(value).toUpperCase();
+
+const alphaOnly = (value) => toUpper(value).replace(/[^A-Z]/g, '');
+const alnumOnly = (value) => toUpper(value).replace(/[^A-Z0-9]/g, '');
+
+const normalizeAirportCode = (value, fallback = 'XXX') => {
+  const token = alphaOnly(value);
+  if (token.length >= 3) return token.slice(0, 3);
+  return alphaOnly(fallback).slice(0, 3) || 'XXX';
+};
+
+const normalizeCountryCode = (value, fallback = 'XX') => {
+  const token = alphaOnly(value);
+  if (token.length >= 2) return token.slice(0, 2);
+  return alphaOnly(fallback).slice(0, 2) || 'XX';
+};
+
+const normalizePostalCode = (value) => {
+  const token = alnumOnly(value);
+  return token ? token.slice(0, 9) : '';
+};
+
+const normalizePlace = (value, fallback = 'UNKNOWN') => {
+  const cleaned = toUpper(value).replace(/[^A-Z0-9 .-]/g, ' ').replace(/\s+/g, ' ').trim();
+  const source = cleaned || toUpper(fallback) || 'UNKNOWN';
+  return source.slice(0, 17).trim() || 'UNKNOWN';
+};
+
 const truncateText = (value, maxLength) => {
   const text = normalizeText(value);
   if (!text) return '';
@@ -190,6 +217,57 @@ const getWeight = (item) => item?.Weight ?? item?.NettoWeight ?? item?.GrossWeig
 
 const getVolume = (item) => item?.Volume ?? item?.VolumeCargo ?? 0;
 
+const normalizePcIndicator = (value, fallback = 'PP') => {
+  const token = toUpper(value).replace(/[^A-Z]/g, '');
+  if (['PP', 'CC', 'PC', 'CP'].includes(token)) return token;
+  if (token === 'P') return 'PP';
+  if (token === 'C') return 'CC';
+  return toUpper(fallback || 'PP');
+};
+
+const formatRoutingSegment = (routingList, destination, defaultCarrier = 'II') => {
+  const fallback = `RTG/${normalizeAirportCode(destination, 'XXX')}${toUpper(defaultCarrier || 'II')}`;
+  const raw = toUpper(routingList)
+    .replace(/[\r\n,;]+/g, '/')
+    .replace(/\s+/g, '/')
+    .split('/')
+    .map((token) => token.replace(/[^A-Z0-9]/g, ''))
+    .filter(Boolean);
+
+  if (!raw.length) return fallback;
+
+  const merged = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const token = raw[i];
+    const next = raw[i + 1] || '';
+
+    if (token.length === 3 && next.length === 2) {
+      merged.push(`${token}${next}`);
+      i += 1;
+      continue;
+    }
+
+    if ([2, 3, 5].includes(token.length)) {
+      merged.push(token);
+    }
+  }
+
+  if (!merged.length) return fallback;
+
+  const first = merged[0].length === 3 ? `${merged[0]}${toUpper(defaultCarrier || 'II')}` : merged[0];
+  const onward = merged
+    .slice(1)
+    .map((token) => {
+      if (token.length === 5) return token;
+      if (token.length === 3) return token;
+      return '';
+    })
+    .filter(Boolean)
+    .slice(0, 2);
+
+  return `RTG/${[first, ...onward].join('/')}`;
+};
+
 /**
  * Membentuk segment party (SHP/CNE) dari data pihak terkait.
  * Output contoh:
@@ -198,35 +276,32 @@ const getVolume = (item) => item?.Volume ?? item?.VolumeCargo ?? 0;
  * - LOC/...
  * - ZIP/...
  */
-const buildPartySegments = (prefix, info, fallbackCode) => {
+const buildPartySegments = (prefix, info, fallbackCode, options = {}) => {
   const lines = [];
-  const name = toUpper(info?.name || fallbackCode || '');
+  const name = truncateText(toUpper(info?.name || fallbackCode || 'UNKNOWN'), 35);
   lines.push(prefix);
-  if (name) {
-    lines.push(`NAM/${name}`);
-  }
+  lines.push(`NAM/${name || 'UNKNOWN'}`);
 
   const addressLines = buildAddressLines(info?.address1, info?.address2, [
     info?.city,
     info?.country,
     info?.postal,
   ]);
-  if (addressLines.length) {
-    lines.push(`ADR/${addressLines[0]}`);
-    if (addressLines[1]) {
-      lines.push(`/${addressLines[1]}`);
-    }
+  const primaryAddress = truncateText(addressLines[0] || 'UNKNOWN ADDRESS', ADDRESS_LINE_LIMIT);
+  lines.push(`ADR/${primaryAddress}`);
+  if (addressLines[1]) {
+    lines.push(`/${truncateText(addressLines[1], ADDRESS_LINE_LIMIT)}`);
   }
 
-  const city = toUpper(info?.city);
-  const country = toUpper(info?.country);
-  if (city || country) {
-    lines.push(`LOC/${city || 'UNKNOWN'}`);
-    lines.push(`/${country || 'XX'}`);
-  }
+  const city = normalizePlace(info?.city, options.fallbackCity || 'UNKNOWN');
+  const country = normalizeCountryCode(info?.country, options.fallbackCountry || 'XX');
+  const postal = normalizePostalCode(info?.postal);
 
-  if (info?.postal) {
-    lines.push(`ZIP/${toUpper(info.postal)}`);
+  lines.push(`LOC/${city}`);
+  if (postal) {
+    lines.push(`/${country}/${postal}`);
+  } else {
+    lines.push(`/${country}`);
   }
 
   return lines;
@@ -243,8 +318,11 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const master = payload?.master ?? header ?? {};
   const hosts = Array.isArray(payload?.host_awbs) ? payload.host_awbs : details;
   const primaryHost = hosts[0] ?? details[0] ?? {};
-  const origin = toUpper(fwb?.origin || master?.Origin || header?.Origin || 'XXX');
-  const destination = toUpper(fwb?.destination || master?.Destination || header?.Destination || 'XXX');
+  const origin = normalizeAirportCode(fwb?.origin || master?.Origin || header?.Origin, 'XXX');
+  const destination = normalizeAirportCode(
+    fwb?.destination || master?.Destination || header?.Destination,
+    'XXX'
+  );
   const awbPrefix = normalizeText(fwb?.awb_prefix || '');
   const awbNumber = normalizeText(fwb?.awb_number || '');
   const fwbAwb =
@@ -252,11 +330,7 @@ const formatFwbMessage = (payload, fallbackMawb) => {
       ? [awbPrefix, awbNumber].filter(Boolean).join(awbPrefix && awbNumber ? '-' : '')
       : '';
   const masterAwb =
-    fwbAwb ||
-    master?.MasterAWB ||
-    header?.MasterAWB ||
-    details[0]?.MasterAWB ||
-    fallbackMawb;
+    fwbAwb || master?.MasterAWB || header?.MasterAWB || details[0]?.MasterAWB || fallbackMawb;
   const formattedMawb = formatMawb(masterAwb);
 
   const baseTotalPieces =
@@ -290,13 +364,14 @@ const formatFwbMessage = (payload, fallbackMawb) => {
     20
   );
   const rateClass = toUpper(
-    fwb?.rate_class || master?.KindOfCode || primaryHost?.kd_kemasan || primaryHost?.KindOfCode || ''
+    fwb?.rate_class ||
+      master?.KindOfCode ||
+      primaryHost?.kd_kemasan ||
+      primaryHost?.KindOfCode ||
+      ''
   );
 
-  const slac = toNumberOr(
-    fwb?.slac,
-    primaryHost?.Quantity ?? primaryHost?.Pieces ?? totalPieces
-  );
+  const slac = toNumberOr(fwb?.slac, primaryHost?.Quantity ?? primaryHost?.Pieces ?? totalPieces);
 
   const shipperCustomer = header?.shipper ?? payload?.shipper;
   const consigneeCustomer = header?.consignee ?? payload?.consignee;
@@ -305,7 +380,7 @@ const formatFwbMessage = (payload, fallbackMawb) => {
     name: fwb?.shipper_name || primaryHost?.shippername || shipperCustomer?.CompanyName,
     address1: fwb?.shipper_address || primaryHost?.shipperaddress || shipperCustomer?.Address1,
     address2: shipperCustomer?.Address2,
-    city: fwb?.shipper_city || primaryHost?.shippercity || shipperCustomer?.City,
+    city: fwb?.shipper_city || primaryHost?.shippercity || shipperCustomer?.City || origin,
     country: fwb?.shipper_country || primaryHost?.shippercountry || shipperCustomer?.CountryCode,
     postal: fwb?.shipper_postcode || primaryHost?.shipperpostal || shipperCustomer?.PostCode,
     tax: primaryHost?.shipperTaxNo || shipperCustomer?.NPWPNumber,
@@ -320,8 +395,9 @@ const formatFwbMessage = (payload, fallbackMawb) => {
     address1:
       fwb?.consignee_address || primaryHost?.Consigneeaddress || consigneeCustomer?.Address1,
     address2: consigneeCustomer?.Address2,
-    city: fwb?.consignee_city || primaryHost?.Consigneecity || consigneeCustomer?.City,
-    country: fwb?.consignee_country || primaryHost?.Consigneecountry || consigneeCustomer?.CountryCode,
+    city: fwb?.consignee_city || primaryHost?.Consigneecity || consigneeCustomer?.City || destination,
+    country:
+      fwb?.consignee_country || primaryHost?.Consigneecountry || consigneeCustomer?.CountryCode,
     postal: fwb?.consignee_postcode || consigneeCustomer?.PostCode,
     tax: consigneeCustomer?.NPWPNumber,
   };
@@ -338,8 +414,7 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   })();
 
   const issueDateRaw = fwb?.issue_date || master?.DateEntry || header?.DateOfEntry || '';
-  const issueDate =
-    issueDateRaw && dayjs(issueDateRaw).isValid() ? dayjs(issueDateRaw) : dayjs();
+  const issueDate = issueDateRaw && dayjs(issueDateRaw).isValid() ? dayjs(issueDateRaw) : dayjs();
 
   const messageType = toUpper(fwb?.message_type || 'FWB');
   const messageVersion = normalizeText(fwb?.message_version || '17');
@@ -347,8 +422,8 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const weightUnit = toUpper(fwb?.weight_unit || 'K');
 
   const cvdCurrency = toUpper(fwb?.currency || 'USD');
-  const cvdChargeCode = toUpper(fwb?.charge_code || '');
-  const cvdWeightCharge = toUpper(fwb?.weight_charge_pp_cc || 'PP');
+  const cvdChargeCode = alnumOnly(fwb?.charge_code || '').slice(0, 2);
+  const cvdWeightCharge = normalizePcIndicator(fwb?.weight_charge_pp_cc, 'PP');
   const declaredValueCarriage = toUpper(fwb?.declared_value_carriage || 'NVD');
   const declaredValueCustoms = toUpper(fwb?.declared_value_customs || 'NCV');
   const insuranceValue = toUpper(fwb?.insurance_value || 'XXX');
@@ -371,24 +446,30 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const lines = [];
 
   lines.push(`${messageType}/${messageVersion}`);
-  const shipmentQuantityWeight = `${shipmentDescriptionCode}${formatNumber(
+  let shipmentQuantityWeight = `${shipmentDescriptionCode}${formatNumber(
     totalPieces,
     0
   )}${weightUnit}${formatNumber(totalWeight, 1)}`;
-  const headerParts = [`${formattedMawb}${origin}${destination}`, shipmentQuantityWeight];
   if (totalVolume) {
-    headerParts.push(`MC${formatNumber(totalVolume, 3)}`);
+    shipmentQuantityWeight = `${shipmentQuantityWeight}MC${formatNumber(totalVolume, 3)}`;
   }
+  const headerParts = [`${formattedMawb}${origin}${destination}`, shipmentQuantityWeight];
   lines.push(headerParts.join('/'));
 
-  if (fwb?.routing_list) {
-    lines.push(`RTG/${toUpper(fwb.routing_list)}`);
-  } else if (destination) {
-    lines.push(`RTG/${destination}II`);
-  }
+  lines.push(formatRoutingSegment(fwb?.routing_list, destination, 'II'));
 
-  lines.push(...buildPartySegments('SHP', shipperInfo, master?.ShipperCode));
-  lines.push(...buildPartySegments('CNE', consigneeInfo, master?.ConsigneeCode));
+  lines.push(
+    ...buildPartySegments('SHP', shipperInfo, master?.ShipperCode, {
+      fallbackCity: origin,
+      fallbackCountry: 'ID',
+    })
+  );
+  lines.push(
+    ...buildPartySegments('CNE', consigneeInfo, master?.ConsigneeCode, {
+      fallbackCity: destination,
+      fallbackCountry: 'XX',
+    })
+  );
 
   if (agentCode || agentName) {
     lines.push(`AGT//${agentNumericCode}`);
@@ -435,7 +516,10 @@ const formatFwbMessage = (payload, fallbackMawb) => {
   const issuePlace = toUpper(fwb?.issue_place || origin);
   const issuedBy = truncateText(toUpper(fwb?.issued_by || agentName), 20);
   const refParticipantCode = truncateText(
-    String(toUpper(fwb?.agent_account || agentCode || agentName || 'AGENT')).replace(/[^A-Z0-9]/g, ''),
+    String(toUpper(fwb?.agent_account || agentCode || agentName || 'AGENT')).replace(
+      /[^A-Z0-9]/g,
+      ''
+    ),
     17
   );
   lines.push(`ISU/${issueDate.format('DDMMMYY').toUpperCase()}/${issuePlace}/${issuedBy}`);

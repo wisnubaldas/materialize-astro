@@ -84,7 +84,7 @@ def run_sending_ke_hubnet(use_dev_url: bool = True, limit: int = 10) -> None:  #
             return _ensure_non_zero(val).strftime("%Y-%m-%d %H:%M")
 
         if isinstance(val, date):
-            return datetime.combine(val, datetime.min.time()).replace(  # noqa: DTZ001
+            return datetime.combine(val, datetime.min.time()).replace(
                 hour=send_time.hour,
                 minute=send_time.minute,
                 second=send_time.second,

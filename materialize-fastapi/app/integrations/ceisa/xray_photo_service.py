@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import json
 from pathlib import Path
-import shutil
 from typing import Any
 from uuid import uuid4
 
@@ -50,7 +50,7 @@ class CeisaXrayPhotoService:
         payload = self.parse_payload_json(payload_json)
         self._ensure_images(images)
         log = self.repository.create_queued(
-            payload.model_dump(),
+            payload.model_dump(by_alias=True),
             operation_type=op_type,
         )
 

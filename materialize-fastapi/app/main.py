@@ -1,9 +1,8 @@
+import logging
 import os
 import platform
 from contextlib import asynccontextmanager
-from datetime import datetime
 
-import pytz
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -18,6 +17,8 @@ from app.utils.env import ENV
 from app.utils.helper import EMAIL_TEMPLATE_DIR, PDF_DIR
 from app.utils.logging_config import setup_logging
 
+logger = logging.getLogger(__name__)
+
 # Set timezone environment variable
 os.environ["TZ"] = "Asia/Jakarta"
 
@@ -25,19 +26,15 @@ os.environ["TZ"] = "Asia/Jakarta"
 if hasattr(time := __import__("time"), "tzset") and platform.system() != "Windows":
     time.tzset()
 
-# Untuk debugging
-tz = pytz.timezone("Asia/Jakarta")
-print("Current Jakarta time:", datetime.now(tz))
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Kode sebelum 'yield' adalah event startup
     setup_logging()  # init logging first so subsequent logs are captured
+    logger.info("Application startup completed")
     yield  # Aplikasi mulai menerima request di titik ini
     # Kode setelah 'yield' adalah event shutdown (opsional)
     # Tambahkan logika cleanup di sini jika diperlukan
-    print("Application shutdown")
+    logger.info("Application shutdown")
 
 
 # app

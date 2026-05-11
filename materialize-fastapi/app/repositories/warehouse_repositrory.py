@@ -186,11 +186,7 @@ class WarehouseRepository:
         result = self.db.execute(sql, {"mawb": master_awbs})
         return [ExportBuildupOut.model_validate(dict(row._mapping)) for row in result]
 
-    def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
-        """Fetch build-up master rows from SQL query based on MasterAWB list."""
-        if not master_awbs:
-            return []
-
+    def _build_unique_awbs(self, master_awbs: list[str]) -> list[str]:
         unique_awbs: list[str] = []
         seen_awbs: set[str] = set()
         for awb in master_awbs:
@@ -199,19 +195,18 @@ class WarehouseRepository:
                 continue
             seen_awbs.add(key)
             unique_awbs.append(awb.strip())
+        return unique_awbs
 
+    def _fetch_buildup_rows(self, unique_awbs: list[str]) -> list[ExportBuildupOut]:
         rows = self._get_buildup_rows_by_awbs(
             master_awbs=unique_awbs,
             query_filename=self.EXPORT_BUILDUP_QUERY,
         )
-
         existing_awb_keys = {
             self._normalize_awb_key(row.mawb) for row in rows if self._normalize_awb_key(row.mawb)
         }
         missing_awbs = [
-            awb
-            for awb in unique_awbs
-            if self._normalize_awb_key(awb) not in existing_awb_keys
+            awb for awb in unique_awbs if self._normalize_awb_key(awb) not in existing_awb_keys
         ]
         if missing_awbs:
             rows.extend(
@@ -220,7 +215,12 @@ class WarehouseRepository:
                     query_filename=self.DOMESTIC_OUTGOING_BUILDUP_QUERY,
                 )
             )
+        return rows
 
+    def _fetch_dead_stock_by_mawb(
+        self,
+        unique_awbs: list[str],
+    ) -> dict[str, tuple[int | None, float | None]]:
         dead_stock_rows = []
         try:
             dead_stock_rows = (
@@ -252,25 +252,51 @@ class WarehouseRepository:
                 int(stock.pieces) if stock.pieces is not None else None,
                 float(stock.weight) if stock.weight is not None else None,
             )
+        return dead_stock_by_mawb
 
+    def _map_rows_by_mawb(
+        self,
+        rows: list[ExportBuildupOut],
+        dead_stock_by_mawb: dict[str, tuple[int | None, float | None]],
+    ) -> dict[str, ExportBuildupOut]:
         by_mawb: dict[str, ExportBuildupOut] = {}
         for row in rows:
             key = self._normalize_awb_key(row.mawb)
-            if key and key not in by_mawb:
-                dead_stock_totals = dead_stock_by_mawb.get(key)
-                if dead_stock_totals:
-                    pieces, weight = dead_stock_totals
-                    if pieces is not None:
-                        row.total_pieces = pieces
-                    if weight is not None:
-                        row.total_weight = weight
-                by_mawb[key] = row
+            if not key or key in by_mawb:
+                continue
+            dead_stock_totals = dead_stock_by_mawb.get(key)
+            if dead_stock_totals:
+                pieces, weight = dead_stock_totals
+                if pieces is not None:
+                    row.total_pieces = pieces
+                if weight is not None:
+                    row.total_weight = weight
+            by_mawb[key] = row
+        return by_mawb
 
+    def _order_rows_by_awb(
+        self,
+        unique_awbs: list[str],
+        by_mawb: dict[str, ExportBuildupOut],
+    ) -> list[ExportBuildupOut]:
         ordered_rows: list[ExportBuildupOut] = []
         for awb in unique_awbs:
             key = self._normalize_awb_key(awb)
             row = by_mawb.get(key)
             if row:
                 ordered_rows.append(row)
-
         return ordered_rows
+
+    def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
+        """Fetch build-up master rows from SQL query based on MasterAWB list."""
+        if not master_awbs:
+            return []
+
+        unique_awbs = self._build_unique_awbs(master_awbs)
+        if not unique_awbs:
+            return []
+
+        rows = self._fetch_buildup_rows(unique_awbs)
+        dead_stock_by_mawb = self._fetch_dead_stock_by_mawb(unique_awbs)
+        by_mawb = self._map_rows_by_mawb(rows, dead_stock_by_mawb)
+        return self._order_rows_by_awb(unique_awbs, by_mawb)

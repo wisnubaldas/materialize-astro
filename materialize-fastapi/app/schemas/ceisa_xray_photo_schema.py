@@ -2,16 +2,18 @@
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CeisaXrayPhotoRequestPayload(BaseModel):
     """Payload JSON pada part `data` multipart kirim foto X-Ray CEISA."""
 
-    nomorAju: str = Field(..., min_length=1, max_length=80)
-    nomorBlAwb: str = Field(..., min_length=1, max_length=80)
-    tanggalBlAwb: date
-    kodeKantor: str = Field(..., min_length=1, max_length=20)
+    model_config = ConfigDict(populate_by_name=True)
+
+    nomor_aju: str = Field(..., alias="nomorAju", min_length=1, max_length=80)
+    nomor_bl_awb: str = Field(..., alias="nomorBlAwb", min_length=1, max_length=80)
+    tanggal_bl_awb: date = Field(..., alias="tanggalBlAwb")
+    kode_kantor: str = Field(..., alias="kodeKantor", min_length=1, max_length=20)
 
 
 class CeisaXrayPhotoEnqueueResult(BaseModel):
@@ -50,19 +52,21 @@ class CeisaXrayPhotoJobStatus(BaseModel):
 class CeisaXrayPhotoGetRequestPayload(BaseModel):
     """Payload request get foto X-Ray CEISA."""
 
-    nomorAju: str | None = Field(default=None, min_length=1, max_length=80)
-    nomorBlAwb: str | None = Field(default=None, min_length=1, max_length=80)
-    tanggalBlAwb: date | None = None
-    kodeKantor: str | None = Field(default=None, min_length=1, max_length=20)
+    model_config = ConfigDict(populate_by_name=True)
+
+    nomor_aju: str | None = Field(default=None, alias="nomorAju", min_length=1, max_length=80)
+    nomor_bl_awb: str | None = Field(default=None, alias="nomorBlAwb", min_length=1, max_length=80)
+    tanggal_bl_awb: date | None = Field(default=None, alias="tanggalBlAwb")
+    kode_kantor: str | None = Field(default=None, alias="kodeKantor", min_length=1, max_length=20)
 
     @model_validator(mode="after")
     def validate_identifier(self):
         """Validasi pola identifikasi sesuai spesifikasi CEISA."""
-        has_nomor_aju = bool((self.nomorAju or "").strip())
+        has_nomor_aju = bool((self.nomor_aju or "").strip())
         has_triple = bool(
-            (self.nomorBlAwb or "").strip()
-            and self.tanggalBlAwb is not None
-            and (self.kodeKantor or "").strip()
+            (self.nomor_bl_awb or "").strip()
+            and self.tanggal_bl_awb is not None
+            and (self.kode_kantor or "").strip()
         )
         if not has_nomor_aju and not has_triple:
             raise ValueError(

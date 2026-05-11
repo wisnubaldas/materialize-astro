@@ -1,9 +1,9 @@
 from sqlalchemy import (
-    Float,
     TIMESTAMP,
     BigInteger,
     Column,
     Date,
+    Float,
     Index,
     Integer,
     String,

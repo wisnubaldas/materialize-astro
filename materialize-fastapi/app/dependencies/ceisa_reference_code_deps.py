@@ -4,12 +4,12 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.repositories.ceisa_log_repository import CeisaLogRepository
-from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.integrations.ceisa.log_service import CeisaLogService
 from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 from app.integrations.ceisa.sync_job import CeisaSyncJobService
+from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.services.ceisa_reference_code_service import CeisaReferenceCodeService
 
 

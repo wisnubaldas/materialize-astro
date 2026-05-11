@@ -4,14 +4,14 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_r, get_db1_w
-from app.repositories.ceisa_log_repository import CeisaLogRepository
-from app.repositories.ceisa_reference_origin_goods_repository import (
-    CeisaReferenceOriginGoodsRepository,
-)
 from app.integrations.ceisa.client import CeisaClientService
 from app.integrations.ceisa.log_service import CeisaLogService
 from app.integrations.ceisa.oauth import CeisaOAuthService
 from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
+from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_reference_origin_goods_repository import (
+    CeisaReferenceOriginGoodsRepository,
+)
 from app.services.ceisa_reference_origin_goods_service import CeisaReferenceOriginGoodsService
 
 

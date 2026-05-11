@@ -1,8 +1,8 @@
 from sqlalchemy import (
-    Float,
     TIMESTAMP,
     BigInteger,
     Column,
+    Float,
     ForeignKey,
     Index,
     Integer,

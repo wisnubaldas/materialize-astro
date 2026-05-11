@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
 from app.models.BaseDB1.mst_ceisa_reference_origin_goods import MstCeisaReferenceOriginGoods
 from app.repositories.ceisa_reference_origin_goods_repository import (
     CeisaReferenceOriginGoodsRepository,
@@ -13,7 +14,6 @@ from app.schemas.mst_ceisa_reference_origin_goods_schema import (
     MstCeisaReferenceOriginGoodsOut,
     MstCeisaReferenceOriginGoodsUpdate,
 )
-from app.integrations.ceisa.reference_code import CeisaReferenceCodeService
 
 
 class CeisaReferenceOriginGoodsService:

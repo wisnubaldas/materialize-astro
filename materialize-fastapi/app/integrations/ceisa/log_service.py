@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_log_repository import (
+    CeisaLogRepository,
+    CeisaRequestLogInput,
+    CeisaWebhookLogInput,
+)
 
 
 class CeisaLogService:
@@ -26,12 +30,14 @@ class CeisaLogService:
         """Simpan log awal request outbound CEISA secara non-blocking."""
         try:
             return self.repository.create_request_log(
-                service_name=service_name,
-                endpoint_path=endpoint_path,
-                http_method=http_method,
-                request_headers=self._sanitize_headers(request_headers),
-                request_payload=request_payload,
-                request_id=request_id,
+                CeisaRequestLogInput(
+                    service_name=service_name,
+                    endpoint_path=endpoint_path,
+                    http_method=http_method,
+                    request_headers=self._sanitize_headers(request_headers),
+                    request_payload=request_payload,
+                    request_id=request_id,
+                )
             )
         except Exception:
             return None
@@ -90,12 +96,14 @@ class CeisaLogService:
         """Simpan log awal webhook inbound CEISA secara non-blocking."""
         try:
             return self.repository.create_webhook_log(
-                webhook_event_id=webhook_event_id,
-                event_type=event_type,
-                request_headers=self._sanitize_headers(request_headers),
-                request_payload=request_payload,
-                signature_value=signature_value,
-                signature_valid=signature_valid,
+                CeisaWebhookLogInput(
+                    webhook_event_id=webhook_event_id,
+                    event_type=event_type,
+                    request_headers=self._sanitize_headers(request_headers),
+                    request_payload=request_payload,
+                    signature_value=signature_value,
+                    signature_valid=signature_valid,
+                )
             )
         except Exception:
             return None

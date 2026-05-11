@@ -832,7 +832,6 @@ class BuildupService:
             autoescape=select_autoescape(["html", "xml"]),
         )
         manifest = BuildupService._build_manifest_payload(flights)
-        print(f"ini kenapa flight? {flights}")
         try:
             template = env.get_template("pdf_build_up.html")
             html_content = template.render(
@@ -869,12 +868,12 @@ class BuildupService:
                     "Gunakan pydyf versi >=0.10 dan <0.12, lalu install ulang dependency."
                 ),
             ) from exc
-        except Exception:
+        except Exception as exc:
             logger.exception("WeasyPrint gagal menghasilkan output PDF build up.")
             raise HTTPException(
                 status_code=500,
                 detail="Gagal memproses file PDF build up dengan WeasyPrint.",
-            )
+            ) from exc
 
         if not pdf_bytes:
             raise HTTPException(status_code=500, detail="File PDF build up kosong.")

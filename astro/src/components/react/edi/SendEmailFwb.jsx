@@ -62,13 +62,19 @@ const buildFwbDefaults = (payload, fallbackAwb) => {
     .filter((value) => value !== null && value !== undefined && value !== '')
     .join('x');
 
+  const origin = header?.Origin ?? '';
+  const destination = header?.Destination ?? '';
+  const shipperName = shipper?.CompanyName ?? 'UNKNOWN SHIPPER';
+  const consigneeName = consignee?.CompanyName ?? 'UNKNOWN CONSIGNEE';
+  const agentName = agent?.CompanyName ?? shipperName;
+
   return {
     message_type: 'FWB',
     message_version: '17',
     awb_prefix,
     awb_number,
-    origin: header?.Origin ?? '',
-    destination: header?.Destination ?? '',
+    origin,
+    destination,
     shipment_description_code: 'T',
     total_pieces: totalPieces || '',
     weight_unit: 'K',
@@ -79,24 +85,24 @@ const buildFwbDefaults = (payload, fallbackAwb) => {
     flight_number: header?.FlightNumber ?? '',
     flight_date: flightDate,
     flight_carrier: header?.AirlinesCode ?? '',
-    shipper_name: shipper?.CompanyName ?? '',
+    shipper_name: shipperName,
     shipper_address: joinParts(shipper?.Address1, shipper?.Address2),
-    shipper_city: shipper?.City ?? '',
+    shipper_city: shipper?.City ?? origin,
     shipper_state: '',
-    shipper_country: shipper?.CountryCode ?? '',
+    shipper_country: shipper?.CountryCode ?? 'ID',
     shipper_postcode: shipper?.PostCode ?? '',
     shipper_contact: buildContact(shipper),
-    consignee_name: consignee?.CompanyName ?? '',
+    consignee_name: consigneeName,
     consignee_address: joinParts(consignee?.Address1, consignee?.Address2),
-    consignee_city: consignee?.City ?? '',
+    consignee_city: consignee?.City ?? destination,
     consignee_state: '',
-    consignee_country: consignee?.CountryCode ?? '',
+    consignee_country: consignee?.CountryCode ?? 'XX',
     consignee_postcode: consignee?.PostCode ?? '',
     consignee_contact: buildContact(consignee),
     agent_iata_code: '',
     agent_account: agent?.CustomerCode ?? header?.AgenCode ?? '',
-    agent_name: agent?.CompanyName ?? '',
-    agent_city: agent?.City ?? '',
+    agent_name: agentName,
+    agent_city: agent?.City ?? origin,
     currency: 'USD',
     charge_code: '',
     weight_charge_pp_cc: header?.PaymentCode ?? 'PP',
@@ -111,7 +117,7 @@ const buildFwbDefaults = (payload, fallbackAwb) => {
     chargeable_weight: header?.TotalCAW ?? '',
     rate: '',
     total_charge: '',
-    goods_description: primaryDetail?.KindOfNature ?? '',
+    goods_description: primaryDetail?.KindOfNature ?? 'GENERAL CARGO',
     dimensions,
     volume: totalVolume || '',
     slac: primaryDetail?.Pieces ?? (totalPieces || ''),
@@ -124,10 +130,10 @@ const buildFwbDefaults = (payload, fallbackAwb) => {
     prepaid_other_charge: '',
     total_prepaid: '',
     collect_charge: '',
-    shipper_certification: shipper?.CompanyName ?? '',
+    shipper_certification: shipperName,
     issue_date: issueDate,
-    issue_place: header?.Origin ?? '',
-    issued_by: agent?.CompanyName ?? '',
+    issue_place: origin,
+    issued_by: agentName,
     special_handling_code: primaryDetail?.DG ?? '',
     ssr: '',
     osi: '',
@@ -148,7 +154,11 @@ export default function SendEmailFwb({ slug }) {
   const [sendData, setSendData] = useState(null);
   const fwbData = useMemo(() => {
     if (!sendData) return null;
-    return sendData.fwb ?? buildFwbDefaults(sendData, slug);
+    const defaults = buildFwbDefaults(sendData, slug);
+    return {
+      ...defaults,
+      ...(sendData.fwb ?? {}),
+    };
   }, [sendData, slug]);
   const handleSendEmail = async ({ emails }) => {
     const recipients = Array.isArray(emails) ? emails : [];
@@ -156,7 +166,7 @@ export default function SendEmailFwb({ slug }) {
       showToast({ type: 'danger', title: 'FWB', message: 'Alamat email wajib diisi.' });
       return;
     }
-    if (!sendData || !message) {
+    if (!sendData || !fwbData || !message) {
       showToast({ type: 'danger', title: 'FWB', message: 'Data FWB belum siap dikirim.' });
       return;
     }
@@ -166,7 +176,7 @@ export default function SendEmailFwb({ slug }) {
       await ediClient.sendEmailFwb({
         emails: recipients,
         message: message,
-        data: sendData,
+        data: { ...sendData, fwb: fwbData },
         edi: 'FWB',
       });
       showToast({ type: 'success', title: 'FWB', message: 'Email FWB berhasil dikirim.' });
@@ -237,8 +247,8 @@ export default function SendEmailFwb({ slug }) {
 
   useEffect(() => {
     if (!sendData || !slug) return;
-    setMessage(formatFwbMessage(sendData, slug));
-  }, [sendData, slug]);
+    setMessage(formatFwbMessage({ ...sendData, fwb: fwbData ?? undefined }, slug));
+  }, [sendData, fwbData, slug]);
 
   const updateFwbField = (key, value) => {
     setSendData((prev) => {

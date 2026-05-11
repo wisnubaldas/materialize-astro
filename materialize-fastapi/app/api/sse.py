@@ -1,17 +1,19 @@
 # app/api/sse_route.py
 import asyncio
 import json
+import logging
 
 import redis.asyncio as redis
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
+from app.services.angkasapura_service import UPLOAD_INVOICE_AP2_CHANNEL, INVAp2Service
 from app.services.crypto_service import decrypt_key
-from app.services.angkasapura_service import INVAp2Service, UPLOAD_INVOICE_AP2_CHANNEL
 from app.services.sse_service import SSEUTIL
 
 REDIS_URL = "redis://localhost:6379/0"
 router = APIRouter(prefix="/sse", tags=["Routing untuk SSE server-sent event"])
+logger = logging.getLogger(__name__)
 
 
 async def redis_to_sse(channel: str):
@@ -33,7 +35,7 @@ async def stream_sending_ke_hubnet(key: str):
     try:
         decrypt_key(key)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
+        raise HTTPException(status_code=401, detail=str(e)) from e
 
     return StreamingResponse(
         redis_to_sse("sending_ke_hubnet_channel"), media_type="text/event-stream"
@@ -45,7 +47,7 @@ async def log_send_invoice_ap2(key: str):
     try:
         decrypt_key(key)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
+        raise HTTPException(status_code=401, detail=str(e)) from e
 
     return StreamingResponse(
         redis_to_sse("send_invoice_ap2_channel"), media_type="text/event-stream"
@@ -64,7 +66,7 @@ async def angkasapura_upload_invoice(key: str):
     try:
         decrypt_key(key)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
+        raise HTTPException(status_code=401, detail=str(e)) from e
 
     return StreamingResponse(_upload_invoice_excel_event_stream(), media_type="text/event-stream")
 
@@ -85,7 +87,7 @@ async def __log_event_stream():
 
             await asyncio.sleep(5)  # interval cek log
     except asyncio.CancelledError:
-        print("SSE client disconnected")
+        logger.info("SSE client disconnected")
         raise
 
 
@@ -94,7 +96,7 @@ async def log_app(_request: Request, key: str):
     try:
         decrypt_key(key)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))  # noqa: B904
+        raise HTTPException(status_code=401, detail=str(e)) from e
     return StreamingResponse(__log_event_stream(), media_type="text/event-stream")
 
 # @router.get("/arithmetic")

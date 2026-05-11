@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -11,6 +12,35 @@ from sqlalchemy.orm import Session
 from app.models.BaseDB1.ceisa_reference_sync_log import CeisaReferenceSyncLog
 from app.models.BaseDB1.ceisa_request_log import CeisaRequestLog
 from app.models.BaseDB1.ceisa_webhook_log import CeisaWebhookLog
+
+
+@dataclass(slots=True)
+class CeisaSyncSuccessMetrics:
+    inserted: int
+    updated: int
+    deactivated: int
+    total_snapshot: int
+    total_active: int
+
+
+@dataclass(slots=True)
+class CeisaRequestLogInput:
+    service_name: str
+    endpoint_path: str
+    http_method: str
+    request_headers: dict[str, Any] | None
+    request_payload: Any
+    request_id: str | None = None
+
+
+@dataclass(slots=True)
+class CeisaWebhookLogInput:
+    webhook_event_id: str | None
+    event_type: str | None
+    request_headers: dict[str, Any] | None
+    request_payload: Any
+    signature_value: str | None = None
+    signature_valid: bool | None = None
 
 
 class CeisaLogRepository:
@@ -49,20 +79,16 @@ class CeisaLogRepository:
     def mark_success(
         self,
         log: CeisaReferenceSyncLog,
-        inserted: int,
-        updated: int,
-        deactivated: int,
-        total_snapshot: int,
-        total_active: int,
+        metrics: CeisaSyncSuccessMetrics,
     ) -> CeisaReferenceSyncLog:
         """Update status log menjadi SUCCESS beserta metrik sinkronisasi."""
         log.status = "SUCCESS"
         log.finished_at = datetime.now(timezone.utc)
-        log.inserted_count = inserted
-        log.updated_count = updated
-        log.deactivated_count = deactivated
-        log.total_snapshot = total_snapshot
-        log.total_active = total_active
+        log.inserted_count = metrics.inserted
+        log.updated_count = metrics.updated
+        log.deactivated_count = metrics.deactivated
+        log.total_snapshot = metrics.total_snapshot
+        log.total_active = metrics.total_active
         log.error_message = None
         self.db.commit()
         self.db.refresh(log)
@@ -77,23 +103,15 @@ class CeisaLogRepository:
         self.db.refresh(log)
         return log
 
-    def create_request_log(
-        self,
-        service_name: str,
-        endpoint_path: str,
-        http_method: str,
-        request_headers: dict[str, Any] | None,
-        request_payload: Any,
-        request_id: str | None = None,
-    ) -> CeisaRequestLog:
+    def create_request_log(self, payload: CeisaRequestLogInput) -> CeisaRequestLog:
         """Buat log awal untuk request outbound CEISA."""
         log = CeisaRequestLog(
-            request_id=request_id,
-            service_name=service_name,
-            endpoint_path=endpoint_path,
-            http_method=http_method.upper(),
-            request_headers=self._to_text(request_headers),
-            request_payload=self._to_text(request_payload),
+            request_id=payload.request_id,
+            service_name=payload.service_name,
+            endpoint_path=payload.endpoint_path,
+            http_method=payload.http_method.upper(),
+            request_headers=self._to_text(payload.request_headers),
+            request_payload=self._to_text(payload.request_payload),
             request_at=datetime.now(timezone.utc),
             execution_status="PENDING",
         )
@@ -142,23 +160,15 @@ class CeisaLogRepository:
         self.db.refresh(log)
         return log
 
-    def create_webhook_log(
-        self,
-        webhook_event_id: str | None,
-        event_type: str | None,
-        request_headers: dict[str, Any] | None,
-        request_payload: Any,
-        signature_value: str | None = None,
-        signature_valid: bool | None = None,
-    ) -> CeisaWebhookLog:
+    def create_webhook_log(self, payload: CeisaWebhookLogInput) -> CeisaWebhookLog:
         """Buat log awal webhook inbound CEISA."""
         log = CeisaWebhookLog(
-            webhook_event_id=webhook_event_id,
-            event_type=event_type,
-            request_headers=self._to_text(request_headers),
-            request_payload=self._to_text(request_payload),
-            signature_value=signature_value,
-            signature_valid=signature_valid,
+            webhook_event_id=payload.webhook_event_id,
+            event_type=payload.event_type,
+            request_headers=self._to_text(payload.request_headers),
+            request_payload=self._to_text(payload.request_payload),
+            signature_value=payload.signature_value,
+            signature_valid=payload.signature_valid,
             processing_status="RECEIVED",
             received_at=datetime.now(timezone.utc),
         )

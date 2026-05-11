@@ -23,6 +23,16 @@ Backend adalah pusat business logic, validasi final, otorisasi final, database a
 - Database: MySQL/MariaDB via SQLAlchemy session.
 - Architecture: Simple Clean Architecture dengan Repository Pattern dan Service Layer.
 - Dependency Injection wajib konsisten untuk session, repository, service, config, dan current user.
+- Performa kode Python wajib dijaga dengan acuan linting dan rule `ruff.toml` project, termasuk pencegahan pola kode lambat/tidak efisien.
+
+---
+
+## Async and Performance Safety Rules
+
+- Dilarang mencampur `async def` dengan operasi blocking langsung seperti `time.sleep()`, blocking I/O, atau client sinkron yang memblokir event loop.
+- Untuk delay pada context async gunakan `await asyncio.sleep(...)`, bukan `time.sleep(...)`.
+- Untuk library blocking yang belum async-native, jalankan via threadpool/worker terkontrol agar event loop FastAPI tetap responsif.
+- Setiap implementasi baru wajib mempertimbangkan dampak performa endpoint, query, dan job; ikuti rule Ruff sebagai baseline kualitas dan performa kode.
 
 ---
 

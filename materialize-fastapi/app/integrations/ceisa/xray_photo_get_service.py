@@ -23,7 +23,7 @@ class CeisaXrayPhotoGetService:
 
     def enqueue_request(self, payload: CeisaXrayPhotoGetRequestPayload):
         """Simpan request get foto X-Ray ke queue."""
-        return self.repository.create_queued(payload.model_dump())
+        return self.repository.create_queued(payload.model_dump(by_alias=True))
 
     def get_job(self, job_id: int):
         """Ambil status job get foto X-Ray."""

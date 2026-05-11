@@ -2,6 +2,7 @@
 
 from fastapi import HTTPException
 
+from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.mst_ceisa_reference_code_schema import (
@@ -9,7 +10,6 @@ from app.schemas.mst_ceisa_reference_code_schema import (
     CeisaReferenceCodeSyncResult,
     MstCeisaReferenceCodeOut,
 )
-from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
 
 
 class CeisaReferenceCodeService:

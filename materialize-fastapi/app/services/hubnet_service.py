@@ -367,7 +367,7 @@ class HbnetRequestService:
                 return _apply_valid_time(FLT_DATE).strftime("%Y-%m-%d %H:%M:%S")
 
             if isinstance(FLT_DATE, date):
-                return datetime.combine(  # noqa: DTZ001
+                return datetime.combine(
                     FLT_DATE,
                     datetime.min.time(),
                 ).replace(

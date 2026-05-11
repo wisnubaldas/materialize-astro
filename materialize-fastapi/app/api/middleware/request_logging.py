@@ -41,30 +41,28 @@ class RequestLoggingMiddleware:
                 or status_code >= 400
                 or duration_ms >= ENV.REQUEST_LOG_SLOW_MS
             )
-            if not should_log:
-                return
+            if should_log:
+                route_path = "-"
+                route = scope.get("route")
+                if route is not None:
+                    route_path = getattr(route, "path", "-")
+                full_path = path if not query_string else f"{path}?{query_string}"
 
-            route_path = "-"
-            route = scope.get("route")
-            if route is not None:
-                route_path = getattr(route, "path", "-")
-            full_path = path if not query_string else f"{path}?{query_string}"
-
-            self.logger.info(
-                "http_request %s %s route=%s status=%s duration_ms=%s",
-                method,
-                full_path,
-                route_path,
-                status_code,
-                duration_ms,
-                extra={
-                    "event": "http.request",
-                    "client_ip": client,
-                    "method": method,
-                    "path": path,
-                    "query_string": query_string or None,
-                    "route": route_path,
-                    "status_code": status_code,
-                    "duration_ms": duration_ms,
-                },
-            )
+                self.logger.info(
+                    "http_request %s %s route=%s status=%s duration_ms=%s",
+                    method,
+                    full_path,
+                    route_path,
+                    status_code,
+                    duration_ms,
+                    extra={
+                        "event": "http.request",
+                        "client_ip": client,
+                        "method": method,
+                        "path": path,
+                        "query_string": query_string or None,
+                        "route": route_path,
+                        "status_code": status_code,
+                        "duration_ms": duration_ms,
+                    },
+                )

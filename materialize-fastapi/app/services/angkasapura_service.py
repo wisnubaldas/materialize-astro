@@ -1271,9 +1271,7 @@ class INVAp2Service:
             ref_data = invoice_lookup_cache[lookup_key]
             source_query = invoice_lookup_source_cache.get(lookup_key)
             for field, value in ref_data.items():
-                if field in {"DOM_INT", "INC_OUT"} and not is_empty_value(value):
-                    mapped_row[field] = value
-                elif is_empty_value(mapped_row.get(field)):
+                if field in {"DOM_INT", "INC_OUT"} and not is_empty_value(value) or is_empty_value(mapped_row.get(field)):
                     mapped_row[field] = value
 
             if (

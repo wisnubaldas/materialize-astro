@@ -37,9 +37,7 @@ def _normalized_flt_datetime(date_value, time_value) -> str:
     if parsed_date is None:
         parsed_date = fallback_date
 
-    if not time_text:
-        time_text = fallback_time
-    elif time_text in {"00:00", "0:00", "00:00:00", "0:00:00", "00:00:00.000000"}:
+    if not time_text or time_text in {"00:00", "0:00", "00:00:00", "0:00:00", "00:00:00.000000"}:
         time_text = fallback_time
 
     parsed_time = None

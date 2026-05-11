@@ -18,12 +18,12 @@ from app.models.BaseDB2.mst_customer import MstCustomer
 from app.models.BaseDB2.weighing_detail_model import EksWeighingDetail
 from app.models.BaseDB2.weighing_header_model import EksWeighingHeader
 from app.schemas.awb_mawb_schema import AwbMawbResponse
+from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_hostawb import EksHostAWBOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
 from app.schemas.imp_masterwaybill import ImpMasterWaybillOut
 from app.schemas.mst_customer_schema import CustomerOut

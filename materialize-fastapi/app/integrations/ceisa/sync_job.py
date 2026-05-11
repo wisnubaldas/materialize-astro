@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.integrations.ceisa.reference_catalog import CeisaReferenceCatalogService
-from app.repositories.ceisa_log_repository import CeisaLogRepository
+from app.repositories.ceisa_log_repository import CeisaLogRepository, CeisaSyncSuccessMetrics
 from app.repositories.ceisa_reference_code_repository import CeisaReferenceCodeRepository
 
 
@@ -50,12 +50,14 @@ class CeisaSyncJobService:
                 rows=rows,
             )
             self.log_repository.mark_success(
-                job=job,
-                inserted=inserted,
-                updated=updated,
-                deactivated=deactivated,
-                total_snapshot=len(rows),
-                total_active=total_active,
+                log=job,
+                metrics=CeisaSyncSuccessMetrics(
+                    inserted=inserted,
+                    updated=updated,
+                    deactivated=deactivated,
+                    total_snapshot=len(rows),
+                    total_active=total_active,
+                ),
             )
         except HTTPException as exc:
             self.log_repository.mark_failed(job, str(exc.detail))

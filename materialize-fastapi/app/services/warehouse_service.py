@@ -1,5 +1,6 @@
 import logging
 import re
+from dataclasses import dataclass
 from datetime import date
 
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
@@ -13,6 +14,25 @@ from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.ffm_preview_schema import FfmPreviewOut
 
 logger = logging.getLogger("warehouse")
+
+
+@dataclass(slots=True)
+class _FfmHeaderContext:
+    carrier: str
+    flight_number: str
+    flight_date: str
+    origin: str
+    destination: str
+
+
+@dataclass(slots=True)
+class _FfmDetailBuildContext:
+    carrier: str
+    origin: str
+    destination: str
+    missing_fields: list[str]
+    warnings: list[str]
+    last_uld_key: str | None = None
 
 
 def _clean_text(value: object) -> str:
@@ -158,59 +178,30 @@ class WarehouseService:
 
         missing_fields: list[str] = []
         warnings: list[str] = []
-
-        carrier = _upper(header.airlines_code)
-        if not carrier:
-            missing_fields.append("header.airlines_code")
-
-        flight_number, derived_flight_no = _derive_flight_number(
-            header.number_build_up,
-            header.airlines_code,
-        )
-        if not flight_number:
-            missing_fields.append(
-                "header.flight_number (tidak tersedia pada tabel build_up_header)"
-            )
-        elif derived_flight_no:
-            warnings.append("Flight number diturunkan dari pattern number_build_up.")
-
-        flight_date = _format_ffm_date(header.flight_date)
-        if not flight_date:
-            missing_fields.append("header.flight_date")
-
-        origin = _upper(header.origin)
-        if not origin:
-            missing_fields.append("header.origin")
-
-        destination = _upper(header.dest)
-        if not destination:
-            missing_fields.append("header.dest")
+        header_context = self._build_ffm_header_context(header, missing_fields, warnings)
 
         if not details:
             missing_fields.append("details (build_up_detail)")
 
         ffm_detail_lines: list[str] = []
-        last_uld_key: str | None = None
+        detail_context = _FfmDetailBuildContext(
+            carrier=header_context.carrier,
+            origin=header_context.origin,
+            destination=header_context.destination,
+            missing_fields=missing_fields,
+            warnings=warnings,
+        )
         valid_detail_count = 0
         for index, row in enumerate(details, start=1):
             current_lines, row_valid = self._build_ffm_detail_lines(
                 row=row,
                 row_index=index,
-                carrier=carrier,
-                origin=origin,
-                destination=destination,
-                missing_fields=missing_fields,
-                warnings=warnings,
-                last_uld_key=last_uld_key,
+                context=detail_context,
             )
             if current_lines:
                 ffm_detail_lines.extend(current_lines)
             if row_valid:
                 valid_detail_count += 1
-                uld_type = _upper(row.uld_type)
-                uld_number = _upper(row.uld_number)
-                if uld_type and uld_number:
-                    last_uld_key = f"{uld_type}|{uld_number}"
 
         if valid_detail_count == 0:
             missing_fields.append("details[*] (tidak ada baris detail yang valid)")
@@ -229,8 +220,12 @@ class WarehouseService:
 
         lines = [
             "FFM/8",
-            f"1/{carrier}{flight_number}/{flight_date}/{origin}",
-            destination,
+            (
+                "1/"
+                f"{header_context.carrier}{header_context.flight_number}/"
+                f"{header_context.flight_date}/{header_context.origin}"
+            ),
+            header_context.destination,
             *ffm_detail_lines,
             "LAST",
         ]
@@ -247,12 +242,7 @@ class WarehouseService:
     def _build_ffm_detail_lines(
         row: BuildUpDetail,
         row_index: int,
-        carrier: str,
-        origin: str,
-        destination: str,
-        missing_fields: list[str],
-        warnings: list[str],
-        last_uld_key: str | None,
+        context: _FfmDetailBuildContext,
     ) -> tuple[list[str], bool]:
         row_missing: list[str] = []
         lines: list[str] = []
@@ -276,32 +266,74 @@ class WarehouseService:
             )
 
         if row_missing:
-            missing_fields.extend(row_missing)
-            warnings.append(f"Baris detail #{row_index} dilewati karena data belum lengkap.")
+            context.missing_fields.extend(row_missing)
+            context.warnings.append(f"Baris detail #{row_index} dilewati karena data belum lengkap.")
             return [], False
 
         uld_type = _upper(row.uld_type)
         uld_number = _upper(row.uld_number)
         if uld_type and uld_number:
             uld_key = f"{uld_type}|{uld_number}"
-            if uld_key != last_uld_key:
+            if uld_key != context.last_uld_key:
                 uld_identifier = _format_uld_identifier(
                     uld_type=uld_type,
                     uld_number=uld_number,
-                    carrier=carrier,
+                    carrier=context.carrier,
                     row_index=row_index,
-                    warnings=warnings,
+                    warnings=context.warnings,
                 )
                 if uld_identifier:
                     lines.append(f"ULD/{uld_identifier}")
+            context.last_uld_key = uld_key
         elif uld_type or uld_number:
-            warnings.append(
+            context.warnings.append(
                 f"details[{row_index}] ULD type/number tidak lengkap, ULD line dilewati."
             )
 
         goods = _upper(row.nature_of_goods) or "GENERAL CARGO"
-        lines.append(f"{mawb}{origin}{destination}/T{pieces}K{weight}MC{volume}/{goods}")
+        lines.append(
+            f"{mawb}{context.origin}{context.destination}/T{pieces}K{weight}MC{volume}/{goods}"
+        )
         return lines, True
+
+    @staticmethod
+    def _build_ffm_header_context(
+        header: BuildUpHeader,
+        missing_fields: list[str],
+        warnings: list[str],
+    ) -> _FfmHeaderContext:
+        carrier = _upper(header.airlines_code)
+        if not carrier:
+            missing_fields.append("header.airlines_code")
+
+        flight_number, derived_flight_no = _derive_flight_number(
+            header.number_build_up,
+            header.airlines_code,
+        )
+        if not flight_number:
+            missing_fields.append("header.flight_number (tidak tersedia pada tabel build_up_header)")
+        elif derived_flight_no:
+            warnings.append("Flight number diturunkan dari pattern number_build_up.")
+
+        flight_date = _format_ffm_date(header.flight_date)
+        if not flight_date:
+            missing_fields.append("header.flight_date")
+
+        origin = _upper(header.origin)
+        if not origin:
+            missing_fields.append("header.origin")
+
+        destination = _upper(header.dest)
+        if not destination:
+            missing_fields.append("header.dest")
+
+        return _FfmHeaderContext(
+            carrier=carrier,
+            flight_number=flight_number,
+            flight_date=flight_date,
+            origin=origin,
+            destination=destination,
+        )
 
     def masterwaybill_datatable(
         self, params: DataTablesParams
