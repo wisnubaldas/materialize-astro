@@ -93,9 +93,10 @@ table.table-uld {
 }
 
 table.table-uld td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
 }
 
 table.table-uld th {
@@ -147,11 +148,11 @@ table.table-uld tfoot td {
 }
 
 .col-uld-mawb {
-  width: 60pt;
+  width: 78pt;
 }
 
 .col-pieces {
-  width: 35pt;
+  width: 44pt;
 }
 
 .col-nature {
@@ -159,7 +160,7 @@ table.table-uld tfoot td {
 }
 
 .col-weight {
-  width: 35pt;
+  width: 44pt;
 }
 
 .col-dest {
@@ -234,6 +235,11 @@ table.table-uld tfoot td {
 
 .stacked-line {
   line-height: 1.35;
+  white-space: nowrap;
+}
+
+.th-nowrap {
+  display: inline-block;
   white-space: nowrap;
 }
 

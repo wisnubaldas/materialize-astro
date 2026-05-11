@@ -834,7 +834,7 @@ class BuildupService:
         manifest = BuildupService._build_manifest_payload(flights)
         print(f"ini kenapa flight? {flights}")
         try:
-            template = env.get_template("air_cargo_manifest2.html")
+            template = env.get_template("pdf_build_up.html")
             html_content = template.render(
                 manifest=manifest,
                 flights=flights,

@@ -8,8 +8,8 @@ from app.repositories.warehouse_repositrory import WarehouseRepository
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
-from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
+from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.ffm_preview_schema import FfmPreviewOut
 
 logger = logging.getLogger("warehouse")
@@ -112,7 +112,9 @@ def _format_uld_identifier(
     return f"{type_code}{serial}{owner_code}"
 
 
-def _derive_flight_number(number_build_up: str | None, airline_code: str | None) -> tuple[str, bool]:
+def _derive_flight_number(
+    number_build_up: str | None, airline_code: str | None
+) -> tuple[str, bool]:
     token = _upper(number_build_up)
     airline = _upper(airline_code)
     if not token:
@@ -213,10 +215,7 @@ class WarehouseService:
         if valid_detail_count == 0:
             missing_fields.append("details[*] (tidak ada baris detail yang valid)")
 
-        blocking_header = any(
-            field.startswith("header.")
-            for field in missing_fields
-        )
+        blocking_header = any(field.startswith("header.") for field in missing_fields)
         generated = bool(not blocking_header and valid_detail_count > 0)
         if not generated:
             return FfmPreviewOut(
@@ -309,13 +308,10 @@ class WarehouseService:
     ) -> DataTablesResponse[EksMasterWaybillOut]:
         return self.repository.masterwaybill_datatable(params)
 
-    def get_masterwaybills_by_awb(
-        self, master_awbs: list[str]
-    ) -> list[ExportBuildupOut]:
+    def get_masterwaybills_by_awb(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
         """Fetch build-up master rows for multiple MasterAWB values."""
         cleaned = [awb.strip() for awb in master_awbs if awb and awb.strip()]
         if not cleaned:
             raise ValueError("MasterAWB wajib diisi.")
 
         return self.repository.get_masterwaybill_by_awbs(cleaned)
-
