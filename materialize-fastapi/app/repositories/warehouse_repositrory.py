@@ -10,16 +10,20 @@ from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
+from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.services.datatables_service import DataTablesService
 
 logger = logging.getLogger("warehouse")
 
 
 class WarehouseRepository:
-    MANIFEST_FIELD_MAP = {
+    QUERY_DIR = Path(__file__).resolve().parent / "query"
+    EXPORT_BUILDUP_QUERY = "get_export_buildup.sql"
+    DOMESTIC_OUTGOING_BUILDUP_QUERY = "get_domestic_outgoing_buildup.sql"
+
+    MANIFEST_FIELD_MAP = {  # noqa: RUF012
         "number": "number_build_up",
         "link_pdf": "pdf_link",
         "created_at": "create_at",
@@ -171,6 +175,17 @@ class WarehouseRepository:
         message = str(exc).lower()
         return "build_up_dead_stock" in message and "doesn't exist" in message
 
+    def _get_buildup_rows_by_awbs(
+        self,
+        master_awbs: list[str],
+        query_filename: str,
+    ) -> list[ExportBuildupOut]:
+        query_path = self.QUERY_DIR / query_filename
+        raw_query = query_path.read_text(encoding="utf-8")
+        sql = text(raw_query).bindparams(bindparam("mawb", expanding=True))
+        result = self.db.execute(sql, {"mawb": master_awbs})
+        return [ExportBuildupOut.model_validate(dict(row._mapping)) for row in result]
+
     def get_masterwaybill_by_awbs(self, master_awbs: list[str]) -> list[ExportBuildupOut]:
         """Fetch build-up master rows from SQL query based on MasterAWB list."""
         if not master_awbs:
@@ -185,14 +200,26 @@ class WarehouseRepository:
             seen_awbs.add(key)
             unique_awbs.append(awb.strip())
 
-        query_path = (
-            Path(__file__).resolve().parent / "query" / "get_export_buildup.sql"
+        rows = self._get_buildup_rows_by_awbs(
+            master_awbs=unique_awbs,
+            query_filename=self.EXPORT_BUILDUP_QUERY,
         )
-        raw_query = query_path.read_text(encoding="utf-8")
-        sql = text(raw_query).bindparams(bindparam("mawb", expanding=True))
 
-        result = self.db.execute(sql, {"mawb": unique_awbs})
-        rows = [ExportBuildupOut.model_validate(dict(row._mapping)) for row in result]
+        existing_awb_keys = {
+            self._normalize_awb_key(row.mawb) for row in rows if self._normalize_awb_key(row.mawb)
+        }
+        missing_awbs = [
+            awb
+            for awb in unique_awbs
+            if self._normalize_awb_key(awb) not in existing_awb_keys
+        ]
+        if missing_awbs:
+            rows.extend(
+                self._get_buildup_rows_by_awbs(
+                    master_awbs=missing_awbs,
+                    query_filename=self.DOMESTIC_OUTGOING_BUILDUP_QUERY,
+                )
+            )
 
         dead_stock_rows = []
         try:

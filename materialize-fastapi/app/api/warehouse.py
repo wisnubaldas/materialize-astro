@@ -99,14 +99,14 @@ def submit_fedex_manifest(
 
 @router.post(
     "/masterwaybill/bulk",
-    summary="Cari data buildup export berdasarkan beberapa MasterAWB",
+    summary="Cari data buildup export/domestic outgoing berdasarkan beberapa MasterAWB",
     response_model=list[ExportBuildupOut],
 )
 def get_masterwaybill_bulk(
     payload: WarehouseMasterWaybillRequest,
     service: WarehouseService = Depends(get_warehouse_service),
 ):
-    """Lookup multiple MasterAWB values from SQL get_export_buildup."""
+    """Lookup multiple MasterAWB values from export + domestic outgoing SQL."""
     try:
         return service.get_masterwaybills_by_awb(payload.MasterAWB)
     except ValueError as exc:
