@@ -1,8 +1,9 @@
 import GridData from '@components/GridData';
 import { Icon } from '@iconify-icon/react';
-import { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
+import ediClient, { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { resolveErrorMessage } from './shared';
 
 const createDefaultFilters = () => ({
   MasterAWB: '',
@@ -13,12 +14,25 @@ const createDefaultFilters = () => ({
   DateOfFlight: '',
 });
 
+const encodeDataValue = (value) => encodeURIComponent(String(value ?? ''));
+const decodeDataValue = (value) => decodeURIComponent(value ?? '');
+const emptyPreviewState = {
+  mawb: '',
+  loading: false,
+  error: '',
+  cargoImp: '',
+  cargoXml: '',
+  activeTab: 'cargo-imp',
+};
+
 export default function FhlDatatables() {
   const tableRef = useRef(null);
+  const modalRef = useRef(null);
   const mountedRef = useRef(false);
 
   const [formFilters, setFormFilters] = useState(createDefaultFilters);
   const [activeFilters, setActiveFilters] = useState(createDefaultFilters);
+  const [previewState, setPreviewState] = useState(emptyPreviewState);
 
   useEffect(() => {
     const api = tableRef.current;
@@ -33,6 +47,93 @@ export default function FhlDatatables() {
 
     api.reload(true);
   }, [activeFilters]);
+
+  useEffect(() => {
+    const api = tableRef.current?.dt?.();
+    if (!api?.table) {
+      return undefined;
+    }
+
+    const tableNode = api.table().node();
+    if (!tableNode) {
+      return undefined;
+    }
+
+    const loadMessagePreview = async (mawb, activeTab) => {
+      setPreviewState({
+        mawb,
+        loading: true,
+        error: '',
+        cargoImp: '',
+        cargoXml: '',
+        activeTab,
+      });
+
+      try {
+        const payload = await ediClient.getFhlMessage(mawb);
+        setPreviewState({
+          mawb,
+          loading: false,
+          error: '',
+          cargoImp: payload?.cargo_imp ?? '',
+          cargoXml: payload?.cargo_xml ?? '',
+          activeTab,
+        });
+      } catch (err) {
+        console.error('Gagal memuat format FHL:', err);
+        setPreviewState({
+          mawb,
+          loading: false,
+          error: resolveErrorMessage(err, 'Gagal memuat format FHL'),
+          cargoImp: '',
+          cargoXml: '',
+          activeTab,
+        });
+      }
+    };
+
+    const handleClick = (event) => {
+      const target = event.target?.closest?.('button[data-action]');
+      if (!target) {
+        return;
+      }
+
+      const action = target.getAttribute('data-action');
+      if (action === 'send-email') {
+        return;
+      }
+
+      const encodedMawb = target.getAttribute('data-mawb');
+      const mawb = decodeDataValue(encodedMawb);
+      if (!mawb) {
+        return;
+      }
+
+      const activeTab = action === 'cargo-xml' ? 'cargo-xml' : 'cargo-imp';
+      void loadMessagePreview(mawb, activeTab);
+    };
+
+    tableNode.addEventListener('click', handleClick);
+    return () => {
+      tableNode.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  useEffect(() => {
+    const modalElement = modalRef.current;
+    if (!modalElement) {
+      return undefined;
+    }
+
+    const handleHidden = () => {
+      setPreviewState(emptyPreviewState);
+    };
+
+    modalElement.addEventListener('hidden.bs.modal', handleHidden);
+    return () => {
+      modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+    };
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -81,15 +182,57 @@ export default function FhlDatatables() {
         data: 'MasterAWB',
         title: 'Master AWB',
         responsivePriority: 2,
-        render: (value) => {
-          return `<a href="/edi/send-email/fhl@${value ?? ''}">${value ?? ''}</a>`;
-        },
       },
       { data: 'AirlinesCode', title: 'Airlines' },
       { data: 'FlightNumber', title: 'Flight' },
       { data: 'Origin', title: 'Origin', className: 'text-center' },
       { data: 'Destination', title: 'Destination', className: 'text-center' },
       { data: 'DateOfFlight', title: 'Flight Date', className: 'text-nowrap' },
+      {
+        data: null,
+        title: 'Aksi',
+        orderable: false,
+        searchable: false,
+        className: 'text-end text-nowrap',
+        render: (_value, type, row) => {
+          if (type !== 'display') {
+            return '';
+          }
+          const mawb = row?.MasterAWB ?? '';
+          const encodedMawb = encodeDataValue(mawb);
+          return `
+            <div class="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                data-action="cargo-imp"
+                data-mawb="${encodedMawb}"
+                data-bs-toggle="modal"
+                data-bs-target="#fhlMessageModal"
+              >
+                Cargo-IMP
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-info"
+                data-action="cargo-xml"
+                data-mawb="${encodedMawb}"
+                data-bs-toggle="modal"
+                data-bs-target="#fhlMessageModal"
+              >
+                Cargo-XML
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                data-action="send-email"
+              >
+                Send Email
+              </button>
+            </div>
+          `;
+        },
+      },
     ],
     []
   );
@@ -108,10 +251,14 @@ export default function FhlDatatables() {
           searchable: false,
         },
         { targets: 1, visible: false, searchable: false },
+        { targets: 8, orderable: false, searchable: false },
       ],
     }),
     []
   );
+
+  const activePreviewText =
+    previewState.activeTab === 'cargo-xml' ? previewState.cargoXml : previewState.cargoImp;
 
   return (
     <div className="card shadow-none border-0">
@@ -205,6 +352,68 @@ export default function FhlDatatables() {
           options={tableOptions}
           className="table-bordered table-striped align-middle"
         />
+      </div>
+
+      <div
+        className="modal fade"
+        id="fhlMessageModal"
+        tabIndex={-1}
+        aria-labelledby="fhlMessageModalLabel"
+        aria-hidden="true"
+        ref={modalRef}
+      >
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="fhlMessageModalLabel">
+                FHL Message {previewState.mawb ? `- ${previewState.mawb}` : ''}
+              </h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <div className="nav-align-top mb-3">
+                <ul className="nav nav-tabs" role="tablist">
+                  <li className="nav-item">
+                    <button
+                      type="button"
+                      className={`nav-link ${previewState.activeTab === 'cargo-imp' ? 'active' : ''}`}
+                      onClick={() => setPreviewState((prev) => ({ ...prev, activeTab: 'cargo-imp' }))}
+                    >
+                      Cargo-IMP
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      type="button"
+                      className={`nav-link ${previewState.activeTab === 'cargo-xml' ? 'active' : ''}`}
+                      onClick={() => setPreviewState((prev) => ({ ...prev, activeTab: 'cargo-xml' }))}
+                    >
+                      Cargo-XML
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              {previewState.loading ? (
+                <div className="d-flex align-items-center gap-2 text-muted">
+                  <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                  Memuat format FHL...
+                </div>
+              ) : previewState.error ? (
+                <div className="alert alert-danger mb-0">{previewState.error}</div>
+              ) : (
+                <pre className="bg-light border rounded p-3 small mb-0" style={{ whiteSpace: 'pre-wrap' }}>
+                  {activePreviewText || 'Data format belum tersedia.'}
+                </pre>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

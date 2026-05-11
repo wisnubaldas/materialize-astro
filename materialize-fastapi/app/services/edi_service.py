@@ -1,7 +1,11 @@
 import logging
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
+from types import SimpleNamespace
 from typing import Any
 
+from app.libs.fhl_message_builder import build_fhl_messages
+from app.libs.fwb_message_builder import build_fwb_cargo_imp, build_fwb_cargo_xml
 from app.repositories.edi_repository import EdiRepository
 from app.schemas.awb_mawb_schema import AwbMawbResponse
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
@@ -9,7 +13,9 @@ from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.fhl_message_schema import FhlMessageOut
 from app.schemas.fhl_schema import FhlResponse
+from app.schemas.fwb_message_schema import FwbMessageOut
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.fwb_table_schema import FwbTableOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
@@ -65,6 +71,36 @@ def _parse_datetime(value: Any) -> datetime | None:
     return parsed
 
 
+def _parse_int(value: Any) -> int | None:
+    """Parse integer-like values and normalize empty strings to None."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        value = text
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_decimal(value: Any) -> Decimal | None:
+    """Parse decimal-like values and normalize empty strings to None."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        value = text
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+
+
 def _extract_mawb(payload: Any) -> str | None:
     """Extract MAWB from FWB payload (prefers awb prefix/number)."""
     if not isinstance(payload, dict):
@@ -87,6 +123,94 @@ def _extract_mawb(payload: Any) -> str | None:
         if detail_mawb:
             return detail_mawb
     return None
+
+
+def _build_fwb_values(payload: dict[str, Any], raw_message: str | None) -> tuple[str, dict[str, Any]] | None:
+    """Build normalized DB-like FWB value map from payload."""
+    mawb = _extract_mawb(payload)
+    if not mawb:
+        return None
+
+    fwb_payload = payload.get("fwb") if isinstance(payload.get("fwb"), dict) else {}
+    issue_date = _parse_date(fwb_payload.get("issue_date"))
+    flight_date = _parse_datetime(fwb_payload.get("flight_date"))
+
+    values = {
+        "mawb": mawb,
+        "message_type": _clean_text(fwb_payload.get("message_type")),
+        "message_version": _clean_text(fwb_payload.get("message_version")),
+        "awb_prefix": _clean_text(fwb_payload.get("awb_prefix")),
+        "awb_number": _clean_text(fwb_payload.get("awb_number")),
+        "origin": _clean_text(fwb_payload.get("origin")),
+        "destination": _clean_text(fwb_payload.get("destination")),
+        "shipment_description_code": _clean_text(fwb_payload.get("shipment_description_code")),
+        "total_pieces": _parse_int(fwb_payload.get("total_pieces")),
+        "weight_unit": _clean_text(fwb_payload.get("weight_unit")),
+        "gross_weight": _parse_decimal(fwb_payload.get("gross_weight")),
+        "routing_list": _clean_text(fwb_payload.get("routing_list")),
+        "first_carrier": _clean_text(fwb_payload.get("first_carrier")),
+        "onward_carrier": _clean_text(fwb_payload.get("onward_carrier")),
+        "flight_number": _clean_text(fwb_payload.get("flight_number")),
+        "flight_carrier": _clean_text(fwb_payload.get("flight_carrier")),
+        "shipper_name": _clean_text(fwb_payload.get("shipper_name")),
+        "shipper_address": _clean_text(fwb_payload.get("shipper_address")),
+        "shipper_city": _clean_text(fwb_payload.get("shipper_city")),
+        "shipper_state": _clean_text(fwb_payload.get("shipper_state")),
+        "shipper_country": _clean_text(fwb_payload.get("shipper_country")),
+        "shipper_postcode": _clean_text(fwb_payload.get("shipper_postcode")),
+        "shipper_contact": _clean_text(fwb_payload.get("shipper_contact")),
+        "consignee_name": _clean_text(fwb_payload.get("consignee_name")),
+        "consignee_address": _clean_text(fwb_payload.get("consignee_address")),
+        "consignee_city": _clean_text(fwb_payload.get("consignee_city")),
+        "consignee_state": _clean_text(fwb_payload.get("consignee_state")),
+        "consignee_country": _clean_text(fwb_payload.get("consignee_country")),
+        "consignee_postcode": _clean_text(fwb_payload.get("consignee_postcode")),
+        "consignee_contact": _clean_text(fwb_payload.get("consignee_contact")),
+        "agent_iata_code": _clean_text(fwb_payload.get("agent_iata_code")),
+        "agent_account": _clean_text(fwb_payload.get("agent_account")),
+        "agent_name": _clean_text(fwb_payload.get("agent_name")),
+        "agent_city": _clean_text(fwb_payload.get("agent_city")),
+        "currency": _clean_text(fwb_payload.get("currency")),
+        "charge_code": _clean_text(fwb_payload.get("charge_code")),
+        "weight_charge_pp_cc": _clean_text(fwb_payload.get("weight_charge_pp_cc")),
+        "other_charge_pp_cc": _clean_text(fwb_payload.get("other_charge_pp_cc")),
+        "declared_value_carriage": _clean_text(fwb_payload.get("declared_value_carriage")),
+        "declared_value_customs": _clean_text(fwb_payload.get("declared_value_customs")),
+        "insurance_value": _clean_text(fwb_payload.get("insurance_value")),
+        "rate_line_no": _clean_text(fwb_payload.get("rate_line_no")),
+        "pieces": _parse_int(fwb_payload.get("pieces") or fwb_payload.get("total_pieces")),
+        "weight": _parse_decimal(fwb_payload.get("weight") or fwb_payload.get("gross_weight")),
+        "rate_class": _clean_text(fwb_payload.get("rate_class")),
+        "chargeable_weight": _parse_decimal(fwb_payload.get("chargeable_weight")),
+        "rate": _parse_decimal(fwb_payload.get("rate")),
+        "total_charge": _parse_decimal(fwb_payload.get("total_charge")),
+        "goods_description": _clean_text(fwb_payload.get("goods_description")),
+        "dimensions": _clean_text(fwb_payload.get("dimensions")),
+        "volume": _parse_decimal(fwb_payload.get("volume")),
+        "slac": _clean_text(fwb_payload.get("slac")),
+        "hs_code": _clean_text(fwb_payload.get("hs_code")),
+        "country_of_origin": _clean_text(fwb_payload.get("country_of_origin")),
+        "other_charge_code": _clean_text(fwb_payload.get("other_charge_code")),
+        "entitlement": _clean_text(fwb_payload.get("entitlement")),
+        "amount": _parse_decimal(fwb_payload.get("amount")),
+        "prepaid_weight_charge": _parse_decimal(fwb_payload.get("prepaid_weight_charge")),
+        "prepaid_other_charge": _parse_decimal(fwb_payload.get("prepaid_other_charge")),
+        "total_prepaid": _parse_decimal(fwb_payload.get("total_prepaid")),
+        "collect_charge": _parse_decimal(fwb_payload.get("collect_charge")),
+        "shipper_certification": _clean_text(fwb_payload.get("shipper_certification")),
+        "issue_date": issue_date,
+        "issue_place": _clean_text(fwb_payload.get("issue_place")),
+        "issued_by": _clean_text(fwb_payload.get("issued_by")),
+        "special_handling_code": _clean_text(fwb_payload.get("special_handling_code")),
+        "ssr": _clean_text(fwb_payload.get("ssr")),
+        "osi": _clean_text(fwb_payload.get("osi")),
+        "oci": _clean_text(fwb_payload.get("oci")),
+        "flight_date": flight_date,
+        "routing": _clean_text(fwb_payload.get("routing_list")),
+        "flight_no": _clean_text(fwb_payload.get("flight_number")),
+        "raw_message": _clean_text(raw_message),
+    }
+    return mawb, values
 
 
 class EdiService:
@@ -135,6 +259,15 @@ class EdiService:
     def parse_awb_mawb(self, mawb: str) -> AwbMawbResponse | None:
         return self.repository.get_awb_mawb(mawb)
 
+    def generate_fhl_message(self, mawb: str) -> FhlMessageOut:
+        """Generate FHL Cargo-IMP and Cargo-XML from MAWB payload."""
+        payload = self.parse_awb_mawb(mawb)
+        if payload is None:
+            raise LookupError("Master AWB tidak ditemukan")
+
+        cargo_imp, cargo_xml = build_fhl_messages(payload.model_dump(), fallback_mawb=mawb)
+        return FhlMessageOut(master_awb=mawb, cargo_imp=cargo_imp, cargo_xml=cargo_xml)
+
     def get_imp_masterwaybill(self, mawb: str) -> ImpMasterWaybillOut | None:
         return self.repository.get_imp_masterwaybill(mawb)
 
@@ -149,98 +282,43 @@ class EdiService:
         record = self.repository.get_fwb_by_mawb(mawb)
         return FwbTableOut.model_validate(record) if record else None
 
+    def get_saved_fwb_record(self, mawb: str):
+        """Retrieve raw FWB model instance by MAWB."""
+        return self.repository.get_fwb_by_mawb(mawb)
+
     def save_fwb_from_payload(self, payload: dict[str, Any], raw_message: str | None) -> FwbTableOut | None:
         """
         Persist FWB payload into DB1.
         Returns saved record or None when MAWB cannot be resolved.
         """
-        mawb = _extract_mawb(payload)
-        if not mawb:
+        resolved = _build_fwb_values(payload, raw_message)
+        if resolved is None:
             return None
-
-        fwb_payload = payload.get("fwb") if isinstance(payload.get("fwb"), dict) else {}
-        issue_date = _parse_date(fwb_payload.get("issue_date"))
-        flight_date = _parse_datetime(fwb_payload.get("flight_date"))
-
-        # Flat-map UI payload fields into the DB1 `fwb` table schema.
-        values = {
-            "mawb": mawb,
-            "message_type": _clean_text(fwb_payload.get("message_type")),
-            "message_version": _clean_text(fwb_payload.get("message_version")),
-            "awb_prefix": _clean_text(fwb_payload.get("awb_prefix")),
-            "awb_number": _clean_text(fwb_payload.get("awb_number")),
-            "origin": _clean_text(fwb_payload.get("origin")),
-            "destination": _clean_text(fwb_payload.get("destination")),
-            "shipment_description_code": _clean_text(fwb_payload.get("shipment_description_code")),
-            "total_pieces": fwb_payload.get("total_pieces"),
-            "weight_unit": _clean_text(fwb_payload.get("weight_unit")),
-            "gross_weight": fwb_payload.get("gross_weight"),
-            "routing_list": _clean_text(fwb_payload.get("routing_list")),
-            "first_carrier": _clean_text(fwb_payload.get("first_carrier")),
-            "onward_carrier": _clean_text(fwb_payload.get("onward_carrier")),
-            "flight_number": _clean_text(fwb_payload.get("flight_number")),
-            "flight_carrier": _clean_text(fwb_payload.get("flight_carrier")),
-            "shipper_name": _clean_text(fwb_payload.get("shipper_name")),
-            "shipper_address": _clean_text(fwb_payload.get("shipper_address")),
-            "shipper_city": _clean_text(fwb_payload.get("shipper_city")),
-            "shipper_state": _clean_text(fwb_payload.get("shipper_state")),
-            "shipper_country": _clean_text(fwb_payload.get("shipper_country")),
-            "shipper_postcode": _clean_text(fwb_payload.get("shipper_postcode")),
-            "shipper_contact": _clean_text(fwb_payload.get("shipper_contact")),
-            "consignee_name": _clean_text(fwb_payload.get("consignee_name")),
-            "consignee_address": _clean_text(fwb_payload.get("consignee_address")),
-            "consignee_city": _clean_text(fwb_payload.get("consignee_city")),
-            "consignee_state": _clean_text(fwb_payload.get("consignee_state")),
-            "consignee_country": _clean_text(fwb_payload.get("consignee_country")),
-            "consignee_postcode": _clean_text(fwb_payload.get("consignee_postcode")),
-            "consignee_contact": _clean_text(fwb_payload.get("consignee_contact")),
-            "agent_iata_code": _clean_text(fwb_payload.get("agent_iata_code")),
-            "agent_account": _clean_text(fwb_payload.get("agent_account")),
-            "agent_name": _clean_text(fwb_payload.get("agent_name")),
-            "agent_city": _clean_text(fwb_payload.get("agent_city")),
-            "currency": _clean_text(fwb_payload.get("currency")),
-            "charge_code": _clean_text(fwb_payload.get("charge_code")),
-            "weight_charge_pp_cc": _clean_text(fwb_payload.get("weight_charge_pp_cc")),
-            "other_charge_pp_cc": _clean_text(fwb_payload.get("other_charge_pp_cc")),
-            "declared_value_carriage": _clean_text(fwb_payload.get("declared_value_carriage")),
-            "declared_value_customs": _clean_text(fwb_payload.get("declared_value_customs")),
-            "insurance_value": _clean_text(fwb_payload.get("insurance_value")),
-            "rate_line_no": _clean_text(fwb_payload.get("rate_line_no")),
-            "pieces": fwb_payload.get("pieces") or fwb_payload.get("total_pieces"),
-            "weight": fwb_payload.get("weight") or fwb_payload.get("gross_weight"),
-            "rate_class": _clean_text(fwb_payload.get("rate_class")),
-            "chargeable_weight": fwb_payload.get("chargeable_weight"),
-            "rate": fwb_payload.get("rate"),
-            "total_charge": fwb_payload.get("total_charge"),
-            "goods_description": _clean_text(fwb_payload.get("goods_description")),
-            "dimensions": _clean_text(fwb_payload.get("dimensions")),
-            "volume": fwb_payload.get("volume"),
-            "slac": _clean_text(fwb_payload.get("slac")),
-            "hs_code": _clean_text(fwb_payload.get("hs_code")),
-            "country_of_origin": _clean_text(fwb_payload.get("country_of_origin")),
-            "other_charge_code": _clean_text(fwb_payload.get("other_charge_code")),
-            "entitlement": _clean_text(fwb_payload.get("entitlement")),
-            "amount": fwb_payload.get("amount"),
-            "prepaid_weight_charge": fwb_payload.get("prepaid_weight_charge"),
-            "prepaid_other_charge": fwb_payload.get("prepaid_other_charge"),
-            "total_prepaid": fwb_payload.get("total_prepaid"),
-            "collect_charge": fwb_payload.get("collect_charge"),
-            "shipper_certification": _clean_text(fwb_payload.get("shipper_certification")),
-            "issue_date": issue_date,
-            "issue_place": _clean_text(fwb_payload.get("issue_place")),
-            "issued_by": _clean_text(fwb_payload.get("issued_by")),
-            "special_handling_code": _clean_text(fwb_payload.get("special_handling_code")),
-            "ssr": _clean_text(fwb_payload.get("ssr")),
-            "osi": _clean_text(fwb_payload.get("osi")),
-            "oci": _clean_text(fwb_payload.get("oci")),
-            "flight_date": flight_date,
-            "routing": _clean_text(fwb_payload.get("routing_list")),
-            "flight_no": _clean_text(fwb_payload.get("flight_number")),
-            "raw_message": _clean_text(raw_message),
-        }
+        mawb, values = resolved
 
         record = self.repository.upsert_fwb(mawb, values)
         return FwbTableOut.model_validate(record)
+
+    def generate_fwb_preview_from_payload(self, payload: dict[str, Any]) -> FwbMessageOut | None:
+        """Generate FWB Cargo-IMP and Cargo-XML directly from payload without saving."""
+        resolved = _build_fwb_values(payload, raw_message=None)
+        if resolved is None:
+            return None
+        mawb, values = resolved
+        preview_record = SimpleNamespace(**values)
+        cargo_imp = build_fwb_cargo_imp(preview_record)
+        cargo_xml = build_fwb_cargo_xml(preview_record, cargo_imp)
+        return FwbMessageOut(mawb=mawb, cargo_imp=cargo_imp, cargo_xml=cargo_xml)
+
+    def generate_fwb_message(self, mawb: str) -> FwbMessageOut:
+        """Generate FWB Cargo-IMP and Cargo-XML from saved FWB data."""
+        record = self.get_saved_fwb_record(mawb)
+        if record is None:
+            raise LookupError("FWB data tidak ditemukan")
+
+        cargo_imp = build_fwb_cargo_imp(record)
+        cargo_xml = build_fwb_cargo_xml(record, cargo_imp)
+        return FwbMessageOut(mawb=mawb, cargo_imp=cargo_imp, cargo_xml=cargo_xml)
 
     @staticmethod
     async def send_email_edi(email: str, message: str, edi: str):

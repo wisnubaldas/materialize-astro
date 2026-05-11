@@ -35,8 +35,11 @@ const createInitialFfmPreview = () => ({
   headerId: null,
   buildupNumber: '',
   loading: false,
+  error: '',
   generated: false,
   cargoImp: '',
+  cargoXml: '',
+  activeTab: 'cargo-imp',
   missingFields: [],
   warnings: [],
 });
@@ -212,14 +215,14 @@ export default function FfmDatatables() {
       return undefined;
     }
 
-    const openPreview = async (headerId, buildupNumber) => {
+    const openPreview = async (headerId, buildupNumber, activeTab = 'cargo-imp') => {
       if (!Number.isFinite(headerId) || headerId <= 0) {
         showToast({
           type: 'danger',
           title: 'FFM Cargo-IMP',
           message: 'Header build up tidak valid.',
         });
-        setFfmPreview(createInitialFfmPreview());
+        setFfmPreview({ ...createInitialFfmPreview(), activeTab });
         return;
       }
 
@@ -229,8 +232,11 @@ export default function FfmDatatables() {
           headerId,
           buildupNumber,
           loading: false,
+          error: '',
           generated: Boolean(cached.generated && cached.cargo_imp),
           cargoImp: cached.cargo_imp || '',
+          cargoXml: cached.cargo_xml || '',
+          activeTab,
           missingFields: Array.isArray(cached.missing_fields) ? cached.missing_fields : [],
           warnings: Array.isArray(cached.warnings) ? cached.warnings : [],
         });
@@ -241,8 +247,11 @@ export default function FfmDatatables() {
         headerId,
         buildupNumber,
         loading: true,
+        error: '',
         generated: false,
         cargoImp: '',
+        cargoXml: '',
+        activeTab,
         missingFields: [],
         warnings: [],
       });
@@ -257,8 +266,11 @@ export default function FfmDatatables() {
           headerId,
           buildupNumber: response?.buildup_number || buildupNumber,
           loading: false,
+          error: '',
           generated: Boolean(response?.generated && response?.cargo_imp),
           cargoImp: response?.cargo_imp || '',
+          cargoXml: response?.cargo_xml || '',
+          activeTab,
           missingFields: Array.isArray(response?.missing_fields) ? response.missing_fields : [],
           warnings: Array.isArray(response?.warnings) ? response.warnings : [],
         });
@@ -269,7 +281,11 @@ export default function FfmDatatables() {
           title: 'FFM Cargo-IMP',
           message: error?.response?.data?.detail || error?.message || 'Gagal memuat preview FFM.',
         });
-        setFfmPreview(createInitialFfmPreview());
+        setFfmPreview({
+          ...createInitialFfmPreview(),
+          activeTab,
+          error: error?.response?.data?.detail || error?.message || 'Gagal memuat preview FFM.',
+        });
       }
     };
 
@@ -277,7 +293,9 @@ export default function FfmDatatables() {
       const button = event?.relatedTarget;
       const headerId = Number(button?.getAttribute('data-header-id'));
       const buildupNumber = decodeDataValue(button?.getAttribute('data-number'));
-      void openPreview(headerId, buildupNumber);
+      const format = button?.getAttribute('data-format');
+      const activeTab = format === 'cargo-xml' ? 'cargo-xml' : 'cargo-imp';
+      void openPreview(headerId, buildupNumber, activeTab);
     };
 
     const handleHidden = () => {
@@ -290,6 +308,56 @@ export default function FfmDatatables() {
     return () => {
       modalElement.removeEventListener('show.bs.modal', handleShow);
       modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let attachedNode = null;
+    let pollTimer = null;
+
+    const handleClick = (event) => {
+      const target = event.target?.closest?.('button[data-action]');
+      if (!target) return;
+      const action = target.getAttribute('data-action');
+      if (action !== 'send-email') return;
+
+      const number = decodeDataValue(target.getAttribute('data-number'));
+      showToast({
+        type: 'info',
+        title: 'FFM',
+        message: `Flow Send Email FFM untuk ${number || 'build up ini'} akan disiapkan pada tahap berikutnya.`,
+      });
+    };
+
+    const tryAttach = () => {
+      const api = tableRef.current?.dt?.();
+      const tableNode = api?.table?.()?.node?.();
+      if (!tableNode) return false;
+      attachedNode = tableNode;
+      attachedNode.addEventListener('click', handleClick);
+      return true;
+    };
+
+    if (!tryAttach()) {
+      pollTimer = window.setInterval(() => {
+        if (tryAttach() && pollTimer) {
+          window.clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }, 250);
+    }
+
+    return () => {
+      if (pollTimer) {
+        window.clearInterval(pollTimer);
+      }
+      if (attachedNode) {
+        attachedNode.removeEventListener('click', handleClick);
+      }
     };
   }, []);
 
@@ -383,7 +451,7 @@ export default function FfmDatatables() {
       {
         data: null,
         title: 'Actions',
-        className: 'text-center text-nowrap',
+        className: 'text-end text-nowrap',
         orderable: false,
         searchable: false,
         render: (_value, type, row) => {
@@ -393,10 +461,10 @@ export default function FfmDatatables() {
           const headerId = Number(row?.id);
           const preview = detailPreviewRef.current?.[headerId] ?? {};
           return `
-            <div class="btn-group btn-group-sm" role="group">
+            <div class="d-inline-flex flex-wrap justify-content-end gap-1" role="group">
               <button
                 type="button"
-                class="btn btn-outline-primary"
+                class="btn btn-sm btn-outline-primary"
                 data-bs-toggle="modal"
                 data-bs-target="#ffmDetailModal"
                 data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
@@ -412,13 +480,33 @@ export default function FfmDatatables() {
               </button>
               <button
                 type="button"
-                class="btn btn-outline-success"
+                class="btn btn-sm btn-outline-secondary"
                 data-bs-toggle="modal"
                 data-bs-target="#ffmCargoImpModal"
                 data-header-id="${Number.isFinite(headerId) ? headerId : ''}"
                 data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+                data-format="cargo-imp"
               >
                 Cargo-IMP
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-info"
+                data-bs-toggle="modal"
+                data-bs-target="#ffmCargoImpModal"
+                data-header-id="${Number.isFinite(headerId) ? headerId : ''}"
+                data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+                data-format="cargo-xml"
+              >
+                Cargo-XML
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-warning"
+                data-action="send-email"
+                data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+              >
+                Send Email
               </button>
             </div>
           `;
@@ -619,16 +707,40 @@ export default function FfmDatatables() {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="ffmCargoImpModalLabel">
-                FFM Cargo-IMP {ffmPreview.buildupNumber ? `- ${ffmPreview.buildupNumber}` : ''}
+                FFM Message {ffmPreview.buildupNumber ? `- ${ffmPreview.buildupNumber}` : ''}
               </h5>
               <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
+              <div className="nav-align-top mb-3">
+                <ul className="nav nav-tabs" role="tablist">
+                  <li className="nav-item">
+                    <button
+                      type="button"
+                      className={`nav-link ${ffmPreview.activeTab === 'cargo-imp' ? 'active' : ''}`}
+                      onClick={() => setFfmPreview((prev) => ({ ...prev, activeTab: 'cargo-imp' }))}
+                    >
+                      Cargo-IMP
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      type="button"
+                      className={`nav-link ${ffmPreview.activeTab === 'cargo-xml' ? 'active' : ''}`}
+                      onClick={() => setFfmPreview((prev) => ({ ...prev, activeTab: 'cargo-xml' }))}
+                    >
+                      Cargo-XML
+                    </button>
+                  </li>
+                </ul>
+              </div>
               {ffmPreview.loading ? (
                 <div className="d-flex align-items-center gap-2 text-muted">
                   <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
                   Memuat preview FFM...
                 </div>
+              ) : ffmPreview.error ? (
+                <div className="alert alert-danger mb-0">{ffmPreview.error}</div>
               ) : (
                 <>
                   {ffmPreview.missingFields.length ? (
@@ -651,13 +763,15 @@ export default function FfmDatatables() {
                       </ul>
                     </div>
                   ) : null}
-                  {ffmPreview.generated && ffmPreview.cargoImp ? (
+                  {ffmPreview.generated && (ffmPreview.cargoImp || ffmPreview.cargoXml) ? (
                     <pre className="bg-light border rounded p-3 small mb-0" style={{ whiteSpace: 'pre-wrap' }}>
-                      {ffmPreview.cargoImp}
+                      {ffmPreview.activeTab === 'cargo-xml'
+                        ? ffmPreview.cargoXml || 'Cargo-XML belum tersedia.'
+                        : ffmPreview.cargoImp || 'Cargo-IMP belum tersedia.'}
                     </pre>
                   ) : (
                     <p className="mb-0 text-muted">
-                      Cargo-IMP belum dapat digenerate. Lengkapi data yang ditandai terlebih dahulu.
+                      Format belum dapat digenerate. Lengkapi data yang ditandai terlebih dahulu.
                     </p>
                   )}
                 </>

@@ -21,6 +21,7 @@ from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.fhl_message_schema import FhlMessageOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fsu_message_schema import (
@@ -29,6 +30,9 @@ from app.schemas.fsu_message_schema import (
     FsuMessageUpdate,
 )
 from app.schemas.fwb_email_request_body import FwbEmailRequestBody
+from app.schemas.fwb_message_schema import FwbMessageOut
+from app.schemas.fwb_preview_request_body import FwbPreviewRequestBody
+from app.schemas.fwb_save_request_body import FwbSaveRequestBody
 from app.schemas.fwb_schema import FwbResponse
 from app.schemas.fwb_table_schema import FwbTableOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
@@ -113,6 +117,50 @@ def get_fwb_by_mawb(mawb: str, service: EdiService = Depends(get_fwb_service_r))
     return record
 
 
+@router.post(
+    "/fwb",
+    summary="Save FWB payload without sending email",
+    response_model=FwbTableOut,
+)
+def save_fwb(
+    params: FwbSaveRequestBody,
+    service: EdiService = Depends(get_fwb_service_w),
+):
+    payload = params.data if isinstance(params.data, dict) else {}
+    record = service.save_fwb_from_payload(payload, params.message)
+    if record is None:
+        raise HTTPException(status_code=422, detail="MAWB pada payload FWB tidak valid")
+    return record
+
+
+@router.post(
+    "/fwb-preview",
+    summary="Generate FWB Cargo-IMP dan Cargo-XML dari payload form tanpa simpan DB",
+    response_model=FwbMessageOut,
+)
+def preview_fwb(
+    params: FwbPreviewRequestBody,
+    service: EdiService = Depends(get_fwb_service_r),
+):
+    payload = params.data if isinstance(params.data, dict) else {}
+    record = service.generate_fwb_preview_from_payload(payload)
+    if record is None:
+        raise HTTPException(status_code=422, detail="MAWB pada payload FWB tidak valid")
+    return record
+
+
+@router.get(
+    "/fwb-message/{mawb}",
+    summary="Generate FWB Cargo-IMP dan Cargo-XML dari data FWB tersimpan",
+    response_model=FwbMessageOut,
+)
+def get_fwb_message(mawb: str, service: EdiService = Depends(get_fwb_service_r)):
+    try:
+        return service.generate_fwb_message(mawb)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.get(
     "/parse-awb-mawb/{mawb}",
     summary="join MAWB with AWB and customer details",
@@ -123,6 +171,20 @@ def parse_awb_mawb(mawb: str, service: EdiService = Depends(get_masterwaybill_se
     if result is None:
         raise HTTPException(status_code=404, detail="Master AWB tidak ditemukan")
     return result
+
+
+@router.get(
+    "/fhl-message/{mawb}",
+    summary="Generate FHL Cargo-IMP dan Cargo-XML dari MAWB",
+    response_model=FhlMessageOut,
+)
+def get_fhl_message(mawb: str, service: EdiService = Depends(get_masterwaybill_service)):
+    try:
+        return service.generate_fhl_message(mawb)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get(

@@ -15,6 +15,20 @@
   --#{$prefix}toast-zindex: 9;
 }
 
+.app-toast-viewport {
+  inset-block-start: calc(env(safe-area-inset-top, 0px) + .75rem);
+  inset-inline-end: .75rem;
+  max-block-size: calc(100vh - 1.5rem);
+  max-inline-size: min(100vw - 1.5rem, 26rem);
+  overflow: hidden auto;
+  pointer-events: none;
+
+  .toast {
+    pointer-events: auto;
+    min-inline-size: min(22rem, calc(100vw - 1.5rem));
+  }
+}
+
 .toast-header {
   border-block-end: $border-width solid $toast-header-border-color;
   .btn-close {
@@ -33,6 +47,14 @@
 /* Placement Toast example */
 .toast-placement-ex {
   position: fixed;
+}
+
+@include media-breakpoint-down(sm) {
+  .app-toast-viewport {
+    inset-inline: .5rem;
+    inset-block-start: calc(env(safe-area-inset-top, 0px) + .5rem);
+    max-inline-size: none;
+  }
 }
 
 /* Generate contextual modifier classes for colorizing the alert */

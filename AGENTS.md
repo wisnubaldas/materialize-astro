@@ -268,6 +268,22 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 
 ---
 
+## Rujukan Tambahan Agent
+
+Untuk task yang berkaitan dengan EDI, Cargo-IMP, Cargo-XML, MAWB/HAWB, dan flow messaging maskapai, agent wajib menjadikan folder berikut sebagai referensi tambahan:
+
+```text
+docs/fleet_master/
+```
+
+Aturan penggunaan:
+
+- Gunakan dokumen di `docs/fleet_master/` sebagai rujukan domain/format sebelum menyusun atau mengubah generator/parser message EDI.
+- Jika ada perbedaan antara implementasi existing dan referensi dokumen, tampilkan gap analysis singkat lalu ikuti keputusan bisnis user.
+- Tetap prioritaskan arsitektur project: business logic final berada di backend `materialize-fastapi/`.
+
+---
+
 ## Collaboration Flow Wajib
 
 Sebelum melakukan perubahan kode:

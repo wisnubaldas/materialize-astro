@@ -1,5 +1,6 @@
 import '@libs/bs-stepper/bs-stepper.scss';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
+import { getFwbFieldInputProps, sanitizeFwbFieldValue } from './fwbValidation';
 
 const fwbSections = [
   {
@@ -9,14 +10,47 @@ const fwbSections = [
     fields: [
       { key: 'message_type', label: 'Message Type', required: true, readOnly: true },
       { key: 'message_version', label: 'Message Version', required: true, readOnly: true },
-      { key: 'awb_prefix', label: 'AWB Prefix', required: true },
-      { key: 'awb_number', label: 'AWB Number', required: true },
-      { key: 'origin', label: 'Origin', required: true },
-      { key: 'destination', label: 'Destination', required: true },
-      { key: 'shipment_description_code', label: 'Shipment Description Code', required: true },
-      { key: 'total_pieces', label: 'Total Pieces', type: 'number', required: true },
-      { key: 'weight_unit', label: 'Weight Unit', required: true },
-      { key: 'gross_weight', label: 'Gross Weight', type: 'number', step: '0.01', required: true },
+      { key: 'awb_prefix', label: 'AWB Prefix', required: true, helper: 'Format: nnn (3 digit)' },
+      {
+        key: 'awb_number',
+        label: 'AWB Number',
+        required: true,
+        helper: 'Format: n[8] (8 digit)',
+      },
+      { key: 'origin', label: 'Origin', required: true, helper: 'Kode IATA 3 huruf (aaa)' },
+      {
+        key: 'destination',
+        label: 'Destination',
+        required: true,
+        helper: 'Kode IATA 3 huruf (aaa)',
+      },
+      {
+        key: 'shipment_description_code',
+        label: 'Shipment Description Code',
+        required: true,
+        helper: 'T atau P (1 karakter)',
+      },
+      {
+        key: 'total_pieces',
+        label: 'Total Pieces',
+        type: 'number',
+        required: true,
+        helper: 'Format: n[...4]',
+      },
+      {
+        key: 'weight_unit',
+        label: 'Weight Unit',
+        required: true,
+        helper: '1 karakter, contoh: K',
+      },
+      {
+        key: 'gross_weight',
+        label: 'Gross Weight',
+        type: 'number',
+        step: '0.01',
+        required: true,
+        helper: 'Format: n[...7]p',
+      },
     ],
   },
   {
@@ -81,10 +115,20 @@ const fwbSections = [
     title: 'Charge Declaration (CVD)',
     subtitle: 'Segment CVD',
     fields: [
-      { key: 'currency', label: 'Currency', required: true },
-      { key: 'charge_code', label: 'Charge Code' },
-      { key: 'weight_charge_pp_cc', label: 'Weight Charge PP/CC', required: true },
-      { key: 'other_charge_pp_cc', label: 'Other Charge PP/CC', required: true },
+      { key: 'currency', label: 'Currency', required: true, helper: 'Kode ISO 3 huruf (aaa)' },
+      { key: 'charge_code', label: 'Charge Code', required: true, helper: 'Format: aa' },
+      {
+        key: 'weight_charge_pp_cc',
+        label: 'Weight Charge PP/CC',
+        required: true,
+        helper: 'Nilai: PP / CC / PC / CP',
+      },
+      {
+        key: 'other_charge_pp_cc',
+        label: 'Other Charge PP/CC',
+        required: true,
+        helper: 'Nilai: PP / CC / PC / CP',
+      },
       { key: 'declared_value_carriage', label: 'Declared Value Carriage' },
       { key: 'declared_value_customs', label: 'Declared Value Customs' },
       { key: 'insurance_value', label: 'Insurance Value' },
@@ -95,9 +139,16 @@ const fwbSections = [
     title: 'Rate & Goods Detail (RTD)',
     subtitle: 'Segment RTD',
     fields: [
-      { key: 'rate_line_no', label: 'Rate Line No', required: true },
-      { key: 'pieces', label: 'Pieces', type: 'number', required: true },
-      { key: 'weight', label: 'Weight', type: 'number', step: '0.01', required: true },
+      { key: 'rate_line_no', label: 'Rate Line No', required: true, helper: 'Format: n[...2]' },
+      { key: 'pieces', label: 'Pieces', type: 'number', required: true, helper: 'Format: n[...4]' },
+      {
+        key: 'weight',
+        label: 'Weight',
+        type: 'number',
+        step: '0.01',
+        required: true,
+        helper: 'Format: n[...7]p',
+      },
       { key: 'rate_class', label: 'Rate Class' },
       { key: 'chargeable_weight', label: 'Chargeable Weight', type: 'number', step: '0.01' },
       { key: 'rate', label: 'Rate', type: 'number', step: '0.01' },
@@ -149,8 +200,8 @@ const fwbSections = [
     fields: [
       { key: 'shipper_certification', label: 'Shipper Certification' },
       { key: 'issue_date', label: 'Issue Date', type: 'date', required: true },
-      { key: 'issue_place', label: 'Issue Place', required: true },
-      { key: 'issued_by', label: 'Issued By', required: true },
+      { key: 'issue_place', label: 'Issue Place', required: true, helper: 'Maksimal 17 karakter' },
+      { key: 'issued_by', label: 'Issued By', required: true, helper: 'Maksimal 20 karakter' },
     ],
   },
   {
@@ -166,9 +217,10 @@ const fwbSections = [
   },
 ];
 
-const renderField = (field, data, onChange) => {
+const renderField = (field, data, onChange, validationErrors = {}) => {
   const value = data?.[field.key] ?? '';
   const id = `fwb-${field.key}`;
+  const errorMessage = validationErrors?.[field.key] ?? '';
   const label = field.required ? (
     <>
       {field.label} <span className="text-danger">*</span>
@@ -178,6 +230,8 @@ const renderField = (field, data, onChange) => {
   );
   const colClass = field.colClass ?? 'col-md-6';
   const isReadOnly = field.readOnly === true;
+  const inputProps = getFwbFieldInputProps(field.key);
+  const inputClassName = `form-control${isReadOnly ? ' readonly' : ''}${errorMessage ? ' is-invalid' : ''}`;
 
   if (field.type === 'textarea') {
     return (
@@ -187,17 +241,21 @@ const renderField = (field, data, onChange) => {
         </label>
         <textarea
           id={id}
-          className={`form-control${isReadOnly ? ' readonly' : ''}`}
+          className={inputClassName}
           rows={field.rows ?? 2}
           value={value}
           placeholder={field.placeholder}
           readOnly={isReadOnly}
-          onChange={(event) => onChange(field.key, event.target.value)}
+          maxLength={inputProps.maxLength}
+          onChange={(event) => onChange(field.key, sanitizeFwbFieldValue(field.key, event.target.value))}
         />
+        {errorMessage ? <div className="invalid-feedback d-block">{errorMessage}</div> : null}
         {field.helper ? <div className="form-text text-muted">{field.helper}</div> : null}
       </div>
     );
   }
+
+  const inputType = field.type === 'number' ? 'text' : field.type ?? 'text';
 
   return (
     <div key={field.key} className={`${colClass} mb-3`}>
@@ -206,26 +264,21 @@ const renderField = (field, data, onChange) => {
       </label>
       <input
         id={id}
-        type={field.type ?? 'text'}
+        type={inputType}
         step={field.step}
-        className={`form-control${isReadOnly ? ' readonly' : ''}`}
+        className={inputClassName}
         value={value}
-        placeholder={field.placeholder}
+        placeholder={field.placeholder ?? inputProps.placeholder}
         readOnly={isReadOnly}
-        onChange={(event) => onChange(field.key, event.target.value)}
+        maxLength={inputProps.maxLength}
+        inputMode={inputProps.inputMode}
+        onChange={(event) => onChange(field.key, sanitizeFwbFieldValue(field.key, event.target.value))}
       />
+      {errorMessage ? <div className="invalid-feedback d-block">{errorMessage}</div> : null}
       {field.helper ? <div className="form-text text-muted">{field.helper}</div> : null}
     </div>
   );
 };
-
-const parseEmails = (value) =>
-  String(value || '')
-    .split(/[\n,;]+/)
-    .map((email) => email.trim())
-    .filter(Boolean);
-
-const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 export default function FwbForm({
   fwbData,
@@ -233,10 +286,9 @@ export default function FwbForm({
   onSubmit,
   isLoading = false,
   isSending = false,
+  validationErrors = {},
 }) {
   const initializedRef = useRef(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [emailError, setEmailError] = useState('');
 
   const initStepper = (StepperCtor) => {
     if (initializedRef.current || typeof window === 'undefined') {
@@ -244,32 +296,25 @@ export default function FwbForm({
     }
 
     const wizardModernVertical = document.querySelector('.wizard-modern-vertical');
-
     if (!wizardModernVertical || typeof StepperCtor !== 'function') {
       return;
     }
 
-    const wizardModernVerticalBtnNextList = [].slice.call(
-      wizardModernVertical.querySelectorAll('.btn-next')
-    );
-    const wizardModernVerticalBtnPrevList = [].slice.call(
-      wizardModernVertical.querySelectorAll('.btn-prev')
-    );
-    const modernVerticalStepper = new StepperCtor(wizardModernVertical, {
-      linear: false,
-    });
+    const nextButtons = [].slice.call(wizardModernVertical.querySelectorAll('.btn-next'));
+    const prevButtons = [].slice.call(wizardModernVertical.querySelectorAll('.btn-prev'));
+    const stepper = new StepperCtor(wizardModernVertical, { linear: false });
 
-    wizardModernVerticalBtnNextList?.forEach((wizardModernVerticalBtnNext) => {
-      wizardModernVerticalBtnNext.addEventListener('click', (event) => {
+    nextButtons?.forEach((button) => {
+      button.addEventListener('click', (event) => {
         event.preventDefault();
-        modernVerticalStepper.next();
+        stepper.next();
       });
     });
 
-    wizardModernVerticalBtnPrevList?.forEach((wizardModernVerticalBtnPrev) => {
-      wizardModernVerticalBtnPrev.addEventListener('click', (event) => {
+    prevButtons?.forEach((button) => {
+      button.addEventListener('click', (event) => {
         event.preventDefault();
-        modernVerticalStepper.previous();
+        stepper.previous();
       });
     });
 
@@ -298,55 +343,18 @@ export default function FwbForm({
     };
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     if (isLoading || isSending) return;
-    const recipients = parseEmails(emailInput);
-    if (!recipients.length) {
-      setEmailError('Alamat email wajib diisi.');
-      return;
-    }
-    const invalid = recipients.filter((email) => !isValidEmail(email));
-    if (invalid.length) {
-      setEmailError(`Format email tidak valid: ${invalid.join(', ')}`);
-      return;
-    }
-    setEmailError('');
-    onSubmit?.({ emails: recipients });
+    onSubmit?.();
   };
 
-  const data = fwbData ?? {};
-  const emailData = { email_recipients: emailInput };
   const handleChange = (key, value) => {
     onFwbChange?.(key, value);
   };
-  const handleEmailChange = (key, value) => {
-    if (key !== 'email_recipients') return;
-    setEmailInput(value);
-    if (emailError) {
-      setEmailError('');
-    }
-  };
 
-  const emailSection = {
-    id: 'email-recipients',
-    title: 'Alamat Email Tujuan',
-    subtitle: 'Pisahkan dengan koma atau baris baru',
-    source: 'email',
-    fields: [
-      {
-        key: 'email_recipients',
-        label: 'Email Tujuan',
-        type: 'textarea',
-        colClass: 'col-12',
-        required: true,
-        rows: 3,
-        placeholder: 'contoh: admin@example.com, operasi@example.com',
-        helper: 'Pisahkan email dengan koma atau tekan Enter untuk baris baru.',
-      },
-    ],
-  };
-  const sections = [...fwbSections, emailSection];
+  const data = fwbData ?? {};
+  const sections = fwbSections;
 
   return (
     <div className="col-md-12">
@@ -374,23 +382,16 @@ export default function FwbForm({
         </div>
         <div className="bs-stepper-content">
           <form onSubmit={handleSubmit}>
-            {sections.map((section, index) => {
-              const sectionData = section.source === 'email' ? emailData : data;
-              const sectionChange = section.source === 'email' ? handleEmailChange : handleChange;
-
-              return (
+            {sections.map((section, index) => (
               <div id={`${section.id}-step`} key={section.id} className="content">
                 <div className="content-header mb-3">
                   <h6 className="mb-0">{section.title}</h6>
                   <small>{section.subtitle}</small>
                 </div>
                 <div className="row g-3">
-                  {section.fields.map((field) => renderField(field, sectionData, sectionChange))}
-                  {section.id === 'email-recipients' && emailError ? (
-                    <div className="col-12">
-                      <div className="alert alert-danger py-2 mb-0">{emailError}</div>
-                    </div>
-                  ) : null}
+                  {section.fields.map((field) =>
+                    renderField(field, data, handleChange, validationErrors)
+                  )}
                   <div className="col-12 d-flex justify-content-between">
                     <button
                       type="button"
@@ -406,7 +407,7 @@ export default function FwbForm({
                         className="btn btn-primary btn-submit"
                         disabled={isSending || isLoading}
                       >
-                        {isSending ? 'Mengirim...' : 'Kirim Email'}
+                        {isSending ? 'Menyimpan...' : 'Simpan FWB'}
                       </button>
                     ) : (
                       <button type="button" className="btn btn-primary btn-next">
@@ -417,7 +418,7 @@ export default function FwbForm({
                   </div>
                 </div>
               </div>
-            )})}
+            ))}
           </form>
         </div>
       </div>

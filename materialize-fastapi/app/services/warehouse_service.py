@@ -2,6 +2,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import date
+from html import escape
 
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
@@ -214,6 +215,7 @@ class WarehouseService:
                 buildup_number=header.number_build_up,
                 generated=False,
                 cargo_imp=None,
+                cargo_xml=None,
                 missing_fields=missing_fields,
                 warnings=warnings,
             )
@@ -229,14 +231,66 @@ class WarehouseService:
             *ffm_detail_lines,
             "LAST",
         ]
+        cargo_imp = "\n".join(lines)
+        cargo_xml = self._build_ffm_cargo_xml(
+            header_id=header_id,
+            buildup_number=header.number_build_up,
+            header_context=header_context,
+            details=details,
+            cargo_imp=cargo_imp,
+        )
         return FfmPreviewOut(
             header_id=header_id,
             buildup_number=header.number_build_up,
             generated=True,
-            cargo_imp="\n".join(lines),
+            cargo_imp=cargo_imp,
+            cargo_xml=cargo_xml,
             missing_fields=missing_fields,
             warnings=warnings,
         )
+
+    @staticmethod
+    def _build_ffm_cargo_xml(
+        header_id: int,
+        buildup_number: str | None,
+        header_context: _FfmHeaderContext,
+        details: list[BuildUpDetail],
+        cargo_imp: str,
+    ) -> str:
+        """Build simple Cargo-XML preview for FFM modal."""
+        lines = ['<XFFM version="1">']
+        lines.append(
+            '  <Manifest '
+            + f'headerId="{header_id}" '
+            + f'buildupNumber="{escape(_clean_text(buildup_number))}" '
+            + f'carrier="{escape(header_context.carrier)}" '
+            + f'flightNumber="{escape(header_context.flight_number)}" '
+            + f'flightDate="{escape(header_context.flight_date)}" '
+            + f'origin="{escape(header_context.origin)}" '
+            + f'destination="{escape(header_context.destination)}"'
+            + " />"
+        )
+        lines.append("  <Details>")
+        for item in details:
+            lines.append(
+                "    <Shipment "
+                + f'mawb="{escape(_clean_text(item.mawb))}" '
+                + f'pieces="{escape(_clean_text(item.pieces))}" '
+                + f'weight="{escape(_clean_text(item.weight))}" '
+                + f'volume="{escape(_clean_text(item.volume))}" '
+                + f'uldType="{escape(_clean_text(item.uld_type))}" '
+                + f'uldNumber="{escape(_clean_text(item.uld_number))}"'
+                + ">"
+            )
+            lines.append(f"      <NatureOfGoods>{escape(_clean_text(item.nature_of_goods))}</NatureOfGoods>")
+            lines.append(f"      <Remark>{escape(_clean_text(item.remark))}</Remark>")
+            lines.append("    </Shipment>")
+        lines.append("  </Details>")
+        lines.append("  <CargoIMP><![CDATA[")
+        lines.append(cargo_imp)
+        lines.append("]]></CargoIMP>")
+        lines.append("</XFFM>")
+        return "\n".join(lines)
 
     @staticmethod
     def _build_ffm_detail_lines(
