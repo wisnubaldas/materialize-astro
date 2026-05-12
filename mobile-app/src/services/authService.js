@@ -1,55 +1,67 @@
-import { appConfig } from '../config/env.js';
-import { postRequest } from './apiService.js';
+import { env } from '../config/env';
+import { getRequest, postRequest } from './apiService';
 
 /**
- * Runs mock authentication for early UI development without depending on an external API.
- * @param {{ username: string, password: string }} credentials - Login form values.
- * @returns {Promise<{ token: string, user: object }>} Mock session data.
+ * Runs local mock authentication for UI-only development.
+ * @param {{ email: string, password: string }} credentials - Login credentials.
+ * @returns {Promise<{ token: string, user: object }>} Mock session.
  */
 async function mockLogin(credentials) {
-  const isValidUser = credentials.username === 'admin' && credentials.password === 'admin123';
+  const isValidUser = credentials.email === 'admin@admin.com' && credentials.password === 'password123';
 
   if (!isValidUser) {
-    throw new Error('Username atau password salah.');
+    throw new Error('Email atau password salah.');
   }
 
   return {
     token: 'mock-token-for-development-only',
     user: {
       id: 1,
-      name: 'Administrator',
-      username: 'admin'
-    }
+      username: 'admin',
+      email: 'admin@admin.com',
+      roles: ['admin'],
+    },
   };
 }
 
 /**
- * Normalizes common external API login response formats into the app session format.
- * @param {object} response - Raw login response from the external API.
- * @param {{ username: string }} credentials - Original login credentials for fallback display data.
- * @returns {{ token: string, user: object }} Normalized session data.
+ * Extracts the access token from common backend auth responses.
+ * @param {object} response - Backend login response.
+ * @returns {string} Access token.
  */
-function normalizeLoginResponse(response, credentials) {
-  const token = response?.token || response?.access_token || response?.data?.token || response?.data?.access_token;
-  const user = response?.user || response?.data?.user || { username: credentials.username };
+function normalizeLoginToken(response) {
+  const token = response?.access_token || response?.token || response?.data?.access_token || response?.data?.token;
 
   if (!token) {
-    throw new Error('Response login tidak memiliki token. Sesuaikan mapping di authService.js.');
+    throw new Error('Response login tidak memiliki token.');
   }
 
-  return { token, user };
+  return token;
 }
 
 /**
- * Authenticates a user using mock mode or the configured external API login endpoint.
- * @param {{ username: string, password: string }} credentials - Login form values.
- * @returns {Promise<{ token: string, user: object }>} Normalized session data.
+ * Authenticates a user against mock mode or the FastAPI backend.
+ * @param {{ email: string, password: string }} credentials - Login credentials.
+ * @returns {Promise<{ token: string, user: object }>} Auth session.
  */
 export async function loginRequest(credentials) {
-  if (appConfig.useMockAuth) {
+  if (env.useMockAuth) {
     return mockLogin(credentials);
   }
 
-  const response = await postRequest(appConfig.authLoginPath, credentials);
-  return normalizeLoginResponse(response, credentials);
+  const response = await postRequest(env.authLoginPath, {
+    email: credentials.email,
+    password: credentials.password,
+  });
+  const token = normalizeLoginToken(response);
+  const user = await getRequest(env.authProfilePath, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return {
+    token,
+    user: user || { email: credentials.email, username: credentials.email },
+  };
 }

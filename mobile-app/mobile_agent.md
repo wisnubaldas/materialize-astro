@@ -1,140 +1,90 @@
 # AGENTS.md
 
-## Project Scope
+## Project identity
 
-This project is a **mobile frontend only** application built with **Ionic React, JavaScript, Vite, and Capacitor**.
+This project is a **React Native + Expo mobile app** using **JavaScript only**.
 
-The backend/API is maintained outside this repository. Do not generate, modify, scaffold, or document backend implementation code inside this project.
+The project must stay focused on the mobile frontend. Do not generate backend code, database migrations, server routes, API controllers, or server deployment scripts inside this repository.
 
-## Main Technology Rules
+## Hard rules
 
-1. Use **JavaScript only**.
-2. Do not create `.ts` or `.tsx` files.
-3. Use `.js` for services, utilities, constants, and configuration files.
-4. Use `.jsx` for React components, pages, providers, and route components.
-5. Do not introduce TypeScript, Angular, or Vue unless the project owner explicitly changes the stack.
-6. Use Ionic React components for mobile UI behavior.
-7. Use Capacitor only for native mobile features and Android/iOS packaging.
-8. Keep the app lightweight. Do not add large libraries unless the feature cannot be handled cleanly with the existing stack.
+1. Use JavaScript only.
+   - Allowed: `.js`, `.jsx`, `.json`, `.md`.
+   - Not allowed: `.ts`, `.tsx`.
+   - Do not introduce TypeScript configuration files.
 
-## Folder Structure Rules
+2. Keep the code easy to maintain.
+   - Screens belong in `src/screens`.
+   - Reusable UI belongs in `src/components`.
+   - API calls belong in `src/services`.
+   - Global state belongs in `src/contexts`.
+   - Navigation belongs in `src/navigation`.
+   - Shared colors, spacing, and typography belong in `src/styles`.
+   - Validation/helper functions belong in `src/utils`.
 
-Use this structure for future development:
+3. Comment every important function and component.
+   - Every exported function must have a JSDoc comment.
+   - Every screen component must explain its role.
+   - Every service function must explain its input and output.
+   - Do not add excessive comments for obvious single-line variables.
 
-```text
-src/
- ├── auth/          # Authentication context and auth-related state
- ├── components/    # Reusable UI components
- ├── config/        # Environment and app configuration
- ├── guards/        # Route protection components
- ├── pages/         # Screen-level pages
- ├── services/      # API, storage, and business service modules
- ├── styles/        # Global app CSS
- ├── theme/         # Ionic theme variables
- └── utils/         # Validation, formatting, helper functions
+4. Do not call APIs directly from screens.
+   - Screens may call context methods or service methods.
+   - Screens must not contain repeated `fetch()` logic.
+   - Keep API URL configuration in `.env` and `src/config/env.js`.
+
+5. Do not hardcode sensitive values.
+   - Do not hardcode tokens.
+   - Do not hardcode production API URLs inside screens.
+   - Do not commit `.env`.
+
+6. Keep authentication predictable.
+   - Auth state is managed in `src/contexts/AuthContext.js`.
+   - Token storage is handled by `src/services/storageService.js`.
+   - Login request behavior is handled by `src/services/authService.js`.
+
+7. Start simple.
+   - Do not add Redux, Zustand, SQLite, Firebase, or push notification libraries unless explicitly needed.
+   - For standard CRUD apps, prefer Context + service functions first.
+
+8. Use Expo-compatible libraries.
+   - Prefer `npx expo install <package>` when installing React Native native packages.
+   - Do not add native packages that require manual native configuration unless the app already moved to a development build.
+
+## Coding style
+
+- Use functional React components.
+- Use clear component names, for example `LoginScreen`, `DashboardScreen`, `AppButton`.
+- Keep each file focused on one responsibility.
+- Avoid large screens. Extract repeated UI into components.
+- Keep form validation in utility files when possible.
+- Use `async/await` for asynchronous logic.
+- Handle API errors with readable messages.
+
+## Current starter scope
+
+The current starter includes:
+
+- Login screen
+- Dashboard screen
+- Authentication context
+- Mock login mode
+- Persistent token storage
+- API request wrapper
+- Environment-based API configuration
+- EAS build profile for Android APK preview and Android App Bundle production
+
+## Demo account
+
+```txt
+Email: admin@admin.com
+Password: password123
 ```
 
-Rules:
+Mock login is controlled by:
 
-1. Pages must stay thin. A page may handle screen state, UI events, and presentation logic, but API calls must be placed in service modules.
-2. Shared UI must be extracted into `src/components`.
-3. Reusable business logic must be extracted into `src/services` or `src/utils`.
-4. Route-level protection must be handled inside `src/guards`.
-5. Environment values must be read through `src/config/env.js`.
-6. Do not hardcode API URLs, tokens, user IDs, credentials, or secret keys in pages or components.
-
-## Commenting Rules
-
-Every new file must be easy to track and understand.
-
-Required comments:
-
-1. Every React component must have a JSDoc block above the component function.
-2. Every service function must have a JSDoc block explaining its purpose, parameters, and return value.
-3. Every utility function must have a JSDoc block explaining the input and output.
-4. Every context provider and custom hook must have a JSDoc block.
-5. Every non-obvious conditional branch must have a short inline comment.
-6. Every exported constant group must include a short comment explaining its purpose.
-
-Example:
-
-```js
-/**
- * Validates whether the login form has the minimum required fields.
- * @param {{ username: string, password: string }} formData - Login form values.
- * @returns {{ isValid: boolean, message: string }} Validation result.
- */
-export function validateLoginForm(formData) {
-  // Keep this validation simple because API-level validation is handled outside this app.
-  if (!formData.username || !formData.password) {
-    return { isValid: false, message: 'Username and password are required.' };
-  }
-
-  return { isValid: true, message: '' };
-}
+```txt
+EXPO_PUBLIC_USE_MOCK_AUTH=true
 ```
 
-## API Integration Rules
-
-1. API calls must go through `src/services/apiService.js`.
-2. Authentication calls must go through `src/services/authService.js`.
-3. Token persistence must go through `src/services/storageService.js`.
-4. Pages must not call `fetch()` directly.
-5. Components must not call `fetch()` directly.
-6. Use `VITE_API_BASE_URL` from environment variables for the external API base URL.
-7. Use `VITE_AUTH_LOGIN_PATH` from environment variables for the login endpoint path.
-8. Do not mention or implement backend framework details inside this repository.
-
-## Authentication Rules
-
-1. Use `AuthProvider` from `src/auth/AuthContext.jsx` to manage login state.
-2. Use `useAuth()` when pages or components need authentication state.
-3. Use `ProtectedRoute` for pages that require login.
-4. Store only the minimum required session data.
-5. Do not store passwords.
-6. Do not store sensitive secrets in the frontend.
-7. For production, use HTTPS-only external API URLs.
-
-## UI Development Rules
-
-1. Prefer Ionic components such as `IonPage`, `IonHeader`, `IonContent`, `IonButton`, `IonInput`, `IonCard`, `IonList`, and `IonToast`.
-2. Keep UI simple and mobile-first.
-3. Use reusable components for repeated card, input, header, empty state, and loading state patterns.
-4. Avoid heavy UI libraries until there is a clear need.
-5. Keep CSS organized in `src/styles/global.css` and `src/theme/variables.css`.
-6. Class names should describe layout or purpose clearly.
-
-## State Management Rules
-
-1. Use React local state for page-specific state.
-2. Use React Context only for app-wide state such as authentication.
-3. Do not add Redux, Zustand, MobX, or other state libraries unless the app grows beyond simple state needs.
-4. Keep state shape simple and readable.
-
-## Error Handling Rules
-
-1. Catch API errors inside service functions or page submit handlers.
-2. Show user-facing errors through Ionic Toast or inline message blocks.
-3. Do not expose raw server stack traces to users.
-4. Console logging is allowed during development, but remove noisy logs before production build.
-
-## Build and Release Rules
-
-1. Always run `npm run build` before syncing native platforms.
-2. Always run `npx cap sync android` after changing web code and before opening Android Studio for release testing.
-3. Use Android Studio for final APK or AAB signing.
-4. Never commit private keystore files or keystore passwords.
-5. Keep `.env` files out of Git.
-
-## Development Quality Checklist
-
-Before considering a feature complete, verify:
-
-- The code uses JavaScript only.
-- No `.ts` or `.tsx` files were added.
-- Every function and component has a useful comment.
-- Pages do not call `fetch()` directly.
-- API paths are not hardcoded inside pages.
-- The screen works in `npm run dev`.
-- The app builds with `npm run build`.
-- Android sync works with `npx cap sync android`.
+Set it to `false` when the real API is ready.

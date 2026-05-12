@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import socket
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -19,6 +20,25 @@ from app.utils.helper import EMAIL_TEMPLATE_DIR, PDF_DIR
 from app.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_debug_cors_origins() -> list[str]:
+    """Return local Ionic dev origins allowed only when APP_DEBUG is enabled."""
+    host_candidates = {"localhost", "127.0.0.1"}
+
+    try:
+        host_candidates.update(socket.gethostbyname_ex(socket.gethostname())[2])
+    except OSError:
+        logger.debug("Tidak dapat membaca IP lokal dari hostname untuk CORS debug.", exc_info=True)
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe_socket:
+            probe_socket.connect(("8.8.8.8", 80))
+            host_candidates.add(probe_socket.getsockname()[0])
+    except OSError:
+        logger.debug("Tidak dapat membaca IP LAN aktif untuk CORS debug.", exc_info=True)
+
+    return [f"http://{host}:8100" for host in sorted(host_candidates) if host]
 
 # Set timezone environment variable
 os.environ["TZ"] = "Asia/Jakarta"
@@ -79,17 +99,20 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # middleware CORS
+default_origins = [
+    "http://110.239.87.173:4321",
+    "http://localhost:4321",  # origin frontend default
+    "http://127.0.0.1:4321",
+    "https://app.mitraadira.com",
+    "https://mitraadira.com",
+]
+debug_origins = get_debug_cors_origins()
 raw_origins = (ENV.CORS_ALLOW_ORIGINS or "").strip()
-if raw_origins:
-    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
-else:
-    origins = [
-        "http://110.239.87.173:4321",
-        "http://localhost:4321",  # origin frontend default
-        "http://127.0.0.1:4321",
-        "https://app.mitraadira.com",
-        "https://mitraadira.com",
-    ]
+configured_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+origins = configured_origins or default_origins
+
+if ENV.APP_DEBUG:
+    origins = list(dict.fromkeys([*origins, *debug_origins]))
 
 app.add_middleware(
     CORSMiddleware,

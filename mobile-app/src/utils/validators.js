@@ -1,11 +1,11 @@
 /**
- * Validates whether the login form has the minimum required fields.
- * @param {{ username: string, password: string }} formData - Login form values.
- * @returns {{ isValid: boolean, message: string }} Validation result for UI feedback.
+ * Validates the minimum fields required for login.
+ * @param {{ email: string, password: string }} formData - Login form values.
+ * @returns {{ isValid: boolean, message: string }} Validation result.
  */
 export function validateLoginForm(formData) {
-  if (!formData.username || !formData.password) {
-    return { isValid: false, message: 'Username dan password wajib diisi.' };
+  if (!formData.email || !formData.password) {
+    return { isValid: false, message: 'Email dan password wajib diisi.' };
   }
 
   if (formData.password.length < 6) {

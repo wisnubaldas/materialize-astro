@@ -1,15 +1,20 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { loginRequest } from '../services/authService.js';
-import { clearAuthStorage, getAuthToken, getAuthUser, saveAuthToken, saveAuthUser } from '../services/storageService.js';
+import { loginRequest } from '../services/authService';
+import {
+  clearAuthStorage,
+  getAuthToken,
+  getAuthUser,
+  saveAuthToken,
+  saveAuthUser,
+} from '../services/storageService';
 
 const AuthContext = createContext(null);
 
 /**
- * Provides authentication state and actions to the entire application.
- * This provider is the single source of truth for login status, token presence, and current user data.
- * @param {{ children: React.ReactNode }} props - React provider props.
- * @returns {JSX.Element} Auth context provider wrapper.
+ * Provides authentication state and actions to the mobile app.
+ * @param {{ children: React.ReactNode }} props - Provider props.
+ * @returns {React.ReactElement} Auth provider wrapper.
  */
 export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,8 +23,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     /**
-     * Loads an existing stored session when the app starts.
-     * @returns {Promise<void>} Resolves after session state is restored or cleared.
+     * Restores a persisted auth session on app launch.
+     * @returns {Promise<void>} Resolves after session state is loaded.
      */
     async function loadStoredSession() {
       const token = await getAuthToken();
@@ -34,9 +39,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Logs a user in, persists the token, and updates global auth state.
-   * @param {{ username: string, password: string }} credentials - Login form values.
-   * @returns {Promise<void>} Resolves when login state has been updated.
+   * Logs in and stores the backend token and user profile.
+   * @param {{ email: string, password: string }} credentials - Login form values.
+   * @returns {Promise<void>} Resolves after auth state is updated.
    */
   async function login(credentials) {
     const session = await loginRequest(credentials);
@@ -49,12 +54,11 @@ export function AuthProvider({ children }) {
   }
 
   /**
-   * Logs the user out and removes all stored authentication data.
-   * @returns {Promise<void>} Resolves after authentication data has been cleared.
+   * Logs out and clears persisted auth state.
+   * @returns {Promise<void>} Resolves after auth data is removed.
    */
   async function logout() {
     await clearAuthStorage();
-
     setUser(null);
     setIsAuthenticated(false);
   }
@@ -65,7 +69,7 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       user,
       login,
-      logout
+      logout,
     }),
     [isLoading, isAuthenticated, user]
   );
@@ -74,8 +78,8 @@ export function AuthProvider({ children }) {
 }
 
 /**
- * Reads authentication state and actions from AuthContext.
- * @returns {{ isLoading: boolean, isAuthenticated: boolean, user: object|null, login: Function, logout: Function }} Auth context value.
+ * Reads the current authentication context.
+ * @returns {{ isLoading: boolean, isAuthenticated: boolean, user: object|null, login: Function, logout: Function }} Auth state.
  */
 export function useAuth() {
   const context = useContext(AuthContext);

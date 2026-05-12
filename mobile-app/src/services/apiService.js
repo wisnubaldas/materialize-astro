@@ -1,50 +1,64 @@
-import { appConfig } from '../config/env.js';
-import { getAuthToken } from './storageService.js';
+import { env } from '../config/env';
+import { getAuthToken } from './storageService';
 
 /**
- * Builds a complete API URL using the configured API base URL and endpoint path.
- * @param {string} path - Endpoint path such as "/users/me".
- * @returns {string} Complete API URL.
+ * Builds a full backend URL from a relative API path.
+ * @param {string} path - Backend path, for example `/auth/me`.
+ * @returns {string} Fully qualified URL.
  */
 function buildApiUrl(path) {
-  const baseUrl = appConfig.apiBaseUrl.replace(/\/$/, '');
+  const baseUrl = env.apiBaseUrl.replace(/\/$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
   return `${baseUrl}${normalizedPath}`;
 }
 
 /**
- * Safely reads a JSON response, including empty responses.
- * @param {Response} response - Native fetch Response object.
- * @returns {Promise<object|null>} Parsed JSON body or null when response has no body.
+ * Reads JSON from a fetch response, including empty responses.
+ * @param {Response} response - Fetch response object.
+ * @returns {Promise<object|null>} Parsed JSON payload.
  */
 async function readJsonResponse(response) {
   const text = await response.text();
-
-  if (!text) {
-    return null;
-  }
-
-  return JSON.parse(text);
+  return text ? JSON.parse(text) : null;
 }
 
 /**
- * Sends an HTTP request to the external API with optional Bearer authentication.
- * @param {string} path - Endpoint path relative to the configured API base URL.
+ * Resolves a readable API error message.
+ * @param {object|null} data - Parsed backend error response.
+ * @returns {string} UI-safe error message.
+ */
+function resolveErrorMessage(data) {
+  if (typeof data?.detail === 'string') {
+    return data.detail;
+  }
+
+  if (Array.isArray(data?.detail) && data.detail.length > 0) {
+    const [firstError] = data.detail;
+
+    if (typeof firstError?.msg === 'string' && firstError.msg.trim()) {
+      return firstError.msg;
+    }
+  }
+
+  return data?.message || 'Request gagal diproses.';
+}
+
+/**
+ * Sends an HTTP request to the backend API.
+ * @param {string} path - Relative backend path.
  * @param {{ method?: string, body?: object, headers?: object, authenticated?: boolean }} options - Request options.
- * @returns {Promise<object|null>} Parsed API response.
+ * @returns {Promise<object|null>} Parsed backend response.
  */
 export async function apiRequest(path, options = {}) {
   const method = options.method || 'GET';
   const headers = {
     'Content-Type': 'application/json',
-    ...(options.headers || {})
+    ...(options.headers || {}),
   };
 
   if (options.authenticated) {
     const token = await getAuthToken();
 
-    // Only attach Authorization when a token exists to avoid malformed headers.
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -53,35 +67,34 @@ export async function apiRequest(path, options = {}) {
   const response = await fetch(buildApiUrl(path), {
     method,
     headers,
-    body: options.body ? JSON.stringify(options.body) : undefined
+    body: options.body ? JSON.stringify(options.body) : undefined,
   });
-
   const data = await readJsonResponse(response);
 
   if (!response.ok) {
-    const message = data?.message || data?.detail || 'Request gagal diproses.';
-    throw new Error(message);
+    console.error('[api] Request failed', { path, status: response.status, data });
+    throw new Error(resolveErrorMessage(data));
   }
 
   return data;
 }
 
 /**
- * Sends a GET request to the external API.
- * @param {string} path - Endpoint path relative to the configured API base URL.
- * @param {{ authenticated?: boolean }} options - Optional request flags.
- * @returns {Promise<object|null>} Parsed API response.
+ * Sends a GET request to the backend API.
+ * @param {string} path - Relative backend path.
+ * @param {{ authenticated?: boolean, headers?: object }} options - Request options.
+ * @returns {Promise<object|null>} Parsed backend response.
  */
 export function getRequest(path, options = {}) {
   return apiRequest(path, { ...options, method: 'GET' });
 }
 
 /**
- * Sends a POST request to the external API.
- * @param {string} path - Endpoint path relative to the configured API base URL.
- * @param {object} body - Request payload.
- * @param {{ authenticated?: boolean }} options - Optional request flags.
- * @returns {Promise<object|null>} Parsed API response.
+ * Sends a POST request to the backend API.
+ * @param {string} path - Relative backend path.
+ * @param {object} body - JSON request body.
+ * @param {{ authenticated?: boolean, headers?: object }} options - Request options.
+ * @returns {Promise<object|null>} Parsed backend response.
  */
 export function postRequest(path, body, options = {}) {
   return apiRequest(path, { ...options, method: 'POST', body });

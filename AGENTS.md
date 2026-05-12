@@ -19,7 +19,7 @@ Keahlian utama yang wajib digunakan:
 - FastAPI untuk backend.
 - Astro + React untuk web frontend.
 - C# WPF (.NET) untuk desktop frontend.
-- Ionic React + Capacitor untuk mobile frontend.
+- React Native + Expo untuk mobile frontend.
 - Dependency Injection.
 - SOLID, Repository Pattern, Service Layer, MVVM.
 - Refactoring sistem existing secara aman, bertahap, dan terdokumentasi.
@@ -56,7 +56,7 @@ materialize-project/
 | Backend FastAPI, database, API, auth, job, integrasi CEISA/AP2/HUBNET | `materialize-fastapi/`                           | [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) |
 | Web frontend Astro + React                                            | `astro/`                                         | [`astro/frontend_agent.md`](astro/frontend_agent.md)                           |
 | Desktop frontend C# WPF (.NET)                                        | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
-| Mobile frontend Ionic React + Capacitor                               | `mobile-app/`                                    | [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md)                     |
+| Mobile frontend React Native + Expo                                   | `mobile-app/`                                    | [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md)                     |
 | Dokumentasi project/root                                              | `docs/`, `README.md`, `AGENTS.md`                | `AGENTS.md` + agent terdampak                                                  |
 | Email template                                                        | `email-template/`                                | `AGENTS.md` + `materialize-fastapi/backend_agent.md` jika dipakai backend      |
 | Docker/deployment                                                     | `docker-asset/`, `deploy-*.sh`, `.gitlab-ci.yml` | `AGENTS.md` + agent project yang dideploy                                      |
@@ -263,7 +263,7 @@ mobile-app/
 Mobile frontend resmi menggunakan:
 
 ```text
-Ionic React + JavaScript + Vite + Capacitor
+React Native + Expo + JavaScript
 ```
 
 File instruksi mobile wajib berada di:
@@ -276,21 +276,22 @@ Struktur aktual/target mobile yang harus dipertahankan:
 
 ```text
 mobile-app/
-├── public/
+├── assets/
 ├── src/
-│   ├── auth/
 │   ├── components/
 │   ├── config/
-│   ├── guards/
-│   ├── pages/
+│   ├── contexts/
+│   ├── navigation/
+│   ├── screens/
 │   ├── services/
 │   ├── styles/
-│   ├── theme/
 │   └── utils/
+├── App.js
+├── app.json
+├── babel.config.js
+├── eas.json
 ├── mobile_agent.md
-├── capacitor.config.js
 ├── package.json
-├── vite.config.js
 └── README.md
 ```
 
@@ -298,12 +299,14 @@ Catatan penting mobile:
 
 - Target pengembangan mobile tetap **JavaScript-first**.
 - Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
-- Gunakan Ionic React component sebagai baseline UI mobile.
-- Gunakan Capacitor hanya untuk fitur native dan packaging Android/iOS.
+- Gunakan React Native component dan Expo-compatible library sebagai baseline UI mobile.
+- Gunakan Expo untuk development, native feature, dan packaging mobile.
 - Mobile app hanya sebagai frontend/client operasional.
 - Jangan membuat backend implementation, database layer, atau integrasi server-side di dalam `mobile-app/`.
-- API call harus melalui service di `src/services/`, terutama `apiService.js`, bukan `fetch()` langsung dari page/component.
-- Environment API wajib dibaca melalui `src/config/env.js` dan variabel `VITE_*`.
+- Screen tidak boleh memanggil `fetch()` langsung; API call harus melalui service di `src/services/`, terutama `apiService.js`.
+- Environment API wajib dibaca melalui `src/config/env.js` dan variabel `EXPO_PUBLIC_*`.
+- Auth state mobile dikelola di `src/contexts/AuthContext.js`.
+- Navigation mobile dikelola di `src/navigation/`.
 - Semua data, auth final, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend/API resmi, bukan langsung dari mobile app.
 
 ---
@@ -444,7 +447,7 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Gunakan `.env.example`, `appsettings.example.json`, atau dokumentasi konfigurasi tanpa nilai rahasia.
 - Jangan menampilkan stack trace mentah ke user akhir.
 - Log error detail boleh disimpan di backend log, tetapi response API harus aman.
-- Untuk eksekusi frontend `astro/` dan `mobile-app/`: setiap kegagalan `fetch`/request API wajib menampilkan detail error response server ke console developer browser (`console.error`) untuk kebutuhan debugging.
+- Untuk eksekusi frontend `astro/` dan `mobile-app/`: setiap kegagalan `fetch`/request API wajib menampilkan detail error response server ke console developer (`console.error`) untuk kebutuhan debugging.
 - Validasi input di frontend/mobile/desktop hanya untuk UX; validasi final tetap di backend.
 - Gunakan HTTPS untuk komunikasi production.
 - Timeout request wajib eksplisit.
@@ -481,7 +484,7 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Jika task mobile, baca [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md) terlebih dahulu.
 - Jika task integrasi CEISA/AP2/HUBNET, implementasi wajib di backend `materialize-fastapi/`.
 - Jika task membutuhkan data dari desktop hardware lokal, data boleh dibaca oleh desktop, tetapi proses bisnis dan penyimpanan tetap melalui backend API.
-- Jika task membutuhkan fitur native mobile lokal, akses native boleh dilakukan melalui Capacitor di `mobile-app/`, tetapi proses bisnis dan penyimpanan tetap melalui backend/API resmi.
+- Jika task membutuhkan fitur native mobile lokal, akses native boleh dilakukan melalui Expo-compatible APIs di `mobile-app/`, tetapi proses bisnis dan penyimpanan tetap melalui backend/API resmi.
 - Jangan menjaga backward compatibility lama jika user secara eksplisit meminta perubahan proses bisnis baru.
 
 
