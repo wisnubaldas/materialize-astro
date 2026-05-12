@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+import re
+from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from html import escape
 
 from app.models.BaseDB1.fwb import Fwb
@@ -20,6 +22,50 @@ def _normalize_awb(prefix: str, number: str, mawb: str) -> str:
 
 def _alnum_upper(value: object) -> str:
     return "".join(ch for ch in _to_text(value).upper() if ch.isalnum())
+
+
+def _cargo_text(value: object, fallback: str = "", max_length: int | None = None) -> str:
+    """Normalize text for Cargo-IMP free-text elements."""
+    text = re.sub(r"\s+", " ", _to_text(value).upper()).strip()
+    if not text:
+        text = fallback
+    if max_length is not None:
+        text = text[:max_length].rstrip()
+    return text
+
+
+def _format_amount(value: object, fallback: object = 0) -> str:
+    """Format numeric charge values without scientific notation."""
+    raw = _to_text(value)
+    if not raw:
+        raw = _to_text(fallback)
+    try:
+        amount = Decimal(raw)
+    except (InvalidOperation, ValueError):
+        return "0"
+    if amount == amount.to_integral():
+        return str(amount.quantize(Decimal("1")))
+    return f"{amount.normalize():f}"
+
+
+def _issue_date_value(record: Fwb) -> str:
+    """Build ISU date value as DDMMMYY."""
+    issue_date = getattr(record, "issue_date", None) or getattr(record, "flight_date", None)
+    parsed: date | None = None
+    if isinstance(issue_date, datetime):
+        parsed = issue_date.date()
+    elif isinstance(issue_date, date):
+        parsed = issue_date
+    elif isinstance(issue_date, str):
+        for candidate in (issue_date[:10], issue_date):
+            try:
+                parsed = datetime.fromisoformat(candidate).date()
+                break
+            except ValueError:
+                continue
+    if parsed is None:
+        return datetime.now(tz=UTC).date().strftime("%d%b%y").upper()
+    return parsed.strftime("%d%b%y").upper()
 
 
 def _flight_id(record: Fwb) -> str:
@@ -58,7 +104,7 @@ def _routing_value(record: Fwb, destination: str) -> str:
     Format uses destination+carrier, e.g. RTG/SINFX or RTG/LHRII.
     """
     raw = _to_text(record.routing_list or record.routing).upper()
-    carrier_fallback = (_alnum_upper(record.first_carrier or record.flight_carrier)[:2] or "II")
+    carrier_fallback = _alnum_upper(record.first_carrier or record.flight_carrier)[:2] or "II"
 
     if not raw:
         return f"{destination}{carrier_fallback}"
@@ -101,6 +147,23 @@ def _party_loc_lines(city: object, country: object, state: object | None = None)
     return [first_line, f"/{country_token}"]
 
 
+def _charge_declaration_lines(record: Fwb) -> list[str]:
+    """Build prepaid or collect charge declaration after RTD."""
+    pp_cc = (_to_text(record.weight_charge_pp_cc) or "PP").upper()
+    line_identifier = "COL" if pp_cc == "CC" else "PPD"
+    weight_charge = _format_amount(record.prepaid_weight_charge, record.total_charge)
+    total_charge = _format_amount(record.total_prepaid, record.total_charge)
+
+    return [f"{line_identifier}/WT{weight_charge}", f"/CT{total_charge}"]
+
+
+def _sender_reference_line(record: Fwb, origin: str) -> str:
+    """Build final sender reference with agent fallback."""
+    sender = _alnum_upper(record.issued_by or record.agent_name or record.shipper_name)[:17] or "AGENT"
+    sender_airport = _alnum_upper(origin)[:3] or "XXX"
+    return f"REF///AGT/{sender}/{sender_airport}"
+
+
 def build_fwb_cargo_imp(record: Fwb) -> str:  # noqa: PLR0912
     """Build Cargo-IMP FWB text from saved DB record."""
     if record.raw_message:
@@ -122,7 +185,9 @@ def build_fwb_cargo_imp(record: Fwb) -> str:  # noqa: PLR0912
 
     lines: list[str] = []
     lines.append(f"{message_type}/{message_version}")
-    lines.append(f"{awb}{origin}{destination}/{shipment_description}{pieces}{weight_unit}{gross_weight}")
+    lines.append(
+        f"{awb}{origin}{destination}/{shipment_description}{pieces}{weight_unit}{gross_weight}"
+    )
     lines.append(f"FLT/{_flight_id(record)}/{_flight_day(record)}")
     lines.append(f"RTG/{_routing_value(record, destination)}")
 
@@ -155,7 +220,9 @@ def build_fwb_cargo_imp(record: Fwb) -> str:  # noqa: PLR0912
             )
 
     if record.agent_account or record.agent_name:
+        # ini bisa di ganti pake npwp consigne atau npwp mau
         agent_account = _alnum_upper(record.agent_account)[:14] or "0000000"
+        agent_account = re.sub(r"\D", "", agent_account)
         lines.append(f"AGT//{agent_account}")
         if record.agent_name:
             lines.append(f"/{_to_text(record.agent_name).upper()}")
@@ -186,8 +253,17 @@ def build_fwb_cargo_imp(record: Fwb) -> str:  # noqa: PLR0912
         )
 
     if record.goods_description:
-        lines.append(f"/NG/{_to_text(record.goods_description).upper()}")
-
+        lines.append(f"/NG/{_cargo_text(record.goods_description, max_length=20)}")
+    lines.append("/2/ND//NDA")
+    lines.extend(_charge_declaration_lines(record))
+    lines.append(f"CER/{_cargo_text(record.shipper_certification or record.shipper_name, max_length=20)}")
+    lines.append(
+        "ISU/"
+        + f"{_issue_date_value(record)}/"
+        + f"{_cargo_text(record.issue_place or record.agent_city or origin, max_length=17)}/"
+        + f"{_cargo_text(record.issued_by or record.agent_name, max_length=20)}"
+    )
+    lines.append(_sender_reference_line(record, origin))
     return "\n".join([line for line in lines if line])
 
 
@@ -205,8 +281,12 @@ def build_fwb_cargo_xml(record: Fwb, cargo_imp: str) -> str:
         + f'destination="{escape(_to_text(record.destination))}" />'
     )
     xml_lines.append("  <Shipment>")
-    xml_lines.append(f"    <Pieces>{escape(_to_text(record.total_pieces or record.pieces or 0))}</Pieces>")
-    xml_lines.append(f"    <Weight unit=\"{escape(_to_text(record.weight_unit) or 'K')}\">{escape(_to_text(record.gross_weight or record.weight or 0))}</Weight>")
+    xml_lines.append(
+        f"    <Pieces>{escape(_to_text(record.total_pieces or record.pieces or 0))}</Pieces>"
+    )
+    xml_lines.append(
+        f"    <Weight unit=\"{escape(_to_text(record.weight_unit) or 'K')}\">{escape(_to_text(record.gross_weight or record.weight or 0))}</Weight>"
+    )
     xml_lines.append(f"    <Description>{escape(_to_text(record.goods_description))}</Description>")
     xml_lines.append("  </Shipment>")
     xml_lines.append("  <Parties>")
