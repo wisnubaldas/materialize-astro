@@ -26,6 +26,16 @@ def get_warehouse_manifest_service_w(
     return WarehouseService(repo)
 
 
+def get_build_up_draft_repo(db: Session = Depends(get_db1_w)) -> WarehouseRepository:
+    return WarehouseRepository(db)
+
+
+def get_build_up_draft_service(
+    repo: WarehouseRepository = Depends(get_build_up_draft_repo),
+) -> WarehouseService:
+    return WarehouseService(repo)
+
+
 def get_warehouse_repo(db: Session = Depends(get_db2_r)) -> WarehouseRepository:
     return WarehouseRepository(db)
 

@@ -66,6 +66,7 @@ export default defineConfig({
         'react/jsx-runtime',
         'flatpickr',
         'flatpickr/dist/plugins/monthSelect',
+        'react-dropzone',
         'sweetalert2',
       ],
     },

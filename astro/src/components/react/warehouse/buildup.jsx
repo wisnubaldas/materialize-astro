@@ -1,65 +1,128 @@
 import { useEffect, useMemo, useState } from 'react';
 import { showToast } from '@utils';
+import warehouseClient from '@lib/api/warehouse';
 import BuildupDatatables from './buildupDatatables';
 import BuildupDrafts from './buildupDrafts';
 import BuildupForm from './buildupForm';
-import { createDraftId, readStoredDrafts, writeStoredDrafts } from './shared';
+import { clearStoredDrafts, readStoredDrafts, resolveErrorMessage } from './shared';
+
+const toDraftPayload = (draftPayload) => ({
+  rows: draftPayload?.rows ?? [],
+  payload: draftPayload?.payload ?? null,
+  ignored: draftPayload?.ignored ?? { masters: 0, details: 0 },
+  master_awbs: draftPayload?.masterAwbs ?? draftPayload?.master_awbs ?? [],
+});
+
+const normalizeDraft = (draft) => ({
+  id: draft?.id,
+  createdAt: draft?.create_at ?? draft?.createdAt ?? null,
+  updatedAt: draft?.update_at ?? draft?.updatedAt ?? null,
+  rows: draft?.rows ?? [],
+  payload: draft?.payload ?? null,
+  ignored: draft?.ignored ?? { masters: 0, details: 0 },
+  masterAwbs: draft?.master_awbs ?? draft?.masterAwbs ?? [],
+});
 
 export default function Buildup() {
   const [activeTab, setActiveTab] = useState('search');
   const [drafts, setDrafts] = useState([]);
+  const [isLoadingDrafts, setIsLoadingDrafts] = useState(true);
 
   useEffect(() => {
-    setDrafts(readStoredDrafts());
-  }, []);
+    let isMounted = true;
 
-  useEffect(() => {
-    writeStoredDrafts(drafts);
-  }, [drafts]);
+    const loadDrafts = async () => {
+      setIsLoadingDrafts(true);
+      try {
+        const [storedDrafts, remoteDrafts] = [
+          readStoredDrafts(),
+          await warehouseClient.listBuildUpDrafts(),
+        ];
+        const validStoredDrafts = storedDrafts.filter(
+          (storedDraft) => Array.isArray(storedDraft?.rows) && storedDraft.rows.length > 0
+        );
+        const migratedDrafts = [];
 
-  const handleSaveDraft = async (draftPayload) => {
-    const nextDraft = {
-      id: createDraftId(),
-      createdAt: new Date().toISOString(),
-      rows: draftPayload?.rows ?? [],
-      payload: draftPayload?.payload ?? null,
-      ignored: draftPayload?.ignored ?? { masters: 0, details: 0 },
-      masterAwbs: draftPayload?.masterAwbs ?? [],
+        if (validStoredDrafts.length) {
+          for (const storedDraft of validStoredDrafts) {
+            const createdDraft = await warehouseClient.createBuildUpDraft(toDraftPayload(storedDraft));
+            migratedDrafts.push(createdDraft);
+          }
+          clearStoredDrafts();
+          showToast({
+            type: 'success',
+            title: 'Draft Manifest',
+            message: `${validStoredDrafts.length} draft lokal berhasil dipindahkan ke database.`,
+          });
+        } else if (storedDrafts.length) {
+          clearStoredDrafts();
+          showToast({
+            type: 'warning',
+            title: 'Draft Manifest',
+            message: 'Draft lokal lama dilewati karena data tidak lengkap.',
+          });
+        }
+
+        if (isMounted) {
+          const nextDrafts = [
+            ...migratedDrafts,
+            ...(Array.isArray(remoteDrafts) ? remoteDrafts : []),
+          ];
+          setDrafts(nextDrafts.map(normalizeDraft));
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = resolveErrorMessage(error, 'Gagal memuat draft manifest.');
+          showToast({
+            type: 'danger',
+            title: 'Draft Manifest',
+            message,
+          });
+          setDrafts([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDrafts(false);
+        }
+      }
     };
 
-    setDrafts((prevDrafts) => [nextDraft, ...prevDrafts]);
+    void loadDrafts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSaveDraft = async (draftPayload) => {
+    const nextDraft = await warehouseClient.createBuildUpDraft(toDraftPayload(draftPayload));
+
+    setDrafts((prevDrafts) => [normalizeDraft(nextDraft), ...prevDrafts]);
     setActiveTab('draft');
   };
 
-  const handleRemoveDraft = (draftId) => {
+  const handleRemoveDraft = async (draftId) => {
+    await warehouseClient.deleteBuildUpDraft(draftId);
     setDrafts((prevDrafts) => prevDrafts.filter((draft) => draft.id !== draftId));
   };
 
   const handleUpdateDraft = async (draftId, draftPayload) => {
-    const updatedAt = new Date().toISOString();
+    const updatedDraft = await warehouseClient.updateBuildUpDraft(draftId, toDraftPayload(draftPayload));
     setDrafts((prevDrafts) =>
       prevDrafts.map((draft) =>
         draft.id === draftId
-          ? {
-              ...draft,
-              updatedAt,
-              rows: draftPayload?.rows ?? [],
-              payload: draftPayload?.payload ?? null,
-              ignored: draftPayload?.ignored ?? { masters: 0, details: 0 },
-              masterAwbs: draftPayload?.masterAwbs ?? [],
-            }
+          ? normalizeDraft(updatedDraft)
           : draft
       )
     );
   };
 
-  const handleSubmittedAllDrafts = () => {
-    setDrafts([]);
-    setActiveTab('data');
+  const handleSubmittedDraft = async (draftId) => {
+    await warehouseClient.deleteBuildUpDraft(draftId);
+    setDrafts((prevDrafts) => prevDrafts.filter((draft) => draft.id !== draftId));
     showToast({
       type: 'success',
       title: 'Draft Manifest',
-      message: 'Semua draft berhasil disubmit dan membentuk satu manifest buildup.',
+      message: 'Draft berhasil disubmit dan dihapus dari daftar draft.',
     });
   };
 
@@ -76,15 +139,16 @@ export default function Buildup() {
         content: (
           <BuildupDrafts
             drafts={drafts}
+            isLoading={isLoadingDrafts}
             onRemoveDraft={handleRemoveDraft}
             onUpdateDraft={handleUpdateDraft}
-            onSubmittedAllDrafts={handleSubmittedAllDrafts}
+            onSubmittedDraft={handleSubmittedDraft}
           />
         ),
       },
       { id: 'data', label: 'Data Manifest', content: <BuildupDatatables /> },
     ],
-    [drafts]
+    [drafts, isLoadingDrafts]
   );
 
   return (

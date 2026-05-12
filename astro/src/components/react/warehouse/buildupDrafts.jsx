@@ -27,75 +27,51 @@ const buildSummaryText = (draft) => {
   return `${manifestCount} flight | ${uldCount} ULD | ${mawbCount} MAWB`;
 };
 
-const mergeDraftPayloads = (drafts) => {
-  const payload = {
-    flight_manifest: [],
-    uld: [],
-    mawb: [],
-  };
-
-  let invalidDraftCount = 0;
-
-  drafts.forEach((draft) => {
-    if (!hasValidPayload(draft?.payload)) {
-      invalidDraftCount += 1;
-      return;
-    }
-
-    payload.flight_manifest.push(...draft.payload.flight_manifest);
-    payload.uld.push(...draft.payload.uld);
-    payload.mawb.push(...draft.payload.mawb);
-  });
-
-  return { payload, invalidDraftCount };
-};
+const countDraftPayloads = (drafts) =>
+  drafts.reduce(
+    (summary, draft) => {
+      const payload = draft?.payload ?? {};
+      return {
+        flightManifestCount:
+          summary.flightManifestCount +
+          (Array.isArray(payload.flight_manifest) ? payload.flight_manifest.length : 0),
+        uldCount: summary.uldCount + (Array.isArray(payload.uld) ? payload.uld.length : 0),
+        mawbCount: summary.mawbCount + (Array.isArray(payload.mawb) ? payload.mawb.length : 0),
+      };
+    },
+    { flightManifestCount: 0, uldCount: 0, mawbCount: 0 }
+  );
 
 export default function BuildupDrafts({
   drafts = [],
+  isLoading = false,
   onRemoveDraft = () => {},
   onUpdateDraft = async () => {},
-  onSubmittedAllDrafts = () => {},
+  onSubmittedDraft = async () => {},
 }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingDraftId, setSubmittingDraftId] = useState(null);
+  const [deletingDraftId, setDeletingDraftId] = useState(null);
   const [editingDraftId, setEditingDraftId] = useState(null);
-  const aggregateSummary = useMemo(() => mergeDraftPayloads(drafts), [drafts]);
+  const aggregateSummary = useMemo(() => countDraftPayloads(drafts), [drafts]);
   const editingDraft = useMemo(
     () => drafts.find((draft) => draft.id === editingDraftId) ?? null,
     [drafts, editingDraftId]
   );
 
-  const handleSubmitAllDrafts = async () => {
-    if (!drafts.length) {
+  const handleSubmitDraft = async (draft) => {
+    if (!hasValidPayload(draft?.payload)) {
       showToast({
         type: 'warning',
         title: 'Draft Manifest',
-        message: 'Belum ada draft untuk disubmit.',
+        message: 'Payload draft tidak valid untuk submit.',
       });
       return;
     }
 
-    if (aggregateSummary.invalidDraftCount > 0) {
-      showToast({
-        type: 'warning',
-        title: 'Draft Manifest',
-        message: `Terdapat ${aggregateSummary.invalidDraftCount} draft tidak valid. Hapus draft tersebut sebelum submit.`,
-      });
-      return;
-    }
-
-    if (!hasValidPayload(aggregateSummary.payload)) {
-      showToast({
-        type: 'warning',
-        title: 'Draft Manifest',
-        message: 'Payload gabungan draft tidak valid untuk submit.',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+    setSubmittingDraftId(draft.id);
     try {
       const formData = new FormData();
-      formData.append('payload_json', JSON.stringify(aggregateSummary.payload));
+      formData.append('payload_json', JSON.stringify(draft.payload));
       const response = await warehouseClient.submitFedexManifest(formData);
 
       const successMessage =
@@ -109,8 +85,20 @@ export default function BuildupDrafts({
         message: successMessage,
       });
 
-      onSubmittedAllDrafts(response);
       emitManifestUploaded(response);
+      try {
+        await onSubmittedDraft(draft.id, response);
+      } catch (cleanupError) {
+        const message = resolveErrorMessage(
+          cleanupError,
+          'Manifest berhasil disubmit, tetapi draft belum berhasil dibersihkan.'
+        );
+        showToast({
+          type: 'warning',
+          title: 'Draft Manifest',
+          message,
+        });
+      }
     } catch (error) {
       const message = resolveErrorMessage(error, 'Gagal submit draft manifest.');
       showToast({
@@ -119,11 +107,11 @@ export default function BuildupDrafts({
         message,
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmittingDraftId(null);
     }
   };
 
-  const handleDeleteDraft = (draftId) => {
+  const handleDeleteDraft = async (draftId) => {
     const confirmDelete = !isBrowser()
       ? true
       : window.confirm('Hapus draft ini? Draft yang dihapus tidak bisa dikembalikan.');
@@ -132,12 +120,24 @@ export default function BuildupDrafts({
       return;
     }
 
-    onRemoveDraft(draftId);
-    showToast({
-      type: 'success',
-      title: 'Draft Manifest',
-      message: 'Draft berhasil dihapus.',
-    });
+    setDeletingDraftId(draftId);
+    try {
+      await onRemoveDraft(draftId);
+      showToast({
+        type: 'success',
+        title: 'Draft Manifest',
+        message: 'Draft berhasil dihapus.',
+      });
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Gagal menghapus draft manifest.');
+      showToast({
+        type: 'danger',
+        title: 'Draft Manifest',
+        message,
+      });
+    } finally {
+      setDeletingDraftId(null);
+    }
   };
 
   const handleStartEdit = (draftId) => {
@@ -157,6 +157,14 @@ export default function BuildupDrafts({
     setEditingDraftId(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="alert alert-secondary mb-0" role="alert">
+        Memuat draft manifest...
+      </div>
+    );
+  }
+
   if (!drafts.length) {
     return (
       <div className="alert alert-info mb-0" role="alert">
@@ -169,22 +177,17 @@ export default function BuildupDrafts({
     <div className="d-flex flex-column gap-3">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="small text-muted">
-          {drafts.length} draft | {aggregateSummary.payload.flight_manifest.length} flight |{' '}
-          {aggregateSummary.payload.uld.length} ULD | {aggregateSummary.payload.mawb.length} MAWB
+          {drafts.length} draft | {aggregateSummary.flightManifestCount} flight |{' '}
+          {aggregateSummary.uldCount} ULD | {aggregateSummary.mawbCount} MAWB
         </div>
-        <button
-          type="button"
-          className="btn btn-success btn-sm"
-          onClick={handleSubmitAllDrafts}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Manifest'}
-        </button>
       </div>
 
       {drafts.map((draft, index) => {
         const createdAtLabel = formatDateTime(draft.createdAt);
         const awbPreview = Array.isArray(draft.masterAwbs) ? draft.masterAwbs.slice(0, 5) : [];
+        const isSubmitting = submittingDraftId === draft.id;
+        const isDeleting = deletingDraftId === draft.id;
+        const isBusy = isSubmitting || isDeleting;
 
         return (
           <div className="card border" key={draft.id}>
@@ -198,9 +201,17 @@ export default function BuildupDrafts({
                 <div className="d-flex align-items-center gap-2">
                   <button
                     type="button"
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleSubmitDraft(draft)}
+                    disabled={isBusy}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Draft'}
+                  </button>
+                  <button
+                    type="button"
                     className="btn btn-outline-primary btn-sm"
                     onClick={() => handleStartEdit(draft.id)}
-                    disabled={isSubmitting}
+                    disabled={isBusy}
                   >
                     Edit Draft
                   </button>
@@ -208,9 +219,9 @@ export default function BuildupDrafts({
                     type="button"
                     className="btn btn-outline-danger btn-sm"
                     onClick={() => handleDeleteDraft(draft.id)}
-                    disabled={isSubmitting}
+                    disabled={isBusy}
                   >
-                    Hapus Draft
+                    {isDeleting ? 'Menghapus...' : 'Hapus Draft'}
                   </button>
                 </div>
               </div>
@@ -250,6 +261,8 @@ export default function BuildupDrafts({
                   saveButtonLabel="Update Draft"
                   saveToastMessage="Draft berhasil diperbarui."
                   onCancel={handleCloseEdit}
+                  showSearchButton={false}
+                  prefillSearchInput={false}
                 />
               </div>
             </div>

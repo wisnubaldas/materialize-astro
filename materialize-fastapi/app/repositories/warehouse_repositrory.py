@@ -7,8 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.models.BaseDB1.build_up_dead_stock import BuildUpDeadStock
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
+from app.models.BaseDB1.build_up_draft import BuildUpDraft
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
+from app.schemas.build_up_draft_schema import BuildUpDraftCreate, BuildUpDraftUpdate
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
@@ -153,6 +155,54 @@ class WarehouseRepository:
             raise
 
         return (True, pdf_link)
+
+    def list_build_up_drafts(self) -> list[BuildUpDraft]:
+        """Return BuildUp drafts ordered newest first."""
+        return self.db.query(BuildUpDraft).order_by(BuildUpDraft.create_at.desc()).all()
+
+    def get_build_up_draft_by_id(self, draft_id: int) -> BuildUpDraft | None:
+        return self.db.query(BuildUpDraft).filter(BuildUpDraft.id == draft_id).first()
+
+    def create_build_up_draft(self, payload: BuildUpDraftCreate) -> BuildUpDraft:
+        draft = BuildUpDraft(
+            rows=payload.rows,
+            payload=payload.payload,
+            ignored=payload.ignored,
+            master_awbs=payload.master_awbs,
+        )
+        self.db.add(draft)
+        try:
+            self.db.commit()
+            self.db.refresh(draft)
+        except Exception:
+            self.db.rollback()
+            raise
+        return draft
+
+    def update_build_up_draft(
+        self,
+        draft: BuildUpDraft,
+        payload: BuildUpDraftUpdate,
+    ) -> BuildUpDraft:
+        draft.rows = payload.rows
+        draft.payload = payload.payload
+        draft.ignored = payload.ignored
+        draft.master_awbs = payload.master_awbs
+        try:
+            self.db.commit()
+            self.db.refresh(draft)
+        except Exception:
+            self.db.rollback()
+            raise
+        return draft
+
+    def delete_build_up_draft(self, draft: BuildUpDraft) -> None:
+        self.db.delete(draft)
+        try:
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
 
     def masterwaybill_datatable(
         self, params: DataTablesParams

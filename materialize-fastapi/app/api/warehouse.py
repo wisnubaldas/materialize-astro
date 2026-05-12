@@ -6,9 +6,15 @@ from sqlalchemy.orm import Session
 
 from app.db.mysql import get_db1_w
 from app.dependencies.warehouse_deps import (
+    get_build_up_draft_service,
     get_warehouse_manifest_service,
     get_warehouse_manifest_service_w,
     get_warehouse_service,
+)
+from app.schemas.build_up_draft_schema import (
+    BuildUpDraftCreate,
+    BuildUpDraftOut,
+    BuildUpDraftUpdate,
 )
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -71,6 +77,62 @@ def delete_manifest_flight(
                 except OSError:
                     logger.warning("Gagal menghapus file PDF build up: %s", pdf_path)
 
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/build-up-drafts",
+    summary="Daftar draft BuildUp",
+    response_model=list[BuildUpDraftOut],
+)
+def list_build_up_drafts(
+    service: WarehouseService = Depends(get_build_up_draft_service),
+):
+    return service.list_build_up_drafts()
+
+
+@router.post(
+    "/build-up-drafts",
+    summary="Simpan draft BuildUp",
+    response_model=BuildUpDraftOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_build_up_draft(
+    payload: BuildUpDraftCreate,
+    service: WarehouseService = Depends(get_build_up_draft_service),
+):
+    return service.create_build_up_draft(payload)
+
+
+@router.put(
+    "/build-up-drafts/{draft_id}",
+    summary="Perbarui draft BuildUp",
+    response_model=BuildUpDraftOut,
+)
+def update_build_up_draft(
+    draft_id: int,
+    payload: BuildUpDraftUpdate,
+    service: WarehouseService = Depends(get_build_up_draft_service),
+):
+    try:
+        return service.update_build_up_draft(draft_id, payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.delete(
+    "/build-up-drafts/{draft_id}",
+    summary="Hapus draft BuildUp",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_build_up_draft(
+    draft_id: int,
+    service: WarehouseService = Depends(get_build_up_draft_service),
+):
+    try:
+        service.delete_build_up_draft(draft_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

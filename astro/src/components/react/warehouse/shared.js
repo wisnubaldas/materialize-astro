@@ -32,6 +32,14 @@ export const writeStoredDrafts = (drafts) => {
   window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(Array.isArray(drafts) ? drafts : []));
 };
 
+export const clearStoredDrafts = () => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+};
+
 export const emitManifestUploaded = (response) => {
   if (!isBrowser()) {
     return;

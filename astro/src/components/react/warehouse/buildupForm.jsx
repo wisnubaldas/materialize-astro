@@ -92,7 +92,7 @@ const MASTER_FIELDS = [
     label: 'Nature Of Goods',
     type: 'text',
     className: 'text-nowrap',
-    readOnly: true,
+    readOnly: false,
   },
   {
     key: 'aircraft_registration',
@@ -100,7 +100,7 @@ const MASTER_FIELDS = [
     type: 'text',
     className: 'text-nowrap',
   },
-  { key: 'route', label: 'Route', type: 'text', className: 'text-nowrap', readOnly: true },
+  { key: 'route', label: 'Route', type: 'text', className: 'text-nowrap', readOnly: false },
 ];
 
 const DETAIL_FIELDS = [
@@ -427,10 +427,18 @@ const validateRowsForCargoImp = (rows) => {
       setRowFieldError(rowIndex, 'origin', 'Origin harus 3 huruf kode bandara IATA (contoh: CGK).');
     }
     if (!AIRPORT_CODE_RE.test(dest)) {
-      setRowFieldError(rowIndex, 'dest', 'Destination harus 3 huruf kode bandara IATA (contoh: SIN).');
+      setRowFieldError(
+        rowIndex,
+        'dest',
+        'Destination harus 3 huruf kode bandara IATA (contoh: SIN).'
+      );
     }
     if (!isAcceptedFlightDate(flightDate)) {
-      setRowFieldError(rowIndex, 'flight_date', 'Flight date harus format YYYY-MM-DD atau DD-MM-YYYY.');
+      setRowFieldError(
+        rowIndex,
+        'flight_date',
+        'Flight date harus format YYYY-MM-DD atau DD-MM-YYYY.'
+      );
     }
     if (aircraftRegistration && !AIRCRAFT_REG_RE.test(aircraftRegistration)) {
       setRowFieldError(
@@ -491,12 +499,7 @@ const validateRowsForCargoImp = (rows) => {
         );
       }
       if (weight === null || weight <= 0) {
-        setDetailFieldError(
-          rowIndex,
-          detailIndex,
-          'weight',
-          'Weight harus angka lebih dari 0.'
-        );
+        setDetailFieldError(rowIndex, detailIndex, 'weight', 'Weight harus angka lebih dari 0.');
       }
       if (volume === null || volume < 0) {
         setDetailFieldError(
@@ -734,22 +737,28 @@ export default function BuildupForm({
   saveButtonLabel = 'Simpan Draft',
   saveToastMessage = 'Draft manifest berhasil disimpan.',
   onCancel = null,
+  showSearchButton = true,
+  prefillSearchInput = true,
 }) {
   const [inputValue, setInputValue] = useState('');
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [validationResult, setValidationResult] = useState({ isValid: true, errors: [], rowErrors: {} });
+  const [validationResult, setValidationResult] = useState({
+    isValid: true,
+    errors: [],
+    rowErrors: {},
+  });
 
   useEffect(() => {
     setRows(cloneRows(initialRows));
     setInputValue(
-      Array.isArray(initialMasterAwbs) && initialMasterAwbs.length
+      prefillSearchInput && Array.isArray(initialMasterAwbs) && initialMasterAwbs.length
         ? initialMasterAwbs.join('\n')
         : ''
     );
     setValidationResult({ isValid: true, errors: [], rowErrors: {} });
-  }, [initialRows, initialMasterAwbs]);
+  }, [initialRows, initialMasterAwbs, prefillSearchInput]);
 
   const revalidateRows = (nextRows) => {
     const result = validateRowsForCargoImp(nextRows);
@@ -1057,20 +1066,22 @@ export default function BuildupForm({
               </div>
               <label className="form-label mb-1 d-none d-md-block">&nbsp;</label>
               <div className="d-flex gap-2">
-                <button type="submit" className="btn btn-primary flex-fill" disabled={isLoading}>
-                  {isLoading ? (
-                    <span className="d-inline-flex align-items-center gap-2">
-                      <span
-                        className="spinner-border spinner-border-sm"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Mencari...
-                    </span>
-                  ) : (
-                    'Cari'
-                  )}
-                </button>
+                {showSearchButton ? (
+                  <button type="submit" className="btn btn-primary flex-fill" disabled={isLoading}>
+                    {isLoading ? (
+                      <span className="d-inline-flex align-items-center gap-2">
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Mencari...
+                      </span>
+                    ) : (
+                      'Cari'
+                    )}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="btn btn-outline-primary flex-fill"
@@ -1170,25 +1181,27 @@ export default function BuildupForm({
                               const fieldError = getRowFieldError(rowIndex, field.key);
                               return (
                                 <>
-                            <input
-                              type={field.type}
-                              className={`form-control form-control-sm ${field.className || ''} ${
-                                field.readOnly ? 'bg-light' : ''
-                              } ${fieldError ? 'is-invalid' : ''}`}
-                              value={row[field.key] ?? ''}
-                              readOnly={Boolean(field.readOnly)}
-                              onChange={
-                                field.readOnly
-                                  ? undefined
-                                  : (event) =>
-                                      handleMasterFieldChange(
-                                        rowIndex,
-                                        field.key,
-                                        event.target.value
-                                      )
-                              }
-                            />
-                                  {fieldError ? <div className="invalid-feedback">{fieldError}</div> : null}
+                                  <input
+                                    type={field.type}
+                                    className={`form-control form-control-sm ${field.className || ''} ${
+                                      field.readOnly ? 'bg-light' : ''
+                                    } ${fieldError ? 'is-invalid' : ''}`}
+                                    value={row[field.key] ?? ''}
+                                    readOnly={Boolean(field.readOnly)}
+                                    onChange={
+                                      field.readOnly
+                                        ? undefined
+                                        : (event) =>
+                                            handleMasterFieldChange(
+                                              rowIndex,
+                                              field.key,
+                                              event.target.value
+                                            )
+                                    }
+                                  />
+                                  {fieldError ? (
+                                    <div className="invalid-feedback">{fieldError}</div>
+                                  ) : null}
                                 </>
                               );
                             })()}
@@ -1216,7 +1229,7 @@ export default function BuildupForm({
                             >
                               <div className="row g-2 align-items-end">
                                 {DETAIL_FIELDS.map((field) => (
-                                  <div key={field.key} className="col-12 col-md-6 col-xl-2">
+                                  <div key={field.key} className="col-12 col-md-6 col-xl-4">
                                     <label className="form-label mb-1">{field.label}</label>
                                     {(() => {
                                       const fieldError = getDetailFieldError(
@@ -1226,54 +1239,58 @@ export default function BuildupForm({
                                       );
                                       return (
                                         <>
-                                    {field.key === 'pieces' || field.key === 'weight' || field.key === 'volume' ? (
-                                      <div className="input-group input-group-sm">
-                                        <input
-                                          type={field.type}
-                                          className={`form-control ${field.className || ''} ${
-                                            fieldError ? 'is-invalid' : ''
-                                          }`}
-                                          value={detail[field.key] ?? ''}
-                                          aria-describedby={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
-                                          onChange={(event) =>
-                                            handleDetailFieldChange(
-                                              rowIndex,
-                                              detailIndex,
-                                              field.key,
-                                              event.target.value
-                                            )
-                                          }
-                                        />
-                                        <span
-                                          className="input-group-text"
-                                          id={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
-                                        >
-                                          {field.key === 'pieces'
-                                            ? `Sisa: ${remainingPieces || '-'}`
-                                            : field.key === 'weight'
-                                            ? `Sisa: ${remainingWeight || '-'}`
-                                            : `Sisa: ${remainingVolume || '-'}`}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <input
-                                        type={field.type}
-                                        className={`form-control form-control-sm ${field.className || ''} ${
-                                          fieldError ? 'is-invalid' : ''
-                                        }`}
-                                        value={detail[field.key] ?? ''}
-                                        onChange={(event) =>
-                                          handleDetailFieldChange(
-                                            rowIndex,
-                                            detailIndex,
-                                            field.key,
-                                            event.target.value
-                                          )
-                                        }
-                                      />
-                                    )}
+                                          {field.key === 'pieces' ||
+                                          field.key === 'weight' ||
+                                          field.key === 'volume' ? (
+                                            <div className="input-group input-group-sm">
+                                              <input
+                                                type={field.type}
+                                                className={`form-control ${field.className || ''} ${
+                                                  fieldError ? 'is-invalid' : ''
+                                                }`}
+                                                value={detail[field.key] ?? ''}
+                                                aria-describedby={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
+                                                onChange={(event) =>
+                                                  handleDetailFieldChange(
+                                                    rowIndex,
+                                                    detailIndex,
+                                                    field.key,
+                                                    event.target.value
+                                                  )
+                                                }
+                                              />
+                                              <span
+                                                className="input-group-text"
+                                                id={`${rowKey}-detail-${detailIndex}-${field.key}-remaining`}
+                                              >
+                                                {field.key === 'pieces'
+                                                  ? `Sisa: ${remainingPieces || '-'}`
+                                                  : field.key === 'weight'
+                                                    ? `Sisa: ${remainingWeight || '-'}`
+                                                    : `Sisa: ${remainingVolume || '-'}`}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            <input
+                                              type={field.type}
+                                              className={`form-control form-control-sm ${field.className || ''} ${
+                                                fieldError ? 'is-invalid' : ''
+                                              }`}
+                                              value={detail[field.key] ?? ''}
+                                              onChange={(event) =>
+                                                handleDetailFieldChange(
+                                                  rowIndex,
+                                                  detailIndex,
+                                                  field.key,
+                                                  event.target.value
+                                                )
+                                              }
+                                            />
+                                          )}
                                           {fieldError ? (
-                                            <div className="invalid-feedback d-block">{fieldError}</div>
+                                            <div className="invalid-feedback d-block">
+                                              {fieldError}
+                                            </div>
                                           ) : null}
                                         </>
                                       );
@@ -1281,7 +1298,7 @@ export default function BuildupForm({
                                   </div>
                                 ))}
 
-                                <div className="col-12 col-xl-2">
+                                <div className="col-12 col-xl-12">
                                   <button
                                     type="button"
                                     className="btn btn-outline-danger w-100"

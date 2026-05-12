@@ -8,6 +8,11 @@ from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.repositories.warehouse_repositrory import WarehouseRepository
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
+from app.schemas.build_up_draft_schema import (
+    BuildUpDraftCreate,
+    BuildUpDraftOut,
+    BuildUpDraftUpdate,
+)
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
@@ -171,6 +176,31 @@ class WarehouseService:
 
     def delete_manifest_flight(self, header_id: int) -> tuple[bool, str | None]:
         return self.repository.delete_manifest_flight(header_id)
+
+    def list_build_up_drafts(self) -> list[BuildUpDraftOut]:
+        rows = self.repository.list_build_up_drafts()
+        return [BuildUpDraftOut.model_validate(row) for row in rows]
+
+    def create_build_up_draft(self, payload: BuildUpDraftCreate) -> BuildUpDraftOut:
+        draft = self.repository.create_build_up_draft(payload)
+        return BuildUpDraftOut.model_validate(draft)
+
+    def update_build_up_draft(
+        self,
+        draft_id: int,
+        payload: BuildUpDraftUpdate,
+    ) -> BuildUpDraftOut:
+        draft = self.repository.get_build_up_draft_by_id(draft_id)
+        if not draft:
+            raise LookupError("Draft build up tidak ditemukan")
+        updated = self.repository.update_build_up_draft(draft, payload)
+        return BuildUpDraftOut.model_validate(updated)
+
+    def delete_build_up_draft(self, draft_id: int) -> None:
+        draft = self.repository.get_build_up_draft_by_id(draft_id)
+        if not draft:
+            raise LookupError("Draft build up tidak ditemukan")
+        self.repository.delete_build_up_draft(draft)
 
     def generate_ffm_preview(self, header_id: int) -> FfmPreviewOut:
         header, details = self.repository.get_manifest_flight_with_details(header_id)
