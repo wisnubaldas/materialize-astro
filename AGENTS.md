@@ -19,6 +19,7 @@ Keahlian utama yang wajib digunakan:
 - FastAPI untuk backend.
 - Astro + React untuk web frontend.
 - C# WPF (.NET) untuk desktop frontend.
+- Ionic React + Capacitor untuk mobile frontend.
 - Dependency Injection.
 - SOLID, Repository Pattern, Service Layer, MVVM.
 - Refactoring sistem existing secara aman, bertahap, dan terdokumentasi.
@@ -40,6 +41,8 @@ materialize-project/
 │   └── backend_agent.md
 ├── desktop-app/
 │   └── desktop_agent.md
+├── mobile-app/
+│   └── mobile_agent.md
 ├── docs/
 ├── email-template/
 ├── docker-asset/
@@ -53,6 +56,7 @@ materialize-project/
 | Backend FastAPI, database, API, auth, job, integrasi CEISA/AP2/HUBNET | `materialize-fastapi/`                           | [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) |
 | Web frontend Astro + React                                            | `astro/`                                         | [`astro/frontend_agent.md`](astro/frontend_agent.md)                           |
 | Desktop frontend C# WPF (.NET)                                        | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
+| Mobile frontend Ionic React + Capacitor                               | `mobile-app/`                                    | [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md)                     |
 | Dokumentasi project/root                                              | `docs/`, `README.md`, `AGENTS.md`                | `AGENTS.md` + agent terdampak                                                  |
 | Email template                                                        | `email-template/`                                | `AGENTS.md` + `materialize-fastapi/backend_agent.md` jika dipakai backend      |
 | Docker/deployment                                                     | `docker-asset/`, `deploy-*.sh`, `.gitlab-ci.yml` | `AGENTS.md` + agent project yang dideploy                                      |
@@ -67,6 +71,7 @@ Sebelum mengubah file, tentukan scope berdasarkan path file:
 Path mengandung astro/                 → baca astro/frontend_agent.md
 Path mengandung materialize-fastapi/   → baca materialize-fastapi/backend_agent.md
 Path mengandung desktop-app/           → baca desktop-app/desktop_agent.md
+Path mengandung mobile-app/            → baca mobile-app/mobile_agent.md
 Path lintas project                    → baca semua agent yang terdampak
 ```
 
@@ -77,7 +82,7 @@ Analisis kebutuhan dan API contract
    ↓
 Backend FastAPI di materialize-fastapi/
    ↓
-Frontend Web di astro/ dan/atau Desktop di desktop-app/
+Frontend Web di astro/, Mobile di mobile-app/, dan/atau Desktop di desktop-app/
    ↓
 Dokumentasi di docs/
    ↓
@@ -100,6 +105,7 @@ materialize-project/
 ├── docs/
 ├── email-template/
 ├── materialize-fastapi/
+├── mobile-app/
 ├── .gitlab-ci.yml
 ├── AGENTS.md
 ├── deploy-development.sh
@@ -246,6 +252,60 @@ Catatan penting desktop:
 - Desktop app hanya sebagai frontend/client operasional.
 - Semua data, auth, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend FastAPI.
 
+### Mobile App
+
+Project mobile berada di:
+
+```text
+mobile-app/
+```
+
+Mobile frontend resmi menggunakan:
+
+```text
+Ionic React + JavaScript + Vite + Capacitor
+```
+
+File instruksi mobile wajib berada di:
+
+```text
+mobile-app/mobile_agent.md
+```
+
+Struktur aktual/target mobile yang harus dipertahankan:
+
+```text
+mobile-app/
+├── public/
+├── src/
+│   ├── auth/
+│   ├── components/
+│   ├── config/
+│   ├── guards/
+│   ├── pages/
+│   ├── services/
+│   ├── styles/
+│   ├── theme/
+│   └── utils/
+├── mobile_agent.md
+├── capacitor.config.js
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+Catatan penting mobile:
+
+- Target pengembangan mobile tetap **JavaScript-first**.
+- Jangan membuat file `.ts`/`.tsx` baru kecuali user meminta eksplisit.
+- Gunakan Ionic React component sebagai baseline UI mobile.
+- Gunakan Capacitor hanya untuk fitur native dan packaging Android/iOS.
+- Mobile app hanya sebagai frontend/client operasional.
+- Jangan membuat backend implementation, database layer, atau integrasi server-side di dalam `mobile-app/`.
+- API call harus melalui service di `src/services/`, terutama `apiService.js`, bukan `fetch()` langsung dari page/component.
+- Environment API wajib dibaca melalui `src/config/env.js` dan variabel `VITE_*`.
+- Semua data, auth final, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend/API resmi, bukan langsung dari mobile app.
+
 ---
 
 ## Project Overview
@@ -263,7 +323,7 @@ Aplikasi untuk operasional gudang cargo lini 1 di Bandara Soekarno Hatta.
 - Menambah dan memperbaiki module sesuai standar role dan permission.
 - Menyediakan pondasi arsitektur yang mudah dikembangkan.
 - Menjaga integrasi dan proses bisnis tetap berada di backend.
-- Menyediakan frontend web dan desktop sebagai client resmi ke backend FastAPI.
+- Menyediakan frontend web, mobile, dan desktop sebagai client resmi ke backend FastAPI.
 - Menyediakan dokumentasi teknis dan laporan progres yang konsisten.
 
 ---
@@ -312,11 +372,11 @@ Backend FastAPI di `materialize-fastapi/` adalah satu-satunya sumber kebenaran u
 - Integrasi pihak ketiga seperti CEISA, AP2, HUBNET, dan layanan eksternal lain.
 - Audit log, request log, response log, dan background job.
 
-Frontend web dan desktop hanya boleh menjadi client/UI yang mengonsumsi endpoint resmi backend.
+Frontend web, mobile, dan desktop hanya boleh menjadi client/UI yang mengonsumsi endpoint resmi backend.
 
-### Frontend dan Desktop Dilarang Bypass Backend
+### Frontend, Mobile, dan Desktop Dilarang Bypass Backend
 
-Web frontend `astro/` dan desktop frontend `desktop-app/` dilarang:
+Web frontend `astro/`, mobile frontend `mobile-app/`, dan desktop frontend `desktop-app/` dilarang:
 
 - Koneksi langsung ke database produksi/internal.
 - Query langsung ke database.
@@ -327,10 +387,10 @@ Web frontend `astro/` dan desktop frontend `desktop-app/` dilarang:
 
 ### API Contract Konsisten
 
-- Gunakan API contract yang sama untuk web frontend dan desktop jika memungkinkan.
-- Jika endpoint belum tersedia, tambahkan endpoint di backend, jangan membuat bypass dari frontend/desktop.
-- Request/response harus terdokumentasi melalui schema backend dan DTO frontend/desktop.
-- Error response harus konsisten agar mudah ditangani oleh web dan desktop.
+- Gunakan API contract yang sama untuk web frontend, mobile, dan desktop jika memungkinkan.
+- Jika endpoint belum tersedia, tambahkan endpoint di backend, jangan membuat bypass dari frontend/mobile/desktop.
+- Request/response harus terdokumentasi melalui schema backend dan DTO/helper client di frontend/mobile/desktop.
+- Error response harus konsisten agar mudah ditangani oleh web, mobile, dan desktop.
 
 ---
 
@@ -384,8 +444,8 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Gunakan `.env.example`, `appsettings.example.json`, atau dokumentasi konfigurasi tanpa nilai rahasia.
 - Jangan menampilkan stack trace mentah ke user akhir.
 - Log error detail boleh disimpan di backend log, tetapi response API harus aman.
-- Untuk eksekusi frontend `astro/`: setiap kegagalan `fetch`/request API wajib menampilkan detail error response server ke console developer browser (`console.error`) untuk kebutuhan debugging.
-- Validasi input di frontend/desktop hanya untuk UX; validasi final tetap di backend.
+- Untuk eksekusi frontend `astro/` dan `mobile-app/`: setiap kegagalan `fetch`/request API wajib menampilkan detail error response server ke console developer browser (`console.error`) untuk kebutuhan debugging.
+- Validasi input di frontend/mobile/desktop hanya untuk UX; validasi final tetap di backend.
 - Gunakan HTTPS untuk komunikasi production.
 - Timeout request wajib eksplisit.
 - Handle minimal status code: `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`.
@@ -418,8 +478,10 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Jika task backend, baca [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) terlebih dahulu.
 - Jika task web frontend, baca [`astro/frontend_agent.md`](astro/frontend_agent.md) terlebih dahulu.
 - Jika task desktop, baca [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md) terlebih dahulu.
+- Jika task mobile, baca [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md) terlebih dahulu.
 - Jika task integrasi CEISA/AP2/HUBNET, implementasi wajib di backend `materialize-fastapi/`.
 - Jika task membutuhkan data dari desktop hardware lokal, data boleh dibaca oleh desktop, tetapi proses bisnis dan penyimpanan tetap melalui backend API.
+- Jika task membutuhkan fitur native mobile lokal, akses native boleh dilakukan melalui Capacitor di `mobile-app/`, tetapi proses bisnis dan penyimpanan tetap melalui backend/API resmi.
 - Jangan menjaga backward compatibility lama jika user secara eksplisit meminta perubahan proses bisnis baru.
 
 
