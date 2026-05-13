@@ -45,6 +45,8 @@ function normalizeLoginToken(response) {
  * @returns {Promise<{ token: string, user: object }>} Auth session.
  */
 export async function loginRequest(credentials) {
+  console.info('[auth] Login request mode', { mode: env.useMockAuth ? 'mock' : 'api' });
+
   if (env.useMockAuth) {
     return mockLogin(credentials);
   }

@@ -18,6 +18,7 @@ No backend code belongs in this project.
 ```text
 src/
  ├── components/
+ │   └── layout/
  ├── config/
  ├── contexts/
  ├── navigation/
@@ -26,6 +27,15 @@ src/
  ├── styles/
  └── utils/
 ```
+
+## Screen Layout Pattern
+
+Use shared layout components for new screens:
+
+- `src/components/layout/ScreenLayout.js` handles safe area, keyboard-aware wrapping, scroll behavior, and responsive web width.
+- `src/components/layout/ScreenHeader.js` handles basic stack headers with back/close actions.
+- Screens should focus on content and behavior. Avoid repeating safe area, scroll, keyboard, and footer boilerplate in every screen.
+- Keep NativeWind wired through `metro.config.js` and `global.css`. Do not add `nativewind/babel` for the current installed NativeWind version because it tries to import `nativewind/jsx-runtime`, which is not exported by this package.
 
 ## Install
 
@@ -67,6 +77,14 @@ Then open the app with Expo Go or run:
 ```bash
 npm run android
 ```
+
+Open the same mobile UI in a browser for quick responsive checks:
+
+```bash
+npm run web
+```
+
+Expo will open the app through React Native Web. Keep using the same `.env` values, and use a LAN API URL when the browser or physical device cannot reach `127.0.0.1`.
 
 ## Auth
 
@@ -122,4 +140,16 @@ See:
 ```text
 ../AGENTS.md
 mobile_agent.md
+```
+
+Agar login dari HP fisik Expo Go bisa masuk backend, jalankan FastAPI seperti ini dari materialize-fastapi:
+
+```
+poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Lalu restart Expo:
+
+```
+npx expo start --clear --host lan
 ```

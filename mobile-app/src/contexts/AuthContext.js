@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [bootError, setBootError] = useState('');
 
   useEffect(() => {
     /**
@@ -27,12 +28,21 @@ export function AuthProvider({ children }) {
      * @returns {Promise<void>} Resolves after session state is loaded.
      */
     async function loadStoredSession() {
-      const token = await getAuthToken();
-      const storedUser = await getAuthUser();
+      try {
+        const token = await getAuthToken();
+        const storedUser = await getAuthUser();
 
-      setIsAuthenticated(Boolean(token));
-      setUser(storedUser);
-      setIsLoading(false);
+        setIsAuthenticated(Boolean(token));
+        setUser(storedUser);
+        setBootError('');
+      } catch (error) {
+        console.error('[auth] Gagal memuat session tersimpan', error);
+        setIsAuthenticated(false);
+        setUser(null);
+        setBootError('Session lokal gagal dimuat. Silakan login ulang.');
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     loadStoredSession();
@@ -68,10 +78,11 @@ export function AuthProvider({ children }) {
       isLoading,
       isAuthenticated,
       user,
+      bootError,
       login,
       logout,
     }),
-    [isLoading, isAuthenticated, user]
+    [isLoading, isAuthenticated, user, bootError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -79,7 +90,7 @@ export function AuthProvider({ children }) {
 
 /**
  * Reads the current authentication context.
- * @returns {{ isLoading: boolean, isAuthenticated: boolean, user: object|null, login: Function, logout: Function }} Auth state.
+ * @returns {{ isLoading: boolean, isAuthenticated: boolean, user: object|null, bootError: string, login: Function, logout: Function }} Auth state.
  */
 export function useAuth() {
   const context = useContext(AuthContext);

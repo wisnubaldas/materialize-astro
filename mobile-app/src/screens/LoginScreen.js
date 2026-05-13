@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import AppButton from '../components/AppButton';
 import AppInput from '../components/AppInput';
+import ScreenLayout from '../components/layout/ScreenLayout';
+import { Card, CardContent } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
-import { theme } from '../styles/theme';
 import { validateLoginForm } from '../utils/validators';
 
 /**
@@ -52,78 +54,44 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
-    >
-      <View style={styles.brand}>
-        <View style={styles.brandMark}>
-          <Text style={styles.brandMarkText}>M</Text>
+    <ScreenLayout keyboardAware contentClassName="web:max-w-[440px]" scrollContentClassName="justify-center">
+      <View className="mb-8">
+        <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
+          <MaterialCommunityIcons name="warehouse" size={30} color="#FFFFFF" />
         </View>
-        <Text style={styles.title}>MAU APP</Text>
-        <Text style={styles.subtitle}>Aplikasi untuk kebutuhan gudang lini 1</Text>
+        <Text className="text-4xl font-black text-slate-950">
+          MAU<Text className="text-blue-600">.</Text>
+        </Text>
+        <Text className="mt-3 text-base leading-6 text-slate-500">
+          Mobile operation untuk gudang cargo lini 1 Bandara Soekarno Hatta.
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <AppInput
-          label="Email"
-          value={formData.email}
-          keyboardType="email-address"
-          onChangeText={(value) => updateField('email', value)}
-        />
-        <AppInput
-          label="Password"
-          value={formData.password}
-          secureTextEntry
-          onChangeText={(value) => updateField('password', value)}
-        />
-        <AppButton title="Login" loading={isSubmitting} onPress={handleLogin} />
-      </View>
-    </KeyboardAvoidingView>
+      <Card className="rounded-3xl">
+        <CardContent className="gap-5">
+          <View>
+            <Text className="text-2xl font-extrabold text-slate-950">Login operasional</Text>
+            <Text className="mt-1 text-sm leading-5 text-slate-500">
+              Masuk dengan akun MAU APP untuk melanjutkan pekerjaan gudang.
+            </Text>
+          </View>
+          <AppInput
+            label="Email"
+            value={formData.email}
+            placeholder="admin@admin.com"
+            keyboardType="email-address"
+            onChangeText={(value) => updateField('email', value)}
+          />
+          <AppInput
+            label="Password"
+            value={formData.password}
+            placeholder="password123"
+            secureTextEntry
+            onChangeText={(value) => updateField('password', value)}
+          />
+          <AppButton title="Login" loading={isSubmitting} onPress={handleLogin} />
+        </CardContent>
+      </Card>
+    </ScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-  },
-  brand: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  brandMark: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    marginBottom: theme.spacing.md,
-  },
-  brandMarkText: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  title: {
-    color: theme.colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
-  },
-  card: {
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-});

@@ -19,7 +19,17 @@ function buildApiUrl(path) {
  */
 async function readJsonResponse(response) {
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch (error) {
+    console.error('[api] Gagal membaca response JSON', {
+      status: response.status,
+      bodyPreview: text.slice(0, 300),
+      error,
+    });
+    return { message: text || 'Response server tidak valid.' };
+  }
 }
 
 /**
@@ -44,6 +54,20 @@ function resolveErrorMessage(data) {
 }
 
 /**
+ * Builds a readable message for failed network requests.
+ * @param {unknown} error - Error thrown by fetch.
+ * @param {string} url - Target request URL.
+ * @returns {string} UI-safe network error message.
+ */
+function resolveNetworkErrorMessage(error, url) {
+  if (error?.name === 'AbortError') {
+    return `Request ke backend timeout setelah ${env.apiTimeoutMs / 1000} detik. Periksa API base URL: ${url}`;
+  }
+
+  return `Tidak bisa menghubungi backend. Periksa koneksi device/emulator dan API base URL: ${url}`;
+}
+
+/**
  * Sends an HTTP request to the backend API.
  * @param {string} path - Relative backend path.
  * @param {{ method?: string, body?: object, headers?: object, authenticated?: boolean }} options - Request options.
@@ -51,6 +75,9 @@ function resolveErrorMessage(data) {
  */
 export async function apiRequest(path, options = {}) {
   const method = options.method || 'GET';
+  const url = buildApiUrl(path);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), env.apiTimeoutMs);
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -64,19 +91,34 @@ export async function apiRequest(path, options = {}) {
     }
   }
 
-  const response = await fetch(buildApiUrl(path), {
-    method,
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-  const data = await readJsonResponse(response);
+  console.info('[api] Request start', { method, url });
 
-  if (!response.ok) {
-    console.error('[api] Request failed', { path, status: response.status, data });
-    throw new Error(resolveErrorMessage(data));
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+    const data = await readJsonResponse(response);
+
+    if (!response.ok) {
+      console.error('[api] Request failed', { method, url, status: response.status, data });
+      throw new Error(resolveErrorMessage(data));
+    }
+
+    console.info('[api] Request success', { method, url, status: response.status });
+    return data;
+  } catch (error) {
+    if (error?.name === 'AbortError' || error instanceof TypeError) {
+      console.error('[api] Request error', { method, url, error });
+      throw new Error(resolveNetworkErrorMessage(error, url));
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return data;
 }
 
 /**

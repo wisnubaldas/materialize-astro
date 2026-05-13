@@ -25,12 +25,17 @@
       "package": "com.mauapp.mobile"
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
         "projectId": ""
       }
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router"
+    ]
   }
 }

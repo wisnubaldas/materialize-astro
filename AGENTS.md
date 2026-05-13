@@ -307,6 +307,7 @@ Catatan penting mobile:
 - Environment API wajib dibaca melalui `src/config/env.js` dan variabel `EXPO_PUBLIC_*`.
 - Auth state mobile dikelola di `src/contexts/AuthContext.js`.
 - Navigation mobile dikelola di `src/navigation/`.
+- Pengembangan UI mobile wajib membaca dan mengikuti `mobile-app/nativewind_agent.md`; gunakan NativeWind sebagai styling utama.
 - Semua data, auth final, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend/API resmi, bukan langsung dari mobile app.
 
 ---

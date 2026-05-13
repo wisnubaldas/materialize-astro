@@ -1,11 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { View } from 'react-native';
 
-import { theme } from '../styles/theme';
+import { Input } from './ui/input';
+import { Text } from './ui/text';
 
 /**
- * Reusable labeled text input.
- * @param {{ label: string, value: string, onChangeText: Function, secureTextEntry?: boolean, keyboardType?: string, autoCapitalize?: string }} props - Input props.
+ * Reusable labeled text input styled with NativeWind utilities.
+ * @param {{ label: string, value: string, onChangeText: Function, secureTextEntry?: boolean, keyboardType?: string, autoCapitalize?: string, placeholder?: string, inputClassName?: string }} props - Input props.
  * @returns {React.ReactElement} Input field.
  */
 export default function AppInput({
@@ -15,40 +16,21 @@ export default function AppInput({
   secureTextEntry = false,
   keyboardType = 'default',
   autoCapitalize = 'none',
+  placeholder = '',
+  inputClassName = '',
 }) {
   return (
-    <View style={styles.wrapper}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
+    <View className="gap-2">
+      <Text variant="label">{label}</Text>
+      <Input
+        className={inputClassName}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
-        placeholderTextColor={theme.colors.muted}
+        placeholder={placeholder}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: theme.spacing.xs,
-  },
-  label: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  input: {
-    minHeight: 50,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: theme.spacing.md,
-    color: theme.colors.text,
-    fontSize: 16,
-  },
-});

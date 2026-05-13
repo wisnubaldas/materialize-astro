@@ -18,7 +18,8 @@ The project must stay focused on the mobile frontend. Do not generate backend co
    - Reusable UI belongs in `src/components`.
    - API calls belong in `src/services`.
    - Global state belongs in `src/contexts`.
-   - Navigation belongs in `src/navigation`.
+   - Expo Router route files belong in `app/` when the router migration is active.
+   - `src/navigation` is only for legacy React Navigation compatibility during migration, and should be removed after Expo Router is stable.
    - Shared colors, spacing, and typography belong in `src/styles`.
    - Validation/helper functions belong in `src/utils`.
 
@@ -51,12 +52,29 @@ The project must stay focused on the mobile frontend. Do not generate backend co
    - Prefer `npx expo install <package>` when installing React Native native packages.
    - Do not add native packages that require manual native configuration unless the app already moved to a development build.
 
+9. Use NativeWind as the primary mobile UI styling system.
+   - Before changing files inside `mobile-app/`, read `mobile-app/nativewind_agent.md`.
+   - Prefer `className` utility styles over new `StyleSheet.create` blocks for screens and reusable UI.
+   - Keep NativeWind setup files in the app root: `global.css`, `metro.config.js`, and PostCSS config.
+   - Keep NativeWind wired through `metro.config.js` with `withNativeWind(config, { input: './global.css' })`; the current installed NativeWind package must not use `nativewind/babel` or `jsxImportSource: 'nativewind'` because it does not export `nativewind/jsx-runtime`.
+   - For third-party components that do not support `className` reliably, use a small local `style` object instead of forcing unsupported interop APIs.
+   - Keep JavaScript-first rules: do not add `nativewind-env.d.ts` or other TypeScript files.
+
+10. Use the shared screen layout pattern.
+   - Basic screen framing belongs in `src/components/layout/`.
+   - New screens should start from `ScreenLayout` for safe area, keyboard behavior, scroll behavior, and web max-width.
+   - Stack/detail screens should use `ScreenHeader` unless they need a clearly custom top bar.
+   - Screens should focus on content and behavior, not repeating safe area, scroll, keyboard, and footer boilerplate.
+   - If a screen appears blank, first verify `app/_layout.js`, Expo Router route files, `AuthContext`, `ScreenLayout`, and NativeWind setup before changing business logic.
+   - If legacy React Navigation is still present during migration, also verify `AppNavigator`.
+
 ## Coding style
 
 - Use functional React components.
 - Use clear component names, for example `LoginScreen`, `DashboardScreen`, `AppButton`.
 - Keep each file focused on one responsibility.
 - Avoid large screens. Extract repeated UI into components.
+- Keep screen-level layout consistent through `ScreenLayout` and extract repeated headers/actions into `src/components/layout`.
 - Keep form validation in utility files when possible.
 - Use `async/await` for asynchronous logic.
 - Handle API errors with readable messages.
@@ -73,6 +91,7 @@ The current starter includes:
 - API request wrapper
 - Environment-based API configuration
 - EAS build profile for Android APK preview and Android App Bundle production
+- Planned Expo Router migration with JavaScript route files in `app/`
 
 ## Demo account
 

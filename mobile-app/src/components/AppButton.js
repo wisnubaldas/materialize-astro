@@ -1,43 +1,42 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
-import { theme } from '../styles/theme';
+import { cn } from './ui/utils/cn';
+import { Button } from './ui/button';
+import { Text } from './ui/text';
 
 /**
- * Reusable primary button for mobile screens.
- * @param {{ title: string, onPress?: Function, disabled?: boolean, loading?: boolean }} props - Button props.
+ * Reusable rounded button styled with NativeWind utilities.
+ * @param {{ title: string, onPress?: Function, disabled?: boolean, loading?: boolean, variant?: 'light'|'dark'|'primary', className?: string }} props - Button props.
  * @returns {React.ReactElement} Pressable button.
  */
-export default function AppButton({ title, onPress, disabled = false, loading = false }) {
+export default function AppButton({
+  title,
+  onPress,
+  disabled = false,
+  loading = false,
+  variant = 'primary',
+  className = '',
+}) {
   const isDisabled = disabled || loading;
+  const buttonVariant = variant === 'light' ? 'outline' : 'default';
+  const variantClassName = variant === 'dark' ? 'bg-slate-900' : '';
+  const textClassName = variant === 'light' ? 'text-slate-950' : 'text-white';
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Button
+      variant={buttonVariant}
+      size="lg"
       disabled={isDisabled}
       onPress={onPress}
-      style={[styles.button, isDisabled && styles.disabledButton]}
+      className={cn(variantClassName, className)}
+      textClassName={textClassName}
     >
-      {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>{title}</Text>}
-    </Pressable>
+      {loading ? (
+        <ActivityIndicator color={variant === 'light' ? '#111111' : '#FFFFFF'} />
+      ) : (
+        <Text>{title}</Text>
+      )}
+    </Button>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    minHeight: 50,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-  },
-  disabledButton: {
-    opacity: 0.65,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
