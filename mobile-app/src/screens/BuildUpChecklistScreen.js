@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenHeader from '../components/layout/ScreenHeader';
 import ScreenLayout from '../components/layout/ScreenLayout';
 import { BarcodeScanner, Button, Card, CardContent, Input, Text } from '../components/ui';
+import { useThemeColors } from '../styles/theme';
 
 const initialForm = {
   mawbNumber: '',
@@ -46,12 +47,16 @@ const fields = [
  * @returns {React.ReactElement} Checklist field.
  */
 function ChecklistField({ field, value, onChangeText, onScanPress }) {
+  const colors = useThemeColors();
   const canScan = Boolean(field.scannerTitle && onScanPress);
 
   return (
     <View className="gap-3">
       <Text variant="label">{field.label}</Text>
-      <View className="min-h-[58px] flex-row items-center rounded-2xl border border-border bg-card px-4">
+      <View
+        className="min-h-[58px] flex-row items-center rounded-sm border border-border bg-card px-4"
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+      >
         <Input
           className="min-h-0 flex-1 border-0 bg-transparent px-0 py-0"
           value={value}
@@ -62,11 +67,11 @@ function ChecklistField({ field, value, onChangeText, onScanPress }) {
         />
         {canScan ? (
           <Button variant="secondary" size="sm" className="ml-3" onPress={onScanPress}>
-            <MaterialCommunityIcons name="barcode-scan" size={18} color="#0F172A" />
+            <MaterialCommunityIcons name="barcode-scan" size={18} color={colors.foreground} />
             <Text className="ml-2 text-sm font-semibold">Scan</Text>
           </Button>
         ) : (
-          <MaterialCommunityIcons name={field.icon} size={24} color="#64748B" />
+          <MaterialCommunityIcons name={field.icon} size={24} color={colors.muted} />
         )}
       </View>
     </View>
@@ -142,7 +147,7 @@ export default function BuildUpChecklistScreen({ onBack }) {
       }
     >
       <View>
-        <Text variant="label" className="uppercase text-blue-600">
+        <Text variant="label" className="uppercase text-primary">
           Build Up
         </Text>
         <Text variant="title" className="mt-1">
@@ -153,7 +158,7 @@ export default function BuildUpChecklistScreen({ onBack }) {
         </Text>
       </View>
 
-      <Card className="mt-8 rounded-3xl bg-card/70">
+      <Card className="mt-8 rounded-sm bg-card/70">
         <CardContent className="gap-5 p-4">
           {fields.map((field) => (
             <ChecklistField

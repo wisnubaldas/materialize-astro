@@ -3,6 +3,7 @@ import { View } from 'react-native';
 
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
+import { resolveBackgroundColor, useThemeColors } from '../../styles/theme';
 
 /**
  * Renders a reusable card container.
@@ -10,7 +11,14 @@ import { TextClassContext } from './utils/text-context';
  * @returns {React.ReactElement} Card container.
  */
 export function Card({ className = '', ...props }) {
-  return <View className={cn('rounded-2xl border border-border bg-card', className)} {...props} />;
+  const colors = useThemeColors();
+  const mergedClassName = cn('rounded-sm border border-border bg-card', className);
+  const backgroundColor = resolveBackgroundColor(mergedClassName, colors, colors.card);
+  const borderColor = mergedClassName.includes('border-transparent') ? 'transparent' : colors.border;
+  const themeStyle = { backgroundColor, borderColor };
+  const callerStyle = props.style;
+
+  return <View className={mergedClassName} {...props} style={[themeStyle, callerStyle]} />;
 }
 
 /**

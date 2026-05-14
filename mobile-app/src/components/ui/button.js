@@ -4,8 +4,9 @@ import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
+import { resolveBackgroundColor, useThemeColors } from '../../styles/theme';
 
-const buttonVariants = cva('group flex-row items-center justify-center rounded-2xl', {
+const buttonVariants = cva('group flex-row items-center justify-center rounded-sm', {
   variants: {
     variant: {
       default: 'bg-primary',
@@ -51,14 +52,64 @@ const buttonTextVariants = cva('text-base font-semibold', {
   },
 });
 
-const rippleColors = {
-  default: 'rgba(37, 99, 235, 0.25)',
-  secondary: 'rgba(15, 23, 42, 0.12)',
-  outline: 'rgba(15, 23, 42, 0.12)',
-  ghost: 'rgba(15, 23, 42, 0.10)',
-  destructive: 'rgba(220, 38, 38, 0.25)',
-  link: 'rgba(37, 99, 235, 0.10)',
-};
+/**
+ * Returns runtime color styles for a button variant.
+ * @param {string} variant - Button visual variant.
+ * @param {string} className - Caller class names.
+ * @param {object} colors - Active theme colors.
+ * @returns {object} Pressable style.
+ */
+function getButtonColorStyle(variant, className, colors) {
+  const variantStyles = {
+    default: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    secondary: {
+      backgroundColor: colors.mutedBackground,
+      borderColor: colors.mutedBackground,
+    },
+    outline: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+    },
+    destructive: {
+      backgroundColor: colors.danger,
+      borderColor: colors.danger,
+    },
+    link: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+    },
+  };
+  const baseStyle = variantStyles[variant] || variantStyles.default;
+  const backgroundColor = resolveBackgroundColor(className, colors, baseStyle.backgroundColor);
+
+  return {
+    ...baseStyle,
+    backgroundColor,
+  };
+}
+
+/**
+ * Returns Android ripple colors for the active theme.
+ * @param {object} colors - Active theme colors.
+ * @returns {object} Ripple color map.
+ */
+function getRippleColors(colors) {
+  return {
+    default: colors.primary,
+    secondary: colors.foreground,
+    outline: colors.foreground,
+    ghost: colors.foreground,
+    destructive: colors.danger,
+    link: colors.primary,
+  };
+}
 
 /**
  * Renders a reusable Pressable button with NativeWind variants.
@@ -75,8 +126,11 @@ export function Button({
   style,
   ...props
 }) {
+  const colors = useThemeColors();
+  const buttonColorStyle = getButtonColorStyle(variant, className, colors);
+  const rippleColorMap = getRippleColors(colors);
   const ripple = android_ripple || {
-    color: rippleColors[variant],
+    color: rippleColorMap[variant],
     borderless: size === 'icon',
   };
 
@@ -88,7 +142,7 @@ export function Button({
   function resolveStyle(state) {
     const callerStyle = typeof style === 'function' ? style(state) : style;
 
-    return [Platform.OS === 'ios' && state.pressed ? { opacity: 0.75 } : null, callerStyle];
+    return [buttonColorStyle, Platform.OS === 'ios' && state.pressed ? { opacity: 0.75 } : null, callerStyle];
   }
 
   return (

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Modal, Pressable, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 import { cn } from './utils/cn';
+import { getThemeColors } from '../../styles/theme';
 
 const drawerStyles = {
   overlay: {
@@ -14,17 +16,13 @@ const drawerStyles = {
   },
   panel: {
     height: '100%',
-    backgroundColor: '#F8FAFC',
-    borderRightColor: '#E2E8F0',
     borderRightWidth: 1,
     elevation: 18,
-    shadowColor: '#0F172A',
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.16,
     shadowRadius: 18,
   },
   panelRight: {
-    borderLeftColor: '#E2E8F0',
     borderLeftWidth: 1,
     borderRightWidth: 0,
     shadowOffset: { width: -4, height: 0 },
@@ -74,13 +72,21 @@ export function Drawer({ visible, onClose, side = 'left', children }) {
  */
 export function DrawerPanel({ className = '', side = 'left', children }) {
   const { width } = useWindowDimensions();
+  const { colorScheme } = useColorScheme();
+  const colors = getThemeColors(colorScheme);
   const panelWidth = Math.min(Math.round(width * 0.9), 380);
   const sideStyle = side === 'right' ? drawerStyles.panelRight : null;
+  const panelColorStyle = {
+    backgroundColor: colors.background,
+    borderLeftColor: colors.border,
+    borderRightColor: colors.border,
+    shadowColor: colors.foreground,
+  };
 
   return (
     <SafeAreaView
       className={cn('web:max-w-[380px]', className)}
-      style={[drawerStyles.panel, sideStyle, { width: panelWidth }]}
+      style={[drawerStyles.panel, panelColorStyle, sideStyle, { width: panelWidth }]}
     >
       <View style={drawerStyles.panelInner}>{children}</View>
     </SafeAreaView>

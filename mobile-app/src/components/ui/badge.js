@@ -4,8 +4,9 @@ import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
+import { useThemeColors } from '../../styles/theme';
 
-const badgeVariants = cva('self-start rounded-full border px-3 py-1', {
+const badgeVariants = cva('self-start rounded-sm border px-3 py-1', {
   variants: {
     variant: {
       default: 'border-transparent bg-primary',
@@ -39,9 +40,31 @@ const badgeTextVariants = cva('text-xs font-semibold', {
  * @returns {React.ReactElement} Badge container.
  */
 export function Badge({ variant = 'default', className = '', textClassName = '', ...props }) {
+  const colors = useThemeColors();
+  const variantStyles = {
+    default: {
+      backgroundColor: colors.primary,
+      borderColor: 'transparent',
+    },
+    secondary: {
+      backgroundColor: colors.mutedBackground,
+      borderColor: 'transparent',
+    },
+    destructive: {
+      backgroundColor: colors.danger,
+      borderColor: 'transparent',
+    },
+    outline: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+    },
+  };
+  const themeStyle = variantStyles[variant] || variantStyles.default;
+  const callerStyle = props.style;
+
   return (
     <TextClassContext.Provider value={cn(badgeTextVariants({ variant }), textClassName)}>
-      <View className={cn(badgeVariants({ variant }), className)} {...props} />
+      <View className={cn(badgeVariants({ variant }), className)} {...props} style={[themeStyle, callerStyle]} />
     </TextClassContext.Provider>
   );
 }

@@ -2,10 +2,11 @@ import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useThemeColors } from '../../styles/theme';
+
 const layoutStyles = {
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -40,6 +41,7 @@ export default function ScreenLayout({
   contentClassName = '',
   scrollContentClassName = '',
 }) {
+  const colors = useThemeColors();
   const Wrapper = keyboardAware ? KeyboardAvoidingView : View;
   const wrapperProps = keyboardAware
     ? {
@@ -57,7 +59,7 @@ export default function ScreenLayout({
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" style={layoutStyles.safeArea}>
+    <SafeAreaView className="flex-1 bg-background" style={[layoutStyles.safeArea, { backgroundColor: colors.background }]}>
       <Wrapper {...wrapperProps}>
         {header}
         {scroll ? (

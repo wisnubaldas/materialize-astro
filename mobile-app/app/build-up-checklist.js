@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import { Spinner } from '../src/components/ui';
 import BuildUpChecklistScreen from '../src/screens/BuildUpChecklistScreen';
 import { useAuth } from '../src/contexts/AuthContext';
+import { useThemeColors } from '../src/styles/theme';
 
 /**
  * Renders the Build Up Checklist route for authenticated users.
@@ -13,6 +14,7 @@ import { useAuth } from '../src/contexts/AuthContext';
 export default function BuildUpChecklistRoute() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const colors = useThemeColors();
 
   /**
    * Returns to the previous screen or dashboard when no stack history exists.
@@ -29,9 +31,9 @@ export default function BuildUpChecklistRoute() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50" style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+      <View className="flex-1 items-center justify-center bg-background" style={{ flex: 1, backgroundColor: colors.background }}>
         <Spinner />
-        <Text className="mt-4 text-sm text-slate-500">Memuat MAU APP...</Text>
+        <Text className="mt-4 text-sm text-muted-foreground">Memuat MAU APP...</Text>
       </View>
     );
   }

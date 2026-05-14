@@ -4,6 +4,7 @@ import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
 import { useTextClass } from './utils/text-context';
+import { resolveBackgroundColor, resolveTextColor, useThemeColors } from '../../styles/theme';
 
 const textVariants = cva('text-base text-foreground', {
   variants: {
@@ -14,7 +15,7 @@ const textVariants = cva('text-base text-foreground', {
       label: 'text-sm font-semibold text-foreground',
       muted: 'text-sm leading-5 text-muted-foreground',
       error: 'text-sm font-semibold text-destructive',
-      code: 'rounded-md bg-muted px-1 font-mono text-sm text-foreground',
+      code: 'rounded-sm bg-muted px-1 font-mono text-sm text-foreground',
     },
   },
   defaultVariants: {
@@ -29,6 +30,14 @@ const textVariants = cva('text-base text-foreground', {
  */
 export function Text({ variant = 'default', className = '', ...props }) {
   const inheritedClassName = useTextClass();
+  const colors = useThemeColors();
+  const mergedClassName = cn(textVariants({ variant }), inheritedClassName, className);
+  const color = resolveTextColor(mergedClassName, colors, colors.foreground);
+  const backgroundColor = mergedClassName.includes('bg-')
+    ? resolveBackgroundColor(mergedClassName, colors, 'transparent')
+    : undefined;
+  const themeStyle = backgroundColor ? { color, backgroundColor } : { color };
+  const callerStyle = props.style;
 
-  return <RNText className={cn(textVariants({ variant }), inheritedClassName, className)} {...props} />;
+  return <RNText className={mergedClassName} {...props} style={[themeStyle, callerStyle]} />;
 }

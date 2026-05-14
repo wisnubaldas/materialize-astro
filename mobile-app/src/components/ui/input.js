@@ -3,8 +3,9 @@ import { Platform, TextInput } from 'react-native';
 import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
+import { useThemeColors } from '../../styles/theme';
 
-const inputVariants = cva('min-h-[54px] rounded-2xl border bg-card px-4 text-base text-foreground', {
+const inputVariants = cva('min-h-[54px] rounded-sm border bg-card px-4 text-base text-foreground', {
   variants: {
     variant: {
       default: 'border-border',
@@ -28,16 +29,24 @@ const androidInputStyle = {
 export function Input({
   variant = 'default',
   className = '',
-  placeholderTextColor = '#94A3B8',
+  placeholderTextColor,
   style,
   ...props
 }) {
+  const colors = useThemeColors();
+  const borderColor = variant === 'error' ? colors.danger : colors.border;
+  const themeStyle = {
+    backgroundColor: colors.card,
+    borderColor,
+    color: colors.foreground,
+  };
+
   return (
     <TextInput
       className={cn(inputVariants({ variant }), className)}
-      placeholderTextColor={placeholderTextColor}
+      placeholderTextColor={placeholderTextColor || colors.muted}
       underlineColorAndroid="transparent"
-      style={[Platform.OS === 'android' ? androidInputStyle : null, style]}
+      style={[themeStyle, Platform.OS === 'android' ? androidInputStyle : null, style]}
       {...props}
     />
   );

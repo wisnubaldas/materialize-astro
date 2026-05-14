@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenLayout from '../components/layout/ScreenLayout';
 import { Button, Card, CardContent, Input, Text } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeColors } from '../styles/theme';
 import { validateLoginForm } from '../utils/validators';
 
 /**
@@ -42,6 +43,7 @@ function LoginField({
  */
 export default function LoginScreen() {
   const { login } = useAuth();
+  const colors = useThemeColors();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,7 +85,7 @@ export default function LoginScreen() {
   return (
     <ScreenLayout keyboardAware contentClassName="web:max-w-[440px]" scrollContentClassName="justify-center">
       <View className="mb-8">
-        <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
+        <View className="mb-5 h-16 w-16 items-center justify-center rounded-sm bg-primary" style={{ backgroundColor: colors.primary }}>
           <MaterialCommunityIcons name="warehouse" size={30} color="#FFFFFF" />
         </View>
         <Text className="text-4xl font-black text-foreground">
@@ -94,7 +96,7 @@ export default function LoginScreen() {
         </Text>
       </View>
 
-      <Card className="rounded-3xl">
+      <Card className="rounded-sm">
         <CardContent className="gap-5">
           <View>
             <Text className="text-2xl font-extrabold text-foreground">Login operasional</Text>

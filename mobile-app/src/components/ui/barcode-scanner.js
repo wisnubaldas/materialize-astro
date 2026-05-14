@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Button } from './button';
 import { Text } from './text';
+import { useThemeColors } from '../../styles/theme';
 
 const cameraPreviewStyle = {
   flex: 1,
@@ -18,6 +19,7 @@ const cargoBarcodeTypes = ['code128', 'code39', 'ean13', 'ean8', 'upc_a', 'upc_e
  * @returns {React.ReactElement} Barcode scanner modal.
  */
 export function BarcodeScanner({ visible, title, description = '', onClose, onScanned }) {
+  const colors = useThemeColors();
   const [permission, requestPermission] = useCameraPermissions();
   const [hasScanned, setHasScanned] = useState(false);
 
@@ -66,7 +68,7 @@ export function BarcodeScanner({ visible, title, description = '', onClose, onSc
         </View>
 
         {permission?.granted ? (
-          <View className="flex-1 overflow-hidden rounded-t-[32px] bg-black">
+          <View className="flex-1 overflow-hidden rounded-t-sm bg-black">
             <CameraView
               facing="back"
               style={cameraPreviewStyle}
@@ -76,7 +78,7 @@ export function BarcodeScanner({ visible, title, description = '', onClose, onSc
               }}
             />
             <View className="absolute inset-0 items-center justify-center px-8">
-              <View className="h-40 w-80 max-w-full rounded-3xl border-4 border-white/90 bg-transparent" />
+              <View className="h-40 w-80 max-w-full rounded-sm border-4 border-white/90 bg-transparent" />
               <Text className="mt-6 text-center text-base font-semibold text-white">
                 Posisikan barcode di dalam area scan
               </Text>
@@ -84,9 +86,9 @@ export function BarcodeScanner({ visible, title, description = '', onClose, onSc
           </View>
         ) : (
           <View className="flex-1 items-center justify-center px-6">
-            <View className="w-full rounded-3xl bg-card p-6">
-              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-                <MaterialCommunityIcons name="barcode-scan" size={28} color="#2563EB" />
+            <View className="w-full rounded-sm bg-card p-6" style={{ backgroundColor: colors.card }}>
+              <View className="h-14 w-14 items-center justify-center rounded-sm bg-muted" style={{ backgroundColor: colors.mutedBackground }}>
+                <MaterialCommunityIcons name="barcode-scan" size={28} color={colors.primary} />
               </View>
               <Text className="mt-5 text-2xl font-black text-foreground">Izinkan akses kamera</Text>
               <Text variant="muted" className="mt-2">
