@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import ScreenLayout from '../components/layout/ScreenLayout';
-import { Badge, Card, CardContent, Separator, Text as UiText } from '../components/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerPanel,
+  Separator,
+  Text,
+} from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 
 const serviceItems = [
@@ -14,7 +24,6 @@ const serviceItems = [
     description: 'Checklist awal',
     icon: 'clipboard-check-outline',
     href: '/build-up-checklist',
-    legacyRoute: 'BuildUpChecklist',
   },
   { title: 'Weighing', description: 'Timbang kargo', icon: 'weight-kilogram' },
   { title: 'EDI', description: 'Status pesan', icon: 'send-outline' },
@@ -64,75 +73,101 @@ function ServiceCard({ item, onPress }) {
   return (
     <Pressable
       onPress={onPress}
-      className="mr-3 h-32 w-36 justify-between rounded-2xl border border-slate-200 bg-white p-4"
+      className="mr-3 h-32 w-36 justify-between rounded-2xl border border-border bg-card p-4"
     >
-      <View className="h-11 w-11 items-center justify-center rounded-2xl bg-blue-50">
+      <View className="h-11 w-11 items-center justify-center rounded-2xl bg-muted">
         <MaterialCommunityIcons name={item.icon} size={24} color="#2563EB" />
       </View>
       <View>
-        <Text className="text-base font-bold text-slate-950">{item.title}</Text>
-        <Text className="mt-1 text-xs text-slate-500">{item.description}</Text>
+        <Text className="text-base font-bold text-foreground">{item.title}</Text>
+        <Text className="mt-1 text-xs text-muted-foreground">{item.description}</Text>
       </View>
     </Pressable>
   );
 }
 
 /**
- * Renders the left menu panel inspired by the provided mobile mockup.
- * @param {{ visible: boolean, onClose: Function, onLogout: Function }} props - Drawer props.
- * @returns {React.ReactElement} Drawer modal.
+ * Renders a full-width search affordance.
+ * @param {{ className?: string }} props - Search field props.
+ * @returns {React.ReactElement} Search field.
  */
-function SideMenu({ visible, onClose, onLogout }) {
+function SearchField({ className = '' }) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 flex-row bg-slate-950/50">
-        <SafeAreaView className="w-[84%] bg-white px-6 py-5 web:max-w-[360px]">
-          <Text className="mt-6 text-3xl font-black text-slate-950">
-            MAU<Text className="text-blue-600">.</Text>
+    <Pressable
+      accessibilityRole="button"
+      className={`min-h-12 w-full flex-row items-center rounded-2xl border border-slate-200 bg-white px-4 ${className}`}
+    >
+      <MaterialCommunityIcons name="magnify" size={24} color="#64748B" />
+      <Text className="ml-3 flex-1 text-base text-slate-500" numberOfLines={1}>
+        Search here
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Renders the dashboard drawer menu with readable contrast.
+ * @param {{ visible: boolean, onClose: Function, onLogout: Function }} props - Drawer props.
+ * @returns {React.ReactElement} Dashboard drawer.
+ */
+function DashboardDrawer({ visible, onClose, onLogout }) {
+  return (
+    <Drawer visible={visible} onClose={onClose}>
+      <DrawerPanel className="bg-slate-50">
+        <DrawerHeader className="pb-5">
+          <Text className="text-3xl font-black text-slate-950">
+            MAU<Text className="text-primary">.</Text>
           </Text>
+          <Text className="text-sm leading-5 text-slate-600">Menu operasional mobile</Text>
+          <SearchField className="mt-3" />
+        </DrawerHeader>
 
-          <View className="mt-8 min-h-12 flex-row items-center rounded-2xl bg-slate-100 px-4">
-            <MaterialCommunityIcons name="magnify" size={23} color="#475569" />
-            <Text className="ml-3 text-base text-slate-500">Search here</Text>
-          </View>
-
-          <View className="mt-10 gap-5">
-            {menuItems.map((item) => (
-              <Pressable key={item.title} className="flex-row items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
-                  <MaterialCommunityIcons name={item.icon} size={24} color="#0F172A" />
-                </View>
-                <Text className="ml-4 text-lg font-bold text-slate-900">{item.title}</Text>
-              </Pressable>
-            ))}
-
-            <Pressable className="flex-row items-center" onPress={onLogout}>
-              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-red-50">
-                <MaterialCommunityIcons name="arrow-left" size={24} color="#DC2626" />
+        <DrawerContent>
+          {menuItems.map((item) => (
+            <Pressable
+              key={item.title}
+              className="w-full min-h-14 flex-row items-center rounded-2xl border border-slate-200 bg-white px-3"
+            >
+              <View className="h-11 w-11 items-center justify-center rounded-2xl bg-blue-50">
+                <MaterialCommunityIcons name={item.icon} size={23} color="#2563EB" />
               </View>
-              <Text className="ml-4 text-lg font-bold text-red-600">Sign out</Text>
+              <Text className="ml-3 flex-1 text-base font-bold text-slate-950" numberOfLines={1}>
+                {item.title}
+              </Text>
             </Pressable>
-          </View>
+          ))}
 
-          <Separator className="mt-10" />
-          <View className="mt-6 flex-row items-center justify-between">
+          <Pressable
+            className="w-full min-h-14 flex-row items-center rounded-2xl border border-red-100 bg-white px-3"
+            onPress={onLogout}
+          >
+            <View className="h-11 w-11 items-center justify-center rounded-2xl bg-red-50">
+              <MaterialCommunityIcons name="arrow-left" size={23} color="#DC2626" />
+            </View>
+            <Text className="ml-3 flex-1 text-base font-bold text-red-600" numberOfLines={1}>
+              Sign out
+            </Text>
+          </Pressable>
+        </DrawerContent>
+
+        <DrawerFooter>
+          <Separator />
+          <View className="flex-row items-center justify-between">
             <Text className="text-sm text-slate-500">Version 2.0.0</Text>
             <MaterialCommunityIcons name="white-balance-sunny" size={26} color="#F59E0B" />
           </View>
-        </SafeAreaView>
-
-        <Pressable className="flex-1" onPress={onClose} />
-      </View>
-    </Modal>
+        </DrawerFooter>
+      </DrawerPanel>
+    </Drawer>
   );
 }
 
 /**
  * Renders the authenticated dashboard screen.
- * @param {{ navigation?: object, onOpenBuildUpChecklist?: Function }} props - Navigation callbacks.
+ * @param {{ onOpenBuildUpChecklist?: Function }} props - Navigation callbacks.
  * @returns {React.ReactElement} Dashboard screen.
  */
-export default function DashboardScreen({ navigation, onOpenBuildUpChecklist }) {
+export default function DashboardScreen({ onOpenBuildUpChecklist }) {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -146,19 +181,15 @@ export default function DashboardScreen({ navigation, onOpenBuildUpChecklist }) 
       onOpenBuildUpChecklist();
       return;
     }
-
-    if (item.legacyRoute && navigation?.navigate) {
-      navigation.navigate(item.legacyRoute);
-    }
   }
 
   return (
     <ScreenLayout
       footer={
-        <View className="min-h-20 flex-row items-center justify-around border-t border-slate-200 bg-white px-4 pb-3 pt-2 web:self-center web:w-full web:max-w-[520px]">
+        <View className="min-h-20 flex-row items-center justify-around border-t border-border bg-card px-4 pb-3 pt-2 web:self-center web:w-full web:max-w-[520px]">
           <View className="items-center">
             <MaterialCommunityIcons name="home-outline" size={28} color="#2563EB" />
-            <Text className="text-xs font-semibold text-blue-600">Home</Text>
+            <Text className="text-xs font-semibold text-primary">Home</Text>
           </View>
           <MaterialCommunityIcons name="cube-outline" size={27} color="#94A3B8" />
           <MaterialCommunityIcons name="magnify" size={28} color="#94A3B8" />
@@ -171,40 +202,37 @@ export default function DashboardScreen({ navigation, onOpenBuildUpChecklist }) 
         </View>
       }
     >
-      <SideMenu visible={isMenuOpen} onClose={() => setIsMenuOpen(false)} onLogout={logout} />
+      <DashboardDrawer visible={isMenuOpen} onClose={() => setIsMenuOpen(false)} onLogout={logout} />
 
-            <View className="mb-6 flex-row items-center justify-between">
+            <View className="mb-7 flex-row items-center justify-between">
               <Pressable
                 onPress={() => setIsMenuOpen(true)}
-                className="h-12 w-12 items-center justify-center rounded-2xl bg-white"
+                className="h-12 w-12 items-center justify-center rounded-2xl bg-blue-600"
               >
-                <MaterialCommunityIcons name="menu" size={27} color="#0F172A" />
+                <MaterialCommunityIcons name="menu" size={27} color="#FFFFFF" />
               </Pressable>
-              <Text className="text-3xl font-black text-slate-950">
-                MAU<Text className="text-blue-600">.</Text>
+              <Text className="text-3xl font-black text-foreground">
+                MAU<Text className="text-primary">.</Text>
               </Text>
-              <View className="relative h-12 w-12 items-center justify-center rounded-2xl bg-white">
+              <View className="relative h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card">
                 <MaterialCommunityIcons name="bell-outline" size={26} color="#0F172A" />
                 <View className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />
               </View>
             </View>
 
-            <View className="mb-6">
+            <View className="mb-6 w-full">
               <Badge variant="secondary">
-                <UiText>Dashboard</UiText>
+                <Text>Dashboard</Text>
               </Badge>
-              <Text className="mt-1 text-2xl font-extrabold text-slate-950">
+              <Text className="mt-2 text-2xl font-extrabold text-foreground">
                 Halo, {user?.username || user?.email || 'Operator'}
               </Text>
-              <Text className="mt-1 text-sm leading-5 text-slate-500">
+              <Text className="mt-1 text-sm leading-5 text-muted-foreground">
                 Pantau aktivitas gudang dan lanjutkan proses operasional hari ini.
               </Text>
             </View>
 
-            <View className="min-h-12 flex-row items-center rounded-2xl border border-slate-200 bg-white px-4">
-              <MaterialCommunityIcons name="magnify" size={24} color="#64748B" />
-              <Text className="ml-3 text-base text-slate-500">Search here</Text>
-            </View>
+            <SearchField />
 
             <View className="mt-6 flex-row gap-3">
               <Card className="flex-1 border-transparent bg-blue-600">
@@ -224,7 +252,7 @@ export default function DashboardScreen({ navigation, onOpenBuildUpChecklist }) 
             </View>
 
             <View className="mt-8">
-              <Text className="mb-4 text-xl font-extrabold text-slate-950">Popular services</Text>
+              <Text className="mb-4 text-xl font-extrabold text-foreground">Popular services</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {serviceItems.map((item) => (
                   <ServiceCard key={item.title} item={item} onPress={() => handleServicePress(item)} />
@@ -247,7 +275,7 @@ export default function DashboardScreen({ navigation, onOpenBuildUpChecklist }) 
             </LinearGradient>
 
             <View className="mt-8">
-              <Text className="mb-4 text-xl font-extrabold text-slate-950">Recently viewed</Text>
+              <Text className="mb-4 text-xl font-extrabold text-foreground">Recently viewed</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {recentItems.map((item) => (
                   <LinearGradient

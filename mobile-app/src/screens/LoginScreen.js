@@ -1,13 +1,40 @@
 import React, { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import AppButton from '../components/AppButton';
-import AppInput from '../components/AppInput';
 import ScreenLayout from '../components/layout/ScreenLayout';
-import { Card, CardContent } from '../components/ui';
+import { Button, Card, CardContent, Input, Text } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { validateLoginForm } from '../utils/validators';
+
+/**
+ * Renders a labeled login form input using the shared UI kit.
+ * @param {{ label: string, value: string, onChangeText: Function, secureTextEntry?: boolean, keyboardType?: string, autoCapitalize?: string, placeholder?: string }} props - Field props.
+ * @returns {React.ReactElement} Login field.
+ */
+function LoginField({
+  label,
+  value,
+  onChangeText,
+  secureTextEntry = false,
+  keyboardType = 'default',
+  autoCapitalize = 'none',
+  placeholder = '',
+}) {
+  return (
+    <View className="gap-2">
+      <Text variant="label">{label}</Text>
+      <Input
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        placeholder={placeholder}
+      />
+    </View>
+  );
+}
 
 /**
  * Renders the authentication screen.
@@ -59,10 +86,10 @@ export default function LoginScreen() {
         <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
           <MaterialCommunityIcons name="warehouse" size={30} color="#FFFFFF" />
         </View>
-        <Text className="text-4xl font-black text-slate-950">
-          MAU<Text className="text-blue-600">.</Text>
+        <Text className="text-4xl font-black text-foreground">
+          MAU<Text className="text-primary">.</Text>
         </Text>
-        <Text className="mt-3 text-base leading-6 text-slate-500">
+        <Text variant="subtitle" className="mt-3">
           Mobile operation untuk gudang cargo lini 1 Bandara Soekarno Hatta.
         </Text>
       </View>
@@ -70,26 +97,28 @@ export default function LoginScreen() {
       <Card className="rounded-3xl">
         <CardContent className="gap-5">
           <View>
-            <Text className="text-2xl font-extrabold text-slate-950">Login operasional</Text>
-            <Text className="mt-1 text-sm leading-5 text-slate-500">
+            <Text className="text-2xl font-extrabold text-foreground">Login operasional</Text>
+            <Text variant="muted" className="mt-1">
               Masuk dengan akun MAU APP untuk melanjutkan pekerjaan gudang.
             </Text>
           </View>
-          <AppInput
+          <LoginField
             label="Email"
             value={formData.email}
             placeholder="admin@admin.com"
             keyboardType="email-address"
             onChangeText={(value) => updateField('email', value)}
           />
-          <AppInput
+          <LoginField
             label="Password"
             value={formData.password}
             placeholder="password123"
             secureTextEntry
             onChangeText={(value) => updateField('password', value)}
           />
-          <AppButton title="Login" loading={isSubmitting} onPress={handleLogin} />
+          <Button size="lg" disabled={isSubmitting} onPress={handleLogin}>
+            <Text>{isSubmitting ? 'Memproses...' : 'Login'}</Text>
+          </Button>
         </CardContent>
       </Card>
     </ScreenLayout>

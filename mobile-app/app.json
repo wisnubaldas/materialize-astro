@@ -2,6 +2,7 @@
   "expo": {
     "name": "MAU APP",
     "slug": "mau-mobile-app",
+    "scheme": "mauapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,7 +36,13 @@
     },
     "plugins": [
       "expo-font",
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "MAU APP membutuhkan akses kamera untuk scan QR AWB/MAWB dan ULD pada proses Build Up."
+        }
+      ]
     ]
   }
 }

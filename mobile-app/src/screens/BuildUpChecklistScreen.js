@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import AppButton from '../components/AppButton';
 import ScreenHeader from '../components/layout/ScreenHeader';
 import ScreenLayout from '../components/layout/ScreenLayout';
-import { Input } from '../components/ui/input';
-import { Text } from '../components/ui/text';
+import { BarcodeScanner, Button, Card, CardContent, Input, Text } from '../components/ui';
 
 const initialForm = {
   mawbNumber: '',
@@ -21,6 +19,8 @@ const fields = [
     placeholder: 'Enter MAWB number',
     icon: 'barcode-scan',
     keyboardType: 'default',
+    scannerTitle: 'Scan AWB/MAWB Barcode',
+    scannerDescription: 'Scan barcode pada dokumen AWB/MAWB untuk mengisi nomor otomatis.',
   },
   {
     key: 'uldNumber',
@@ -28,6 +28,8 @@ const fields = [
     placeholder: 'Enter ULD number',
     icon: 'cube-outline',
     keyboardType: 'default',
+    scannerTitle: 'Scan ULD Barcode',
+    scannerDescription: 'Scan barcode pada label ULD untuk mengisi nomor ULD otomatis.',
   },
   {
     key: 'grossWeight',
@@ -40,14 +42,16 @@ const fields = [
 
 /**
  * Renders one rounded field for the Build Up Checklist form.
- * @param {{ field: object, value: string, onChangeText: Function }} props - Field props.
+ * @param {{ field: object, value: string, onChangeText: Function, onScanPress?: Function }} props - Field props.
  * @returns {React.ReactElement} Checklist field.
  */
-function ChecklistField({ field, value, onChangeText }) {
+function ChecklistField({ field, value, onChangeText, onScanPress }) {
+  const canScan = Boolean(field.scannerTitle && onScanPress);
+
   return (
     <View className="gap-3">
       <Text variant="label">{field.label}</Text>
-      <View className="min-h-[58px] flex-row items-center rounded-2xl border border-slate-200 bg-white px-4">
+      <View className="min-h-[58px] flex-row items-center rounded-2xl border border-border bg-card px-4">
         <Input
           className="min-h-0 flex-1 border-0 bg-transparent px-0 py-0"
           value={value}
@@ -56,7 +60,14 @@ function ChecklistField({ field, value, onChangeText }) {
           keyboardType={field.keyboardType}
           autoCapitalize="characters"
         />
-        <MaterialCommunityIcons name={field.icon} size={24} color="#64748B" />
+        {canScan ? (
+          <Button variant="secondary" size="sm" className="ml-3" onPress={onScanPress}>
+            <MaterialCommunityIcons name="barcode-scan" size={18} color="#0F172A" />
+            <Text className="ml-2 text-sm font-semibold">Scan</Text>
+          </Button>
+        ) : (
+          <MaterialCommunityIcons name={field.icon} size={24} color="#64748B" />
+        )}
       </View>
     </View>
   );
@@ -64,11 +75,12 @@ function ChecklistField({ field, value, onChangeText }) {
 
 /**
  * Renders the Build Up Checklist form screen.
- * @param {{ navigation?: object, onBack?: Function }} props - Navigation callbacks.
+ * @param {{ onBack?: Function }} props - Navigation callbacks.
  * @returns {React.ReactElement} Build Up Checklist screen.
  */
-export default function BuildUpChecklistScreen({ navigation, onBack }) {
+export default function BuildUpChecklistScreen({ onBack }) {
   const [formData, setFormData] = useState(initialForm);
+  const [scannerField, setScannerField] = useState(null);
 
   /**
    * Updates one checklist form field.
@@ -92,10 +104,29 @@ export default function BuildUpChecklistScreen({ navigation, onBack }) {
       onBack();
       return;
     }
+  }
 
-    if (navigation?.goBack) {
-      navigation.goBack();
+  /**
+   * Opens the barcode scanner for a specific checklist field.
+   * @param {object} field - Field metadata.
+   * @returns {void}
+   */
+  function openScanner(field) {
+    setScannerField(field);
+  }
+
+  /**
+   * Applies scanned barcode data to the active field and closes the scanner.
+   * @param {string} scannedValue - Barcode payload.
+   * @returns {void}
+   */
+  function handleScannedValue(scannedValue) {
+    if (!scannerField?.key) {
+      return;
     }
+
+    updateField(scannerField.key, scannedValue);
+    setScannerField(null);
   }
 
   return (
@@ -104,7 +135,9 @@ export default function BuildUpChecklistScreen({ navigation, onBack }) {
       header={<ScreenHeader onBack={handleBack} onClose={handleBack} />}
       footer={
         <View className="px-5 pb-6 pt-3 web:self-center web:w-full web:max-w-[520px]">
-          <AppButton title="Next" variant="light" />
+          <Button variant="outline" size="lg">
+            <Text>Next</Text>
+          </Button>
         </View>
       }
     >
@@ -120,16 +153,27 @@ export default function BuildUpChecklistScreen({ navigation, onBack }) {
         </Text>
       </View>
 
-      <View className="mt-8 gap-5 rounded-3xl border border-slate-200 bg-white/70 p-4">
-        {fields.map((field) => (
-          <ChecklistField
-            key={field.key}
-            field={field}
-            value={formData[field.key]}
-            onChangeText={(value) => updateField(field.key, value)}
-          />
-        ))}
-      </View>
+      <Card className="mt-8 rounded-3xl bg-card/70">
+        <CardContent className="gap-5 p-4">
+          {fields.map((field) => (
+            <ChecklistField
+              key={field.key}
+              field={field}
+              value={formData[field.key]}
+              onChangeText={(value) => updateField(field.key, value)}
+              onScanPress={field.scannerTitle ? () => openScanner(field) : undefined}
+            />
+          ))}
+        </CardContent>
+      </Card>
+
+      <BarcodeScanner
+        visible={Boolean(scannerField)}
+        title={scannerField?.scannerTitle || 'Scan Barcode'}
+        description={scannerField?.scannerDescription || ''}
+        onClose={() => setScannerField(null)}
+        onScanned={handleScannedValue}
+      />
     </ScreenLayout>
   );
 }

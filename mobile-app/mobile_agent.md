@@ -15,11 +15,13 @@ The project must stay focused on the mobile frontend. Do not generate backend co
 
 2. Keep the code easy to maintain.
    - Screens belong in `src/screens`.
-   - Reusable UI belongs in `src/components`.
+   - Reusable UI primitives belong in `src/components/ui`.
+   - Screen framing belongs in `src/components/layout`.
+   - Feature-specific reusable components may live in `src/components` only when they are not generic UI primitives.
    - API calls belong in `src/services`.
    - Global state belongs in `src/contexts`.
-   - Expo Router route files belong in `app/` when the router migration is active.
-   - `src/navigation` is only for legacy React Navigation compatibility during migration, and should be removed after Expo Router is stable.
+   - Expo Router route files belong in `app/`.
+   - Do not recreate `src/navigation`; the app now uses Expo Router as the active navigation layer.
    - Shared colors, spacing, and typography belong in `src/styles`.
    - Validation/helper functions belong in `src/utils`.
 
@@ -66,14 +68,21 @@ The project must stay focused on the mobile frontend. Do not generate backend co
    - Stack/detail screens should use `ScreenHeader` unless they need a clearly custom top bar.
    - Screens should focus on content and behavior, not repeating safe area, scroll, keyboard, and footer boilerplate.
    - If a screen appears blank, first verify `app/_layout.js`, Expo Router route files, `AuthContext`, `ScreenLayout`, and NativeWind setup before changing business logic.
-   - If legacy React Navigation is still present during migration, also verify `AppNavigator`.
+
+11. Use the shared UI kit.
+   - Prefer imports from `src/components/ui/index.js`.
+   - Available primitives include `Text`, `Button`, `Input`, `Card`, `Badge`, `Separator`, `Spinner`, `Drawer`, `BarcodeScanner`, and `QrScanner`.
+   - New UI primitives must be JavaScript files in `src/components/ui/` with JSDoc and NativeWind `className` styling.
+   - Export new primitives from `src/components/ui/index.js`.
+   - Do not copy TypeScript files, typed routes, `tsconfig.json`, or `nativewind-env.d.ts` from the source template.
+   - Do not install delayed UI dependencies such as bottom sheet, gesture drawer, checkbox, switch, select, dialog, or permission modules unless a concrete screen flow requires them.
 
 ## Coding style
 
 - Use functional React components.
-- Use clear component names, for example `LoginScreen`, `DashboardScreen`, `AppButton`.
+- Use clear component names, for example `LoginScreen`, `DashboardScreen`, `Button`, and `BarcodeScanner`.
 - Keep each file focused on one responsibility.
-- Avoid large screens. Extract repeated UI into components.
+- Avoid large screens. Extract repeated UI into `src/components/ui` or `src/components/layout` based on responsibility.
 - Keep screen-level layout consistent through `ScreenLayout` and extract repeated headers/actions into `src/components/layout`.
 - Keep form validation in utility files when possible.
 - Use `async/await` for asynchronous logic.
@@ -91,7 +100,7 @@ The current starter includes:
 - API request wrapper
 - Environment-based API configuration
 - EAS build profile for Android APK preview and Android App Bundle production
-- Planned Expo Router migration with JavaScript route files in `app/`
+- Expo Router with JavaScript route files in `app/`
 
 ## Demo account
 

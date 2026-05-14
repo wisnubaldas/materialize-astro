@@ -4,11 +4,11 @@ import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
 
-const inputVariants = cva('min-h-[54px] rounded-2xl border bg-white px-4 text-base text-slate-950', {
+const inputVariants = cva('min-h-[54px] rounded-2xl border bg-card px-4 text-base text-foreground', {
   variants: {
     variant: {
-      default: 'border-slate-200',
-      error: 'border-red-500',
+      default: 'border-border',
+      error: 'border-destructive',
     },
   },
   defaultVariants: {

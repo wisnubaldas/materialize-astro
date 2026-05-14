@@ -8,10 +8,10 @@ import { TextClassContext } from './utils/text-context';
 const badgeVariants = cva('self-start rounded-full border px-3 py-1', {
   variants: {
     variant: {
-      default: 'border-transparent bg-blue-600',
-      secondary: 'border-transparent bg-slate-100',
-      destructive: 'border-transparent bg-red-600',
-      outline: 'border-slate-200 bg-white',
+      default: 'border-transparent bg-primary',
+      secondary: 'border-transparent bg-muted',
+      destructive: 'border-transparent bg-destructive',
+      outline: 'border-border bg-card',
     },
   },
   defaultVariants: {
@@ -22,10 +22,10 @@ const badgeVariants = cva('self-start rounded-full border px-3 py-1', {
 const badgeTextVariants = cva('text-xs font-semibold', {
   variants: {
     variant: {
-      default: 'text-white',
-      secondary: 'text-slate-700',
-      destructive: 'text-white',
-      outline: 'text-slate-700',
+      default: 'text-primary-foreground',
+      secondary: 'text-foreground',
+      destructive: 'text-destructive-foreground',
+      outline: 'text-foreground',
     },
   },
   defaultVariants: {

@@ -1,0 +1,107 @@
+import React, { useState } from 'react';
+import { Modal, View } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import { Button } from './button';
+import { Text } from './text';
+
+const cameraPreviewStyle = {
+  flex: 1,
+};
+
+const cargoBarcodeTypes = ['code128', 'code39', 'ean13', 'ean8', 'upc_a', 'upc_e'];
+
+/**
+ * Renders a cargo barcode scanner modal backed by Expo Camera.
+ * @param {{ visible: boolean, title: string, description?: string, onClose: Function, onScanned: Function }} props - Scanner props.
+ * @returns {React.ReactElement} Barcode scanner modal.
+ */
+export function BarcodeScanner({ visible, title, description = '', onClose, onScanned }) {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [hasScanned, setHasScanned] = useState(false);
+
+  /**
+   * Requests camera access from the operating system.
+   * @returns {Promise<void>} Resolves after permission prompt finishes.
+   */
+  async function handleRequestPermission() {
+    await requestPermission();
+  }
+
+  /**
+   * Sends scanned barcode data to the caller once per modal session.
+   * @param {{ data?: string }} result - Barcode scanning result.
+   * @returns {void}
+   */
+  function handleBarcodeScanned(result) {
+    if (hasScanned || !result?.data) {
+      return;
+    }
+
+    setHasScanned(true);
+    onScanned(result.data.trim());
+  }
+
+  /**
+   * Closes the scanner and resets scan throttling.
+   * @returns {void}
+   */
+  function handleClose() {
+    setHasScanned(false);
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={handleClose}>
+      <View className="flex-1 bg-slate-950">
+        <View className="flex-row items-center justify-between px-6 pb-4 pt-14">
+          <View className="flex-1 pr-4">
+            <Text className="text-2xl font-black text-white">{title}</Text>
+            {description ? <Text className="mt-1 text-sm leading-5 text-slate-300">{description}</Text> : null}
+          </View>
+          <Button variant="ghost" size="icon" className="bg-white/10" textClassName="text-white" onPress={handleClose}>
+            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </Button>
+        </View>
+
+        {permission?.granted ? (
+          <View className="flex-1 overflow-hidden rounded-t-[32px] bg-black">
+            <CameraView
+              facing="back"
+              style={cameraPreviewStyle}
+              onBarcodeScanned={hasScanned ? undefined : handleBarcodeScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: cargoBarcodeTypes,
+              }}
+            />
+            <View className="absolute inset-0 items-center justify-center px-8">
+              <View className="h-40 w-80 max-w-full rounded-3xl border-4 border-white/90 bg-transparent" />
+              <Text className="mt-6 text-center text-base font-semibold text-white">
+                Posisikan barcode di dalam area scan
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View className="flex-1 items-center justify-center px-6">
+            <View className="w-full rounded-3xl bg-card p-6">
+              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <MaterialCommunityIcons name="barcode-scan" size={28} color="#2563EB" />
+              </View>
+              <Text className="mt-5 text-2xl font-black text-foreground">Izinkan akses kamera</Text>
+              <Text variant="muted" className="mt-2">
+                Kamera diperlukan untuk membaca barcode AWB/MAWB dan ULD. Data hasil scan hanya mengisi form ini.
+              </Text>
+              <Button className="mt-6" onPress={handleRequestPermission}>
+                <Text>Izinkan kamera</Text>
+              </Button>
+              <Button variant="ghost" className="mt-2" onPress={handleClose}>
+                <Text>Batal</Text>
+              </Button>
+            </View>
+          </View>
+        )}
+      </View>
+    </Modal>
+  );
+}

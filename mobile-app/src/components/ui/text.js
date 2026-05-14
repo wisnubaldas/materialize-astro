@@ -5,16 +5,16 @@ import { cva } from 'class-variance-authority';
 import { cn } from './utils/cn';
 import { useTextClass } from './utils/text-context';
 
-const textVariants = cva('text-base text-slate-950', {
+const textVariants = cva('text-base text-foreground', {
   variants: {
     variant: {
-      default: 'text-base text-slate-950',
-      title: 'text-3xl font-black text-slate-950',
-      subtitle: 'text-base leading-6 text-slate-500',
-      label: 'text-sm font-semibold text-slate-700',
-      muted: 'text-sm leading-5 text-slate-500',
-      error: 'text-sm font-semibold text-red-600',
-      code: 'rounded-md bg-slate-100 px-1 font-mono text-sm text-slate-950',
+      default: 'text-base text-foreground',
+      title: 'text-3xl font-black text-foreground',
+      subtitle: 'text-base leading-6 text-muted-foreground',
+      label: 'text-sm font-semibold text-foreground',
+      muted: 'text-sm leading-5 text-muted-foreground',
+      error: 'text-sm font-semibold text-destructive',
+      code: 'rounded-md bg-muted px-1 font-mono text-sm text-foreground',
     },
   },
   defaultVariants: {

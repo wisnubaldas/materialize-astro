@@ -18,7 +18,7 @@ const layoutStyles = {
     width: '100%',
     maxWidth: 520,
     alignSelf: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   scrollContent: {
     flexGrow: 1,
@@ -50,7 +50,11 @@ export default function ScreenLayout({
         style: layoutStyles.body,
       };
 
-  const content = <View className={`w-full web:max-w-[520px] ${contentClassName}`} style={layoutStyles.content}>{children}</View>;
+  const content = (
+    <View className={`w-full web:max-w-[520px] ${contentClassName}`} style={layoutStyles.content}>
+      {children}
+    </View>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" style={layoutStyles.safeArea}>
@@ -59,7 +63,7 @@ export default function ScreenLayout({
         {scroll ? (
           <ScrollView
             className="flex-1"
-            contentContainerClassName={`py-6 ${scrollContentClassName}`}
+            contentContainerClassName={`py-7 ${scrollContentClassName}`}
             contentContainerStyle={layoutStyles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -67,7 +71,7 @@ export default function ScreenLayout({
             {content}
           </ScrollView>
         ) : (
-          <View className="flex-1 py-6" style={layoutStyles.body}>
+          <View className="flex-1 py-7" style={layoutStyles.body}>
             {content}
           </View>
         )}

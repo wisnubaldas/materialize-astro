@@ -97,7 +97,7 @@ Catatan struktur:
 - `src/constants/` hanya untuk token non-secret, misalnya varian ukuran dan semantic status.
 - `src/hooks/` hanya untuk hook client-side ringan, bukan business logic.
 - `app/` menyimpan route Expo Router yang tipis dan memanggil screen dari `src/screens/`.
-- `src/navigation/` boleh dipertahankan sementara selama transisi, lalu dihapus setelah semua route Expo Router stabil.
+- `src/navigation/` sudah dihapus setelah Expo Router stabil; jangan dibuat kembali kecuali ada keputusan arsitektur baru.
 - `src/styles/theme.js` tetap boleh dipakai untuk token JavaScript yang tidak bisa nyaman ditulis di className.
 
 ## Fase 0 - Audit Awal
@@ -330,153 +330,153 @@ Checkpoint fase 8:
 
 ## Fase 9 - Theme Token
 
-- [ ] 9.1 Evaluasi apakah perlu `tailwind.config.js`.
-- [ ] 9.2 Jika perlu, buat `tailwind.config.js` JavaScript dan pastikan content path hanya `.js`, `.jsx`, `.json`.
-- [ ] 9.3 Jangan copy config template sumber mentah karena path-nya memakai `.tsx`, typed routes, dan struktur demo yang belum tentu sesuai flow MAU APP.
-- [ ] 9.4 Tambahkan token minimal: `background`, `foreground`, `primary`, `muted`, `border`, `card`, `destructive`.
-- [ ] 9.5 Update `global.css` dengan CSS variables jika sudah terbukti kompatibel dengan NativeWind versi project.
-- [ ] 9.6 Jalankan export web dan android.
-- [ ] 9.7 Jika ada blank screen, rollback perubahan theme token dan catat blocker.
-- [ ] 9.8 Update checklist dan progress report.
+- [x] 9.1 Evaluasi apakah perlu `tailwind.config.js` - 2026-05-14 - Tidak perlu pada fase ini karena project memakai Tailwind CSS 4 dan NativeWind 5 preview dengan pola CSS-first melalui `global.css`.
+- [x] 9.2 Jika perlu, buat `tailwind.config.js` JavaScript dan pastikan content path hanya `.js`, `.jsx`, `.json` - 2026-05-14 - Tidak dibuat; keputusan teknis dicatat agar tidak menambah konfigurasi paralel yang belum diperlukan.
+- [x] 9.3 Jangan copy config template sumber mentah karena path-nya memakai `.tsx`, typed routes, dan struktur demo yang belum tentu sesuai flow MAU APP - 2026-05-14 - Tidak ada config TypeScript atau struktur demo template yang dicopy.
+- [x] 9.4 Tambahkan token minimal: `background`, `foreground`, `primary`, `muted`, `border`, `card`, `destructive` - 2026-05-14 - Token semantik ditambahkan via `@theme` di `global.css`, plus foreground token untuk kontras teks.
+- [x] 9.5 Update `global.css` dengan CSS variables jika sudah terbukti kompatibel dengan NativeWind versi project - 2026-05-14 - `@theme` CSS variables dipakai dan primitive UI utama mulai memakai class semantik seperti `bg-primary`, `text-foreground`, `border-border`, dan `bg-card`.
+- [x] 9.6 Jalankan export web dan android - 2026-05-14 - `npm run doctor`, export web, dan export Android berhasil.
+- [x] 9.7 Jika ada blank screen, rollback perubahan theme token dan catat blocker - 2026-05-14 - Tidak ada error bundling atau `nativewind/jsx-runtime`; rollback tidak diperlukan.
+- [x] 9.8 Update checklist dan progress report - 2026-05-14 - Checklist dan progress report root diperbarui.
 
 Checkpoint fase 9:
 
-- [ ] Token theme berjalan di web.
-- [ ] Token theme berjalan di android export.
-- [ ] Tidak ada `nativewind/jsx-runtime` error.
+- [x] Token theme berjalan di web.
+- [x] Token theme berjalan di android export.
+- [x] Tidak ada `nativewind/jsx-runtime` error.
 
 ## Fase 10 - Refactor Screen ke UI Kit
 
-- [ ] 10.1 Refactor `LoginScreen.js` memakai `Text`, `Button`, `Input`, `Card`.
-- [ ] 10.2 Refactor `DashboardScreen.js` memakai `Text`, `Card`, `Badge`, `Separator`.
-- [ ] 10.3 Refactor `BuildUpChecklistScreen.js` memakai `Text`, `Button`, `Input`, `Card`.
-- [ ] 10.4 Pastikan semua screen tetap memakai `ScreenLayout`.
-- [ ] 10.5 Pastikan screen tidak memanggil `fetch()` langsung.
-- [ ] 10.6 Pastikan auth tetap dari `useAuth()`.
-- [ ] 10.7 Jalankan export web dan android.
-- [ ] 10.8 Update checklist dan progress report.
+- [x] 10.1 Refactor `LoginScreen.js` memakai `Text`, `Button`, `Input`, `Card` - 2026-05-14 - Login screen memakai import langsung dari `src/components/ui`; wrapper `AppButton` dan `AppInput` tidak lagi dipakai di screen.
+- [x] 10.2 Refactor `DashboardScreen.js` memakai `Text`, `Card`, `Badge`, `Separator` - 2026-05-14 - Dashboard memakai `Text` dari UI kit secara langsung bersama `Card`, `Badge`, dan `Separator`.
+- [x] 10.3 Refactor `BuildUpChecklistScreen.js` memakai `Text`, `Button`, `Input`, `Card` - 2026-05-14 - Footer memakai `Button` UI kit dan form section memakai `Card`/`CardContent`.
+- [x] 10.4 Pastikan semua screen tetap memakai `ScreenLayout` - 2026-05-14 - `LoginScreen`, `DashboardScreen`, dan `BuildUpChecklistScreen` masih memakai `ScreenLayout`.
+- [x] 10.5 Pastikan screen tidak memanggil `fetch()` langsung - 2026-05-14 - `rg "fetch\\(" mobile-app\\src\\screens mobile-app\\src\\components` kosong; API call tetap di service.
+- [x] 10.6 Pastikan auth tetap dari `useAuth()` - 2026-05-14 - Login dan Dashboard tetap memakai `useAuth()`; route guard juga tetap memakai `AuthContext`.
+- [x] 10.7 Jalankan export web dan android - 2026-05-14 - `npm run doctor`, export web, dan export Android berhasil; satu retry web dilakukan karena percobaan pertama exit tanpa output.
+- [x] 10.8 Update checklist dan progress report - 2026-05-14 - Checklist dan progress report root diperbarui.
 
 Checkpoint fase 10:
 
-- [ ] Semua screen existing memakai komponen `src/components/ui`.
-- [ ] `AppButton.js`, `AppInput.js`, `InfoCard.js` sudah dihapus atau menjadi compatibility wrapper dengan catatan.
-- [ ] Export web dan android berhasil.
+- [x] Semua screen existing memakai komponen `src/components/ui`.
+- [x] `AppButton.js`, `AppInput.js`, `InfoCard.js` sudah dihapus atau menjadi compatibility wrapper dengan catatan.
+- [x] Export web dan android berhasil.
 
 ## Fase 11 - Komponen Menengah yang Ditunda
 
-- [ ] 11.1 Evaluasi kebutuhan `switch`.
-- [ ] 11.2 Evaluasi kebutuhan `checkbox`.
-- [ ] 11.3 Evaluasi kebutuhan `dialog`.
-- [ ] 11.4 Evaluasi kebutuhan `sheet`.
-- [ ] 11.5 Evaluasi kebutuhan `drawer`.
-- [ ] 11.6 Untuk setiap komponen, catat dependency tambahan sebelum install.
-- [ ] 11.7 Jangan install `@gorhom/bottom-sheet` atau `react-native-gesture-handler` sebelum kebutuhan sheet/drawer jelas.
-- [ ] 11.8 Jika install native dependency, gunakan `npx expo install` bila tersedia.
-- [ ] 11.9 Jalankan export web dan android setelah setiap dependency baru.
-- [ ] 11.10 Update checklist dan progress report.
+- [x] 11.1 Evaluasi kebutuhan `switch` - 2026-05-14 - Belum ada kebutuhan UI/flow; ditunda agar dependency dan state tambahan tidak masuk prematur.
+- [x] 11.2 Evaluasi kebutuhan `checkbox` - 2026-05-14 - Belum ada form checklist yang membutuhkan checkbox reusable; ditunda sampai flow validasi item jelas.
+- [x] 11.3 Evaluasi kebutuhan `dialog` - 2026-05-14 - Belum dibutuhkan untuk bug saat ini; alert/login flow tetap existing.
+- [x] 11.4 Evaluasi kebutuhan `sheet` - 2026-05-14 - Tidak dipilih karena belum ada kebutuhan bottom sheet dan dependency gesture belum diperlukan.
+- [x] 11.5 Evaluasi kebutuhan `drawer` - 2026-05-14 - Dibutuhkan untuk memperbaiki menu Dashboard; dibuat `src/components/ui/drawer.js` berbasis `Modal`, `SafeAreaView`, dan NativeWind tanpa dependency tambahan.
+- [x] 11.6 Untuk setiap komponen, catat dependency tambahan sebelum install - 2026-05-14 - Drawer tidak membutuhkan dependency baru; `switch`, `checkbox`, `dialog`, dan `sheet` tetap ditunda.
+- [x] 11.7 Jangan install `@gorhom/bottom-sheet` atau `react-native-gesture-handler` sebelum kebutuhan sheet/drawer jelas - 2026-05-14 - Tidak ada dependency native baru yang dipasang.
+- [x] 11.8 Jika install native dependency, gunakan `npx expo install` bila tersedia - 2026-05-14 - Tidak berlaku karena tidak ada dependency yang diinstall.
+- [x] 11.9 Jalankan export web dan android setelah setiap dependency baru - 2026-05-14 - Tidak ada dependency baru; tetap menjalankan `npm run doctor`, export web, dan export Android setelah komponen Drawer dibuat.
+- [x] 11.10 Update checklist dan progress report - 2026-05-14 - Checklist dan progress report root diperbarui.
 
 Checkpoint fase 11:
 
-- [ ] Dependency tambahan punya alasan bisnis/UI yang jelas.
-- [ ] Komponen menengah tidak membuat Expo Go/dev workflow rusak.
-- [ ] Export web dan android berhasil.
+- [x] Dependency tambahan punya alasan bisnis/UI yang jelas.
+- [x] Komponen menengah tidak membuat Expo Go/dev workflow rusak.
+- [x] Export web dan android berhasil.
 
 ## Fase 12 - Permission Components
 
-- [ ] 12.1 Jangan adopsi `permission-requester` sebelum ada fitur native yang butuh permission.
-- [ ] 12.2 Jika butuh kamera, evaluasi `expo-camera`.
-- [ ] 12.3 Jika butuh lokasi, evaluasi `expo-location`.
-- [ ] 12.4 Jika butuh notifikasi, evaluasi batas Expo Go dan development build.
-- [ ] 12.5 Semua permission final dan proses bisnis tetap harus melalui backend jika terkait operasional.
-- [ ] 12.6 Tambahkan dokumentasi permission ke README jika dependency dipasang.
-- [ ] 12.7 Jalankan export web dan android.
-- [ ] 12.8 Update checklist dan progress report.
+- [x] 12.1 Jangan adopsi `permission-requester` sebelum ada fitur native yang butuh permission - 2026-05-14 - Kebutuhan native sudah jelas: scan barcode AWB/MAWB dan ULD di Build Up Checklist; tidak mengadopsi permission-requester template mentah.
+- [x] 12.2 Jika butuh kamera, evaluasi `expo-camera` - 2026-05-14 - Menggunakan `expo-camera` SDK 54 dengan `CameraView`, `useCameraPermissions`, dan `barcodeScannerSettings`; Build Up memakai `BarcodeScanner`, sementara `QrScanner` dipertahankan untuk kebutuhan QR nanti.
+- [x] 12.3 Jika butuh lokasi, evaluasi `expo-location` - 2026-05-14 - Tidak dibutuhkan untuk flow scan barcode saat ini; tidak dipasang.
+- [x] 12.4 Jika butuh notifikasi, evaluasi batas Expo Go dan development build - 2026-05-14 - Tidak dibutuhkan untuk flow scan barcode saat ini; tidak dipasang.
+- [x] 12.5 Semua permission final dan proses bisnis tetap harus melalui backend jika terkait operasional - 2026-05-14 - Scanner hanya mengisi form lokal; validasi final dan simpan data tetap harus lewat backend/API.
+- [x] 12.6 Tambahkan dokumentasi permission ke README jika dependency dipasang - 2026-05-14 - README diperbarui dengan catatan `expo-camera`, barcode scanner, QR scanner reusable, `scheme`, dan batas review device fisik.
+- [x] 12.7 Jalankan export web dan android - 2026-05-14 - `npm run doctor`, export web, dan export Android berhasil setelah `expo-camera` dipasang.
+- [x] 12.8 Update checklist dan progress report - 2026-05-14 - Checklist dan progress report root diperbarui.
 
 Checkpoint fase 12:
 
-- [ ] Tidak ada permission module tanpa kebutuhan.
-- [ ] README menjelaskan batas Expo Go jika ada permission native.
-- [ ] Export web dan android berhasil.
+- [x] Tidak ada permission module tanpa kebutuhan.
+- [x] README menjelaskan batas Expo Go jika ada permission native.
+- [x] Export web dan android berhasil.
 
 ## Fase 13 - Cleanup Struktur Lama
 
-- [ ] 13.1 Cari import `AppButton`, `AppInput`, `InfoCard`.
-- [ ] 13.2 Jika tidak dipakai, hapus file lama.
-- [ ] 13.3 Jika masih dipakai oleh modul lain, ubah menjadi wrapper tipis ke `src/components/ui`.
-- [ ] 13.4 Rapikan import dari `src/components/ui/index.js`.
-- [ ] 13.5 Jalankan `rg "StyleSheet.create" src` dan pastikan hanya tersisa untuk kasus yang memang tidak cocok dengan NativeWind.
-- [ ] 13.6 Jalankan `rg "fetch\\(" src/screens src/components` dan pastikan kosong.
-- [ ] 13.7 Jalankan export web dan android.
-- [ ] 13.8 Update checklist dan progress report.
+- [x] 13.1 Cari import `AppButton`, `AppInput`, `InfoCard` - 2026-05-14 - Tidak ada import aktif di `src/`, `app/`, atau `App.js`; hanya catatan historis di dokumen.
+- [x] 13.2 Jika tidak dipakai, hapus file lama - 2026-05-14 - `src/components/AppButton.js`, `src/components/AppInput.js`, dan `src/components/InfoCard.js` dihapus.
+- [x] 13.3 Jika masih dipakai oleh modul lain, ubah menjadi wrapper tipis ke `src/components/ui` - 2026-05-14 - Tidak diperlukan karena semua screen memakai UI kit langsung.
+- [x] 13.4 Rapikan import dari `src/components/ui/index.js` - 2026-05-14 - Screen memakai barrel export; UI kit juga mengekspor `Drawer`, `BarcodeScanner`, dan `QrScanner`.
+- [x] 13.5 Jalankan `rg "StyleSheet.create" src` dan pastikan hanya tersisa untuk kasus yang memang tidak cocok dengan NativeWind - 2026-05-14 - Hasil kosong.
+- [x] 13.6 Jalankan `rg "fetch\\(" src/screens src/components` dan pastikan kosong - 2026-05-14 - Hasil kosong.
+- [x] 13.7 Jalankan export web dan android - 2026-05-14 - `npm run doctor`, export web, dan export Android berhasil setelah cleanup.
+- [x] 13.8 Update checklist dan progress report - 2026-05-14 - Checklist dan progress report root diperbarui.
 
 Checkpoint fase 13:
 
-- [ ] Struktur UI baru menjadi sumber utama.
-- [ ] Tidak ada duplicate component yang membingungkan.
-- [ ] Export web dan android berhasil.
+- [x] Struktur UI baru menjadi sumber utama.
+- [x] Tidak ada duplicate component yang membingungkan.
+- [x] Export web dan android berhasil.
 
 ## Fase 14 - Dokumentasi dan Agent Update
 
-- [ ] 14.1 Update `mobile_agent.md` dengan aturan `src/components/ui`.
-- [ ] 14.2 Update `README.md` dengan cara membuat komponen UI baru.
-- [ ] 14.3 Tambahkan contoh pemakaian `Button`, `Text`, `Card`, `Input`.
-- [ ] 14.4 Tambahkan catatan bahwa template sumber TypeScript tidak boleh di-copy mentah.
-- [ ] 14.5 Tambahkan catatan dependency yang ditunda.
-- [ ] 14.6 Update progress report root.
-- [ ] 14.7 Jalankan export web dan android final.
+- [x] 14.1 Update `mobile_agent.md` dengan aturan `src/components/ui` - 2026-05-14 - Agent kini mewajibkan UI primitive baru berada di `src/components/ui`, diekspor dari barrel, memakai NativeWind, dan tetap JavaScript-only.
+- [x] 14.2 Update `README.md` dengan cara membuat komponen UI baru - 2026-05-14 - README menambahkan langkah membuat UI component, lokasi file, JSDoc, export barrel, dan batas business logic.
+- [x] 14.3 Tambahkan contoh pemakaian `Button`, `Text`, `Card`, `Input` - 2026-05-14 - README menambahkan contoh `ExampleForm` dengan `Button`, `Text`, `Card`, `CardContent`, dan `Input`.
+- [x] 14.4 Tambahkan catatan bahwa template sumber TypeScript tidak boleh di-copy mentah - 2026-05-14 - README dan agent menegaskan tidak boleh copy `.ts`, `.tsx`, typed routes, `tsconfig.json`, atau `nativewind-env.d.ts`.
+- [x] 14.5 Tambahkan catatan dependency yang ditunda - 2026-05-14 - README dan agent mencatat `Dialog`, `Sheet`, `Select`, `Checkbox`, `Switch`, gesture drawer, dan dependency native terkait tetap butuh review terpisah.
+- [x] 14.6 Update progress report root - 2026-05-14 - Progress report root diperbarui.
+- [x] 14.7 Jalankan export web dan android final - 2026-05-14 - `npm run doctor`, export web, dan export Android final berhasil.
 
 Checkpoint fase 14:
 
-- [ ] Dokumentasi project sinkron dengan struktur actual.
-- [ ] Agent instruction sinkron dengan pola UI baru.
-- [ ] Export final berhasil.
+- [x] Dokumentasi project sinkron dengan struktur actual.
+- [x] Agent instruction sinkron dengan pola UI baru.
+- [x] Export final berhasil.
 
 ## Fase 15 - Acceptance Review
 
-- [ ] 15.1 Review Login di web.
-- [ ] 15.2 Review Login di HP fisik Expo Go.
-- [ ] 15.3 Review Dashboard di web.
-- [ ] 15.4 Review Dashboard di HP fisik Expo Go.
-- [ ] 15.5 Review Build Up Checklist di web.
-- [ ] 15.6 Review Build Up Checklist di HP fisik Expo Go.
-- [ ] 15.7 Cek orientasi portrait di Android.
-- [ ] 15.8 Cek keyboard tidak menutup input Login.
-- [ ] 15.9 Cek navigasi Dashboard atau tab/group Expo Router tidak menutup konten.
-- [ ] 15.10 Cek tidak ada blank putih/hitam ketika reload.
-- [ ] 15.11 Catat screenshot atau ringkasan hasil manual QA di progress report.
+- [x] 15.1 Review Login di web - 2026-05-14 - Headless Chromium membuka `/login` dan menemukan teks `Login operasional`.
+- [ ] 15.2 Review Login di HP fisik Expo Go - Blocker: membutuhkan konfirmasi dari device fisik user; tidak bisa divalidasi langsung oleh Codex dari terminal.
+- [x] 15.3 Review Dashboard di web - 2026-05-14 - Headless Chromium masuk Dashboard dengan session acceptance lokal dan menemukan `Popular services`; search field melebar 345px.
+- [ ] 15.4 Review Dashboard di HP fisik Expo Go - Blocker: membutuhkan konfirmasi dari device fisik user; khususnya drawer, bottom nav, dan safe-area.
+- [x] 15.5 Review Build Up Checklist di web - 2026-05-14 - Headless Chromium membuka Build Up dan menemukan `Checklist`, `MAWB Number`, `ULD Number`, serta 2 tombol `Scan`.
+- [ ] 15.6 Review Build Up Checklist di HP fisik Expo Go - Blocker: membutuhkan konfirmasi dari device fisik user; khususnya kamera dan scan barcode.
+- [ ] 15.7 Cek orientasi portrait di Android - Blocker: membutuhkan HP fisik atau emulator Android; `app.json` sudah mengunci `orientation: "portrait"`.
+- [ ] 15.8 Cek keyboard tidak menutup input Login - Blocker: membutuhkan HP fisik/emulator dengan virtual keyboard; layout sudah memakai `ScreenLayout keyboardAware`.
+- [x] 15.9 Cek navigasi Dashboard atau tab/group Expo Router tidak menutup konten - 2026-05-14 - Web acceptance membuka Dashboard lalu route Build Up via Expo Router; konten utama tetap terlihat.
+- [x] 15.10 Cek tidak ada blank putih/hitam ketika reload - 2026-05-14 - Reload pada route Build Up tetap menampilkan `Checklist`.
+- [x] 15.11 Catat screenshot atau ringkasan hasil manual QA di progress report - 2026-05-14 - Ringkasan acceptance web dan blocker device fisik dicatat di progress report.
 
 Checkpoint fase 15:
 
-- [ ] Semua screen existing tampil.
-- [ ] Tidak ada runtime error utama di console Metro.
-- [ ] Tidak ada blank screen.
-- [ ] Checklist ini sudah diperbarui untuk semua step yang dikerjakan.
+- [x] Semua screen existing tampil di web acceptance.
+- [x] Tidak ada runtime error utama di console Metro.
+- [x] Tidak ada blank screen pada web acceptance.
+- [x] Checklist ini sudah diperbarui untuk semua step yang dikerjakan.
 
 ## Daftar Komponen yang Disarankan untuk Adopsi Pertama
 
-- [ ] `Text`
-- [ ] `Button`
-- [ ] `Input`
-- [ ] `Card`
-- [ ] `Badge`
-- [ ] `Separator`
-- [ ] `Spinner`
+- [x] `Text` - 2026-05-14 - Tersedia di `src/components/ui/text.js`.
+- [x] `Button` - 2026-05-14 - Tersedia di `src/components/ui/button.js`.
+- [x] `Input` - 2026-05-14 - Tersedia di `src/components/ui/input.js`.
+- [x] `Card` - 2026-05-14 - Tersedia di `src/components/ui/card.js`.
+- [x] `Badge` - 2026-05-14 - Tersedia di `src/components/ui/badge.js`.
+- [x] `Separator` - 2026-05-14 - Tersedia di `src/components/ui/separator.js`.
+- [x] `Spinner` - 2026-05-14 - Tersedia di `src/components/ui/spinner.js`.
 
 ## Daftar Komponen yang Perlu Evaluasi Terpisah
 
-- [ ] `Dialog` - perlu pola modal yang matang dan aksesibilitas.
-- [ ] `Sheet` - kemungkinan butuh `@gorhom/bottom-sheet` dan gesture handling.
-- [ ] `Drawer` - harus disesuaikan dengan Expo Router route groups atau layout nested.
-- [ ] `Select` - perlu evaluasi UX mobile dan dependency.
-- [ ] `Checkbox` - bisa butuh primitive tambahan atau implementasi custom.
-- [ ] `Switch` - bisa memakai React Native `Switch` dulu.
-- [ ] `PermissionRequester` - hanya jika fitur native benar-benar diperlukan.
+- [x] `Dialog` - 2026-05-14 - Dievaluasi dan ditunda; belum ada kebutuhan flow modal baru.
+- [x] `Sheet` - 2026-05-14 - Dievaluasi dan ditunda; belum memasang `@gorhom/bottom-sheet` atau gesture dependency.
+- [x] `Drawer` - 2026-05-14 - Diimplementasikan sebagai `src/components/ui/drawer.js` memakai `Modal` bawaan tanpa dependency native tambahan.
+- [x] `Select` - 2026-05-14 - Dievaluasi dan ditunda; perlu desain UX mobile sebelum memilih dependency.
+- [x] `Checkbox` - 2026-05-14 - Dievaluasi dan ditunda; belum ada form yang membutuhkan checkbox reusable.
+- [x] `Switch` - 2026-05-14 - Dievaluasi dan ditunda; bisa memakai React Native `Switch` saat ada kebutuhan nyata.
+- [x] `PermissionRequester` - 2026-05-14 - Tidak diadopsi mentah; permission kamera ditangani langsung oleh `BarcodeScanner`/`QrScanner`.
 
 ## Risiko Utama
 
 - NativeWind versi project berbeda dari template sumber.
 - Template sumber TypeScript-first, sedangkan project ini JavaScript-only.
-- Project saat ini masih memiliki React Navigation/AppNavigator, sehingga migrasi ke Expo Router harus bertahap dan diverifikasi per route.
+- React Navigation/AppNavigator sudah dihapus dari source setelah Expo Router stabil.
 - Komponen advanced bisa menambah native dependency dan memperumit Expo Go.
 - CSS variable theme dari template sumber perlu validasi bertahap.
 

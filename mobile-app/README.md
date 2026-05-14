@@ -7,8 +7,9 @@ This project uses:
 - React Native
 - Expo
 - JavaScript only
-- React Navigation
+- Expo Router
 - AsyncStorage for token persistence
+- Expo Camera for barcode and QR scanning in supported operational forms
 - Environment-based API configuration
 
 No backend code belongs in this project.
@@ -18,10 +19,10 @@ No backend code belongs in this project.
 ```text
 src/
  ├── components/
- │   └── layout/
+ │   ├── layout/
+ │   └── ui/
  ├── config/
  ├── contexts/
- ├── navigation/
  ├── screens/
  ├── services/
  ├── styles/
@@ -36,6 +37,115 @@ Use shared layout components for new screens:
 - `src/components/layout/ScreenHeader.js` handles basic stack headers with back/close actions.
 - Screens should focus on content and behavior. Avoid repeating safe area, scroll, keyboard, and footer boilerplate in every screen.
 - Keep NativeWind wired through `metro.config.js` and `global.css`. Do not add `nativewind/babel` for the current installed NativeWind version because it tries to import `nativewind/jsx-runtime`, which is not exported by this package.
+
+## UI Components
+
+Reusable UI primitives live in `src/components/ui/`.
+
+Use these first for new screens:
+
+- `Text`
+- `Button`
+- `Input`
+- `Card`
+- `Badge`
+- `Separator`
+- `Spinner`
+- `Drawer`
+- `BarcodeScanner`
+- `QrScanner`
+
+Do not copy the source template's TypeScript files directly. This app stays JavaScript-only.
+
+### Creating a UI Component
+
+When adding a new reusable UI primitive:
+
+- Create a `.js` file in `src/components/ui/`.
+- Use NativeWind `className` as the default styling API.
+- Add JSDoc to exported components and important functions.
+- Export it from `src/components/ui/index.js`.
+- Keep business logic, API calls, and screen-specific state out of UI primitives.
+- Prefer existing dependencies before installing new UI libraries.
+
+Example:
+
+```js
+import React from 'react';
+import { View } from 'react-native';
+
+import { Text } from './text';
+import { cn } from './utils/cn';
+
+/**
+ * Renders a compact status row.
+ * @param {{ label: string, value: string, className?: string }} props - Status row props.
+ * @returns {React.ReactElement} Status row.
+ */
+export function StatusRow({ label, value, className = '' }) {
+  return (
+    <View className={cn('flex-row items-center justify-between py-2', className)}>
+      <Text variant="muted">{label}</Text>
+      <Text className="font-semibold text-foreground">{value}</Text>
+    </View>
+  );
+}
+```
+
+### Usage Examples
+
+```js
+import React from 'react';
+import { View } from 'react-native';
+
+import { Button, Card, CardContent, Input, Text } from '../components/ui';
+
+/**
+ * Renders a simple form example.
+ * @returns {React.ReactElement} Example form.
+ */
+export default function ExampleForm() {
+  return (
+    <Card>
+      <CardContent className="gap-4">
+        <Text variant="title">Form title</Text>
+        <Input placeholder="AWB number" autoCapitalize="characters" />
+        <Button>
+          <Text>Submit</Text>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### Delayed Dependencies
+
+These components still need separate product/UI review before implementation:
+
+- `Dialog`
+- `Sheet`
+- `Select`
+- `Checkbox`
+- `Switch`
+- Gesture-based drawer
+
+Do not install `@gorhom/bottom-sheet`, `react-native-gesture-handler`, `react-native-svg`, or extra Expo permission modules unless the target flow is already clear.
+
+## Native Permissions
+
+Build Up Checklist uses `expo-camera` to scan barcodes for AWB/MAWB and ULD input fields.
+
+Camera access is requested only when the user opens the scanner. The scanned barcode payload only fills the local form field; final validation and persistence must still happen through the backend API.
+
+`QrScanner` is kept as a separate reusable component for future QR-code flows, but Build Up currently uses `BarcodeScanner`.
+
+For production builds, `app.json` includes:
+
+- `scheme: "mauapp"` for Expo Router linking.
+- `expo-camera` plugin with a camera permission message.
+
+Expo Go can test the scanner, but camera behavior should still be reviewed on a physical Android device before release.
 
 ## Install
 

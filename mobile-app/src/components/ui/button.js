@@ -8,11 +8,11 @@ import { TextClassContext } from './utils/text-context';
 const buttonVariants = cva('group flex-row items-center justify-center rounded-2xl', {
   variants: {
     variant: {
-      default: 'bg-blue-600',
-      secondary: 'bg-slate-100',
-      outline: 'border border-slate-200 bg-white',
+      default: 'bg-primary',
+      secondary: 'bg-muted',
+      outline: 'border border-border bg-card',
       ghost: 'bg-transparent',
-      destructive: 'bg-red-600',
+      destructive: 'bg-destructive',
       link: 'bg-transparent px-0',
     },
     size: {
@@ -31,12 +31,12 @@ const buttonVariants = cva('group flex-row items-center justify-center rounded-2
 const buttonTextVariants = cva('text-base font-semibold', {
   variants: {
     variant: {
-      default: 'text-white',
-      secondary: 'text-slate-950',
-      outline: 'text-slate-950',
-      ghost: 'text-slate-950',
-      destructive: 'text-white',
-      link: 'text-blue-600 underline',
+      default: 'text-primary-foreground',
+      secondary: 'text-foreground',
+      outline: 'text-foreground',
+      ghost: 'text-foreground',
+      destructive: 'text-destructive-foreground',
+      link: 'text-primary underline',
     },
     size: {
       default: 'text-base',

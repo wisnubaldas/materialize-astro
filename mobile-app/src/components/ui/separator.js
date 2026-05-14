@@ -11,5 +11,5 @@ import { cn } from './utils/cn';
 export function Separator({ orientation = 'horizontal', className = '' }) {
   const orientationClassName = orientation === 'vertical' ? 'h-full w-px' : 'h-px w-full';
 
-  return <View className={cn('bg-slate-200', orientationClassName, className)} />;
+  return <View className={cn('bg-border', orientationClassName, className)} />;
 }

@@ -10,7 +10,7 @@ import { TextClassContext } from './utils/text-context';
  * @returns {React.ReactElement} Card container.
  */
 export function Card({ className = '', ...props }) {
-  return <View className={cn('rounded-2xl border border-slate-200 bg-white', className)} {...props} />;
+  return <View className={cn('rounded-2xl border border-border bg-card', className)} {...props} />;
 }
 
 /**
@@ -29,7 +29,7 @@ export function CardHeader({ className = '', ...props }) {
  */
 export function CardTitle({ className = '', ...props }) {
   return (
-    <TextClassContext.Provider value={cn('text-xl font-extrabold text-slate-950', className)}>
+    <TextClassContext.Provider value={cn('text-xl font-extrabold text-card-foreground', className)}>
       <View {...props} />
     </TextClassContext.Provider>
   );
@@ -42,7 +42,7 @@ export function CardTitle({ className = '', ...props }) {
  */
 export function CardDescription({ className = '', ...props }) {
   return (
-    <TextClassContext.Provider value={cn('text-sm leading-5 text-slate-500', className)}>
+    <TextClassContext.Provider value={cn('text-sm leading-5 text-muted-foreground', className)}>
       <View {...props} />
     </TextClassContext.Provider>
   );

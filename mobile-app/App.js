@@ -1,22 +1,12 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Redirect } from 'expo-router';
 
 import './global.css';
-import { AuthProvider } from './src/contexts/AuthContext';
-import AppNavigator from './src/navigation/AppNavigator';
 
 /**
- * Root Expo application component.
- * @returns {React.ReactElement} App provider tree.
+ * Legacy compatibility entry for environments that import App directly.
+ * @returns {React.ReactElement} Redirect to the Expo Router root route.
  */
 export default function App() {
-  return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="dark" />
-        <AppNavigator />
-      </AuthProvider>
-    </SafeAreaProvider>
-  );
+  return <Redirect href="/" />;
 }
