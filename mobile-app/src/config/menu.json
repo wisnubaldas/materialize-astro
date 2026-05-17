@@ -1,0 +1,57 @@
+[
+  {
+    "title": "Home",
+    "label": "Home",
+    "description": "Dashboard",
+    "icon": "home-outline",
+    "href": "/",
+    "activePaths": ["/"],
+    "showInFooter": true,
+    "showInDrawer": false,
+    "showInDashboard": false
+  },
+  {
+    "title": "BU Checklist",
+    "label": "Build Up Checklist",
+    "description": "Checklist awal",
+    "icon": "clipboard-check-outline",
+    "href": "/build-up-checklist",
+    "activePaths": ["/build-up-checklist", "/completed-build-up"],
+    "showInFooter": true,
+    "showInDrawer": true,
+    "showInDashboard": true
+  },
+  {
+    "title": "Draft Build Up",
+    "label": "Draft",
+    "description": "Rencana build up",
+    "icon": "airplane-settings",
+    "href": "/draft-build-up",
+    "activePaths": ["/draft-build-up", "/draft-build-up-master-awb", "/draft-build-up-rincian"],
+    "showInFooter": true,
+    "showInDrawer": true,
+    "showInDashboard": true
+  },
+  {
+    "title": "EDI",
+    "label": "EDI",
+    "description": "Status pesan",
+    "icon": "send-outline",
+    "href": null,
+    "activePaths": [],
+    "showInFooter": true,
+    "showInDrawer": true,
+    "showInDashboard": true
+  },
+  {
+    "title": "Warehouse",
+    "label": "WH",
+    "description": "Area kerja",
+    "icon": "warehouse",
+    "href": null,
+    "activePaths": [],
+    "showInFooter": true,
+    "showInDrawer": true,
+    "showInDashboard": true
+  }
+]

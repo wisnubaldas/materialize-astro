@@ -6,6 +6,31 @@ import { resolveBackgroundColor, resolveBorderColor, useThemeColors } from '../.
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
 
+const tailwindButtonVariants = {
+  slate: 'bg-slate-500',
+  gray: 'bg-gray-500',
+  zinc: 'bg-zinc-500',
+  neutral: 'bg-neutral-500',
+  stone: 'bg-stone-500',
+  red: 'bg-red-500',
+  orange: 'bg-orange-500',
+  amber: 'bg-amber-400',
+  yellow: 'bg-yellow-400',
+  lime: 'bg-lime-500',
+  green: 'bg-green-500',
+  emerald: 'bg-emerald-500',
+  teal: 'bg-teal-500',
+  cyan: 'bg-cyan-500',
+  sky: 'bg-sky-500',
+  blue: 'bg-blue-500',
+  indigo: 'bg-indigo-500',
+  violet: 'bg-violet-500',
+  purple: 'bg-purple-500',
+  fuchsia: 'bg-fuchsia-500',
+  pink: 'bg-pink-500',
+  rose: 'bg-rose-500',
+};
+
 const buttonVariants = cva('group flex-row items-center justify-center rounded-sm', {
   variants: {
     variant: {
@@ -15,10 +40,7 @@ const buttonVariants = cva('group flex-row items-center justify-center rounded-s
       ghost: 'bg-transparent',
       destructive: 'bg-destructive',
       link: 'bg-transparent px-0',
-      lime: 'bg-lime',
-      pink: 'bg-pink',
-      slate: 'bg-slate',
-      indigo: 'bg-indigo',
+      ...tailwindButtonVariants,
     },
     size: {
       default: 'min-h-12 px-5 py-3',
@@ -42,7 +64,28 @@ const buttonTextVariants = cva('text-base font-semibold', {
       ghost: 'text-foreground',
       destructive: 'text-destructive-foreground',
       link: 'text-primary underline',
+      slate: 'text-white',
+      gray: 'text-white',
+      zinc: 'text-white',
+      neutral: 'text-white',
+      stone: 'text-white',
+      red: 'text-white',
+      orange: 'text-white',
+      amber: 'text-slate-950',
+      yellow: 'text-slate-950',
+      lime: 'text-slate-950',
+      green: 'text-white',
+      emerald: 'text-white',
+      teal: 'text-white',
+      cyan: 'text-white',
+      sky: 'text-white',
+      blue: 'text-white',
       indigo: 'text-white',
+      violet: 'text-white',
+      purple: 'text-white',
+      fuchsia: 'text-white',
+      pink: 'text-white',
+      rose: 'text-white',
     },
     size: {
       default: 'text-base',
@@ -115,12 +158,34 @@ function getRippleColors(colors) {
     ghost: colors.foreground,
     destructive: colors.danger,
     link: colors.primary,
+    slate: '#62748E',
+    gray: '#6A7282',
+    zinc: '#71717B',
+    neutral: '#737373',
+    stone: '#79716B',
+    red: '#FB2C36',
+    orange: '#FF6900',
+    amber: '#FFB900',
+    yellow: '#FDC700',
+    lime: '#7CCF00',
+    green: '#00C950',
+    emerald: '#00BC7D',
+    teal: '#00BBA7',
+    cyan: '#00B8DB',
+    sky: '#00A6F4',
+    blue: '#2B7FFF',
+    indigo: '#615FFF',
+    violet: '#8E51FF',
+    purple: '#AD46FF',
+    fuchsia: '#E12AFB',
+    pink: '#F6339A',
+    rose: '#FF2056',
   };
 }
 
 /**
  * Renders a reusable Pressable button with NativeWind variants.
- * @param {{ variant?: 'default'|'secondary'|'outline'|'ghost'|'destructive'|'link', size?: 'default'|'sm'|'lg'|'icon', className?: string, textClassName?: string, disabled?: boolean, android_ripple?: object, style?: object|Function, children?: React.ReactNode }} props - Button props.
+ * @param {{ variant?: 'default'|'secondary'|'outline'|'ghost'|'destructive'|'link'|'slate'|'gray'|'zinc'|'neutral'|'stone'|'red'|'orange'|'amber'|'yellow'|'lime'|'green'|'emerald'|'teal'|'cyan'|'sky'|'blue'|'indigo'|'violet'|'purple'|'fuchsia'|'pink'|'rose', size?: 'default'|'sm'|'lg'|'icon', className?: string, textClassName?: string, disabled?: boolean, android_ripple?: object, style?: object|Function, children?: React.ReactNode }} props - Button props.
  * @returns {React.ReactElement} Pressable button.
  */
 export function Button({

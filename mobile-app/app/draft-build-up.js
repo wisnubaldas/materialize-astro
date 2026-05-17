@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 
 import { Spinner } from '../src/components/ui';
 import { useAuth } from '../src/contexts/AuthContext';
-import DraftBuildUpScreen from '../src/screens/DraftBuildUpScreen';
+import DraftBuildUpScreen from '../src/screens/buildup/DraftBuildUpScreen';
 import { useThemeColors } from '../src/styles/theme';
 
 /**
@@ -29,6 +29,26 @@ export default function DraftBuildUpRoute() {
     router.replace('/');
   }
 
+  /**
+   * Opens the dedicated Master AWB creation screen for the selected Build Up header.
+   * @param {object} header - Selected Build Up header.
+   * @returns {void}
+   */
+  function handleOpenMasterAwb(header) {
+    router.push({
+      pathname: '/draft-build-up-master-awb',
+      params: {
+        headerId: String(header.id),
+        flightNo: header.flight_no || '',
+        flightDate: header.flight_date || '',
+        uld: header.uld || '',
+        dest: header.dest || '',
+        completedPieces: String(header.completed_pieces || 0),
+        totalPieces: String(header.total_pieces || 0),
+      },
+    });
+  }
+
   if (isLoading) {
     return (
       <View
@@ -45,5 +65,5 @@ export default function DraftBuildUpRoute() {
     return <Redirect href="/login" />;
   }
 
-  return <DraftBuildUpScreen onBack={handleBack} />;
+  return <DraftBuildUpScreen onBack={handleBack} onOpenMasterAwb={handleOpenMasterAwb} />;
 }

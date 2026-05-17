@@ -11,7 +11,9 @@ export {
 } from './card';
 export { DatePicker } from './date-picker';
 export { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerPanel } from './drawer';
+export { HeaderMetricCard } from './header-metric-card';
 export { Input } from './input';
+export { MetricCard } from './metric-card';
 export { QrScanner } from './qr-scanner';
 export { Separator } from './separator';
 export { Spinner } from './spinner';

@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from sqlalchemy import bindparam, text
+from sqlalchemy import bindparam, case, func, text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
@@ -413,6 +413,45 @@ class WarehouseRepository:
             .all()
         )
 
+    def get_build_up_master_awb_summary(self) -> dict[str, int]:
+        """Return all-time completed and unfinished Master AWB counts."""
+        rincian_totals = (
+            self.db.query(
+                BuildUpCheckRincian.check_detail_id.label("detail_id"),
+                func.coalesce(func.sum(BuildUpCheckRincian.pieces), 0).label("completed_pieces"),
+            )
+            .group_by(BuildUpCheckRincian.check_detail_id)
+            .subquery()
+        )
+
+        completed_condition = (
+            (func.coalesce(BuildUpCheckDetail.total_pieces, 0) > 0)
+            & (
+                func.coalesce(rincian_totals.c.completed_pieces, 0)
+                >= func.coalesce(BuildUpCheckDetail.total_pieces, 0)
+            )
+        )
+        row = (
+            self.db.query(
+                func.coalesce(
+                    func.sum(case((completed_condition, 1), else_=0)),
+                    0,
+                ).label("completed"),
+                func.coalesce(
+                    func.sum(case((completed_condition, 0), else_=1)),
+                    0,
+                ).label("unfinished"),
+            )
+            .select_from(BuildUpCheckDetail)
+            .outerjoin(rincian_totals, rincian_totals.c.detail_id == BuildUpCheckDetail.id)
+            .one()
+        )
+
+        return {
+            "unfinished": int(row.unfinished or 0),
+            "completed": int(row.completed or 0),
+        }
+
     def get_build_up_check_detail_by_id(self, detail_id: int) -> BuildUpCheckDetail | None:
         """Return one Build Up check detail."""
         return (
@@ -467,15 +506,3 @@ class WarehouseRepository:
             self.db.rollback()
             raise
         return detail
-
-    def reopen_build_up_check_header(self, header: BuildUpCheckHeader) -> BuildUpCheckHeader:
-        """Set every detail under a header back to unfinished status."""
-        for detail in header.details:
-            detail.status = 0
-        try:
-            self.db.commit()
-            self.db.refresh(header)
-        except Exception:
-            self.db.rollback()
-            raise
-        return header

@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 
 import { Spinner } from '../src/components/ui';
 import { useAuth } from '../src/contexts/AuthContext';
-import CompletedBuildUpScreen from '../src/screens/CompletedBuildUpScreen';
+import CompletedBuildUpScreen from '../src/screens/buildup/CompletedBuildUpScreen';
 import { useThemeColors } from '../src/styles/theme';
 
 /**

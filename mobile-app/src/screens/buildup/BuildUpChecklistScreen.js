@@ -2,20 +2,21 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 
-import ScreenHeader from '../components/layout/ScreenHeader';
-import ScreenLayout from '../components/layout/ScreenLayout';
+import ScreenHeader from '../../components/layout/ScreenHeader';
+import ScreenLayout from '../../components/layout/ScreenLayout';
 import {
   BarcodeScanner,
   Button,
   Card,
   CardContent,
   DatePicker,
+  HeaderMetricCard,
   Input,
   Text,
-} from '../components/ui';
-import { createBuildUpCheckHeader } from '../services/buildUpService';
-import { useThemeColors } from '../styles/theme';
-import { validateBuildUpChecklistForm } from '../utils/validators';
+} from '../../components/ui';
+import { createBuildUpCheckHeader } from '../../services/buildUpService';
+import { useThemeColors } from '../../styles/theme';
+import { validateBuildUpChecklistForm } from '../../utils/validators';
 
 const initialForm = {
   uld: '',
@@ -118,7 +119,6 @@ function HeaderField({ field, value, onChangeText, onScanPress }) {
  * @returns {React.ReactElement} Header form screen.
  */
 export default function BuildUpChecklistScreen({ onBack, onOpenCompleted }) {
-  const colors = useThemeColors();
   const [formData, setFormData] = useState(initialForm);
   const [scannerField, setScannerField] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -205,15 +205,25 @@ export default function BuildUpChecklistScreen({ onBack, onOpenCompleted }) {
         </View>
       }
     >
-      <View className="rounded-sm bg-blue-200/70 px-5 py-4 web:self-center web:w-full web:max-w-130">
-        <Text variant="title" className="mt-1">
-          Build Up Checklist
-        </Text>
-        <Button variant="slate" className="mt-4" onPress={onOpenCompleted}>
-          <MaterialCommunityIcons name="check-circle-outline" size={20} color={colors.foreground} />
-          <Text className="ml-2 text-amber-50">Buka Kembali Buildup Selesai</Text>
-        </Button>
-      </View>
+      <HeaderMetricCard
+        title="Build Up Checklist"
+        variant="violet"
+        className="web:self-center web:w-full web:max-w-130"
+        action={
+          <Button
+            variant="indigo"
+            size="sm"
+            onPress={onOpenCompleted}
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.18)',
+              borderColor: 'rgba(255,255,255,0.42)',
+            }}
+          >
+            <MaterialCommunityIcons name="check-circle-outline" size={18} />
+            <Text className="ml-2 text-xs font-extrabold">Buka Kembali Buildup Selesai</Text>
+          </Button>
+        }
+      />
 
       <Card className="mt-8 rounded-sm bg-card/70">
         <CardContent className="gap-5 p-4">

@@ -349,6 +349,7 @@ export const TAILWIND_COLOR_ALIASES = {
   pink: TAILWIND_COLORS.pink[500],
   gray: TAILWIND_COLORS.gray[500],
   slate: TAILWIND_COLORS.slate[500],
+  indigo: TAILWIND_COLORS.indigo[500],
 };
 
 export const TAILWIND_SIMPLE_COLORS = {

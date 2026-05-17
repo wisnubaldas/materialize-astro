@@ -44,8 +44,32 @@ class BuildUpCheckHeaderOut(BaseModel):
     updated_at: datetime
 
 
+class BuildUpMasterAwbSummaryOut(BaseModel):
+    """Ringkasan jumlah Master AWB Build Up Check."""
+
+    unfinished: int = 0
+    completed: int = 0
+
+
 class BuildUpCheckDetailCreate(BaseModel):
     """Payload detail MAWB dalam satu header build up check."""
+
+    mawb: str = Field(min_length=1, max_length=100)
+    total_pieces: int = Field(gt=0)
+    agent: str | None = Field(default=None, max_length=100)
+    remark: str | None = None
+
+    @field_validator("mawb", "agent", "remark", mode="before")
+    @classmethod
+    def normalize_text(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        cleaned = str(value).strip()
+        return cleaned.upper() if cleaned else None
+
+
+class BuildUpCheckHeaderReopen(BaseModel):
+    """Payload untuk membuka kembali header selesai dengan master AWB baru."""
 
     mawb: str = Field(min_length=1, max_length=100)
     total_pieces: int = Field(gt=0)

@@ -20,8 +20,10 @@ from app.schemas.build_up_draft_schema import (
 from app.schemas.build_up_check_schema import (
     BuildUpCheckDetailCreate,
     BuildUpCheckDetailOut,
+    BuildUpMasterAwbSummaryOut,
     BuildUpCheckHeaderCreate,
     BuildUpCheckHeaderOut,
+    BuildUpCheckHeaderReopen,
     BuildUpCheckRincianCreate,
 )
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
@@ -166,6 +168,17 @@ def list_build_up_check_headers(
     )
 
 
+@router.get(
+    "/build-up-check-headers/master-awb-summary",
+    summary="Ringkasan jumlah Master AWB Build Up Check",
+    response_model=BuildUpMasterAwbSummaryOut,
+)
+def get_build_up_master_awb_summary(
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    return service.get_build_up_master_awb_summary()
+
+
 @router.post(
     "/build-up-check-headers",
     summary="Simpan header Build Up Check",
@@ -186,12 +199,15 @@ def create_build_up_check_header(
 )
 def reopen_build_up_check_header(
     header_id: int,
+    payload: BuildUpCheckHeaderReopen,
     service: WarehouseService = Depends(get_build_up_check_service),
 ):
     try:
-        return service.reopen_build_up_check_header(header_id)
+        return service.reopen_build_up_check_header(header_id, payload)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get(

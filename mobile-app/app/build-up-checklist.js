@@ -3,7 +3,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { Spinner } from '../src/components/ui';
-import BuildUpChecklistScreen from '../src/screens/BuildUpChecklistScreen';
+import BuildUpChecklistScreen from '../src/screens/buildup/BuildUpChecklistScreen';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useThemeColors } from '../src/styles/theme';
 

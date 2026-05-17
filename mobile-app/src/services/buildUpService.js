@@ -47,19 +47,25 @@ export async function listBuildUpCheckHeaders(filters = {}) {
 
 /**
  * Lists completed Build Up Check headers.
+ * @param {{ flightDate?: string }} filters - Completed header filters.
  * @returns {Promise<Array>} Completed header list.
  */
-export function listCompletedBuildUpCheckHeaders() {
-  return listBuildUpCheckHeaders({ completedOnly: true, unfinishedOnly: false });
+export function listCompletedBuildUpCheckHeaders(filters = {}) {
+  return listBuildUpCheckHeaders({
+    flightDate: filters.flightDate,
+    completedOnly: true,
+    unfinishedOnly: false,
+  });
 }
 
 /**
- * Reopens a completed Build Up Check header.
+ * Reopens a completed Build Up Check header with a new MAWB detail.
  * @param {number} headerId - Header id.
+ * @param {object} formData - New MAWB values required to reopen the header.
  * @returns {Promise<object|null>} Reopened header.
  */
-export function reopenBuildUpCheckHeader(headerId) {
-  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/reopen`, {}, {
+export function reopenBuildUpCheckHeader(headerId, formData) {
+  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/reopen`, formData, {
     authenticated: true,
   });
 }
@@ -74,6 +80,20 @@ export async function listBuildUpCheckDetails(headerId) {
     authenticated: true,
   });
   return Array.isArray(response) ? response : [];
+}
+
+/**
+ * Gets all-time completed and unfinished Master AWB summary for dashboard cards.
+ * @returns {Promise<{ unfinished: number, completed: number }>} Master AWB summary.
+ */
+export async function getBuildUpMasterAwbSummary() {
+  const response = await getRequest(`${env.buildUpCheckHeadersPath}/master-awb-summary`, {
+    authenticated: true,
+  });
+  return {
+    unfinished: Number(response?.unfinished || 0),
+    completed: Number(response?.completed || 0),
+  };
 }
 
 /**

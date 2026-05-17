@@ -12,8 +12,10 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckDetailOut,
     BuildUpCheckHeaderCreate,
     BuildUpCheckHeaderOut,
+    BuildUpCheckHeaderReopen,
     BuildUpCheckRincianCreate,
     BuildUpCheckRincianOut,
+    BuildUpMasterAwbSummaryOut,
 )
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.build_up_draft_schema import (
@@ -454,17 +456,19 @@ class WarehouseService:
     def _map_check_detail(row) -> BuildUpCheckDetailOut:
         completed_pieces = _sum_rincian_pieces(list(row.rincian or []))
         total_pieces = int(row.total_pieces or 0)
+        remaining_pieces = max(total_pieces - completed_pieces, 0)
+        is_completed = total_pieces > 0 and remaining_pieces == 0
         return BuildUpCheckDetailOut(
             id=row.id,
             header_id=row.header_id,
             mawb=row.mawb,
             total_pieces=row.total_pieces,
-            status=int(row.status or 0),
+            status=1 if is_completed else 0,
             agent=row.agent,
             remark=row.remark,
             completed_pieces=completed_pieces,
-            remaining_pieces=max(total_pieces - completed_pieces, 0),
-            is_completed=int(row.status or 0) == 1,
+            remaining_pieces=remaining_pieces,
+            is_completed=is_completed,
             rincian=[BuildUpCheckRincianOut.model_validate(item) for item in row.rincian],
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -501,10 +505,18 @@ class WarehouseService:
         """Return Build Up check headers with completion status."""
         rows = self.repository.list_build_up_check_headers(
             flight_date=flight_date,
-            unfinished_only=unfinished_only,
-            completed_only=completed_only,
         )
-        return [self._map_check_header(row) for row in rows]
+        mapped_rows = [self._map_check_header(row) for row in rows]
+        if completed_only:
+            return [row for row in mapped_rows if row.is_completed]
+        if unfinished_only:
+            return [row for row in mapped_rows if not row.is_completed]
+        return mapped_rows
+
+    def get_build_up_master_awb_summary(self) -> BuildUpMasterAwbSummaryOut:
+        """Return all-time Master AWB completion summary for dashboard cards."""
+        summary = self.repository.get_build_up_master_awb_summary()
+        return BuildUpMasterAwbSummaryOut(**summary)
 
     def create_build_up_check_header(
         self,
@@ -563,10 +575,24 @@ class WarehouseService:
         )
         return self._map_check_detail(refreshed)
 
-    def reopen_build_up_check_header(self, header_id: int) -> BuildUpCheckHeaderOut:
-        """Reopen a completed Build Up check header so users can add another master."""
+    def reopen_build_up_check_header(
+        self,
+        header_id: int,
+        payload: BuildUpCheckHeaderReopen,
+    ) -> BuildUpCheckHeaderOut:
+        """Reopen a completed Build Up check header by adding a new MAWB detail."""
         header = self.repository.get_build_up_check_header_by_id(header_id)
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
-        reopened = self.repository.reopen_build_up_check_header(header)
+
+        current_header = self._map_check_header(header)
+        if not current_header.is_completed:
+            raise ValueError("Build Up belum selesai, tidak perlu dibuka kembali.")
+
+        detail_payload = BuildUpCheckDetailCreate(**payload.model_dump())
+        self.repository.create_build_up_check_detail(
+            header_id=header_id,
+            payload=detail_payload,
+        )
+        reopened = self.repository.get_build_up_check_header_by_id(header_id)
         return self._map_check_header(reopened)

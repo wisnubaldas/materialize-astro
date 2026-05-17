@@ -1,41 +1,28 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import ScreenLayout from '../components/layout/ScreenLayout';
 import {
   Badge,
-  Card,
-  CardContent,
   Drawer,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
   DrawerPanel,
+  MetricCard,
   Separator,
   Text,
 } from '../components/ui';
+import menuItems from '../config/menu.json';
 import { useAuth } from '../contexts/AuthContext';
+import { getBuildUpMasterAwbSummary } from '../services/buildUpService';
 import { getThemeColors, theme } from '../styles/theme';
 
-const serviceItems = [
-  {
-    title: 'Build Up',
-    description: 'Checklist awal',
-    icon: 'clipboard-check-outline',
-    href: '/build-up-checklist',
-  },
-  {
-    title: 'Draft Build Up',
-    description: 'Rencana build up',
-    icon: 'airplane-settings',
-    href: '/draft-build-up',
-  },
-  { title: 'EDI', description: 'Status pesan', icon: 'send-outline' },
-  { title: 'Warehouse', description: 'Area kerja', icon: 'warehouse' },
-];
+const dashboardMenuItems = menuItems.filter((item) => item.showInDashboard);
+const drawerMenuItems = menuItems.filter((item) => item.showInDrawer);
 
 const recentItems = [
   { title: 'Build up plan', description: '3 flight aktif', colorSet: 'primary' },
@@ -156,7 +143,7 @@ function DashboardDrawer({ visible, onClose, onLogout, onNavigate }) {
         </DrawerHeader>
 
         <DrawerContent>
-          {serviceItems.map((item) => (
+          {drawerMenuItems.map((item) => (
             <Pressable
               key={item.title}
               className="w-full min-h-14 flex-row items-center rounded-sm border border-border bg-card px-3"
@@ -231,6 +218,35 @@ export default function DashboardScreen({ onOpenBuildUpChecklist, onOpenDraftBui
   const { colorScheme } = useColorScheme();
   const colors = getThemeColors(colorScheme);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [masterAwbSummary, setMasterAwbSummary] = useState({
+    unfinished: 0,
+    completed: 0,
+  });
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+
+  /**
+   * Loads all-time Master AWB Build Up summary for dashboard counters.
+   * @returns {Promise<void>} Resolves after summary is loaded.
+   */
+  async function loadMasterAwbSummary() {
+    setIsSummaryLoading(true);
+    setSummaryError('');
+
+    try {
+      const summary = await getBuildUpMasterAwbSummary();
+      setMasterAwbSummary(summary);
+    } catch (error) {
+      console.error('[dashboard] Load Master AWB summary gagal', error);
+      setSummaryError(error?.message || 'Gagal memuat ringkasan Master AWB.');
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMasterAwbSummary();
+  }, []);
 
   /**
    * Handles tapping a service card.
@@ -284,30 +300,7 @@ export default function DashboardScreen({ onOpenBuildUpChecklist, onOpenDraftBui
   }
 
   return (
-    <ScreenLayout
-      footer={
-        <View
-          className="min-h-20 flex-row items-center justify-around border-t border-border bg-card px-4 pb-3 pt-2 web:self-center web:w-full web:max-w-[520px]"
-          style={{ backgroundColor: colors.card, borderColor: colors.border }}
-        >
-          <View className="items-center">
-            <MaterialCommunityIcons name="home-outline" size={28} color={colors.primary} />
-            <Text className="text-xs font-semibold text-primary">Home</Text>
-          </View>
-          <MaterialCommunityIcons name="cube-outline" size={27} color={colors.muted} />
-          <MaterialCommunityIcons name="magnify" size={28} color={colors.muted} />
-          <MaterialCommunityIcons name="bookmark-outline" size={27} color={colors.muted} />
-          <View
-            className="h-9 w-9 items-center justify-center rounded-full bg-foreground"
-            style={{ backgroundColor: colors.foreground }}
-          >
-            <Text className="text-sm font-bold text-background">
-              {(user?.username || user?.email || 'U').charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        </View>
-      }
-    >
+    <ScreenLayout>
       <DashboardDrawer
         visible={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -348,28 +341,33 @@ export default function DashboardScreen({ onOpenBuildUpChecklist, onOpenDraftBui
       </View>
 
       <SearchField />
-
       <View className="mt-6 flex-row gap-3">
-        <Card className="flex-1 border-transparent bg-pink">
-          <CardContent className="p-4">
-            <Text className="text-xs font-semibold uppercase text-indigo-100">MAWB Build Up</Text>
-            <Text className="mt-2 text-3xl font-black text-white">18</Text>
-            <Text className="mt-1 text-xs text-indigo-100">Perlu diproses</Text>
-          </CardContent>
-        </Card>
-        <Card className="flex-1 border-transparent bg-lime">
-          <CardContent className="p-4">
-            <Text className="text-xs font-semibold uppercase text-indigo-50">Manifest</Text>
-            <Text className="mt-2 text-3xl font-black text-indigo-50">96</Text>
-            <Text className="mt-1 text-xs text-indigo-50">Shipment hari ini</Text>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Master Belum Selesai"
+          value={masterAwbSummary.unfinished}
+          caption="MAWB perlu rincian"
+          variant="blue"
+          loading={isSummaryLoading}
+        />
+        <MetricCard
+          title="Master Selesai"
+          value={masterAwbSummary.completed}
+          caption="MAWB selesai total"
+          variant="violet"
+          loading={isSummaryLoading}
+        />
       </View>
+
+      {summaryError ? (
+        <View className="mt-3 rounded-sm border border-destructive bg-red-50 p-3">
+          <Text variant="error">{summaryError}</Text>
+        </View>
+      ) : null}
 
       <View className="mt-8">
         <Text className="mb-4 text-xl font-extrabold text-foreground">Services</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {serviceItems.map((item) => (
+          {dashboardMenuItems.map((item) => (
             <ServiceCard key={item.title} item={item} onPress={() => handleServicePress(item)} />
           ))}
         </ScrollView>
