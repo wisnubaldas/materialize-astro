@@ -3,15 +3,15 @@ import { Redirect, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { Spinner } from '../src/components/ui';
-import BuildUpChecklistScreen from '../src/screens/BuildUpChecklistScreen';
 import { useAuth } from '../src/contexts/AuthContext';
+import CompletedBuildUpScreen from '../src/screens/CompletedBuildUpScreen';
 import { useThemeColors } from '../src/styles/theme';
 
 /**
- * Renders the Build Up Checklist route for authenticated users.
- * @returns {React.ReactElement} Build Up Checklist route content.
+ * Renders the completed Build Up route for authenticated users.
+ * @returns {React.ReactElement} Completed Build Up route content.
  */
-export default function BuildUpChecklistRoute() {
+export default function CompletedBuildUpRoute() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const colors = useThemeColors();
@@ -31,7 +31,10 @@ export default function BuildUpChecklistRoute() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background" style={{ flex: 1, backgroundColor: colors.background }}>
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={{ flex: 1, backgroundColor: colors.background }}
+      >
         <Spinner />
         <Text className="mt-4 text-sm text-muted-foreground">Memuat MAU APP...</Text>
       </View>
@@ -43,9 +46,9 @@ export default function BuildUpChecklistRoute() {
   }
 
   return (
-    <BuildUpChecklistScreen
+    <CompletedBuildUpScreen
       onBack={handleBack}
-      onOpenCompleted={() => router.push('/completed-build-up')}
+      onReopened={() => router.replace('/draft-build-up')}
     />
   );
 }

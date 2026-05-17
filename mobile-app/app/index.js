@@ -29,5 +29,10 @@ export default function IndexRoute() {
     return <Redirect href="/login" />;
   }
 
-  return <DashboardScreen onOpenBuildUpChecklist={() => router.push('/build-up-checklist')} />;
+  return (
+    <DashboardScreen
+      onOpenBuildUpChecklist={() => router.push('/build-up-checklist')}
+      onOpenDraftBuildUp={() => router.push('/draft-build-up')}
+    />
+  );
 }

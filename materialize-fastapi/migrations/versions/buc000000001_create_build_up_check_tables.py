@@ -87,6 +87,7 @@ def upgrade() -> None:
             ),
             sa.Column("mawb", sa.String(length=100), nullable=True),
             sa.Column("total_pieces", sa.Integer(), nullable=True),
+            sa.Column("status", sa.Integer(), nullable=False, server_default=sa.text("0")),
             sa.Column("agent", sa.String(length=100), nullable=True),
             sa.Column("remark", sa.Text(), nullable=True),
             sa.Column(
@@ -111,6 +112,7 @@ def upgrade() -> None:
             unique=False,
         )
         op.create_index("ix_build_up_check_detail_mawb", DETAIL_TABLE, ["mawb"], unique=False)
+        op.create_index("ix_build_up_check_detail_status", DETAIL_TABLE, ["status"], unique=False)
 
     if not _table_exists(RINCIAN_TABLE):
         op.create_table(
@@ -153,6 +155,7 @@ def downgrade() -> None:
         op.drop_table(RINCIAN_TABLE)
 
     _drop_index_if_exists("ix_build_up_check_detail_mawb", DETAIL_TABLE)
+    _drop_index_if_exists("ix_build_up_check_detail_status", DETAIL_TABLE)
     _drop_index_if_exists("ix_build_up_check_detail_header_id", DETAIL_TABLE)
     if _table_exists(DETAIL_TABLE):
         op.drop_table(DETAIL_TABLE)

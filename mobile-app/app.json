@@ -24,6 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.mauapp.mobile",
+      "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"

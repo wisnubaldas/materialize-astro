@@ -11,12 +11,14 @@ class BuildUpCheckHeader(BaseDB1):
     __tablename__ = "build_up_check_header"
     __table_args__ = (
         Index("ix_build_up_check_header_uld", "uld"),
+        Index("ix_build_up_check_header_flight_no", "flight_no"),
         Index("ix_build_up_check_header_flight_date", "flight_date"),
     )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     uld = Column(String(100), nullable=False)
     airlines = Column(String(50), nullable=True)
+    flight_no = Column(String(50), nullable=True)
     dest = Column(String(50), nullable=True)
     flight_date = Column(Date, nullable=True)
     staff = Column(String(100), nullable=True)

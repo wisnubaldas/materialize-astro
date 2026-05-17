@@ -31,6 +31,7 @@ class BuildUpCheckDetail(BaseDB1):
     )
     mawb = Column(String(100), nullable=True)
     total_pieces = Column(Integer, nullable=True)
+    status = Column(Integer, nullable=False, server_default="0")
     agent = Column(String(100), nullable=True)
     remark = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)

@@ -20,6 +20,9 @@ export const env = {
   apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000',
   authLoginPath: process.env.EXPO_PUBLIC_AUTH_LOGIN_PATH || '/auth/login',
   authProfilePath: process.env.EXPO_PUBLIC_AUTH_PROFILE_PATH || '/auth/me',
+  buildUpSubmitPath: process.env.EXPO_PUBLIC_BUILD_UP_SUBMIT_PATH || '/warehouse/submit-build-up-manifest',
+  buildUpCheckHeadersPath:
+    process.env.EXPO_PUBLIC_BUILD_UP_CHECK_HEADERS_PATH || '/warehouse/build-up-check-headers',
   apiTimeoutMs: parsePositiveNumber(process.env.EXPO_PUBLIC_API_TIMEOUT_MS, DEFAULT_API_TIMEOUT_MS),
   useMockAuth: String(process.env.EXPO_PUBLIC_USE_MOCK_AUTH || 'false') === 'true',
 };

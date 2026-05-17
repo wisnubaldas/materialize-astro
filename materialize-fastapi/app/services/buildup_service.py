@@ -279,6 +279,11 @@ def _compose_detail_remark(
 
 class BuildupService:
     @staticmethod
+    def submit_manifest_payload(payload: dict, db: Session) -> dict:
+        """Submit manifest Build Up dari payload JSON client API/mobile."""
+        return BuildupService.submit_manifest(payload_json=json.dumps(payload), db=db)
+
+    @staticmethod
     def _build_manifest_payload(flights: list[dict]) -> dict | None:
         if not flights:
             return None

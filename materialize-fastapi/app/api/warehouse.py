@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.mysql import get_db1_w
 from app.dependencies.warehouse_deps import (
     get_build_up_draft_service,
+    get_build_up_check_service,
     get_warehouse_manifest_service,
     get_warehouse_manifest_service_w,
     get_warehouse_service,
@@ -16,11 +17,22 @@ from app.schemas.build_up_draft_schema import (
     BuildUpDraftOut,
     BuildUpDraftUpdate,
 )
+from app.schemas.build_up_check_schema import (
+    BuildUpCheckDetailCreate,
+    BuildUpCheckDetailOut,
+    BuildUpCheckHeaderCreate,
+    BuildUpCheckHeaderOut,
+    BuildUpCheckRincianCreate,
+)
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.export_buildup_schema import ExportBuildupOut
 from app.schemas.exp_manifest_flight_schema import ExpManifestFlightOut
 from app.schemas.ffm_preview_schema import FfmPreviewOut
+from app.schemas.build_up_manifest_schema import (
+    BuildUpManifestSubmitOut,
+    BuildUpManifestSubmitRequest,
+)
 from app.schemas.warehouse_masterwaybill_schema import WarehouseMasterWaybillRequest
 from app.services.buildup_service import BuildupService
 from app.services.warehouse_service import WarehouseService
@@ -137,6 +149,103 @@ def delete_build_up_draft(
 
 
 @router.get(
+    "/build-up-check-headers",
+    summary="Daftar header Build Up Check",
+    response_model=list[BuildUpCheckHeaderOut],
+)
+def list_build_up_check_headers(
+    flight_date: str | None = None,
+    unfinished_only: bool = False,
+    completed_only: bool = False,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    return service.list_build_up_check_headers(
+        flight_date=flight_date,
+        unfinished_only=unfinished_only,
+        completed_only=completed_only,
+    )
+
+
+@router.post(
+    "/build-up-check-headers",
+    summary="Simpan header Build Up Check",
+    response_model=BuildUpCheckHeaderOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_build_up_check_header(
+    payload: BuildUpCheckHeaderCreate,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    return service.create_build_up_check_header(payload)
+
+
+@router.post(
+    "/build-up-check-headers/{header_id}/reopen",
+    summary="Buka kembali header Build Up Check yang sudah selesai",
+    response_model=BuildUpCheckHeaderOut,
+)
+def reopen_build_up_check_header(
+    header_id: int,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    try:
+        return service.reopen_build_up_check_header(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get(
+    "/build-up-check-headers/{header_id}/details",
+    summary="Daftar detail Build Up Check",
+    response_model=list[BuildUpCheckDetailOut],
+)
+def list_build_up_check_details(
+    header_id: int,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    try:
+        return service.list_build_up_check_details(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-check-headers/{header_id}/details",
+    summary="Simpan detail Build Up Check",
+    response_model=BuildUpCheckDetailOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_build_up_check_detail(
+    header_id: int,
+    payload: BuildUpCheckDetailCreate,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    try:
+        return service.create_build_up_check_detail(header_id=header_id, payload=payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-check-details/{detail_id}/rincian",
+    summary="Simpan rincian Build Up Check",
+    response_model=BuildUpCheckDetailOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_build_up_check_rincian(
+    detail_id: int,
+    payload: BuildUpCheckRincianCreate,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    try:
+        return service.create_build_up_check_rincian(detail_id=detail_id, payload=payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.get(
     "/manifest-flight/{header_id}/ffm-preview",
     summary="Generate preview FFM Cargo-IMP dari data build_up_header + build_up_detail",
     response_model=FfmPreviewOut,
@@ -157,6 +266,19 @@ def submit_fedex_manifest(
     db: Session = Depends(get_db1_w),
 ):
     return BuildupService.submit_manifest(payload_json=payload_json, db=db)
+
+
+@router.post(
+    "/submit-build-up-manifest",
+    summary="Submit manifest Build Up dari payload JSON",
+    response_model=BuildUpManifestSubmitOut,
+)
+def submit_build_up_manifest(
+    payload: BuildUpManifestSubmitRequest,
+    db: Session = Depends(get_db1_w),
+):
+    """Submit manifest Build Up via JSON untuk client mobile dan API modern."""
+    return BuildupService.submit_manifest_payload(payload=payload.model_dump(mode="json"), db=db)
 
 
 @router.post(

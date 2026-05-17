@@ -7,6 +7,14 @@ from html import escape
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.repositories.warehouse_repositrory import WarehouseRepository
+from app.schemas.build_up_check_schema import (
+    BuildUpCheckDetailCreate,
+    BuildUpCheckDetailOut,
+    BuildUpCheckHeaderCreate,
+    BuildUpCheckHeaderOut,
+    BuildUpCheckRincianCreate,
+    BuildUpCheckRincianOut,
+)
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.build_up_draft_schema import (
     BuildUpDraftCreate,
@@ -60,6 +68,16 @@ def _format_mawb(value: object) -> str:
     prefix = cleaned[:3]
     serial = cleaned[3:]
     return f"{prefix}-{serial}".upper()
+
+
+def _sum_rincian_pieces(items: list) -> int:
+    total = 0
+    for item in items:
+        try:
+            total += int(item.pieces or 0)
+        except (TypeError, ValueError):
+            continue
+    return total
 
 
 def _format_number(
@@ -431,3 +449,124 @@ class WarehouseService:
             raise ValueError("MasterAWB wajib diisi.")
 
         return self.repository.get_masterwaybill_by_awbs(cleaned)
+
+    @staticmethod
+    def _map_check_detail(row) -> BuildUpCheckDetailOut:
+        completed_pieces = _sum_rincian_pieces(list(row.rincian or []))
+        total_pieces = int(row.total_pieces or 0)
+        return BuildUpCheckDetailOut(
+            id=row.id,
+            header_id=row.header_id,
+            mawb=row.mawb,
+            total_pieces=row.total_pieces,
+            status=int(row.status or 0),
+            agent=row.agent,
+            remark=row.remark,
+            completed_pieces=completed_pieces,
+            remaining_pieces=max(total_pieces - completed_pieces, 0),
+            is_completed=int(row.status or 0) == 1,
+            rincian=[BuildUpCheckRincianOut.model_validate(item) for item in row.rincian],
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    @classmethod
+    def _map_check_header(cls, row) -> BuildUpCheckHeaderOut:
+        details = list(row.details or [])
+        mapped_details = [cls._map_check_detail(detail) for detail in details]
+        total_pieces = sum(int(detail.total_pieces or 0) for detail in mapped_details)
+        completed_pieces = sum(detail.completed_pieces for detail in mapped_details)
+        return BuildUpCheckHeaderOut(
+            id=row.id,
+            uld=row.uld,
+            airlines=row.airlines,
+            flight_no=row.flight_no,
+            dest=row.dest,
+            flight_date=row.flight_date,
+            staff=row.staff,
+            supervisor=row.supervisor,
+            total_pieces=total_pieces,
+            completed_pieces=completed_pieces,
+            is_completed=bool(details) and total_pieces > 0 and completed_pieces >= total_pieces,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    def list_build_up_check_headers(
+        self,
+        flight_date: str | None = None,
+        unfinished_only: bool = False,
+        completed_only: bool = False,
+    ) -> list[BuildUpCheckHeaderOut]:
+        """Return Build Up check headers with completion status."""
+        rows = self.repository.list_build_up_check_headers(
+            flight_date=flight_date,
+            unfinished_only=unfinished_only,
+            completed_only=completed_only,
+        )
+        return [self._map_check_header(row) for row in rows]
+
+    def create_build_up_check_header(
+        self,
+        payload: BuildUpCheckHeaderCreate,
+    ) -> BuildUpCheckHeaderOut:
+        """Create one Build Up check header."""
+        row = self.repository.create_build_up_check_header(payload)
+        return self._map_check_header(row)
+
+    def list_build_up_check_details(self, header_id: int) -> list[BuildUpCheckDetailOut]:
+        """Return Build Up check details for one header."""
+        header = self.repository.get_build_up_check_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+        rows = self.repository.list_build_up_check_details(header_id)
+        return [self._map_check_detail(row) for row in rows]
+
+    def create_build_up_check_detail(
+        self,
+        header_id: int,
+        payload: BuildUpCheckDetailCreate,
+    ) -> BuildUpCheckDetailOut:
+        """Create detail MAWB for one Build Up check header."""
+        header = self.repository.get_build_up_check_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+        row = self.repository.create_build_up_check_detail(header_id=header_id, payload=payload)
+        return self._map_check_detail(row)
+
+    def create_build_up_check_rincian(
+        self,
+        detail_id: int,
+        payload: BuildUpCheckRincianCreate,
+    ) -> BuildUpCheckDetailOut:
+        """Add rincian and prevent pieces from exceeding detail total."""
+        detail = self.repository.get_build_up_check_detail_by_id(detail_id)
+        if not detail:
+            raise LookupError("Detail build up check tidak ditemukan")
+
+        completed_pieces = _sum_rincian_pieces(list(detail.rincian or []))
+        total_pieces = int(detail.total_pieces or 0)
+        requested_pieces = int(payload.pieces)
+        if completed_pieces + requested_pieces > total_pieces:
+            raise ValueError(
+                "Total pieces rincian melebihi total_pieces detail "
+                f"({completed_pieces + requested_pieces}/{total_pieces})."
+            )
+
+        self.repository.create_build_up_check_rincian(detail_id=detail_id, payload=payload)
+        refreshed = self.repository.get_build_up_check_detail_by_id(detail_id)
+        new_completed_pieces = _sum_rincian_pieces(list(refreshed.rincian or []))
+        new_status = 1 if total_pieces > 0 and new_completed_pieces >= total_pieces else 0
+        refreshed = self.repository.update_build_up_check_detail_status(
+            detail=refreshed,
+            status=new_status,
+        )
+        return self._map_check_detail(refreshed)
+
+    def reopen_build_up_check_header(self, header_id: int) -> BuildUpCheckHeaderOut:
+        """Reopen a completed Build Up check header so users can add another master."""
+        header = self.repository.get_build_up_check_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+        reopened = self.repository.reopen_build_up_check_header(header)
+        return self._map_check_header(reopened)

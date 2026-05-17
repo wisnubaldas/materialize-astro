@@ -27,7 +27,12 @@ const serviceItems = [
     icon: 'clipboard-check-outline',
     href: '/build-up-checklist',
   },
-  { title: 'Draft Build Up', description: 'Rencana build up', icon: 'airplane-settings' },
+  {
+    title: 'Draft Build Up',
+    description: 'Rencana build up',
+    icon: 'airplane-settings',
+    href: '/draft-build-up',
+  },
   { title: 'EDI', description: 'Status pesan', icon: 'send-outline' },
   { title: 'Warehouse', description: 'Area kerja', icon: 'warehouse' },
 ];
@@ -218,10 +223,10 @@ function DashboardDrawer({ visible, onClose, onLogout, onNavigate }) {
 
 /**
  * Renders the authenticated dashboard screen.
- * @param {{ onOpenBuildUpChecklist?: Function }} props - Navigation callbacks.
+ * @param {{ onOpenBuildUpChecklist?: Function, onOpenDraftBuildUp?: Function }} props - Navigation callbacks.
  * @returns {React.ReactElement} Dashboard screen.
  */
-export default function DashboardScreen({ onOpenBuildUpChecklist }) {
+export default function DashboardScreen({ onOpenBuildUpChecklist, onOpenDraftBuildUp }) {
   const { user, logout } = useAuth();
   const { colorScheme } = useColorScheme();
   const colors = getThemeColors(colorScheme);
@@ -237,6 +242,10 @@ export default function DashboardScreen({ onOpenBuildUpChecklist }) {
       onOpenBuildUpChecklist();
       return;
     }
+
+    if (item.href === '/draft-build-up' && onOpenDraftBuildUp) {
+      onOpenDraftBuildUp();
+    }
   }
 
   /**
@@ -249,6 +258,11 @@ export default function DashboardScreen({ onOpenBuildUpChecklist }) {
 
     if (href === '/build-up-checklist' && onOpenBuildUpChecklist) {
       onOpenBuildUpChecklist();
+      return;
+    }
+
+    if (href === '/draft-build-up' && onOpenDraftBuildUp) {
+      onOpenDraftBuildUp();
     }
   }
 

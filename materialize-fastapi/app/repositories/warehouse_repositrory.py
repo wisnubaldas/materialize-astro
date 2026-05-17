@@ -5,11 +5,19 @@ from sqlalchemy import bindparam, text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
+from app.models.BaseDB1.build_up_check_detail import BuildUpCheckDetail
+from app.models.BaseDB1.build_up_check_header import BuildUpCheckHeader
+from app.models.BaseDB1.build_up_check_rincian import BuildUpCheckRincian
 from app.models.BaseDB1.build_up_dead_stock import BuildUpDeadStock
 from app.models.BaseDB1.build_up_detail import BuildUpDetail
 from app.models.BaseDB1.build_up_draft import BuildUpDraft
 from app.models.BaseDB1.build_up_header import BuildUpHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
+from app.schemas.build_up_check_schema import (
+    BuildUpCheckDetailCreate,
+    BuildUpCheckHeaderCreate,
+    BuildUpCheckRincianCreate,
+)
 from app.schemas.build_up_draft_schema import BuildUpDraftCreate, BuildUpDraftUpdate
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
@@ -350,3 +358,124 @@ class WarehouseRepository:
         dead_stock_by_mawb = self._fetch_dead_stock_by_mawb(unique_awbs)
         by_mawb = self._map_rows_by_mawb(rows, dead_stock_by_mawb)
         return self._order_rows_by_awb(unique_awbs, by_mawb)
+
+    def list_build_up_check_headers(
+        self,
+        flight_date: str | None = None,
+        unfinished_only: bool = False,
+        completed_only: bool = False,
+    ) -> list[BuildUpCheckHeader]:
+        """Return Build Up check headers ordered newest first."""
+        query = self.db.query(BuildUpCheckHeader)
+        if flight_date:
+            query = query.filter(BuildUpCheckHeader.flight_date == flight_date)
+        if completed_only:
+            query = query.filter(
+                BuildUpCheckHeader.details.any(),
+                ~BuildUpCheckHeader.details.any(BuildUpCheckDetail.status == 0),
+            )
+        elif unfinished_only:
+            query = query.filter(
+                (~BuildUpCheckHeader.details.any())
+                | BuildUpCheckHeader.details.any(BuildUpCheckDetail.status == 0)
+            )
+        return query.order_by(BuildUpCheckHeader.id.desc()).all()
+
+    def get_build_up_check_header_by_id(self, header_id: int) -> BuildUpCheckHeader | None:
+        """Return one Build Up check header by id."""
+        return (
+            self.db.query(BuildUpCheckHeader)
+            .filter(BuildUpCheckHeader.id == header_id)
+            .first()
+        )
+
+    def create_build_up_check_header(
+        self,
+        payload: BuildUpCheckHeaderCreate,
+    ) -> BuildUpCheckHeader:
+        """Create a Build Up check header."""
+        header = BuildUpCheckHeader(**payload.model_dump())
+        self.db.add(header)
+        try:
+            self.db.commit()
+            self.db.refresh(header)
+        except Exception:
+            self.db.rollback()
+            raise
+        return header
+
+    def list_build_up_check_details(self, header_id: int) -> list[BuildUpCheckDetail]:
+        """Return details for a Build Up check header."""
+        return (
+            self.db.query(BuildUpCheckDetail)
+            .filter(BuildUpCheckDetail.header_id == header_id)
+            .order_by(BuildUpCheckDetail.id.asc())
+            .all()
+        )
+
+    def get_build_up_check_detail_by_id(self, detail_id: int) -> BuildUpCheckDetail | None:
+        """Return one Build Up check detail."""
+        return (
+            self.db.query(BuildUpCheckDetail)
+            .filter(BuildUpCheckDetail.id == detail_id)
+            .first()
+        )
+
+    def create_build_up_check_detail(
+        self,
+        header_id: int,
+        payload: BuildUpCheckDetailCreate,
+    ) -> BuildUpCheckDetail:
+        """Create a MAWB detail for a Build Up check header."""
+        detail = BuildUpCheckDetail(header_id=header_id, **payload.model_dump())
+        self.db.add(detail)
+        try:
+            self.db.commit()
+            self.db.refresh(detail)
+        except Exception:
+            self.db.rollback()
+            raise
+        return detail
+
+    def create_build_up_check_rincian(
+        self,
+        detail_id: int,
+        payload: BuildUpCheckRincianCreate,
+    ) -> BuildUpCheckRincian:
+        """Create rincian pieces for a Build Up check detail."""
+        rincian = BuildUpCheckRincian(check_detail_id=detail_id, **payload.model_dump())
+        self.db.add(rincian)
+        try:
+            self.db.commit()
+            self.db.refresh(rincian)
+        except Exception:
+            self.db.rollback()
+            raise
+        return rincian
+
+    def update_build_up_check_detail_status(
+        self,
+        detail: BuildUpCheckDetail,
+        status: int,
+    ) -> BuildUpCheckDetail:
+        """Update Build Up check detail completion status."""
+        detail.status = status
+        try:
+            self.db.commit()
+            self.db.refresh(detail)
+        except Exception:
+            self.db.rollback()
+            raise
+        return detail
+
+    def reopen_build_up_check_header(self, header: BuildUpCheckHeader) -> BuildUpCheckHeader:
+        """Set every detail under a header back to unfinished status."""
+        for detail in header.details:
+            detail.status = 0
+        try:
+            self.db.commit()
+            self.db.refresh(header)
+        except Exception:
+            self.db.rollback()
+            raise
+        return header

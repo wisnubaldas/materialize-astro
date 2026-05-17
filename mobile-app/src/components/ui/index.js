@@ -9,6 +9,7 @@ export {
   CardHeader,
   CardTitle,
 } from './card';
+export { DatePicker } from './date-picker';
 export { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerPanel } from './drawer';
 export { Input } from './input';
 export { QrScanner } from './qr-scanner';

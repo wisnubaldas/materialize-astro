@@ -1,0 +1,101 @@
+import { env } from '../config/env';
+import { getRequest, postRequest } from './apiService';
+
+/**
+ * Builds a query string from simple filter values.
+ * @param {object} params - Query parameters.
+ * @returns {string} URL query string including `?` when needed.
+ */
+function buildQuery(params) {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      searchParams.set(key, value);
+    }
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
+}
+
+/**
+ * Creates one Build Up Check header.
+ * @param {object} formData - Header form values.
+ * @returns {Promise<object|null>} Created header from backend.
+ */
+export function createBuildUpCheckHeader(formData) {
+  return postRequest(env.buildUpCheckHeadersPath, formData, { authenticated: true });
+}
+
+/**
+ * Lists Build Up Check headers, optionally filtered by flight date.
+ * @param {{ flightDate?: string }} filters - Header filters.
+ * @returns {Promise<Array>} Header list.
+ */
+export async function listBuildUpCheckHeaders(filters = {}) {
+  const query = buildQuery({
+    flight_date: filters.flightDate,
+    completed_only: filters.completedOnly ? 'true' : '',
+    unfinished_only: filters.unfinishedOnly === false ? '' : 'true',
+  });
+  const response = await getRequest(`${env.buildUpCheckHeadersPath}${query}`, {
+    authenticated: true,
+  });
+  return Array.isArray(response) ? response : [];
+}
+
+/**
+ * Lists completed Build Up Check headers.
+ * @returns {Promise<Array>} Completed header list.
+ */
+export function listCompletedBuildUpCheckHeaders() {
+  return listBuildUpCheckHeaders({ completedOnly: true, unfinishedOnly: false });
+}
+
+/**
+ * Reopens a completed Build Up Check header.
+ * @param {number} headerId - Header id.
+ * @returns {Promise<object|null>} Reopened header.
+ */
+export function reopenBuildUpCheckHeader(headerId) {
+  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/reopen`, {}, {
+    authenticated: true,
+  });
+}
+
+/**
+ * Lists MAWB details for one Build Up Check header.
+ * @param {number} headerId - Header id.
+ * @returns {Promise<Array>} Detail list.
+ */
+export async function listBuildUpCheckDetails(headerId) {
+  const response = await getRequest(`${env.buildUpCheckHeadersPath}/${headerId}/details`, {
+    authenticated: true,
+  });
+  return Array.isArray(response) ? response : [];
+}
+
+/**
+ * Creates one MAWB detail under a Build Up Check header.
+ * @param {number} headerId - Header id.
+ * @param {object} formData - Detail form values.
+ * @returns {Promise<object|null>} Created detail.
+ */
+export function createBuildUpCheckDetail(headerId, formData) {
+  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/details`, formData, {
+    authenticated: true,
+  });
+}
+
+/**
+ * Adds one rincian row to a Build Up Check detail.
+ * @param {number} detailId - Detail id.
+ * @param {object} formData - Rincian form values.
+ * @returns {Promise<object|null>} Updated detail with progress.
+ */
+export function createBuildUpCheckRincian(detailId, formData) {
+  return postRequest(`/warehouse/build-up-check-details/${detailId}/rincian`, formData, {
+    authenticated: true,
+  });
+}
