@@ -1,6 +1,7 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import ScreenHeader from '../components/layout/ScreenHeader';
 import ScreenLayout from '../components/layout/ScreenLayout';
@@ -13,15 +14,34 @@ const initialForm = {
   grossWeight: '',
 };
 
-const fields = [
+const fieldsHeader = [
   {
-    key: 'mawbNumber',
-    label: 'MAWB Number',
-    placeholder: 'Enter MAWB number',
-    icon: 'barcode-scan',
-    keyboardType: 'default',
-    scannerTitle: 'Scan AWB/MAWB Barcode',
-    scannerDescription: 'Scan barcode pada dokumen AWB/MAWB untuk mengisi nomor otomatis.',
+    key: 'airlines',
+    label: 'Airlines',
+    placeholder: 'Masukan Airlines',
+    icon: 'airlines',
+    keyboardType: 'text',
+  },
+  {
+    key: 'flightNumber',
+    label: 'Flight Number',
+    placeholder: 'Masukan Nomor Penerbangan',
+    icon: 'flight-takeoff',
+    keyboardType: 'text',
+  },
+  {
+    key: 'flightDate',
+    label: 'Flight Date',
+    placeholder: 'Masukan Tanggal Penerbangan (YYYY-MM-DD)',
+    icon: 'calendar-month',
+    keyboardType: 'date',
+  },
+  {
+    key: 'destination',
+    label: 'Destination',
+    placeholder: 'Enter Destination Airport',
+    icon: 'alt-route',
+    keyboardType: 'text',
   },
   {
     key: 'uldNumber',
@@ -32,12 +52,17 @@ const fields = [
     scannerTitle: 'Scan ULD Barcode',
     scannerDescription: 'Scan barcode pada label ULD untuk mengisi nomor ULD otomatis.',
   },
+];
+
+const fieldsDetail = [
   {
-    key: 'grossWeight',
-    label: 'Gross Weight',
-    placeholder: 'Enter gross weight',
-    icon: 'weight-kilogram',
-    keyboardType: 'numeric',
+    key: 'mawbNumber',
+    label: 'MAWB Number',
+    placeholder: 'Enter MAWB number',
+    icon: 'barcode-scan',
+    keyboardType: 'default',
+    scannerTitle: 'Scan AWB/MAWB Barcode',
+    scannerDescription: 'Scan barcode pada dokumen AWB/MAWB untuk mengisi nomor otomatis.',
   },
 ];
 
@@ -54,7 +79,7 @@ function ChecklistField({ field, value, onChangeText, onScanPress }) {
     <View className="gap-3">
       <Text variant="label">{field.label}</Text>
       <View
-        className="min-h-[58px] flex-row items-center rounded-sm border border-border bg-card px-4"
+        className="min-h-14.5 flex-row items-center rounded-sm border border-border bg-card px-4"
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
       >
         <Input
@@ -71,7 +96,7 @@ function ChecklistField({ field, value, onChangeText, onScanPress }) {
             <Text className="ml-2 text-sm font-semibold">Scan</Text>
           </Button>
         ) : (
-          <MaterialCommunityIcons name={field.icon} size={24} color={colors.muted} />
+          <MaterialIcons name={field.icon} size={24} color={colors.muted} />
         )}
       </View>
     </View>
@@ -139,28 +164,25 @@ export default function BuildUpChecklistScreen({ onBack }) {
       keyboardAware
       header={<ScreenHeader onBack={handleBack} onClose={handleBack} />}
       footer={
-        <View className="px-5 pb-6 pt-3 web:self-center web:w-full web:max-w-[520px]">
-          <Button variant="outline" size="lg">
+        <View className="px-5 pb-6 pt-3 web:self-center web:w-full web:max-w-130">
+          <Button variant="indigo" size="lg" className="text-white">
             <Text>Next</Text>
           </Button>
         </View>
       }
     >
-      <View>
-        <Text variant="label" className="uppercase text-primary">
-          Build Up
-        </Text>
+      <View className="bg-blue-200/70 px-5 py-4 web:self-center web:w-full web:max-w-130 rounded-sm">
         <Text variant="title" className="mt-1">
           Checklist
         </Text>
         <Text variant="subtitle" className="mt-2">
-          Isi data awal proses build up warehouse sebelum lanjut ke validasi backend.
+          Isi data awal proses build up warehouse.
         </Text>
       </View>
 
       <Card className="mt-8 rounded-sm bg-card/70">
         <CardContent className="gap-5 p-4">
-          {fields.map((field) => (
+          {fieldsHeader.map((field) => (
             <ChecklistField
               key={field.key}
               field={field}

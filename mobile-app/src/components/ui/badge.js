@@ -4,7 +4,7 @@ import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
-import { useThemeColors } from '../../styles/theme';
+import { resolveBackgroundColor, resolveBorderColor, useThemeColors } from '../../styles/theme';
 
 const badgeVariants = cva('self-start rounded-sm border px-3 py-1', {
   variants: {
@@ -59,12 +59,17 @@ export function Badge({ variant = 'default', className = '', textClassName = '',
       borderColor: colors.border,
     },
   };
-  const themeStyle = variantStyles[variant] || variantStyles.default;
+  const mergedClassName = cn(badgeVariants({ variant }), className);
+  const baseStyle = variantStyles[variant] || variantStyles.default;
+  const themeStyle = {
+    backgroundColor: resolveBackgroundColor(mergedClassName, colors, baseStyle.backgroundColor),
+    borderColor: resolveBorderColor(mergedClassName, colors, baseStyle.borderColor),
+  };
   const callerStyle = props.style;
 
   return (
     <TextClassContext.Provider value={cn(badgeTextVariants({ variant }), textClassName)}>
-      <View className={cn(badgeVariants({ variant }), className)} {...props} style={[themeStyle, callerStyle]} />
+      <View className={mergedClassName} {...props} style={[themeStyle, callerStyle]} />
     </TextClassContext.Provider>
   );
 }

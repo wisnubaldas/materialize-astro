@@ -1,10 +1,10 @@
+import { cva } from 'class-variance-authority';
 import React from 'react';
 import { Platform, Pressable } from 'react-native';
-import { cva } from 'class-variance-authority';
 
+import { resolveBackgroundColor, resolveBorderColor, useThemeColors } from '../../styles/theme';
 import { cn } from './utils/cn';
 import { TextClassContext } from './utils/text-context';
-import { resolveBackgroundColor, useThemeColors } from '../../styles/theme';
 
 const buttonVariants = cva('group flex-row items-center justify-center rounded-sm', {
   variants: {
@@ -15,6 +15,10 @@ const buttonVariants = cva('group flex-row items-center justify-center rounded-s
       ghost: 'bg-transparent',
       destructive: 'bg-destructive',
       link: 'bg-transparent px-0',
+      lime: 'bg-lime',
+      pink: 'bg-pink',
+      slate: 'bg-slate',
+      indigo: 'bg-indigo',
     },
     size: {
       default: 'min-h-12 px-5 py-3',
@@ -38,6 +42,7 @@ const buttonTextVariants = cva('text-base font-semibold', {
       ghost: 'text-foreground',
       destructive: 'text-destructive-foreground',
       link: 'text-primary underline',
+      indigo: 'text-white',
     },
     size: {
       default: 'text-base',
@@ -88,10 +93,12 @@ function getButtonColorStyle(variant, className, colors) {
   };
   const baseStyle = variantStyles[variant] || variantStyles.default;
   const backgroundColor = resolveBackgroundColor(className, colors, baseStyle.backgroundColor);
+  const borderColor = resolveBorderColor(className, colors, baseStyle.borderColor);
 
   return {
     ...baseStyle,
     backgroundColor,
+    borderColor,
   };
 }
 
@@ -142,7 +149,11 @@ export function Button({
   function resolveStyle(state) {
     const callerStyle = typeof style === 'function' ? style(state) : style;
 
-    return [buttonColorStyle, Platform.OS === 'ios' && state.pressed ? { opacity: 0.75 } : null, callerStyle];
+    return [
+      buttonColorStyle,
+      Platform.OS === 'ios' && state.pressed ? { opacity: 0.75 } : null,
+      callerStyle,
+    ];
   }
 
   return (

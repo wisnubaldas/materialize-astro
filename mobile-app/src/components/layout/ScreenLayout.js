@@ -53,13 +53,16 @@ export default function ScreenLayout({
       };
 
   const content = (
-    <View className={`w-full web:max-w-[520px] ${contentClassName}`} style={layoutStyles.content}>
+    <View className={`w-full web:max-w-130 ${contentClassName}`} style={layoutStyles.content}>
       {children}
     </View>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background" style={[layoutStyles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      className="flex-1 bg-background"
+      style={[layoutStyles.safeArea, { backgroundColor: colors.background }]}
+    >
       <Wrapper {...wrapperProps}>
         {header}
         {scroll ? (

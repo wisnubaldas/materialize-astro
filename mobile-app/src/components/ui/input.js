@@ -3,7 +3,7 @@ import { Platform, TextInput } from 'react-native';
 import { cva } from 'class-variance-authority';
 
 import { cn } from './utils/cn';
-import { useThemeColors } from '../../styles/theme';
+import { resolveBackgroundColor, resolveBorderColor, resolveTextColor, useThemeColors } from '../../styles/theme';
 
 const inputVariants = cva('min-h-[54px] rounded-sm border bg-card px-4 text-base text-foreground', {
   variants: {
@@ -34,16 +34,17 @@ export function Input({
   ...props
 }) {
   const colors = useThemeColors();
-  const borderColor = variant === 'error' ? colors.danger : colors.border;
+  const mergedClassName = cn(inputVariants({ variant }), className);
+  const fallbackBorderColor = variant === 'error' ? colors.danger : colors.border;
   const themeStyle = {
-    backgroundColor: colors.card,
-    borderColor,
-    color: colors.foreground,
+    backgroundColor: resolveBackgroundColor(mergedClassName, colors, colors.card),
+    borderColor: resolveBorderColor(mergedClassName, colors, fallbackBorderColor),
+    color: resolveTextColor(mergedClassName, colors, colors.foreground),
   };
 
   return (
     <TextInput
-      className={cn(inputVariants({ variant }), className)}
+      className={mergedClassName}
       placeholderTextColor={placeholderTextColor || colors.muted}
       underlineColorAndroid="transparent"
       style={[themeStyle, Platform.OS === 'android' ? androidInputStyle : null, style]}

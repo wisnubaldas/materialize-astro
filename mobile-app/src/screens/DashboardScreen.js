@@ -1,8 +1,8 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useColorScheme } from 'nativewind';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useColorScheme } from 'nativewind';
 
 import ScreenLayout from '../components/layout/ScreenLayout';
 import {
@@ -27,7 +27,7 @@ const serviceItems = [
     icon: 'clipboard-check-outline',
     href: '/build-up-checklist',
   },
-  { title: 'Weighing', description: 'Timbang kargo', icon: 'weight-kilogram' },
+  { title: 'Draft Build Up', description: 'Rencana build up', icon: 'airplane-settings' },
   { title: 'EDI', description: 'Status pesan', icon: 'send-outline' },
   { title: 'Warehouse', description: 'Area kerja', icon: 'warehouse' },
 ];
@@ -36,19 +36,6 @@ const recentItems = [
   { title: 'Build up plan', description: '3 flight aktif', colorSet: 'primary' },
   { title: 'ULD control', description: '12 ULD siap', colorSet: 'accent' },
   { title: 'Cargo report', description: 'Update hari ini', colors: ['#16A34A', '#84CC16'] },
-];
-
-const menuItems = [
-  {
-    title: 'Build Up Checklist',
-    icon: 'clipboard-check-outline',
-    href: '/build-up-checklist',
-  },
-  { title: 'Profile', icon: 'account-outline' },
-  { title: 'Onboarding', icon: 'lightbulb-outline' },
-  { title: 'Welcome', icon: 'cube-outline' },
-  { title: 'Permissions', icon: 'shield-check-outline' },
-  { title: 'Chat', icon: 'chat-outline' },
 ];
 
 const gradientStyles = {
@@ -86,7 +73,10 @@ function ServiceCard({ item, onPress }) {
       className="mr-3 h-32 w-36 justify-between rounded-sm border border-border bg-card p-4"
       style={{ backgroundColor: colors.card, borderColor: colors.border }}
     >
-      <View className="h-11 w-11 items-center justify-center rounded-sm bg-muted" style={{ backgroundColor: colors.mutedBackground }}>
+      <View
+        className="h-11 w-11 items-center justify-center rounded-sm bg-muted"
+        style={{ backgroundColor: colors.mutedBackground }}
+      >
         <MaterialCommunityIcons name={item.icon} size={24} color={colors.primary} />
       </View>
       <View>
@@ -161,19 +151,27 @@ function DashboardDrawer({ visible, onClose, onLogout, onNavigate }) {
         </DrawerHeader>
 
         <DrawerContent>
-          {menuItems.map((item) => (
+          {serviceItems.map((item) => (
             <Pressable
               key={item.title}
               className="w-full min-h-14 flex-row items-center rounded-sm border border-border bg-card px-3"
               onPress={() => handleMenuPress(item)}
               style={{ backgroundColor: colors.card, borderColor: colors.border }}
             >
-              <View className="h-11 w-11 items-center justify-center rounded-sm bg-muted" style={{ backgroundColor: colors.mutedBackground }}>
+              <View
+                className="h-11 w-11 items-center justify-center rounded-sm bg-muted"
+                style={{ backgroundColor: colors.mutedBackground }}
+              >
                 <MaterialCommunityIcons name={item.icon} size={23} color={colors.primary} />
               </View>
-              <Text className="ml-3 flex-1 text-base font-bold text-foreground" numberOfLines={1}>
-                {item.title}
-              </Text>
+              <View className="ml-3 flex-1">
+                <Text className="text-base font-bold text-foreground" numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <Text className="mt-0.5 text-xs text-muted-foreground" numberOfLines={1}>
+                  {item.description}
+                </Text>
+              </View>
             </Pressable>
           ))}
 
@@ -182,7 +180,10 @@ function DashboardDrawer({ visible, onClose, onLogout, onNavigate }) {
             onPress={onLogout}
             style={{ backgroundColor: colors.card, borderColor: colors.danger }}
           >
-            <View className="h-11 w-11 items-center justify-center rounded-sm bg-muted" style={{ backgroundColor: colors.mutedBackground }}>
+            <View
+              className="h-11 w-11 items-center justify-center rounded-sm bg-muted"
+              style={{ backgroundColor: colors.mutedBackground }}
+            >
               <MaterialCommunityIcons name="arrow-left" size={23} color={colors.danger} />
             </View>
             <Text className="ml-3 flex-1 text-base font-bold text-red-600" numberOfLines={1}>
@@ -282,7 +283,10 @@ export default function DashboardScreen({ onOpenBuildUpChecklist }) {
           <MaterialCommunityIcons name="cube-outline" size={27} color={colors.muted} />
           <MaterialCommunityIcons name="magnify" size={28} color={colors.muted} />
           <MaterialCommunityIcons name="bookmark-outline" size={27} color={colors.muted} />
-          <View className="h-9 w-9 items-center justify-center rounded-full bg-foreground" style={{ backgroundColor: colors.foreground }}>
+          <View
+            className="h-9 w-9 items-center justify-center rounded-full bg-foreground"
+            style={{ backgroundColor: colors.foreground }}
+          >
             <Text className="text-sm font-bold text-background">
               {(user?.username || user?.email || 'U').charAt(0).toUpperCase()}
             </Text>
@@ -297,98 +301,98 @@ export default function DashboardScreen({ onOpenBuildUpChecklist }) {
         onNavigate={handleDrawerNavigate}
       />
 
-            <View className="mb-7 flex-row items-center justify-between">
-              <Pressable
-                onPress={() => setIsMenuOpen(true)}
-                className="h-12 w-12 items-center justify-center rounded-sm bg-primary"
-                style={{ backgroundColor: colors.primary }}
-              >
-                <MaterialCommunityIcons name="menu" size={27} color="#FFFFFF" />
-              </Pressable>
-              <Text className="text-3xl font-black text-foreground">
-                MAU<Text className="text-primary">.</Text>
-              </Text>
-              <View
-                className="relative h-12 w-12 items-center justify-center rounded-sm border border-border bg-card"
-                style={{ backgroundColor: colors.card, borderColor: colors.border }}
-              >
-                <MaterialCommunityIcons name="bell-outline" size={26} color={colors.foreground} />
-                <View className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />
-              </View>
-            </View>
+      <View className="mb-7 flex-row items-center justify-between">
+        <Pressable
+          onPress={() => setIsMenuOpen(true)}
+          className="h-12 w-12 items-center justify-center rounded-sm bg-primary"
+          style={{ backgroundColor: colors.primary }}
+        >
+          <MaterialCommunityIcons name="menu" size={27} color="#FFFFFF" />
+        </Pressable>
+        <Text className="text-3xl font-black text-foreground">
+          MAU<Text className="text-primary">.</Text>
+        </Text>
+        <View
+          className="relative h-12 w-12 items-center justify-center rounded-sm border border-border bg-card"
+          style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={26} color={colors.foreground} />
+          <View className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />
+        </View>
+      </View>
 
-            <View className="mb-6 w-full">
-              <Badge variant="secondary">
-                <Text>Dashboard</Text>
-              </Badge>
-              <Text className="mt-2 text-2xl font-extrabold text-foreground">
-                Halo, {user?.username || user?.email || 'Operator'}
-              </Text>
-              <Text className="mt-1 text-sm leading-5 text-muted-foreground">
-                Pantau aktivitas gudang dan lanjutkan proses operasional hari ini.
-              </Text>
-            </View>
+      <View className="mb-6 w-full">
+        <Badge variant="secondary">
+          <Text>Dashboard</Text>
+        </Badge>
+        <Text className="mt-2 text-2xl font-extrabold text-foreground">
+          Halo, {user?.username || user?.email || 'Operator'}
+        </Text>
+        <Text className="mt-1 text-sm leading-5 text-muted-foreground">
+          Pantau aktivitas gudang dan lanjutkan proses operasional hari ini.
+        </Text>
+      </View>
 
-            <SearchField />
+      <SearchField />
 
-            <View className="mt-6 flex-row gap-3">
-              <Card className="flex-1 border-transparent bg-primary">
-                <CardContent className="p-4">
-                  <Text className="text-xs font-semibold uppercase text-indigo-100">Open task</Text>
-                  <Text className="mt-2 text-3xl font-black text-white">18</Text>
-                  <Text className="mt-1 text-xs text-indigo-100">Perlu diproses</Text>
-                </CardContent>
-              </Card>
-              <Card className="flex-1">
-                <CardContent className="p-4">
-                  <Text className="text-xs font-semibold uppercase text-muted-foreground">On time</Text>
-                  <Text className="mt-2 text-3xl font-black text-foreground">96%</Text>
-                  <Text className="mt-1 text-xs text-muted-foreground">Shift hari ini</Text>
-                </CardContent>
-              </Card>
-            </View>
+      <View className="mt-6 flex-row gap-3">
+        <Card className="flex-1 border-transparent bg-pink">
+          <CardContent className="p-4">
+            <Text className="text-xs font-semibold uppercase text-indigo-100">MAWB Build Up</Text>
+            <Text className="mt-2 text-3xl font-black text-white">18</Text>
+            <Text className="mt-1 text-xs text-indigo-100">Perlu diproses</Text>
+          </CardContent>
+        </Card>
+        <Card className="flex-1 border-transparent bg-lime">
+          <CardContent className="p-4">
+            <Text className="text-xs font-semibold uppercase text-indigo-50">Manifest</Text>
+            <Text className="mt-2 text-3xl font-black text-indigo-50">96</Text>
+            <Text className="mt-1 text-xs text-indigo-50">Shipment hari ini</Text>
+          </CardContent>
+        </Card>
+      </View>
 
-            <View className="mt-8">
-              <Text className="mb-4 text-xl font-extrabold text-foreground">Popular services</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {serviceItems.map((item) => (
-                  <ServiceCard key={item.title} item={item} onPress={() => handleServicePress(item)} />
-                ))}
-              </ScrollView>
-            </View>
+      <View className="mt-8">
+        <Text className="mb-4 text-xl font-extrabold text-foreground">Services</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {serviceItems.map((item) => (
+            <ServiceCard key={item.title} item={item} onPress={() => handleServicePress(item)} />
+          ))}
+        </ScrollView>
+      </View>
 
+      <LinearGradient
+        colors={[colors.primary, colors.foreground]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={gradientStyles.hero}
+      >
+        <View className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/10" />
+        <View className="absolute -left-8 bottom-10 h-28 w-28 rounded-full bg-indigo-300/20" />
+        <Text className="text-2xl font-black text-white">MAU operational workspace</Text>
+        <Text className="mt-2 text-sm leading-5 text-indigo-100">
+          Build up, weighing, dan reporting tetap lewat backend resmi.
+        </Text>
+      </LinearGradient>
+
+      <View className="mt-8">
+        <Text className="mb-4 text-xl font-extrabold text-foreground">Recently viewed</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {recentItems.map((item) => (
             <LinearGradient
-              colors={[colors.primary, colors.foreground]}
+              key={item.title}
+              colors={getRecentCardColors(item)}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={gradientStyles.hero}
+              style={gradientStyles.recentCard}
             >
-              <View className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/10" />
-              <View className="absolute -left-8 bottom-10 h-28 w-28 rounded-full bg-indigo-300/20" />
-              <Text className="text-2xl font-black text-white">MAU operational workspace</Text>
-              <Text className="mt-2 text-sm leading-5 text-indigo-100">
-                Build up, weighing, dan reporting tetap lewat backend resmi.
-              </Text>
+              <View className="absolute right-5 top-5 h-16 w-16 rounded-full bg-white/20" />
+              <Text className="text-lg font-extrabold text-white">{item.title}</Text>
+              <Text className="mt-1 text-sm text-white/85">{item.description}</Text>
             </LinearGradient>
-
-            <View className="mt-8">
-              <Text className="mb-4 text-xl font-extrabold text-foreground">Recently viewed</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {recentItems.map((item) => (
-                  <LinearGradient
-                    key={item.title}
-                    colors={getRecentCardColors(item)}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={gradientStyles.recentCard}
-                  >
-                    <View className="absolute right-5 top-5 h-16 w-16 rounded-full bg-white/20" />
-                    <Text className="text-lg font-extrabold text-white">{item.title}</Text>
-                    <Text className="mt-1 text-sm text-white/85">{item.description}</Text>
-                  </LinearGradient>
-                ))}
-              </ScrollView>
-            </View>
+          ))}
+        </ScrollView>
+      </View>
     </ScreenLayout>
   );
 }

@@ -5,8 +5,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --clear --host lan",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "clear": "expo start -c",
     "doctor": "npx expo-doctor",
@@ -29,6 +29,7 @@
     "expo-router": "~6.0.23",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "expo-system-ui": "^55.0.18",
     "nativewind": "^5.0.0-preview.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",

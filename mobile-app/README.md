@@ -229,18 +229,98 @@ Then loads the profile from:
 GET /auth/me
 ```
 
-## Build
+## Build Android
 
-Preview APK:
+Project ini memakai EAS Build. Profile Android sudah tersedia di `eas.json`:
+
+- `preview` menghasilkan APK karena memakai `android.buildType: "apk"`.
+- `production` menghasilkan Android App Bundle/AAB untuk distribusi Play Store.
+
+Referensi resmi:
+
+- Expo APK builds: <https://docs.expo.dev/build-reference/apk/>
+- Expo local EAS builds: <https://docs.expo.dev/build-reference/local-builds/>
+
+### Preview APK via EAS Cloud
+
+Gunakan ini jika hanya butuh APK installable untuk device/emulator tanpa menyiapkan Android SDK lokal:
 
 ```bash
+cd mobile-app
 npm run build:android:preview
 ```
 
-Production Android App Bundle:
+Setelah build selesai, EAS akan memberi URL download APK. Install ke device lewat link tersebut atau gunakan `adb install`.
+
+### Build APK Lokal
+
+Build lokal memakai EAS `--local`, sehingga proses build berjalan di mesin sendiri tetapi tetap memakai konfigurasi EAS project.
+
+Prasyarat:
+
+- Sudah login Expo: `npx eas-cli login`
+- Node.js dan npm sudah terpasang.
+- Android Studio, Android SDK, dan Android NDK tersedia.
+- Java/OpenJDK tersedia.
+- Untuk Windows, jalankan local EAS build dari WSL2. Expo mendukung local build resmi di macOS/Linux; Windows native tidak resmi didukung untuk `eas build --local`.
+
+Siapkan environment public sebelum build. Untuk production API, pastikan `.env` berisi nilai production yang benar. Contoh PowerShell:
+
+```powershell
+Copy-Item .env.production .env
+```
+
+Lalu jalankan local APK build:
 
 ```bash
+cd mobile-app
+mkdir -p build/android
+export EAS_LOCAL_BUILD_ARTIFACTS_DIR="$PWD/build/android"
+npx eas-cli build --platform android --profile preview --local
+```
+
+Output APK akan disalin ke:
+
+```text
+mobile-app/build/android/
+```
+
+Install ke Android device/emulator:
+
+```bash
+adb install build/android/*.apk
+```
+
+Jika memakai PowerShell untuk install file APK tertentu:
+
+```powershell
+adb install .\build\android\nama-file.apk
+```
+
+### Production AAB
+
+Gunakan AAB untuk rilis Play Store:
+
+```bash
+cd mobile-app
 npm run build:android:production
+```
+
+### Troubleshooting Build Lokal
+
+- Jika env belum terbaca, cek ulang `.env`. Variabel yang dipakai app harus diawali `EXPO_PUBLIC_`.
+- Jika Android SDK tidak ditemukan, cek `ANDROID_HOME` atau `ANDROID_SDK_ROOT`.
+- Jika build lokal gagal dan perlu melihat folder kerja EAS, jalankan:
+
+```bash
+export EAS_LOCAL_BUILD_SKIP_CLEANUP=1
+npx eas-cli build --platform android --profile preview --local
+```
+
+- Jika Metro/cache bermasalah setelah perubahan NativeWind atau env:
+
+```bash
+npx expo start --clear
 ```
 
 ## Code Rules

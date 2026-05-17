@@ -1,4 +1,5 @@
 import { useColorScheme, vars } from 'nativewind';
+import { TAILWIND_COLOR_ALIASES, TAILWIND_COLORS, TAILWIND_SIMPLE_COLORS } from './tailwind-colors';
 
 const lightColors = {
   background: '#F8FAFC',
@@ -14,6 +15,16 @@ const lightColors = {
   border: '#E2E8F0',
   danger: '#DC2626',
   destructiveForeground: '#FFFFFF',
+  warning: TAILWIND_COLOR_ALIASES.warning,
+  lime: TAILWIND_COLOR_ALIASES.lime,
+  green: TAILWIND_COLOR_ALIASES.green,
+  teal: TAILWIND_COLOR_ALIASES.teal,
+  cyan: TAILWIND_COLOR_ALIASES.cyan,
+  violet: TAILWIND_COLOR_ALIASES.violet,
+  pink: TAILWIND_COLOR_ALIASES.pink,
+  gray: TAILWIND_COLOR_ALIASES.gray,
+  slate: TAILWIND_COLOR_ALIASES.slate,
+  indigo: TAILWIND_COLOR_ALIASES.indigo,
 };
 
 const darkColors = {
@@ -30,6 +41,16 @@ const darkColors = {
   border: '#334155',
   danger: '#F87171',
   destructiveForeground: '#FFFFFF',
+  warning: TAILWIND_COLOR_ALIASES.warning,
+  lime: TAILWIND_COLOR_ALIASES.lime,
+  green: TAILWIND_COLOR_ALIASES.green,
+  teal: TAILWIND_COLOR_ALIASES.teal,
+  cyan: TAILWIND_COLOR_ALIASES.cyan,
+  violet: TAILWIND_COLOR_ALIASES.violet,
+  pink: TAILWIND_COLOR_ALIASES.pink,
+  gray: TAILWIND_COLOR_ALIASES.gray,
+  slate: TAILWIND_COLOR_ALIASES.slate,
+  indigo: TAILWIND_COLOR_ALIASES.indigo,
 };
 
 /**
@@ -50,6 +71,16 @@ function createThemeVariables(colors) {
     '--color-border': colors.border,
     '--color-destructive': colors.danger,
     '--color-destructive-foreground': colors.destructiveForeground,
+    '--color-warning': colors.warning,
+    '--color-lime': colors.lime,
+    '--color-green': colors.green,
+    '--color-teal': colors.teal,
+    '--color-cyan': colors.cyan,
+    '--color-violet': colors.violet,
+    '--color-pink': colors.pink,
+    '--color-gray': colors.gray,
+    '--color-slate': colors.slate,
+    '--color-indigo': colors.indigo,
   });
 }
 
@@ -115,6 +146,85 @@ function hexToRgba(hex, alpha) {
 }
 
 /**
+ * Applies a numeric opacity value to a supported color string.
+ * @param {string} color - Hex, rgb, rgba, or transparent color.
+ * @param {number|undefined} alpha - Alpha channel from 0 to 1.
+ * @returns {string} Color with opacity applied when possible.
+ */
+function applyColorOpacity(color, alpha) {
+  if (alpha === undefined) return color;
+  if (color === 'transparent') return color;
+  if (color.startsWith('#')) return hexToRgba(color, alpha);
+
+  return color;
+}
+
+/**
+ * Converts Tailwind opacity suffixes such as /20 or /[71.37%] to alpha.
+ * @param {string|undefined} opacityToken - Tailwind opacity token.
+ * @returns {number|undefined} Alpha channel from 0 to 1.
+ */
+function parseOpacityToken(opacityToken) {
+  if (!opacityToken) return undefined;
+
+  const normalizedToken = opacityToken.replace(/^\[/, '').replace(/\]$/, '');
+  const numericValue = Number(normalizedToken.replace('%', ''));
+
+  if (Number.isNaN(numericValue)) return undefined;
+
+  return Math.min(1, Math.max(0, numericValue / 100));
+}
+
+/**
+ * Checks whether a NativeWind class list contains an exact utility.
+ * @param {string} className - NativeWind class names.
+ * @param {string} utility - Utility class to find.
+ * @returns {boolean} True when the utility exists as its own class.
+ */
+function hasUtility(className, utility) {
+  return className.split(/\s+/).includes(utility);
+}
+
+/**
+ * Resolves Tailwind color utilities such as bg-lime-500 or text-slate-950.
+ * @param {string} className - NativeWind class names.
+ * @param {string} prefix - Utility prefix, for example bg- or text-.
+ * @returns {string|undefined} Resolved color value.
+ */
+function resolveTailwindColorUtility(className, prefix) {
+  const classes = className.split(/\s+/);
+
+  for (const utilityClass of classes) {
+    if (!utilityClass.startsWith(prefix)) continue;
+
+    const utilityValue = utilityClass.slice(prefix.length);
+    const [colorToken, opacityToken] = utilityValue.split('/');
+    const alpha = parseOpacityToken(opacityToken);
+
+    if (TAILWIND_SIMPLE_COLORS[colorToken]) {
+      return applyColorOpacity(TAILWIND_SIMPLE_COLORS[colorToken], alpha);
+    }
+
+    if (TAILWIND_COLOR_ALIASES[colorToken]) {
+      return applyColorOpacity(TAILWIND_COLOR_ALIASES[colorToken], alpha);
+    }
+
+    const shadeSeparatorIndex = colorToken.lastIndexOf('-');
+    if (shadeSeparatorIndex === -1) continue;
+
+    const colorName = colorToken.slice(0, shadeSeparatorIndex);
+    const colorShade = colorToken.slice(shadeSeparatorIndex + 1);
+    const colorValue = TAILWIND_COLORS[colorName]?.[colorShade];
+
+    if (colorValue) {
+      return applyColorOpacity(colorValue, alpha);
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Resolves common app background utility classes to active theme colors.
  * @param {string} className - NativeWind class names.
  * @param {object} colors - Active color tokens.
@@ -122,17 +232,20 @@ function hexToRgba(hex, alpha) {
  * @returns {string} Background color.
  */
 export function resolveBackgroundColor(className, colors, fallback) {
-  if (className.includes('bg-card/70')) return hexToRgba(colors.card, 0.7);
-  if (className.includes('bg-white/10')) return 'rgba(255, 255, 255, 0.1)';
-  if (className.includes('bg-white/20')) return 'rgba(255, 255, 255, 0.2)';
-  if (className.includes('bg-primary')) return colors.primary;
-  if (className.includes('bg-primary-foreground')) return colors.primaryForeground;
-  if (className.includes('bg-card')) return colors.card;
-  if (className.includes('bg-muted')) return colors.mutedBackground;
-  if (className.includes('bg-background')) return colors.background;
-  if (className.includes('bg-foreground')) return colors.foreground;
-  if (className.includes('bg-destructive')) return colors.danger;
-  if (className.includes('bg-transparent')) return 'transparent';
+  const tailwindColor = resolveTailwindColorUtility(className, 'bg-');
+
+  if (tailwindColor) return tailwindColor;
+  if (hasUtility(className, 'bg-card/70')) return hexToRgba(colors.card, 0.7);
+  if (hasUtility(className, 'bg-white/10')) return 'rgba(255, 255, 255, 0.1)';
+  if (hasUtility(className, 'bg-white/20')) return 'rgba(255, 255, 255, 0.2)';
+  if (hasUtility(className, 'bg-primary-foreground')) return colors.primaryForeground;
+  if (hasUtility(className, 'bg-primary')) return colors.primary;
+  if (hasUtility(className, 'bg-card')) return colors.card;
+  if (hasUtility(className, 'bg-muted')) return colors.mutedBackground;
+  if (hasUtility(className, 'bg-background')) return colors.background;
+  if (hasUtility(className, 'bg-foreground')) return colors.foreground;
+  if (hasUtility(className, 'bg-destructive')) return colors.danger;
+  if (hasUtility(className, 'bg-transparent')) return 'transparent';
 
   return fallback;
 }
@@ -145,21 +258,48 @@ export function resolveBackgroundColor(className, colors, fallback) {
  * @returns {string} Text color.
  */
 export function resolveTextColor(className, colors, fallback) {
-  if (className.includes('text-primary-foreground')) return colors.primaryForeground;
-  if (className.includes('text-muted-foreground')) return colors.muted;
-  if (className.includes('text-card-foreground')) return colors.cardForeground;
-  if (className.includes('text-destructive-foreground')) return colors.destructiveForeground;
-  if (className.includes('text-destructive')) return colors.danger;
-  if (className.includes('text-primary')) return colors.primary;
-  if (className.includes('text-white/85')) return 'rgba(255, 255, 255, 0.85)';
-  if (className.includes('text-white')) return '#FFFFFF';
-  if (className.includes('text-indigo-100')) return '#E0E7FF';
-  if (className.includes('text-red-700')) return '#B91C1C';
-  if (className.includes('text-red-600')) return '#DC2626';
-  if (className.includes('text-slate-500')) return colors.muted;
-  if (className.includes('text-slate-950')) return colors.foreground;
-  if (className.includes('text-background')) return colors.background;
-  if (className.includes('text-foreground')) return colors.foreground;
+  const tailwindColor = resolveTailwindColorUtility(className, 'text-');
+
+  if (tailwindColor) return tailwindColor;
+  if (hasUtility(className, 'text-primary-foreground')) return colors.primaryForeground;
+  if (hasUtility(className, 'text-muted-foreground')) return colors.muted;
+  if (hasUtility(className, 'text-card-foreground')) return colors.cardForeground;
+  if (hasUtility(className, 'text-destructive-foreground')) return colors.destructiveForeground;
+  if (hasUtility(className, 'text-destructive')) return colors.danger;
+  if (hasUtility(className, 'text-primary')) return colors.primary;
+  if (hasUtility(className, 'text-white/85')) return 'rgba(255, 255, 255, 0.85)';
+  if (hasUtility(className, 'text-white')) return '#FFFFFF';
+  if (hasUtility(className, 'text-indigo-100')) return '#E0E7FF';
+  if (hasUtility(className, 'text-red-700')) return '#B91C1C';
+  if (hasUtility(className, 'text-red-600')) return '#DC2626';
+  if (hasUtility(className, 'text-slate-500')) return colors.muted;
+  if (hasUtility(className, 'text-slate-950')) return colors.foreground;
+  if (hasUtility(className, 'text-background')) return colors.background;
+  if (hasUtility(className, 'text-foreground')) return colors.foreground;
+
+  return fallback;
+}
+
+/**
+ * Resolves common app border utility classes to active theme colors.
+ * @param {string} className - NativeWind class names.
+ * @param {object} colors - Active color tokens.
+ * @param {string} fallback - Fallback border color.
+ * @returns {string} Border color.
+ */
+export function resolveBorderColor(className, colors, fallback) {
+  const tailwindColor = resolveTailwindColorUtility(className, 'border-');
+
+  if (tailwindColor) return tailwindColor;
+  if (hasUtility(className, 'border-primary-foreground')) return colors.primaryForeground;
+  if (hasUtility(className, 'border-primary')) return colors.primary;
+  if (hasUtility(className, 'border-card')) return colors.card;
+  if (hasUtility(className, 'border-muted')) return colors.mutedBackground;
+  if (hasUtility(className, 'border-background')) return colors.background;
+  if (hasUtility(className, 'border-foreground')) return colors.foreground;
+  if (hasUtility(className, 'border-destructive')) return colors.danger;
+  if (hasUtility(className, 'border-border')) return colors.border;
+  if (hasUtility(className, 'border-transparent')) return 'transparent';
 
   return fallback;
 }

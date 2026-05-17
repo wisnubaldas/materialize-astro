@@ -23,7 +23,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mauapp.mobile"
+      "package": "com.mauapp.mobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,8 +35,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": ""
-      }
+        "projectId": "81f0479b-39f0-423c-bb21-7f6a3e020b0c"
+      },
+      "router": {}
     },
     "plugins": [
       "expo-font",
