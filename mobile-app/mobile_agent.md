@@ -1,124 +1,124 @@
 # AGENTS.md
 
-## Project identity
+## Identitas Project
 
-This project is a **React Native + Expo mobile app** using **JavaScript only**.
+Project ini adalah aplikasi mobile **React Native + Expo** yang menggunakan **JavaScript saja**.
 
-The project must stay focused on the mobile frontend. Do not generate backend code, database migrations, server routes, API controllers, or server deployment scripts inside this repository.
+Project harus tetap fokus sebagai frontend mobile. Jangan membuat kode backend, migrasi database, route server, API controller, atau script deployment server di dalam repository ini.
 
-## Hard rules
+## Aturan Wajib
 
-1. Use JavaScript only.
-   - Allowed: `.js`, `.jsx`, `.json`, `.md`.
-   - Not allowed: `.ts`, `.tsx`.
-   - Do not introduce TypeScript configuration files.
+1. Gunakan JavaScript saja.
+   - Diizinkan: `.js`, `.jsx`, `.json`, `.md`.
+   - Tidak diizinkan: `.ts`, `.tsx`.
+   - Jangan menambahkan file konfigurasi TypeScript.
 
-2. Keep the code easy to maintain.
-   - Screens belong in `src/screens`.
-   - Reusable UI primitives belong in `src/components/ui`.
-   - Screen framing belongs in `src/components/layout`.
-   - Feature-specific reusable components may live in `src/components` only when they are not generic UI primitives.
-   - API calls belong in `src/services`.
-   - Global state belongs in `src/contexts`.
-   - Expo Router route files belong in `app/`.
-   - Do not recreate `src/navigation`; the app now uses Expo Router as the active navigation layer.
-   - Shared colors, spacing, and typography belong in `src/styles`.
-   - Validation/helper functions belong in `src/utils`.
+2. Jaga kode agar mudah dirawat.
+   - Screen berada di `src/screens`.
+   - Komponen UI reusable/primitif berada di `src/components/ui`.
+   - Kerangka layout screen berada di `src/components/layout`.
+   - Komponen reusable khusus fitur boleh berada di `src/components` hanya jika bukan UI primitif generik.
+   - API call berada di `src/services`.
+   - Global state berada di `src/contexts`.
+   - File route Expo Router berada di `app/`.
+   - Jangan membuat ulang `src/navigation`; aplikasi sekarang menggunakan Expo Router sebagai layer navigasi aktif.
+   - Warna, spacing, dan typography bersama berada di `src/styles`.
+   - Fungsi validasi/helper berada di `src/utils`.
 
-3. Comment every important function and component.
-   - Every exported function must have a JSDoc comment.
-   - Every screen component must explain its role.
-   - Every service function must explain its input and output.
-   - Do not add excessive comments for obvious single-line variables.
+3. Beri komentar pada setiap function dan component penting.
+   - Setiap exported function wajib memiliki komentar JSDoc.
+   - Setiap screen component wajib menjelaskan perannya.
+   - Setiap service function wajib menjelaskan input dan output.
+   - Jangan menambahkan komentar berlebihan untuk variabel satu baris yang sudah jelas.
 
-4. Do not call APIs directly from screens.
-   - Screens may call context methods or service methods.
-   - Screens must not contain repeated `fetch()` logic.
-   - Keep API URL configuration in `.env` and `src/config/env.js`.
+4. Jangan memanggil API langsung dari screen.
+   - Screen boleh memanggil method dari context atau service.
+   - Screen tidak boleh berisi logic `fetch()` yang berulang.
+   - Konfigurasi API URL harus berada di `.env` dan `src/config/env.js`.
 
-5. Do not hardcode sensitive values.
-   - Do not hardcode tokens.
-   - Do not hardcode production API URLs inside screens.
-   - Do not commit `.env`.
+5. Jangan hardcode nilai sensitif.
+   - Jangan hardcode token.
+   - Jangan hardcode production API URL di dalam screen.
+   - Jangan commit `.env`.
 
-6. Keep authentication predictable.
-   - Auth state is managed in `src/contexts/AuthContext.js`.
-   - Token storage is handled by `src/services/storageService.js`.
-   - Login request behavior is handled by `src/services/authService.js`.
+6. Jaga authentication agar predictable.
+   - Auth state dikelola di `src/contexts/AuthContext.js`.
+   - Penyimpanan token ditangani oleh `src/services/storageService.js`.
+   - Perilaku request login ditangani oleh `src/services/authService.js`.
 
-7. Start simple.
-   - Do not add Redux, Zustand, SQLite, Firebase, or push notification libraries unless explicitly needed.
-   - For standard CRUD apps, prefer Context + service functions first.
+7. Mulai dari solusi sederhana.
+   - Jangan menambahkan Redux, Zustand, SQLite, Firebase, atau library push notification kecuali memang dibutuhkan secara eksplisit.
+   - Untuk aplikasi CRUD standar, prioritaskan Context + service functions terlebih dahulu.
 
-8. Use Expo-compatible libraries.
-   - Prefer `npx expo install <package>` when installing React Native native packages.
-   - Do not add native packages that require manual native configuration unless the app already moved to a development build.
+8. Gunakan library yang kompatibel dengan Expo.
+   - Prioritaskan `npx expo install <package>` saat menginstal package React Native native.
+   - Jangan menambahkan package native yang membutuhkan konfigurasi native manual kecuali aplikasi sudah berpindah ke development build.
 
-9. Use NativeWind as the primary mobile UI styling system.
-   - Before changing files inside `mobile-app/`, read `mobile-app/nativewind_agent.md`.
-   - Prefer `className` utility styles over new `StyleSheet.create` blocks for screens and reusable UI.
-   - Keep NativeWind setup files in the app root: `global.css`, `metro.config.js`, and PostCSS config.
-   - Keep NativeWind wired through `metro.config.js` with `withNativeWind(config, { input: './global.css' })`; the current installed NativeWind package must not use `nativewind/babel` or `jsxImportSource: 'nativewind'` because it does not export `nativewind/jsx-runtime`.
-   - For third-party components that do not support `className` reliably, use a small local `style` object instead of forcing unsupported interop APIs.
-   - Keep JavaScript-first rules: do not add `nativewind-env.d.ts` or other TypeScript files.
+9. Gunakan NativeWind sebagai sistem styling utama UI mobile.
+   - Sebelum mengubah file di dalam `mobile-app/`, baca `mobile-app/nativewind_agent.md`.
+   - Prioritaskan utility style melalui `className` dibanding membuat block `StyleSheet.create` baru untuk screen dan UI reusable.
+   - Pertahankan file setup NativeWind di root app: `global.css`, `metro.config.js`, dan konfigurasi PostCSS.
+   - Pertahankan wiring NativeWind melalui `metro.config.js` dengan `withNativeWind(config, { input: './global.css' })`; package NativeWind yang terpasang saat ini tidak boleh memakai `nativewind/babel` atau `jsxImportSource: 'nativewind'` karena tidak mengekspor `nativewind/jsx-runtime`.
+   - Untuk third-party component yang tidak mendukung `className` dengan stabil, gunakan object `style` lokal kecil daripada memaksa API interop yang tidak didukung.
+   - Pertahankan aturan JavaScript-first: jangan menambahkan `nativewind-env.d.ts` atau file TypeScript lain.
 
-10. Use the shared screen layout pattern.
+10. Gunakan pola shared screen layout.
 
-- Basic screen framing belongs in `src/components/layout/`.
-- New screens should start from `ScreenLayout` for safe area, keyboard behavior, scroll behavior, and web max-width.
-- Stack/detail screens should use `ScreenHeader` unless they need a clearly custom top bar.
-- Screens should focus on content and behavior, not repeating safe area, scroll, keyboard, and footer boilerplate.
-- If a screen appears blank, first verify `app/_layout.js`, Expo Router route files, `AuthContext`, `ScreenLayout`, and NativeWind setup before changing business logic.
+- Kerangka dasar screen berada di `src/components/layout/`.
+- Screen baru sebaiknya mulai dari `ScreenLayout` untuk safe area, perilaku keyboard, perilaku scroll, dan max-width web.
+- Stack/detail screen sebaiknya memakai `ScreenHeader` kecuali membutuhkan top bar custom yang jelas.
+- Screen harus fokus pada konten dan behavior, bukan mengulang boilerplate safe area, scroll, keyboard, dan footer.
+- Jika screen terlihat blank, cek terlebih dahulu `app/_layout.js`, file route Expo Router, `AuthContext`, `ScreenLayout`, dan setup NativeWind sebelum mengubah business logic.
 
-11. Use the shared UI kit.
+11. Gunakan shared UI kit.
 
-- Prefer imports from `src/components/ui/index.js`.
-- Available primitives include `Text`, `Button`, `Input`, `Card`, `Badge`, `Separator`, `Spinner`, `Drawer`, `BarcodeScanner`, and `QrScanner`.
-- New UI primitives must be JavaScript files in `src/components/ui/` with JSDoc and NativeWind `className` styling.
-- Export new primitives from `src/components/ui/index.js`.
-- Do not copy TypeScript files, typed routes, `tsconfig.json`, or `nativewind-env.d.ts` from the source template.
-- Do not install delayed UI dependencies such as bottom sheet, gesture drawer, checkbox, switch, select, dialog, or permission modules unless a concrete screen flow requires them.
+- Prioritaskan import dari `src/components/ui/index.js`.
+- Primitive yang tersedia meliputi `Text`, `Button`, `Input`, `Card`, `Badge`, `Separator`, `Spinner`, `Drawer`, `BarcodeScanner`, dan `QrScanner`.
+- UI primitive baru wajib berupa file JavaScript di `src/components/ui/`, memiliki JSDoc, dan memakai styling NativeWind `className`.
+- Export primitive baru dari `src/components/ui/index.js`.
+- Jangan menyalin file TypeScript, typed routes, `tsconfig.json`, atau `nativewind-env.d.ts` dari source template.
+- Jangan menginstal dependency UI yang ditunda seperti bottom sheet, gesture drawer, checkbox, switch, select, dialog, atau permission module kecuali ada flow screen konkret yang membutuhkannya.
 
-## Coding style
+## Gaya Coding
 
-- Use functional React components.
-- Use clear component names, for example `LoginScreen`, `DashboardScreen`, `Button`, and `BarcodeScanner`.
-- Keep each file focused on one responsibility.
-- Avoid large screens. Extract repeated UI into `src/components/ui` or `src/components/layout` based on responsibility.
-- Keep screen-level layout consistent through `ScreenLayout` and extract repeated headers/actions into `src/components/layout`.
-- Keep form validation in utility files when possible.
-- Use `async/await` for asynchronous logic.
-- Handle API errors with readable messages.
+- Gunakan functional React components.
+- Gunakan nama component yang jelas, misalnya `LoginScreen`, `DashboardScreen`, `Button`, dan `BarcodeScanner`.
+- Jaga setiap file agar fokus pada satu tanggung jawab.
+- Hindari screen yang terlalu besar. Ekstrak UI berulang ke `src/components/ui` atau `src/components/layout` sesuai tanggung jawabnya.
+- Jaga konsistensi layout level screen melalui `ScreenLayout`, lalu ekstrak header/action berulang ke `src/components/layout`.
+- Simpan validasi form di file utility jika memungkinkan.
+- Gunakan `async/await` untuk logic asynchronous.
+- Tangani error API dengan pesan yang mudah dibaca.
 
-## Current starter scope
+## Scope Starter Saat Ini
 
-The current starter includes:
+Starter saat ini mencakup:
 
 - Login screen
 - Dashboard screen
 - Authentication context
-- Mock login mode
+- Mode mock login
 - Persistent token storage
 - API request wrapper
-- Environment-based API configuration
-- EAS build profile for Android APK preview and Android App Bundle production
-- Expo Router with JavaScript route files in `app/`
+- Konfigurasi API berbasis environment
+- EAS build profile untuk Android APK preview dan Android App Bundle production
+- Expo Router dengan file route JavaScript di `app/`
 
-## Demo account
+## Akun Demo
 
 ```txt
 Email: admin@admin.com
 Password: password123
 ```
 
-Mock login is controlled by:
+Mock login dikontrol oleh:
 
 ```txt
 EXPO_PUBLIC_USE_MOCK_AUTH=true
 ```
 
-Set it to `false` when the real API is ready.
+Ubah menjadi `false` ketika API asli sudah siap.
 
-## Importan !
+## Penting
 
-- Progress report di `docs/report-progress/progress-YYYY-MM-DD.md` diperbarui.
+- Progress report di `docs/report-progress/progress-YYYY-MM-DD.md` wajib diperbarui setelah perubahan.

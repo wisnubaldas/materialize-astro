@@ -440,6 +440,32 @@ materialize-fastapi/docs/      # hanya jika folder dibuat/tersedia
 
 Namun progress utama tetap di `docs/report-progress/` agar mudah dicari.
 
+### Report Mingguan Wajib
+
+Jika user meminta report mingguan, rangkum progres dari file-file di:
+
+```text
+docs/report-progress/
+```
+
+Agent wajib membaca dan mengikuti panduan format report mingguan di:
+
+```text
+docs/report-email-mingguan.md
+```
+
+Aturan output report mingguan:
+
+- Gunakan bahasa email yang mudah dipahami stakeholder, manager, dan supervisor IT.
+- Fokus pada capaian aplikasi, dampak operasional, status project, risiko, blocker, dan next step.
+- Minimalkan istilah teknis; jika istilah teknis perlu disebut, jelaskan dampaknya secara bisnis/operasional.
+- Simpan hasil report mingguan di folder `docs/report-mingguan/`.
+- Gunakan nama file deskriptif dengan rentang tanggal absolut, contoh:
+
+```text
+docs/report-mingguan/laporan-progress-mingguan-ctos-mau-app-2026-05-10-18.md
+```
+
 ---
 
 ## Standar Keamanan Umum
