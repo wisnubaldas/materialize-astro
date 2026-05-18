@@ -89,7 +89,7 @@ function HeaderField({ field, value, onChangeText, onScanPress }) {
     <View className="gap-3">
       <Text variant="label">{field.label}</Text>
       <View
-        className="min-h-[58px] flex-row items-center rounded-sm border border-border bg-card px-4"
+        className="min-h-14.5 flex-row items-center rounded-sm border border-border bg-card px-4"
         style={{ backgroundColor: colors.card, borderColor: colors.border }}
       >
         <Input

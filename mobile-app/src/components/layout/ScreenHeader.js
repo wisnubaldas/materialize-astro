@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 import { getThemeColors } from '../../styles/theme';
 
@@ -25,13 +25,13 @@ export default function ScreenHeader({ title = '', onBack, onClose, right = null
   const colors = getThemeColors(colorScheme);
 
   return (
-    <View className="w-full web:max-w-[520px]" style={headerStyles.frame}>
+    <View className="w-full web:max-w-130" style={headerStyles.frame}>
       <View className="min-h-12 flex-row items-center justify-between">
         {onBack ? (
           <Pressable
             accessibilityRole="button"
             onPress={onBack}
-            className="h-12 w-12 items-center justify-center rounded-sm bg-card"
+            className="h-12 w-12 items-center justify-center rounded-sm bg-indigo"
             style={{ backgroundColor: colors.card }}
           >
             <MaterialCommunityIcons name="arrow-left" size={27} color={colors.foreground} />
@@ -41,27 +41,29 @@ export default function ScreenHeader({ title = '', onBack, onClose, right = null
         )}
 
         {title ? (
-          <Text className="text-base font-extrabold text-foreground" style={{ color: colors.foreground }}>
+          <Text
+            className="text-base font-extrabold text-foreground"
+            style={{ color: colors.foreground }}
+          >
             {title}
           </Text>
         ) : (
           <View />
         )}
 
-        {right || (
-          onClose ? (
+        {right ||
+          (onClose ? (
             <Pressable
               accessibilityRole="button"
               onPress={onClose}
-              className="h-12 w-12 items-center justify-center rounded-sm bg-card"
+              className="h-12 w-12 items-center justify-center rounded-sm bg-indigo"
               style={{ backgroundColor: colors.card }}
             >
               <MaterialCommunityIcons name="close" size={27} color={colors.foreground} />
             </Pressable>
           ) : (
             <View className="h-12 w-12" />
-          )
-        )}
+          ))}
       </View>
     </View>
   );
