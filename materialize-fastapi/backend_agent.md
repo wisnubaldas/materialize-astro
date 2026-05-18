@@ -347,5 +347,4 @@ Sebelum menyelesaikan task backend:
 - Pastikan endpoint protected memakai dependency auth/permission.
 - Pastikan response success/error konsisten.
 - Pastikan tidak ada secret baru di source code.
-- Update progress report di root `docs/progress-YYYY-MM-DD.md`.
-
+- Update progress report di `docs/report-progress/progress-YYYY-MM-DD.md`.

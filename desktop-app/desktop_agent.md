@@ -131,7 +131,7 @@ Sebelum selesai task desktop:
 - Tidak ada bypass ke database/internal service.
 - Alur API tetap ke backend.
 - Error state dan loading state jelas.
-- Progress report root `docs/progress-YYYY-MM-DD.md` diperbarui.
+- Progress report di `docs/report-progress/progress-YYYY-MM-DD.md` diperbarui.
 
 ## Standar Grid/Table WPF
 

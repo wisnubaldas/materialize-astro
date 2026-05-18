@@ -402,10 +402,10 @@ Web frontend `astro/`, mobile frontend `mobile-app/`, dan desktop frontend `desk
 
 Setelah eksekusi perubahan kode:
 
-- Buat folder `docs/` di root project jika belum ada.
-- Simpan laporan progres harian ke file Markdown di folder `docs/` root project.
-- Format nama file: `docs/progress-YYYY-MM-DD.md`.
-- Gunakan tanggal absolut, contoh: `docs/progress-2026-05-02.md`.
+- Buat folder `docs/report-progress/` di root project jika belum ada.
+- Simpan laporan progres harian ke file Markdown di folder `docs/report-progress/` root project.
+- Format nama file: `docs/report-progress/progress-YYYY-MM-DD.md`.
+- Gunakan tanggal absolut, contoh: `docs/report-progress/progress-2026-05-02.md`.
 
 Isi minimal:
 
@@ -438,7 +438,7 @@ astro/docs/
 materialize-fastapi/docs/      # hanya jika folder dibuat/tersedia
 ```
 
-Namun progress utama tetap di root `docs/` agar mudah dicari.
+Namun progress utama tetap di `docs/report-progress/` agar mudah dicari.
 
 ---
 
@@ -487,5 +487,3 @@ Namun progress utama tetap di root `docs/` agar mudah dicari.
 - Jika task membutuhkan data dari desktop hardware lokal, data boleh dibaca oleh desktop, tetapi proses bisnis dan penyimpanan tetap melalui backend API.
 - Jika task membutuhkan fitur native mobile lokal, akses native boleh dilakukan melalui Expo-compatible APIs di `mobile-app/`, tetapi proses bisnis dan penyimpanan tetap melalui backend/API resmi.
 - Jangan menjaga backward compatibility lama jika user secara eksplisit meminta perubahan proses bisnis baru.
-
-

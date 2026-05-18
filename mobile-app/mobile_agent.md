@@ -63,19 +63,21 @@ The project must stay focused on the mobile frontend. Do not generate backend co
    - Keep JavaScript-first rules: do not add `nativewind-env.d.ts` or other TypeScript files.
 
 10. Use the shared screen layout pattern.
-   - Basic screen framing belongs in `src/components/layout/`.
-   - New screens should start from `ScreenLayout` for safe area, keyboard behavior, scroll behavior, and web max-width.
-   - Stack/detail screens should use `ScreenHeader` unless they need a clearly custom top bar.
-   - Screens should focus on content and behavior, not repeating safe area, scroll, keyboard, and footer boilerplate.
-   - If a screen appears blank, first verify `app/_layout.js`, Expo Router route files, `AuthContext`, `ScreenLayout`, and NativeWind setup before changing business logic.
+
+- Basic screen framing belongs in `src/components/layout/`.
+- New screens should start from `ScreenLayout` for safe area, keyboard behavior, scroll behavior, and web max-width.
+- Stack/detail screens should use `ScreenHeader` unless they need a clearly custom top bar.
+- Screens should focus on content and behavior, not repeating safe area, scroll, keyboard, and footer boilerplate.
+- If a screen appears blank, first verify `app/_layout.js`, Expo Router route files, `AuthContext`, `ScreenLayout`, and NativeWind setup before changing business logic.
 
 11. Use the shared UI kit.
-   - Prefer imports from `src/components/ui/index.js`.
-   - Available primitives include `Text`, `Button`, `Input`, `Card`, `Badge`, `Separator`, `Spinner`, `Drawer`, `BarcodeScanner`, and `QrScanner`.
-   - New UI primitives must be JavaScript files in `src/components/ui/` with JSDoc and NativeWind `className` styling.
-   - Export new primitives from `src/components/ui/index.js`.
-   - Do not copy TypeScript files, typed routes, `tsconfig.json`, or `nativewind-env.d.ts` from the source template.
-   - Do not install delayed UI dependencies such as bottom sheet, gesture drawer, checkbox, switch, select, dialog, or permission modules unless a concrete screen flow requires them.
+
+- Prefer imports from `src/components/ui/index.js`.
+- Available primitives include `Text`, `Button`, `Input`, `Card`, `Badge`, `Separator`, `Spinner`, `Drawer`, `BarcodeScanner`, and `QrScanner`.
+- New UI primitives must be JavaScript files in `src/components/ui/` with JSDoc and NativeWind `className` styling.
+- Export new primitives from `src/components/ui/index.js`.
+- Do not copy TypeScript files, typed routes, `tsconfig.json`, or `nativewind-env.d.ts` from the source template.
+- Do not install delayed UI dependencies such as bottom sheet, gesture drawer, checkbox, switch, select, dialog, or permission modules unless a concrete screen flow requires them.
 
 ## Coding style
 
@@ -116,3 +118,7 @@ EXPO_PUBLIC_USE_MOCK_AUTH=true
 ```
 
 Set it to `false` when the real API is ready.
+
+## Importan !
+
+- Progress report di `docs/report-progress/progress-YYYY-MM-DD.md` diperbarui.

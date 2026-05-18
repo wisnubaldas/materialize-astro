@@ -72,7 +72,7 @@ Aturan struktur target:
 - Gunakan `astro/src/assets/vendor/` untuk vendor asset yang diproses pipeline frontend.
 - Gunakan `astro/src/assets/fonts/` untuk font yang diproses bundler.
 - Gunakan `astro/public/` untuk static file yang di-serve langsung.
-- Simpan dokumentasi frontend di `astro/docs/` jika khusus frontend, tetapi progress utama tetap di root `docs/`.
+- Simpan dokumentasi frontend di `astro/docs/` jika khusus frontend, tetapi progress utama tetap di `docs/report-progress/`.
 - Jangan buat folder paralel baru tanpa alasan arsitektur yang jelas dan terdokumentasi.
 
 ---
@@ -256,7 +256,7 @@ Setiap membuat module frontend baru:
 6. Tambahkan auth guard dan permission UI jika diperlukan.
 7. Tambahkan loading, error, empty state, dan success notification.
 8. Verifikasi flow create/read/update/delete jika ada.
-9. Update dokumentasi progress harian di root `docs/progress-YYYY-MM-DD.md`.
+9. Update dokumentasi progress harian di `docs/report-progress/progress-YYYY-MM-DD.md`.
 
 Template flow:
 
@@ -289,7 +289,7 @@ Update UI State
   - cek warning ukuran chunk pada hasil build;
   - catat modul/dependency terbesar;
   - pastikan tidak ada asset tak terpakai yang ikut ter-bundle.
-- Update progress report di root `docs/progress-YYYY-MM-DD.md`.
+- Update progress report di root `docs/report-progress/progress-YYYY-MM-DD.md`.
 
 ---
 
