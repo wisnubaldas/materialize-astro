@@ -11,4 +11,4 @@ Buatkan saya report dengan format email kepada stakeholder, manager dan supervis
 4. [Mobile Aplikasi](mobile-app)
    Sama seperti aplikasi desktop. saya menggunakan Expo + React Native.
 
-Buatkan laporannya, rangkum progress dari file-file `docs\report-progress\progress-YYYY-MM-DD.md`.
+Buatkan laporannya, rangkum progress dari file-file `docs\report-progress`. Tempatkan laporan mingguan di folder `docs\report-mingguan`.
