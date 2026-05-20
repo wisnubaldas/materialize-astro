@@ -8,6 +8,20 @@ import { Card, CardContent, DatePicker, Text } from '../../components/ui';
 import { PatternedCard } from '../../components/ui/patterned-card.js';
 import { listBuildUpCheckHeaders } from '../../services/buildUpService';
 import { useThemeColors } from '../../styles/theme';
+
+/**
+ * Formats current local date into backend-friendly `YYYY-MM-DD`.
+ * @returns {string} Current local date string.
+ */
+function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
 /**
  * Renders one compact label and value pair.
  * @param {{ label: string, value: string|number|null|undefined }} props - Display props.
@@ -31,7 +45,7 @@ function InfoLine({ label, value }) {
  */
 export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
   const colors = useThemeColors();
-  const [flightDate, setFlightDate] = useState('');
+  const [flightDate, setFlightDate] = useState(getTodayDate);
   const [headers, setHeaders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');

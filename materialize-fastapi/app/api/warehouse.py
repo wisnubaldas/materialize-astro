@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app.db.mysql import get_db1_w
 from app.dependencies.warehouse_deps import (
     get_build_up_draft_service,
-    get_build_up_check_service,
     get_warehouse_manifest_service,
     get_warehouse_manifest_service_w,
     get_warehouse_service,
@@ -16,15 +15,6 @@ from app.schemas.build_up_draft_schema import (
     BuildUpDraftCreate,
     BuildUpDraftOut,
     BuildUpDraftUpdate,
-)
-from app.schemas.build_up_check_schema import (
-    BuildUpCheckDetailCreate,
-    BuildUpCheckDetailOut,
-    BuildUpMasterAwbSummaryOut,
-    BuildUpCheckHeaderCreate,
-    BuildUpCheckHeaderOut,
-    BuildUpCheckHeaderReopen,
-    BuildUpCheckRincianCreate,
 )
 from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -148,136 +138,6 @@ def delete_build_up_draft(
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get(
-    "/build-up-check-headers",
-    summary="Daftar header Build Up Check",
-    response_model=list[BuildUpCheckHeaderOut],
-)
-def list_build_up_check_headers(
-    flight_date: str | None = None,
-    unfinished_only: bool = False,
-    completed_only: bool = False,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    return service.list_build_up_check_headers(
-        flight_date=flight_date,
-        unfinished_only=unfinished_only,
-        completed_only=completed_only,
-    )
-
-
-@router.get(
-    "/build-up-check-headers/master-awb-summary",
-    summary="Ringkasan jumlah Master AWB Build Up Check",
-    response_model=BuildUpMasterAwbSummaryOut,
-)
-def get_build_up_master_awb_summary(
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    return service.get_build_up_master_awb_summary()
-
-
-@router.post(
-    "/build-up-check-headers",
-    summary="Simpan header Build Up Check",
-    response_model=BuildUpCheckHeaderOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_build_up_check_header(
-    payload: BuildUpCheckHeaderCreate,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    return service.create_build_up_check_header(payload)
-
-
-@router.post(
-    "/build-up-check-headers/{header_id}/reopen",
-    summary="Buka kembali header Build Up Check yang sudah selesai",
-    response_model=BuildUpCheckHeaderOut,
-)
-def reopen_build_up_check_header(
-    header_id: int,
-    payload: BuildUpCheckHeaderReopen,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    try:
-        return service.reopen_build_up_check_header(header_id, payload)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-
-
-@router.get(
-    "/build-up-check-headers/{header_id}/details",
-    summary="Daftar detail Build Up Check",
-    response_model=list[BuildUpCheckDetailOut],
-)
-def list_build_up_check_details(
-    header_id: int,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    try:
-        return service.list_build_up_check_details(header_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-
-@router.post(
-    "/build-up-check-headers/{header_id}/details",
-    summary="Simpan detail Build Up Check",
-    response_model=BuildUpCheckDetailOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_build_up_check_detail(
-    header_id: int,
-    payload: BuildUpCheckDetailCreate,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    try:
-        return service.create_build_up_check_detail(header_id=header_id, payload=payload)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-
-
-@router.post(
-    "/build-up-check-details/{detail_id}/close-allocation",
-    summary="Tutup alokasi ULD untuk detail Build Up Check",
-    response_model=BuildUpCheckDetailOut,
-)
-def close_build_up_check_detail_allocation(
-    detail_id: int,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    try:
-        return service.close_build_up_check_detail_allocation(detail_id=detail_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-
-
-@router.post(
-    "/build-up-check-details/{detail_id}/rincian",
-    summary="Simpan rincian Build Up Check",
-    response_model=BuildUpCheckDetailOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_build_up_check_rincian(
-    detail_id: int,
-    payload: BuildUpCheckRincianCreate,
-    service: WarehouseService = Depends(get_build_up_check_service),
-):
-    try:
-        return service.create_build_up_check_rincian(detail_id=detail_id, payload=payload)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get(

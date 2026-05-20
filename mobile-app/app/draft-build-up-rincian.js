@@ -36,8 +36,15 @@ function getRincianContextFromParams(params) {
       agent: params.agent || '',
       completed_pieces: Number(params.completedPieces || 0),
       total_pieces: Number(params.totalPieces || 0),
+      master_total_pieces: Number(params.masterTotalPieces || 0),
+      master_completed_pieces: Number(params.masterCompletedPieces || 0),
+      master_remaining_pieces: Number(params.masterRemainingPieces || 0),
       remaining_pieces: Number(params.remainingPieces || 0),
       is_completed: params.isCompleted === 'true',
+      is_allocation_final: params.isAllocationFinal === 'true',
+      is_split_uld: params.isSplitUld === 'true',
+      split_sequence: params.splitSequence ? Number(params.splitSequence) : null,
+      split_total_uld: Number(params.splitTotalUld || 1),
     },
   };
 }

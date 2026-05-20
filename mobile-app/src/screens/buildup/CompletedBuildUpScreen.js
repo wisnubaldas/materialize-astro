@@ -10,6 +10,7 @@ import {
   reopenBuildUpCheckHeader,
 } from '../../services/buildUpService';
 import { useThemeColors } from '../../styles/theme';
+import { validateBuildUpCheckDetailForm } from '../../utils/validators';
 
 const initialReopenForm = {
   mawb: '',
@@ -121,26 +122,18 @@ export default function CompletedBuildUpScreen({ onBack, onReopened }) {
     }
 
     const mawb = reopenForm.mawb.trim();
-    const totalPieces = reopenForm.total_pieces
-      ? Number.parseInt(reopenForm.total_pieces, 10)
-      : null;
-    const masterTotalPieces = Number.parseInt(reopenForm.master_total_pieces, 10);
-    if (!mawb) {
-      setErrorMessage('Nomor Master AWB wajib diisi.');
+    const validation = validateBuildUpCheckDetailForm({
+      ...reopenForm,
+      mawb,
+    });
+
+    if (!validation.isValid) {
+      setErrorMessage(validation.message);
       return;
     }
-    if (!Number.isFinite(masterTotalPieces) || masterTotalPieces <= 0) {
-      setErrorMessage('Total pieces MAWB wajib diisi lebih dari 0.');
-      return;
-    }
-    if (totalPieces !== null && totalPieces <= 0) {
-      setErrorMessage('Pieces ULD ini harus lebih dari 0 jika diisi.');
-      return;
-    }
-    if (totalPieces !== null && masterTotalPieces < totalPieces) {
-      setErrorMessage('Total pieces MAWB tidak boleh lebih kecil dari pieces ULD ini.');
-      return;
-    }
+
+    const totalPieces = reopenForm.total_pieces === '' ? null : Number(reopenForm.total_pieces);
+    const masterTotalPieces = Number(reopenForm.master_total_pieces);
 
     setIsSubmitting(true);
     setErrorMessage('');

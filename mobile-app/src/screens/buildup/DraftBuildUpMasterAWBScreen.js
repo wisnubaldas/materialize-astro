@@ -78,6 +78,11 @@ function MasterAwbCard({ detail, onPress }) {
               value={detail.master_total_pieces || detail.total_pieces}
             />
             <InfoLine
+              label="Progress MAWB"
+              value={`${detail.master_completed_pieces || 0}/${detail.master_total_pieces || detail.total_pieces || 0}`}
+            />
+            <InfoLine label="Sisa MAWB" value={detail.master_remaining_pieces} />
+            <InfoLine
               label="Pieces ULD"
               value={`${detail.completed_pieces}/${pieceTarget}`}
             />

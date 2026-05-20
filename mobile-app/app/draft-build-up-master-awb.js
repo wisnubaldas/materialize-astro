@@ -70,8 +70,15 @@ export default function DraftBuildUpMasterAWBRoute() {
         agent: detail.agent || '',
         completedPieces: String(detail.completed_pieces || 0),
         totalPieces: String(detail.total_pieces || 0),
+        masterTotalPieces: String(detail.master_total_pieces || 0),
+        masterCompletedPieces: String(detail.master_completed_pieces || 0),
+        masterRemainingPieces: String(detail.master_remaining_pieces || 0),
         remainingPieces: String(detail.remaining_pieces || 0),
         isCompleted: detail.is_completed ? 'true' : 'false',
+        isAllocationFinal: detail.is_allocation_final ? 'true' : 'false',
+        isSplitUld: detail.is_split_uld ? 'true' : 'false',
+        splitSequence: String(detail.split_sequence || ''),
+        splitTotalUld: String(detail.split_total_uld || 1),
       },
     });
   }

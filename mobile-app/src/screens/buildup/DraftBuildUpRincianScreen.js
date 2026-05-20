@@ -63,6 +63,9 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
   const [isClosingAllocation, setIsClosingAllocation] = useState(false);
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const isMasterFulfilledElsewhere = Number(activeDetail.master_remaining_pieces || 0) <= 0
+    && Number(activeDetail.completed_pieces || 0) <= 0
+    && !activeDetail.is_allocation_final;
 
   /**
    * Updates one rincian form field.
@@ -170,6 +173,10 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
             label="Progress ULD"
             value={`${activeDetail.completed_pieces}/${activeDetail.total_pieces || 'belum ditutup'}`}
           />
+          <InfoLine
+            label="Progress MAWB"
+            value={`${activeDetail.master_completed_pieces || 0}/${activeDetail.master_total_pieces || activeDetail.total_pieces || 0}`}
+          />
           <InfoLine label="Sisa MAWB" value={activeDetail.master_remaining_pieces} />
           <InfoLine
             label="Status Alokasi"
@@ -210,7 +217,11 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
               </Button>
               <Button
                 variant="outline"
-                disabled={isClosingAllocation || activeDetail.completed_pieces <= 0}
+                disabled={
+                  isClosingAllocation
+                  || activeDetail.completed_pieces <= 0
+                  || isMasterFulfilledElsewhere
+                }
                 onPress={handleCloseAllocation}
               >
                 <MaterialCommunityIcons name="archive-check-outline" size={20} />
@@ -224,7 +235,9 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
               <Text className="text-sm font-semibold text-lime">
                 {activeDetail.master_remaining_pieces > 0
                   ? 'Alokasi ULD ini sudah ditutup.'
-                  : 'Master ini sudah selesai.'}
+                  : isMasterFulfilledElsewhere
+                    ? 'Master AWB sudah terpenuhi di ULD lain.'
+                    : 'Master ini sudah selesai.'}
               </Text>
             </View>
           )}

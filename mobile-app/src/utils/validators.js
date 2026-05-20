@@ -45,6 +45,12 @@ export function validateBuildUpChecklistForm(formData) {
  * @returns {{ isValid: boolean, message: string }} Validation result.
  */
 export function validateBuildUpCheckDetailForm(formData) {
+  const masterTotalPieces = Number(formData.master_total_pieces);
+  const totalPieces = Number(formData.total_pieces);
+  const hasTotalPieces = formData.total_pieces !== ''
+    && formData.total_pieces !== null
+    && formData.total_pieces !== undefined;
+
   if (!String(formData.mawb || '').trim()) {
     return { isValid: false, message: 'MAWB wajib diisi.' };
   }
@@ -53,24 +59,20 @@ export function validateBuildUpCheckDetailForm(formData) {
     return { isValid: false, message: 'MAWB wajib berisi 11 digit, contoh 123-45678901.' };
   }
 
-  if (Number(formData.master_total_pieces) <= 0) {
+  if (!Number.isFinite(masterTotalPieces) || masterTotalPieces <= 0) {
     return { isValid: false, message: 'Total pieces MAWB harus lebih dari 0.' };
   }
 
   if (
-    formData.total_pieces !== ''
-    && formData.total_pieces !== null
-    && formData.total_pieces !== undefined
-    && Number(formData.total_pieces) <= 0
+    hasTotalPieces
+    && (!Number.isFinite(totalPieces) || totalPieces <= 0)
   ) {
     return { isValid: false, message: 'Pieces ULD ini harus lebih dari 0 jika diisi.' };
   }
 
   if (
-    formData.total_pieces !== ''
-    && formData.total_pieces !== null
-    && formData.total_pieces !== undefined
-    && Number(formData.master_total_pieces) < Number(formData.total_pieces)
+    hasTotalPieces
+    && masterTotalPieces < totalPieces
   ) {
     return {
       isValid: false,
@@ -87,11 +89,14 @@ export function validateBuildUpCheckDetailForm(formData) {
  * @returns {{ isValid: boolean, message: string }} Validation result.
  */
 export function validateBuildUpCheckRincianForm(formData) {
-  if (Number(formData.pieces) <= 0) {
+  const pieces = Number(formData.pieces);
+  const weight = Number(formData.weight);
+
+  if (!Number.isFinite(pieces) || pieces <= 0) {
     return { isValid: false, message: 'Pieces rincian harus lebih dari 0.' };
   }
 
-  if (formData.weight !== '' && Number(formData.weight) < 0) {
+  if (formData.weight !== '' && (!Number.isFinite(weight) || weight < 0)) {
     return { isValid: false, message: 'Weight tidak boleh negatif.' };
   }
 
