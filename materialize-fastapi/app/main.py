@@ -40,12 +40,14 @@ def get_debug_cors_origins() -> list[str]:
 
     return [f"http://{host}:8100" for host in sorted(host_candidates) if host]
 
+
 # Set timezone environment variable
 os.environ["TZ"] = "Asia/Jakarta"
 
 # Hanya jalankan tzset() jika OS mendukung
 if hasattr(time := __import__("time"), "tzset") and platform.system() != "Windows":
     time.tzset()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -105,6 +107,10 @@ default_origins = [
     "http://127.0.0.1:4321",
     "https://app.mitraadira.com",
     "https://mitraadira.com",
+    "http://localhost:8100",
+    "http://127.0.0.1:8100",
+    "http://192.168.1.7:8081",
+    "http://192.168.5.224:8081",
 ]
 debug_origins = get_debug_cors_origins()
 raw_origins = (ENV.CORS_ALLOW_ORIGINS or "").strip()

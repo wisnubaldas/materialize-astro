@@ -1,14 +1,13 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import ScreenHeader from '../../components/layout/ScreenHeader';
 import ScreenLayout from '../../components/layout/ScreenLayout';
-import { Button, Card, CardContent, DatePicker, Text } from '../../components/ui';
+import { Card, CardContent, DatePicker, Text } from '../../components/ui';
+import { PatternedCard } from '../../components/ui/patterned-card.js';
 import { listBuildUpCheckHeaders } from '../../services/buildUpService';
 import { useThemeColors } from '../../styles/theme';
-
 /**
  * Renders one compact label and value pair.
  * @param {{ label: string, value: string|number|null|undefined }} props - Display props.
@@ -46,7 +45,7 @@ export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
     setErrorMessage('');
 
     try {
-      const rows = await listBuildUpCheckHeaders({ flightDate });
+      const rows = await listBuildUpCheckHeaders({ flightDate, unfinishedOnly: false });
       setHeaders(rows);
     } catch (error) {
       console.error('[draft-build-up] Load headers gagal', error);
@@ -56,21 +55,27 @@ export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
     }
   }
 
-  useFocusEffect(useCallback(() => {
-    loadHeaders();
-  }, [flightDate]));
+  useFocusEffect(
+    useCallback(() => {
+      loadHeaders();
+    }, [flightDate])
+  );
 
   return (
     <ScreenLayout
       keyboardAware
       header={<ScreenHeader title="Draft Build Up" onBack={onBack} onClose={onBack} />}
     >
-      <View className="rounded-sm bg-blue-200/70 px-5 py-4">
-        <Text variant="title">Draft Build Up</Text>
-        <Text variant="subtitle" className="mt-2">
-          Pilih header, lengkapi detail, lalu input rincian sampai total pieces terpenuhi.
-        </Text>
-      </View>
+      <PatternedCard variant="blue">
+        <View>
+          <Text variant="title" className="text-amber-50">
+            Draft Build Up
+          </Text>
+          <Text variant="subtitle" className="mt-2 text-stone-50">
+            Pilih header, lengkapi detail, lalu input rincian sampai total pieces terpenuhi.
+          </Text>
+        </View>
+      </PatternedCard>
 
       <Card className="mt-6 rounded-sm bg-card/70">
         <CardContent className="gap-3 p-4">
@@ -80,10 +85,6 @@ export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
             onChange={setFlightDate}
             placeholder="YYYY-MM-DD"
           />
-          <Button variant="outline" onPress={loadHeaders}>
-            <MaterialCommunityIcons name="magnify" size={20} color={colors.foreground} />
-            <Text className="ml-2">{isLoading ? 'Memuat...' : 'Cari Header'}</Text>
-          </Button>
         </CardContent>
       </Card>
 

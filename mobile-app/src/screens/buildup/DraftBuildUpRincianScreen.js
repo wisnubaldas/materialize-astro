@@ -97,7 +97,9 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
       });
       setActiveDetail(updated);
       setForm(initialForm);
-      setMessage(updated.is_completed ? 'Rincian master sudah selesai.' : 'Rincian berhasil ditambahkan.');
+      setMessage(
+        updated.is_completed ? 'Rincian master sudah selesai.' : 'Rincian berhasil ditambahkan.'
+      );
     } catch (error) {
       console.error('[draft-build-up-rincian] Save rincian gagal', error);
       setErrorMessage(error?.message || 'Gagal menyimpan rincian.');
@@ -168,10 +170,7 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
             label="Progress ULD"
             value={`${activeDetail.completed_pieces}/${activeDetail.total_pieces || 'belum ditutup'}`}
           />
-          <InfoLine
-            label="Sisa MAWB"
-            value={activeDetail.master_remaining_pieces}
-          />
+          <InfoLine label="Sisa MAWB" value={activeDetail.master_remaining_pieces} />
           <InfoLine
             label="Status Alokasi"
             value={activeDetail.is_allocation_final ? 'Ditutup' : 'Aktif'}
@@ -207,9 +206,7 @@ export default function DraftBuildUpRincianScreen({ header, detail, onBack }) {
               />
               <Button variant="indigo" disabled={isSubmitting} onPress={handleSubmit}>
                 <MaterialCommunityIcons name="plus" size={20} color="#FFFFFF" />
-                <Text className="ml-2">
-                  {isSubmitting ? 'Menyimpan...' : 'Tambah Rincian'}
-                </Text>
+                <Text className="ml-2">{isSubmitting ? 'Menyimpan...' : 'Tambah Rincian'}</Text>
               </Button>
               <Button
                 variant="outline"
