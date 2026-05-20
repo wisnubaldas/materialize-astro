@@ -1,10 +1,12 @@
 from sqlalchemy import (
     TIMESTAMP,
     BigInteger,
+    Boolean,
     Column,
     ForeignKey,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
 )
@@ -21,6 +23,9 @@ class BuildUpCheckDetail(BaseDB1):
     __table_args__ = (
         Index("ix_build_up_check_detail_header_id", "header_id"),
         Index("ix_build_up_check_detail_mawb", "mawb"),
+        Index("ix_build_up_check_detail_mawb_header", "mawb", "header_id"),
+        Index("ix_build_up_check_detail_split_group", "split_group_key"),
+        Index("ix_build_up_check_detail_allocation_final", "is_allocation_final"),
     )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -31,6 +36,13 @@ class BuildUpCheckDetail(BaseDB1):
     )
     mawb = Column(String(100), nullable=True)
     total_pieces = Column(Integer, nullable=True)
+    master_total_pieces = Column(Integer, nullable=True)
+    split_group_key = Column(String(150), nullable=True)
+    split_sequence = Column(SmallInteger, nullable=True)
+    split_total_uld = Column(SmallInteger, nullable=False, server_default="1")
+    is_split_uld = Column(Boolean, nullable=False, server_default="0")
+    is_allocation_final = Column(Boolean, nullable=False, server_default="0")
+    allocation_closed_at = Column(TIMESTAMP, nullable=True)
     status = Column(Integer, nullable=False, server_default="0")
     agent = Column(String(100), nullable=True)
     remark = Column(Text, nullable=True)

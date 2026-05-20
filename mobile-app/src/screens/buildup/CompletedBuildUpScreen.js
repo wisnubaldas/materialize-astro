@@ -14,6 +14,7 @@ import { useThemeColors } from '../../styles/theme';
 const initialReopenForm = {
   mawb: '',
   total_pieces: '',
+  master_total_pieces: '',
   agent: '',
   remark: '',
 };
@@ -120,13 +121,24 @@ export default function CompletedBuildUpScreen({ onBack, onReopened }) {
     }
 
     const mawb = reopenForm.mawb.trim();
-    const totalPieces = Number.parseInt(reopenForm.total_pieces, 10);
+    const totalPieces = reopenForm.total_pieces
+      ? Number.parseInt(reopenForm.total_pieces, 10)
+      : null;
+    const masterTotalPieces = Number.parseInt(reopenForm.master_total_pieces, 10);
     if (!mawb) {
       setErrorMessage('Nomor Master AWB wajib diisi.');
       return;
     }
-    if (!Number.isFinite(totalPieces) || totalPieces <= 0) {
-      setErrorMessage('Pieces wajib diisi lebih dari 0.');
+    if (!Number.isFinite(masterTotalPieces) || masterTotalPieces <= 0) {
+      setErrorMessage('Total pieces MAWB wajib diisi lebih dari 0.');
+      return;
+    }
+    if (totalPieces !== null && totalPieces <= 0) {
+      setErrorMessage('Pieces ULD ini harus lebih dari 0 jika diisi.');
+      return;
+    }
+    if (totalPieces !== null && masterTotalPieces < totalPieces) {
+      setErrorMessage('Total pieces MAWB tidak boleh lebih kecil dari pieces ULD ini.');
       return;
     }
 
@@ -138,6 +150,7 @@ export default function CompletedBuildUpScreen({ onBack, onReopened }) {
       await reopenBuildUpCheckHeader(selectedHeader.id, {
         mawb,
         total_pieces: totalPieces,
+        master_total_pieces: masterTotalPieces,
         agent: reopenForm.agent.trim() || null,
         remark: reopenForm.remark.trim() || null,
       });
@@ -180,11 +193,20 @@ export default function CompletedBuildUpScreen({ onBack, onReopened }) {
               />
             </View>
             <View className="gap-2">
-              <Text className="text-sm font-semibold text-foreground">Pieces</Text>
+              <Text className="text-sm font-semibold text-foreground">Pieces ULD Ini</Text>
               <Input
-                placeholder="0"
+                placeholder="Opsional"
                 value={reopenForm.total_pieces}
                 onChangeText={(value) => handleFormChange('total_pieces', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Total Pieces MAWB</Text>
+              <Input
+                placeholder="Total pieces MAWB asli"
+                value={reopenForm.master_total_pieces}
+                onChangeText={(value) => handleFormChange('master_total_pieces', value)}
                 keyboardType="numeric"
               />
             </View>

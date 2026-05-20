@@ -147,7 +147,7 @@ export function DatePicker({ label = '', value, onChange, placeholder = 'YYYY-MM
         animationType="fade"
         onRequestClose={() => setIsOpen(false)}
       >
-        <View className="flex-1 justify-end bg-black/40 px-4 pb-4">
+        <View className="flex-1 justify-end bg-black/40 px-4 pb-21">
           <View
             className="rounded-sm border border-border bg-card p-4"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}

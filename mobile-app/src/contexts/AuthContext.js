@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
+import { addAuthExpiredListener, resetAuthExpiredNotification } from '../services/apiService';
 import { loginRequest } from '../services/authService';
 import {
   clearAuthStorage,
@@ -48,6 +49,21 @@ export function AuthProvider({ children }) {
     loadStoredSession();
   }, []);
 
+  useEffect(() => {
+    /**
+     * Applies global session expiry events from API service middleware.
+     * @param {string} message - Session expiry message.
+     * @returns {void}
+     */
+    function handleAuthExpired(message) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setBootError(message || 'Session sudah berakhir. Silakan login ulang.');
+    }
+
+    return addAuthExpiredListener(handleAuthExpired);
+  }, []);
+
   /**
    * Logs in and stores the backend token and user profile.
    * @param {{ email: string, password: string }} credentials - Login form values.
@@ -59,8 +75,10 @@ export function AuthProvider({ children }) {
     await saveAuthToken(session.token);
     await saveAuthUser(session.user);
 
+    resetAuthExpiredNotification();
     setUser(session.user);
     setIsAuthenticated(true);
+    setBootError('');
   }
 
   /**
@@ -69,8 +87,10 @@ export function AuthProvider({ children }) {
    */
   async function logout() {
     await clearAuthStorage();
+    resetAuthExpiredNotification();
     setUser(null);
     setIsAuthenticated(false);
+    setBootError('');
   }
 
   const value = useMemo(

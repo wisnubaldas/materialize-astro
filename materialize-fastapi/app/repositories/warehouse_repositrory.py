@@ -476,6 +476,89 @@ class WarehouseRepository:
             raise
         return detail
 
+    def list_build_up_check_details_by_mawb_flight(
+        self,
+        mawb: str,
+        flight_no: str | None,
+        flight_date: object,
+    ) -> list[BuildUpCheckDetail]:
+        """Return same-MAWB details across ULDs for one flight identity."""
+        if not mawb or not flight_no or not flight_date:
+            return []
+
+        return (
+            self.db.query(BuildUpCheckDetail)
+            .join(BuildUpCheckHeader, BuildUpCheckDetail.header_id == BuildUpCheckHeader.id)
+            .filter(
+                BuildUpCheckDetail.mawb == mawb,
+                BuildUpCheckHeader.flight_no == flight_no,
+                BuildUpCheckHeader.flight_date == flight_date,
+            )
+            .order_by(BuildUpCheckHeader.uld.asc(), BuildUpCheckDetail.id.asc())
+            .all()
+        )
+
+    def update_build_up_check_split_metadata(
+        self,
+        details: list[BuildUpCheckDetail],
+        group_key: str | None,
+    ) -> list[BuildUpCheckDetail]:
+        """Update split ULD metadata for same-MAWB detail rows."""
+        if not details:
+            return []
+
+        header_ids: list[int] = []
+        for detail in details:
+            header_id = int(detail.header_id)
+            if header_id not in header_ids:
+                header_ids.append(header_id)
+        sequence_by_header_id = {
+            header_id: sequence for sequence, header_id in enumerate(header_ids, start=1)
+        }
+        split_total_uld = len(header_ids)
+        is_split_uld = split_total_uld > 1
+
+        for detail in details:
+            detail.split_group_key = group_key if is_split_uld else None
+            detail.split_sequence = sequence_by_header_id.get(int(detail.header_id))
+            detail.split_total_uld = split_total_uld
+            detail.is_split_uld = is_split_uld
+
+        try:
+            self.db.commit()
+            for detail in details:
+                self.db.refresh(detail)
+        except Exception:
+            self.db.rollback()
+            raise
+        return details
+
+    def sum_build_up_check_rincian_by_mawb_flight(
+        self,
+        mawb: str,
+        flight_no: str | None,
+        flight_date: object,
+    ) -> int:
+        """Return total actual pieces for one MAWB across ULDs in one flight."""
+        if not mawb or not flight_no or not flight_date:
+            return 0
+
+        total = (
+            self.db.query(func.coalesce(func.sum(BuildUpCheckRincian.pieces), 0))
+            .join(
+                BuildUpCheckDetail,
+                BuildUpCheckRincian.check_detail_id == BuildUpCheckDetail.id,
+            )
+            .join(BuildUpCheckHeader, BuildUpCheckDetail.header_id == BuildUpCheckHeader.id)
+            .filter(
+                BuildUpCheckDetail.mawb == mawb,
+                BuildUpCheckHeader.flight_no == flight_no,
+                BuildUpCheckHeader.flight_date == flight_date,
+            )
+            .scalar()
+        )
+        return int(total or 0)
+
     def create_build_up_check_rincian(
         self,
         detail_id: int,
@@ -491,6 +574,25 @@ class WarehouseRepository:
             self.db.rollback()
             raise
         return rincian
+
+    def close_build_up_check_detail_allocation(
+        self,
+        detail: BuildUpCheckDetail,
+        total_pieces: int,
+        status: int,
+    ) -> BuildUpCheckDetail:
+        """Close one ULD allocation for a MAWB detail."""
+        detail.total_pieces = total_pieces
+        detail.status = status
+        detail.is_allocation_final = True
+        detail.allocation_closed_at = func.now()
+        try:
+            self.db.commit()
+            self.db.refresh(detail)
+        except Exception:
+            self.db.rollback()
+            raise
+        return detail
 
     def update_build_up_check_detail_status(
         self,

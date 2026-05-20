@@ -240,6 +240,25 @@ def create_build_up_check_detail(
         return service.create_build_up_check_detail(header_id=header_id, payload=payload)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-check-details/{detail_id}/close-allocation",
+    summary="Tutup alokasi ULD untuk detail Build Up Check",
+    response_model=BuildUpCheckDetailOut,
+)
+def close_build_up_check_detail_allocation(
+    detail_id: int,
+    service: WarehouseService = Depends(get_build_up_check_service),
+):
+    try:
+        return service.close_build_up_check_detail_allocation(detail_id=detail_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post(

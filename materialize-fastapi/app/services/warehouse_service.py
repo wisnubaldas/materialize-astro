@@ -82,6 +82,13 @@ def _sum_rincian_pieces(items: list) -> int:
     return total
 
 
+def _build_split_group_key(mawb: str | None, flight_no: str | None, flight_date: object) -> str | None:
+    """Build a stable key for MAWB split checks within the same flight."""
+    if not mawb or not flight_no or not flight_date:
+        return None
+    return f"{_upper(flight_no)}|{flight_date}|{_upper(mawb)}"
+
+
 def _format_number(
     value: object,
     fraction_digits: int = 1,
@@ -453,21 +460,39 @@ class WarehouseService:
         return self.repository.get_masterwaybill_by_awbs(cleaned)
 
     @staticmethod
-    def _map_check_detail(row) -> BuildUpCheckDetailOut:
+    def _map_check_detail(row, master_completed_pieces: int | None = None) -> BuildUpCheckDetailOut:
         completed_pieces = _sum_rincian_pieces(list(row.rincian or []))
-        total_pieces = int(row.total_pieces or 0)
-        remaining_pieces = max(total_pieces - completed_pieces, 0)
-        is_completed = total_pieces > 0 and remaining_pieces == 0
+        master_total_pieces = int(row.master_total_pieces or row.total_pieces or 0)
+        allocation_limit = int(row.total_pieces or master_total_pieces or 0)
+        remaining_pieces = max(allocation_limit - completed_pieces, 0)
+        resolved_master_completed_pieces = (
+            int(master_completed_pieces)
+            if master_completed_pieces is not None
+            else completed_pieces
+        )
+        master_remaining_pieces = max(master_total_pieces - resolved_master_completed_pieces, 0)
+        is_completed = bool(row.is_allocation_final) or (
+            allocation_limit > 0 and remaining_pieces == 0
+        )
         return BuildUpCheckDetailOut(
             id=row.id,
             header_id=row.header_id,
             mawb=row.mawb,
             total_pieces=row.total_pieces,
+            master_total_pieces=row.master_total_pieces,
+            split_group_key=row.split_group_key,
+            split_sequence=row.split_sequence,
+            split_total_uld=int(row.split_total_uld or 1),
+            is_split_uld=bool(row.is_split_uld),
+            is_allocation_final=bool(row.is_allocation_final),
+            allocation_closed_at=row.allocation_closed_at,
             status=1 if is_completed else 0,
             agent=row.agent,
             remark=row.remark,
             completed_pieces=completed_pieces,
             remaining_pieces=remaining_pieces,
+            master_completed_pieces=resolved_master_completed_pieces,
+            master_remaining_pieces=master_remaining_pieces,
             is_completed=is_completed,
             rincian=[BuildUpCheckRincianOut.model_validate(item) for item in row.rincian],
             created_at=row.created_at,
@@ -518,6 +543,46 @@ class WarehouseService:
         summary = self.repository.get_build_up_master_awb_summary()
         return BuildUpMasterAwbSummaryOut(**summary)
 
+    @staticmethod
+    def _validate_master_total_pieces(payload: BuildUpCheckDetailCreate) -> None:
+        """Ensure total pieces allocated to one ULD does not exceed MAWB total."""
+        if payload.master_total_pieces is None and payload.total_pieces is None:
+            raise ValueError("Total pieces MAWB wajib diisi.")
+        if payload.master_total_pieces is None:
+            return
+        if payload.total_pieces is not None and int(payload.master_total_pieces) < int(
+            payload.total_pieces
+        ):
+            raise ValueError("Total pieces MAWB tidak boleh lebih kecil dari pieces ULD ini.")
+
+    @staticmethod
+    def _ensure_master_total_pieces(payload: BuildUpCheckDetailCreate) -> BuildUpCheckDetailCreate:
+        """Use planned ULD pieces as MAWB total for legacy payloads."""
+        if payload.master_total_pieces is not None:
+            return payload
+        return payload.model_copy(update={"master_total_pieces": payload.total_pieces})
+
+    def _sync_build_up_check_split_metadata(self, detail) -> object:
+        """Refresh split ULD flags for same MAWB on the same flight."""
+        header = detail.header or self.repository.get_build_up_check_header_by_id(detail.header_id)
+        if not header:
+            return detail
+
+        group_key = _build_split_group_key(detail.mawb, header.flight_no, header.flight_date)
+        related_details = self.repository.list_build_up_check_details_by_mawb_flight(
+            mawb=detail.mawb,
+            flight_no=header.flight_no,
+            flight_date=header.flight_date,
+        )
+        if not related_details:
+            related_details = [detail]
+
+        updated_details = self.repository.update_build_up_check_split_metadata(
+            details=related_details,
+            group_key=group_key,
+        )
+        return next((item for item in updated_details if item.id == detail.id), detail)
+
     def create_build_up_check_header(
         self,
         payload: BuildUpCheckHeaderCreate,
@@ -543,7 +608,10 @@ class WarehouseService:
         header = self.repository.get_build_up_check_header_by_id(header_id)
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
+        self._validate_master_total_pieces(payload)
+        payload = self._ensure_master_total_pieces(payload)
         row = self.repository.create_build_up_check_detail(header_id=header_id, payload=payload)
+        row = self._sync_build_up_check_split_metadata(row)
         return self._map_check_detail(row)
 
     def create_build_up_check_rincian(
@@ -556,24 +624,74 @@ class WarehouseService:
         if not detail:
             raise LookupError("Detail build up check tidak ditemukan")
 
-        completed_pieces = _sum_rincian_pieces(list(detail.rincian or []))
-        total_pieces = int(detail.total_pieces or 0)
+        if detail.is_allocation_final:
+            raise ValueError("Alokasi ULD untuk MAWB ini sudah ditutup.")
+
+        header = detail.header or self.repository.get_build_up_check_header_by_id(detail.header_id)
+        master_total_pieces = int(detail.master_total_pieces or detail.total_pieces or 0)
+        if master_total_pieces <= 0:
+            raise ValueError("Total pieces MAWB belum tersedia untuk detail ini.")
+
+        current_master_completed = self.repository.sum_build_up_check_rincian_by_mawb_flight(
+            mawb=detail.mawb,
+            flight_no=header.flight_no if header else None,
+            flight_date=header.flight_date if header else None,
+        )
+        if current_master_completed == 0:
+            current_master_completed = _sum_rincian_pieces(list(detail.rincian or []))
+
         requested_pieces = int(payload.pieces)
-        if completed_pieces + requested_pieces > total_pieces:
+        if current_master_completed + requested_pieces > master_total_pieces:
             raise ValueError(
-                "Total pieces rincian melebihi total_pieces detail "
-                f"({completed_pieces + requested_pieces}/{total_pieces})."
+                "Total pieces rincian melebihi total pieces MAWB "
+                f"({current_master_completed + requested_pieces}/{master_total_pieces})."
             )
 
         self.repository.create_build_up_check_rincian(detail_id=detail_id, payload=payload)
         refreshed = self.repository.get_build_up_check_detail_by_id(detail_id)
-        new_completed_pieces = _sum_rincian_pieces(list(refreshed.rincian or []))
-        new_status = 1 if total_pieces > 0 and new_completed_pieces >= total_pieces else 0
+        new_master_completed = self.repository.sum_build_up_check_rincian_by_mawb_flight(
+            mawb=refreshed.mawb,
+            flight_no=header.flight_no if header else None,
+            flight_date=header.flight_date if header else None,
+        )
+        if new_master_completed == 0:
+            new_master_completed = _sum_rincian_pieces(list(refreshed.rincian or []))
+
+        new_status = 1 if new_master_completed >= master_total_pieces else 0
         refreshed = self.repository.update_build_up_check_detail_status(
             detail=refreshed,
             status=new_status,
         )
-        return self._map_check_detail(refreshed)
+        return self._map_check_detail(refreshed, master_completed_pieces=new_master_completed)
+
+    def close_build_up_check_detail_allocation(self, detail_id: int) -> BuildUpCheckDetailOut:
+        """Close current ULD allocation using the actual entered pieces."""
+        detail = self.repository.get_build_up_check_detail_by_id(detail_id)
+        if not detail:
+            raise LookupError("Detail build up check tidak ditemukan")
+        if detail.is_allocation_final:
+            return self._map_check_detail(detail)
+
+        completed_pieces = _sum_rincian_pieces(list(detail.rincian or []))
+        if completed_pieces <= 0:
+            raise ValueError("Rincian pieces wajib diisi sebelum alokasi ULD ditutup.")
+
+        header = detail.header or self.repository.get_build_up_check_header_by_id(detail.header_id)
+        master_completed = self.repository.sum_build_up_check_rincian_by_mawb_flight(
+            mawb=detail.mawb,
+            flight_no=header.flight_no if header else None,
+            flight_date=header.flight_date if header else None,
+        )
+        if master_completed == 0:
+            master_completed = completed_pieces
+
+        closed = self.repository.close_build_up_check_detail_allocation(
+            detail=detail,
+            total_pieces=completed_pieces,
+            status=1,
+        )
+        closed = self._sync_build_up_check_split_metadata(closed)
+        return self._map_check_detail(closed, master_completed_pieces=master_completed)
 
     def reopen_build_up_check_header(
         self,
@@ -590,9 +708,12 @@ class WarehouseService:
             raise ValueError("Build Up belum selesai, tidak perlu dibuka kembali.")
 
         detail_payload = BuildUpCheckDetailCreate(**payload.model_dump())
-        self.repository.create_build_up_check_detail(
+        self._validate_master_total_pieces(detail_payload)
+        detail_payload = self._ensure_master_total_pieces(detail_payload)
+        detail = self.repository.create_build_up_check_detail(
             header_id=header_id,
             payload=detail_payload,
         )
+        self._sync_build_up_check_split_metadata(detail)
         reopened = self.repository.get_build_up_check_header_by_id(header_id)
         return self._map_check_header(reopened)

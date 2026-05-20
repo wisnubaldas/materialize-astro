@@ -119,3 +119,14 @@ export function createBuildUpCheckRincian(detailId, formData) {
     authenticated: true,
   });
 }
+
+/**
+ * Closes one ULD allocation for a Build Up Check detail.
+ * @param {number} detailId - Detail id.
+ * @returns {Promise<object|null>} Updated detail with final allocation status.
+ */
+export function closeBuildUpCheckDetailAllocation(detailId) {
+  return postRequest(`/warehouse/build-up-check-details/${detailId}/close-allocation`, {}, {
+    authenticated: true,
+  });
+}

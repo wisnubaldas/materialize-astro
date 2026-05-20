@@ -53,8 +53,29 @@ export function validateBuildUpCheckDetailForm(formData) {
     return { isValid: false, message: 'MAWB wajib berisi 11 digit, contoh 123-45678901.' };
   }
 
-  if (Number(formData.total_pieces) <= 0) {
-    return { isValid: false, message: 'Total pieces harus lebih dari 0.' };
+  if (Number(formData.master_total_pieces) <= 0) {
+    return { isValid: false, message: 'Total pieces MAWB harus lebih dari 0.' };
+  }
+
+  if (
+    formData.total_pieces !== ''
+    && formData.total_pieces !== null
+    && formData.total_pieces !== undefined
+    && Number(formData.total_pieces) <= 0
+  ) {
+    return { isValid: false, message: 'Pieces ULD ini harus lebih dari 0 jika diisi.' };
+  }
+
+  if (
+    formData.total_pieces !== ''
+    && formData.total_pieces !== null
+    && formData.total_pieces !== undefined
+    && Number(formData.master_total_pieces) < Number(formData.total_pieces)
+  ) {
+    return {
+      isValid: false,
+      message: 'Total pieces MAWB tidak boleh lebih kecil dari pieces ULD ini.',
+    };
   }
 
   return { isValid: true, message: '' };

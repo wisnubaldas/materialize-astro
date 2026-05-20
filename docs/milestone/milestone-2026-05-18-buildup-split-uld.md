@@ -104,3 +104,93 @@ Mobile tidak perlu menentukan split sendiri. Mobile cukup:
 - opsional tampilkan `2 ULD` dari `split_total_uld`.
 
 Jadi source of truth tetap backend, sesuai aturan agent project.
+
+---
+
+# koreksi alur buildup
+
+Betul, mas ganteng. Penyelesaiannya: alur harus diubah dari **input total pieces ULD di awal** menjadi **input actual pieces dulu, lalu finalisasi ULD saat penuh**.
+
+**Masalah Alur Sekarang**
+Saat ini `build_up_check_detail.total_pieces` dipakai sebagai batas pieces untuk ULD itu. Akibatnya mobile memaksa operator tahu dulu:
+
+> MAWB ini masuk berapa pieces ke ULD ini?
+
+Padahal kondisi real:
+
+1. Operator tahu total MAWB, misalnya 100 pieces.
+2. Barang masuk ke ULD berjalan bertahap.
+3. ULD ternyata penuh di 63 pieces.
+4. Sisa 37 pieces harus masuk ULD lain.
+
+Jadi `total_pieces` per ULD tidak boleh wajib di awal.
+
+**Best Practice Baru**
+Gunakan konsep:
+
+- `master_total_pieces` = total pieces MAWB asli, contoh 100.
+- `total_pieces` = final allocation untuk ULD ini, boleh kosong saat proses.
+- `completed_pieces` = hasil sum dari `build_up_check_rincian`.
+- Saat ULD penuh, operator tekan tombol **Finalisasi / Split ULD**.
+- Backend set `total_pieces = completed_pieces` untuk ULD itu.
+- Backend hitung sisa MAWB dari total semua rincian MAWB lintas ULD.
+- Jika sisa > 0, MAWB dianggap split dan bisa dilanjutkan di ULD berikutnya.
+
+**Skema Tambahan yang Saya Sarankan**
+Tambahkan kolom kecil di `build_up_check_detail`:
+
+```sql
+is_allocation_final TINYINT(1) NOT NULL DEFAULT 0
+```
+
+Opsional tapi bagus:
+
+```sql
+allocation_closed_at TIMESTAMP NULL
+```
+
+Maknanya:
+
+- `is_allocation_final = 0`: MAWB di ULD ini masih bisa ditambah pieces.
+- `is_allocation_final = 1`: ULD ini sudah ditutup/final untuk MAWB tersebut.
+
+**Perubahan Validasi**
+Current:
+
+```text
+rincian pieces tidak boleh melebihi total_pieces
+```
+
+Ubah menjadi:
+
+```text
+Jika total_pieces ULD belum final/null:
+  rincian boleh bertambah selama total seluruh MAWB lintas ULD tidak melebihi master_total_pieces.
+
+Jika total_pieces ULD sudah final:
+  detail tidak boleh ditambah lagi.
+```
+
+**Flow Mobile yang Lebih Pas**
+
+1. Pilih ULD.
+2. Tambah MAWB.
+3. Isi:
+   - MAWB
+   - Total Pieces MAWB
+   - Agent
+   - Remark
+4. Masuk screen rincian.
+5. Input pieces aktual berkali-kali.
+6. Kalau ULD penuh, tekan **Tutup Alokasi ULD**.
+7. Jika masih ada sisa MAWB, mobile tampilkan:
+   - `Sisa 37 pieces`
+   - `Lanjutkan di ULD lain`
+
+**Kesimpulan**
+Jadi fix yang benar bukan sekadar tambah kolom split, tapi menambah status **allocation final**. `split` harus menjadi hasil dari actual pieces lintas ULD, bukan keputusan manual di awal.
+
+Saya sarankan next task saya eksekusi perubahan ini:
+
+- backend: migration `is_allocation_final`, endpoint finalisasi ULD allocation, validasi total lintas ULD;
+- mobile: `Pieces ULD Ini` tidak wajib saat tambah MAWB, tambah tombol **Tutup Alokasi ULD** di screen rincian.

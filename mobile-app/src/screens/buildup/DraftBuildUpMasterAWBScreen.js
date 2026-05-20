@@ -16,6 +16,7 @@ import { validateBuildUpCheckDetailForm } from '../../utils/validators';
 const initialMasterForm = {
   mawb: '',
   total_pieces: '',
+  master_total_pieces: '',
   agent: '',
   remark: '',
 };
@@ -47,6 +48,9 @@ function InfoLine({ label, value }) {
  * @returns {React.ReactElement} Master MAWB card.
  */
 function MasterAwbCard({ detail, onPress }) {
+  const allocationLabel = detail.is_allocation_final ? 'DITUTUP' : 'AKTIF';
+  const pieceTarget = detail.total_pieces || 'belum ditutup';
+
   return (
     <Pressable onPress={onPress}>
       <Card className="rounded-sm bg-card">
@@ -57,11 +61,25 @@ function MasterAwbCard({ detail, onPress }) {
               {detail.is_completed ? 'SELESAI' : 'BELUM'}
             </Text>
           </View>
+          <View className="self-start rounded-sm bg-muted px-2 py-1">
+            <Text className="text-xs font-extrabold text-muted-foreground">{allocationLabel}</Text>
+          </View>
+          {detail.is_split_uld ? (
+            <View className="self-start rounded-sm bg-amber-100 px-2 py-1">
+              <Text className="text-xs font-extrabold text-amber-700">
+                SPLIT {detail.split_sequence || '-'}/{detail.split_total_uld || 1} ULD
+              </Text>
+            </View>
+          ) : null}
           <View className="gap-1">
             <InfoLine label="Agent" value={detail.agent} />
             <InfoLine
-              label="Pieces"
-              value={`${detail.completed_pieces}/${detail.total_pieces}`}
+              label="Total MAWB"
+              value={detail.master_total_pieces || detail.total_pieces}
+            />
+            <InfoLine
+              label="Pieces ULD"
+              value={`${detail.completed_pieces}/${pieceTarget}`}
             />
             <InfoLine label="Sisa" value={detail.remaining_pieces} />
           </View>
@@ -186,7 +204,8 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
     try {
       await createBuildUpCheckDetail(header.id, {
         mawb: form.mawb,
-        total_pieces: Number(form.total_pieces),
+        total_pieces: form.total_pieces === '' ? null : Number(form.total_pieces),
+        master_total_pieces: Number(form.master_total_pieces),
         agent: form.agent,
         remark: form.remark,
       });
@@ -253,10 +272,17 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
               placeholder="123-45678901"
             />
             <MasterInput
-              label="Total Pieces"
+              label="Pieces ULD Ini"
               value={form.total_pieces}
               onChangeText={(value) => updateForm('total_pieces', value)}
-              placeholder="Total pieces MAWB"
+              placeholder="Opsional, isi jika sudah pasti"
+              keyboardType="numeric"
+            />
+            <MasterInput
+              label="Total Pieces MAWB"
+              value={form.master_total_pieces}
+              onChangeText={(value) => updateForm('master_total_pieces', value)}
+              placeholder="Total pieces MAWB asli"
               keyboardType="numeric"
             />
             <MasterInput
