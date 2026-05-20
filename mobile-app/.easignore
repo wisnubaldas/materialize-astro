@@ -1,0 +1,40 @@
+# Dependencies and local package-manager cache
+node_modules/
+.npm/
+.yarn/
+
+# Expo local state and build output
+.expo/
+dist/
+web-build/
+build/
+
+# Native build artifacts
+android/.gradle/
+android/app/build/
+ios/build/
+
+# Local environment files. Configure production values through EAS secrets/env.
+.env
+.env.local
+.env.*.local
+
+# Signing keys and credentials
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# Logs and OS/editor noise
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.expo-server*.log
+.DS_Store
+Thumbs.db
+
+# Test and coverage artifacts
+coverage/
+.nyc_output/
