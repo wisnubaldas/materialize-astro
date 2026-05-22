@@ -1,11 +1,10 @@
 import GridData from '@components/GridData';
-import { showToast } from '@utils';
+import { API_BASE_URL } from '@lib/api/client.js';
+import { getAccessToken } from '@lib/auth/token.js';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getAccessToken } from '@lib/auth/token.js';
-import { API_BASE_URL } from '@lib/api/client.js';
 import { boolBadge } from '../edi/shared.js';
-
+import CardPages from '../ui/CardPages.jsx';
 // Helper to format date
 const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   if (type !== 'display' && type !== 'filter') {
@@ -134,7 +133,7 @@ export default function BuildUpListDatatables() {
             return row?.total_pieces ?? 0;
           }
           return `<span class="fw-medium">${row?.completed_pieces ?? 0}</span> / <span class="text-muted">${row?.total_pieces ?? 0}</span>`;
-        }
+        },
       },
       {
         data: 'is_completed',
@@ -161,10 +160,10 @@ export default function BuildUpListDatatables() {
           return `
             <div class="btn-group btn-group-sm" role="group">
               <button class="btn btn-outline-primary d-flex align-items-center gap-1" data-action="print-manifest" data-id="${row?.id}">
-                <i class="ri-file-pdf-line"></i> Manifest
+                <i class="ri ri-file-pdf-line"></i> Manifest
               </button>
               <button class="btn btn-outline-info d-flex align-items-center gap-1" data-action="print-checklist" data-id="${row?.id}">
-                <i class="ri-printer-line"></i> Checklist
+                <i class="ri ri-printer-line"></i> Checklist
               </button>
             </div>
           `;
@@ -185,21 +184,10 @@ export default function BuildUpListDatatables() {
 
   return (
     <div className="card shadow-sm border-0 overflow-hidden">
-      <div className="card-header bg-gradient-primary text-white p-4" style={{ background: 'linear-gradient(135deg, #7367f0 0%, #9e95f5 100%)' }}>
-        <div className="d-flex align-items-center gap-3">
-          <div className="avatar avatar-md bg-white text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm">
-            <i className="ri-archive-line icon-24px"></i>
-          </div>
-          <div>
-            <h4 className="mb-0 text-white fw-bold">Build Up Checklist & Manifest</h4>
-            <p className="mb-0 text-white-50 small">Kelola data build up, cetak manifest, dan lembar checklist secara realtime</p>
-          </div>
-        </div>
-      </div>
-
+      <CardPages variant="info" />
       <div className="card-body bg-light-50 border-bottom p-4">
         <h5 className="fw-semibold text-secondary mb-3 d-flex align-items-center gap-2">
-          <i className="ri-filter-2-line"></i> Filter Pencarian
+          <i className="ri ri-filter-2-line"></i> Filter Pencarian
         </h5>
         <form onSubmit={handleApply}>
           <div className="row g-3">
@@ -283,11 +271,18 @@ export default function BuildUpListDatatables() {
           </div>
 
           <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-outline-secondary d-flex align-items-center gap-1" onClick={handleReset}>
-              <i className="ri-refresh-line"></i> Reset
+            <button
+              type="button"
+              className="btn btn-outline-secondary d-flex align-items-center gap-1"
+              onClick={handleReset}
+            >
+              <i className="ri ri-refresh-line"></i> Reset
             </button>
-            <button type="submit" className="btn btn-primary d-flex align-items-center gap-1 shadow-sm">
-              <i className="ri-search-line"></i> Cari Data
+            <button
+              type="submit"
+              className="btn btn-primary d-flex align-items-center gap-1 shadow-sm"
+            >
+              <i className="ri ri-search-line"></i> Cari Data
             </button>
           </div>
         </form>

@@ -1,4 +1,9 @@
-from fastapi import APIRouter, Depends, Query, Request, Response, status
+import asyncio
+import json
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import StreamingResponse
 
 from app.dependencies.setting_deps import get_setting_service_r, get_setting_service_w
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
@@ -16,9 +21,13 @@ from app.schemas.setting_schema import (
     UserRolesUpdate,
     UserUpdate,
 )
+from app.services.crypto_service import decrypt_key
 from app.services.setting_service import SettingService
+from app.services.sse_service import SSEUTIL
 
 router = APIRouter(prefix="/setting", tags=["Setting"])
+logger = logging.getLogger(__name__)
+LOG_PATH = "logs/app.log"
 
 
 @router.get("/users", response_model=list[UserOut], summary="List users")
@@ -211,3 +220,29 @@ def delete_menu(
 ):
     setting_service.delete_menu(menu_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+async def __log_event_stream():
+    last_sent = None
+    try:
+        while True:
+            logs = SSEUTIL.read_last_json_lines(LOG_PATH, 100)
+            # hanya kirim jika berubah (tidak broadcast spam)
+            if logs != last_sent:
+                last_sent = logs
+                data = json.dumps(logs)
+                yield f"data: {data}\n\n"
+
+            await asyncio.sleep(5)  # interval cek log
+    except asyncio.CancelledError:
+        logger.info("SSE client disconnected")
+        raise
+
+
+@router.get("/log-app", summary="menampilkan log dari semua log aplikasi")
+async def log_app(_request: Request, key: str):
+    try:
+        decrypt_key(key)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e)) from e
+    return StreamingResponse(__log_event_stream(), media_type="text/event-stream")

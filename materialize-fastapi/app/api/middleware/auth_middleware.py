@@ -35,6 +35,8 @@ class JWTMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if path == "/sse" or path.startswith("/sse/"):
             return await call_next(request)
+        if path == "/setting/log-app":
+            return await call_next(request)
         if any(path.startswith(p) for p in EXCLUDED_PATH_PREFIXES):
             return await call_next(request)
 

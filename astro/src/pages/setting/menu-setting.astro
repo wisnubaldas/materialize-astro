@@ -1,14 +1,10 @@
 ---
 import { MenuManagement } from '@components/setting';
-import AdminLayout from '@layouts/BaseLayout.astro';
+import BaseLayout from '@layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="Setting | Menu Management" description="Menu permissions by role">
-  <div class="row-auto">
-    <div class="row g-6">
-      <div class="col-12">
-        <MenuManagement client:only />
-      </div>
-    </div>
+<BaseLayout title="Setting | Menu Management" description="Menu permissions by role">
+  <div class="container-xxl grow">
+    <MenuManagement client:only="react" />
   </div>
-</AdminLayout>
+</BaseLayout>

@@ -6,6 +6,6 @@ import AdminLayout from '@layouts/BaseLayout.astro';
 <AdminLayout title="Page Admin" description="Admin dashboard page">
   <!-- Komponen controller -->
   <div class="row m-4" style="min-height: 500px;">
-    <InvoicePanel client:only />
+    <InvoicePanel client:only="react" />
   </div>
 </AdminLayout>

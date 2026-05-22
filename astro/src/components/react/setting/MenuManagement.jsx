@@ -5,6 +5,7 @@ import settingClient from '@lib/api/setting';
 import { showToast } from '@utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
+import CardPages from '../ui/CardPages.jsx';
 import { escapeHtml, normalizeCollection, resolveErrorMessage } from './shared';
 
 const emptyMenuForm = {
@@ -401,98 +402,119 @@ export default function MenuManagement() {
   }, [handleAssignRole, handleDeleteMenu, openEditMenuModal]);
 
   return (
-    <div className="row g-6">
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Tambah Menu</h5>
-            <div className="row g-4">
-              <div className="col-md-6">
-                <InputField
-                  label="Nama Menu"
-                  name="name"
-                  placeholder="User Management"
-                  value={menuForm.name}
+    <div className="card shadow-sm border-0 overflow-hidden">
+      <CardPages
+        title="Menu Management"
+        description="Kelola data menu dan hak akses menu secara realtime"
+        icon="ri ri-menu-line"
+      />
+
+      <div className="card-body bg-light-50 border-bottom p-4">
+        <h5 className="fw-semibold text-secondary mb-3 d-flex align-items-center gap-2">
+          <i className="ri ri-add-box-line"></i> Tambah Menu Baru
+        </h5>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleMenuSubmit();
+          }}
+        >
+          <div className="row g-3">
+            <div className="col-12 col-md-3">
+              <InputField
+                label="Nama Menu"
+                name="name"
+                placeholder="User Management"
+                value={menuForm.name}
+                onChange={handleMenuChange}
+                error={menuErrors.name}
+              />
+            </div>
+            <div className="col-12 col-md-3">
+              <InputField
+                label="URL"
+                name="url"
+                placeholder="/setting/user-management"
+                value={menuForm.url}
+                onChange={handleMenuChange}
+                error={menuErrors.url}
+              />
+            </div>
+            <div className="col-12 col-sm-4 col-md-2">
+              <InputField
+                label="Icon"
+                name="icon"
+                placeholder="ri ri-user-line"
+                value={menuForm.icon}
+                onChange={handleMenuChange}
+                error={menuErrors.icon}
+              />
+            </div>
+            <div className="col-12 col-sm-4 col-md-2">
+              <InputField
+                label="Parent ID"
+                name="parent"
+                type="number"
+                placeholder="0"
+                value={menuForm.parent}
+                onChange={handleMenuChange}
+                error={menuErrors.parent}
+              />
+            </div>
+            <div className="col-12 col-sm-4 col-md-2">
+              <div className="form-floating form-floating-outline mb-3">
+                <select
+                  className={`form-select ${menuErrors.role_id ? 'is-invalid' : ''}`}
+                  id="input-role"
+                  name="role_id"
+                  value={menuForm.role_id ?? ''}
                   onChange={handleMenuChange}
-                  error={menuErrors.name}
-                />
-              </div>
-              <div className="col-md-6">
-                <InputField
-                  label="URL"
-                  name="url"
-                  placeholder="/setting/user-management"
-                  value={menuForm.url}
-                  onChange={handleMenuChange}
-                  error={menuErrors.url}
-                />
-              </div>
-              <div className="col-md-4">
-                <InputField
-                  label="Icon"
-                  name="icon"
-                  placeholder="ri ri-user-line"
-                  value={menuForm.icon}
-                  onChange={handleMenuChange}
-                  error={menuErrors.icon}
-                />
-              </div>
-              <div className="col-md-4">
-                <div className="form-floating form-floating-outline mb-3">
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="input-parent"
-                    name="parent"
-                    value={menuForm.parent}
-                    onChange={handleMenuChange}
-                    placeholder="0"
-                  />
-                  <label htmlFor="input-parent">Parent ID</label>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-floating form-floating-outline mb-3">
-                  <select
-                    className="form-select"
-                    id="input-role"
-                    name="role_id"
-                    value={menuForm.role_id ?? ''}
-                    onChange={handleMenuChange}
-                  >
-                    {renderRoleOptions()}
-                  </select>
-                  <label htmlFor="input-role">Role Akses</label>
-                </div>
+                >
+                  {renderRoleOptions()}
+                </select>
+                <label htmlFor="input-role">Role Akses</label>
+                {menuErrors.role_id && <div className="form-text text-danger mt-1">{menuErrors.role_id}</div>}
               </div>
             </div>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 mt-4">
             <button
-              className="btn btn-primary mt-2"
               type="button"
-              onClick={handleMenuSubmit}
+              className="btn btn-outline-secondary d-flex align-items-center gap-1"
+              onClick={() => {
+                setMenuForm(emptyMenuForm);
+                setMenuErrors({});
+              }}
+            >
+              <i className="ri ri-refresh-line"></i> Reset
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary d-flex align-items-center gap-1 shadow-sm"
               disabled={menuLoading}
             >
-              {menuLoading ? 'Menyimpan...' : 'Simpan Menu'}
+              <i className="ri ri-save-line"></i> {menuLoading ? 'Menyimpan...' : 'Simpan Menu'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Daftar Menu</h5>
-            {loading ? <Spinner /> : null}
-            {error ? <div className="alert alert-danger mb-3">{error}</div> : null}
-            <GridData
-              ref={tableRef}
-              columns={columns}
-              ajaxEndpoint={MENUS_DATATABLE_ENDPOINT}
-              filters={{}}
-              options={tableOptions}
-              className="table-bordered table-striped align-middle"
-            />
-          </div>
+      <div className="card-body p-4">
+        <h5 className="fw-semibold text-secondary mb-3 d-flex align-items-center gap-2">
+          <i className="ri ri-menu-line"></i> Daftar Menu
+        </h5>
+        {loading ? <Spinner /> : null}
+        {error ? <div className="alert alert-danger mb-3">{error}</div> : null}
+        <div className="table-responsive">
+          <GridData
+            ref={tableRef}
+            columns={columns}
+            ajaxEndpoint={MENUS_DATATABLE_ENDPOINT}
+            filters={{}}
+            options={tableOptions}
+            className="table-bordered table-striped align-middle"
+          />
         </div>
       </div>
     </div>

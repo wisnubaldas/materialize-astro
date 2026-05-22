@@ -347,6 +347,7 @@ Aturan CEISA:
 Sebelum menyelesaikan task backend:
 
 - Jalankan test yang relevan jika tersedia.
+- **Pembersihan Kode (Code Cleanup)**: Pastikan tidak ada Dead Code, Unreachable Code, Legacy/Deprecated Code yang tidak terpakai, dan sisa debug/komentar sampah (Code Cruft).
 - Jalankan lint/ruff jika perubahan Python cukup besar.
 - Pastikan migration Alembic valid jika mengubah model/tabel.
 - Pastikan endpoint protected memakai dependency auth/permission.

@@ -1,14 +1,10 @@
 ---
-import { UserManagement } from '@components/setting';
-import AdminLayout from '@layouts/BaseLayout.astro';
+import { UserManagement as UserManagementContainer } from '@components/setting';
+import BaseLayout from '@layouts/BaseLayout.astro';
 ---
 
-<AdminLayout title="Setting | User Management" description="User and password management">
-  <div class="row-auto">
-    <div class="row g-6">
-      <div class="col-12">
-        <UserManagement client:only />
-      </div>
-    </div>
+<BaseLayout title="Setting | User Management" description="User and password management">
+  <div class="container-xxl grow">
+    <UserManagementContainer client:only="react" />
   </div>
-</AdminLayout>
+</BaseLayout>

@@ -64,7 +64,7 @@ const SSE_REQUEST = {
   async getLogApp(options = {}) {
     const key = await createSseKey({ client: 'hubnet-dashboard' });
     const params = { ...(options?.params ?? {}), key };
-    return apiClient.sse('/sse/log-app', {
+    return apiClient.sse('/setting/log-app', {
       ...options,
       params,
     });

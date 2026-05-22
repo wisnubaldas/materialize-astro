@@ -218,6 +218,7 @@ Catatan penting frontend:
 - Dilarang membuat kembali folder legacy `src/js`, `src/libs`, `src/scss`, `src/vendor`, atau `src/fonts` di level `src/`.
 - Khusus pengerjaan modul EDI di `astro/src/pages/edi`, jika ada perubahan format/flow Cargo-IMP, lakukan validasi sintaks pesan di `https://www.parse2.com/service-cargoimp.shtml` (gunakan tipe pesan yang sesuai, misalnya `FWB/17` untuk FWB).
 - Hindari membuat folder paralel baru di luar struktur target tanpa alasan arsitektur yang jelas.
+- **Hindari Konflik Nama Deklarasi**: Dilarang keras mengimpor komponen, kelas, atau fungsi dengan nama yang sama dengan deklarasi lokal di file tersebut (misalnya, mengimpor `UserManagement` di dalam file yang juga mendefinisikan fungsi/variabel `UserManagement`). Hal ini penting untuk mencegah error linter `Import declaration conflicts with local declaration`.
 - Web Performance Optimization (WPO) bersifat wajib pada setiap pengembangan frontend:
   - lakukan code-splitting untuk modul berat (`dynamic import`, `manualChunks`) agar initial bundle tidak membengkak;
   - minimalkan dependency duplikat/legacy yang overlap fungsi;
@@ -358,8 +359,19 @@ Sebelum melakukan perubahan kode:
 4. Tampilkan gap analysis singkat: kondisi sekarang vs target arsitektur.
 5. Buat rencana implementasi bertahap beserta risiko.
 6. Eksekusi perubahan secara kecil, aman, dan mudah direview.
-7. Verifikasi dengan lint, type check, build, atau minimal pemeriksaan manual yang relevan.
-8. Simpan laporan progres harian sesuai aturan dokumentasi.
+7. Bersihkan sisa-sisa kode lama (Dead Code, Unreachable Code, Legacy/Deprecated Code, Code Cruft) setelah selesai melakukan perubahan.
+8. Verifikasi dengan lint, type check, build, atau minimal pemeriksaan manual yang relevan.
+9. Simpan laporan progres harian sesuai aturan dokumentasi.
+
+---
+
+## Aturan Pembersihan Code (Code Cleanup)
+
+Setiap pengerjaan migrasi, refactor, atau pengembangan fitur baru wajib menyertakan langkah pemeriksaan dan pembersihan code:
+- **Dead Code / Unused Code**: Hapus fungsi, variabel, import, file, atau modul yang tidak lagi digunakan setelah perubahan dilakukan.
+- **Unreachable Code**: Pastikan tidak ada blok kode yang tidak mungkin dieksekusi (unreachable) karena alur percabangan atau return statement yang salah.
+- **Legacy & Deprecated Code**: Jika memindahkan/memperbarui logic lama, pastikan logic lama yang didepresiasi dihapus secara aman jika tidak ada lagi dependensi lain yang menggunakannya.
+- **Code Cruft**: Bersihkan komentar-komentar sampah, sisa debugging (seperti `console.log` berlebihan atau statement print sementara), serta file backup sementara di dalam repositori kerja.
 
 ---
 

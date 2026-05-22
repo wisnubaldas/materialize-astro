@@ -5,11 +5,18 @@ import { showToast } from '@utils';
 import { useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { escapeHtml, normalizeCollection, resolveErrorMessage } from './shared';
+import CardPages from '../ui/CardPages.jsx';
 
 const emptyRoleForm = {
   role_name: '',
 };
 
+/**
+ * RoleManagement component.
+ * Provides UI for managing user roles, creating new roles, editing role names, and deleting roles.
+ *
+ * @returns {React.JSX.Element} The rendered RoleManagement component.
+ */
 export default function RoleManagement() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,90 +153,111 @@ export default function RoleManagement() {
   }, [loadData]);
 
   return (
-    <div className="row g-6">
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Tambah Role</h5>
-            <div className="row g-4">
-              <div className="col-md-6">
-                <InputField
-                  label="Nama Role"
-                  name="role_name"
-                  placeholder="admin"
-                  value={roleForm.role_name}
-                  onChange={handleRoleChange}
-                  error={roleErrors.role_name}
-                />
-              </div>
+    <div className="card shadow-sm border-0 overflow-hidden">
+      <CardPages
+        title="Role Management"
+        description="Kelola data role user operasional secara realtime"
+        icon="ri ri-shield-user-line"
+      />
+
+      <div className="card-body bg-light-50 border-bottom p-4">
+        <h5 className="fw-semibold text-secondary mb-3 d-flex align-items-center gap-2">
+          <i className="ri ri-shield-keyhole-line"></i> Tambah Role Baru
+        </h5>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleRoleSubmit();
+          }}
+        >
+          <div className="row g-3 align-items-end">
+            <div className="col-12 col-md-4 col-lg-3">
+              <InputField
+                label="Nama Role"
+                name="role_name"
+                placeholder="admin"
+                value={roleForm.role_name}
+                onChange={handleRoleChange}
+                error={roleErrors.role_name}
+              />
             </div>
-            <button
-              className="btn btn-primary mt-2"
-              type="button"
-              onClick={handleRoleSubmit}
-              disabled={roleLoading}
-            >
-              {roleLoading ? 'Menyimpan...' : 'Simpan Role'}
-            </button>
+            <div className="col-12 col-md-8 col-lg-9 d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-outline-secondary d-flex align-items-center gap-1"
+                onClick={() => {
+                  setRoleForm(emptyRoleForm);
+                  setRoleErrors({});
+                }}
+              >
+                <i className="ri ri-refresh-line"></i> Reset
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary d-flex align-items-center gap-1 shadow-sm"
+                disabled={roleLoading}
+              >
+                <i className="ri ri-save-line"></i> {roleLoading ? 'Menyimpan...' : 'Simpan Role'}
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
 
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Daftar Role</h5>
-            {loading ? (
-              <Spinner />
-            ) : error ? (
-              <div className="alert alert-danger mb-0">{error}</div>
-            ) : roles.length === 0 ? (
-              <div className="text-muted">Belum ada role.</div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Role</th>
-                      <th className="text-end">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {roles.map((role) => (
-                      <tr key={role.id}>
-                        <td>{role.id}</td>
-                        <td>{role.role_name}</td>
-                        <td className="text-end">
-                          <div className="btn-group btn-group-sm">
-                            <button
-                              type="button"
-                              className="btn btn-outline-warning"
-                              onClick={() => openEditRoleModal(role)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger"
-                              onClick={() => handleDeleteRole(role)}
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+      <div className="card-body p-4">
+        <h5 className="fw-semibold text-secondary mb-3 d-flex align-items-center gap-2">
+          <i className="ri ri-shield-user-line"></i> Daftar Role
+        </h5>
+        {loading ? (
+          <Spinner />
+        ) : error ? (
+          <div className="alert alert-danger mb-0">{error}</div>
+        ) : roles.length === 0 ? (
+          <div className="text-muted">Belum ada role.</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-bordered table-striped align-middle">
+              <thead className="table-light">
+                <tr>
+                  <th style={{ width: '80px' }}>ID</th>
+                  <th>Nama Role</th>
+                  <th className="text-end" style={{ width: '180px' }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roles.map((role) => (
+                  <tr key={role.id}>
+                    <td>{role.id}</td>
+                    <td>
+                      <span className="badge bg-label-primary px-3 py-2 rounded-2 fw-semibold">
+                        {role.role_name}
+                      </span>
+                    </td>
+                    <td className="text-end">
+                      <div className="btn-group btn-group-sm">
+                        <button
+                          type="button"
+                          className="btn btn-outline-warning d-flex align-items-center gap-1"
+                          onClick={() => openEditRoleModal(role)}
+                        >
+                          <i className="ri ri-edit-box-line"></i> Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger d-flex align-items-center gap-1"
+                          onClick={() => handleDeleteRole(role)}
+                        >
+                          <i className="ri ri-delete-bin-line"></i> Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
-
-
-

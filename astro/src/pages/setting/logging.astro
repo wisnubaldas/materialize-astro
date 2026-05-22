@@ -1,0 +1,10 @@
+---
+import { SseDataTracking } from '@components/setting';
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Setting | Logging" description="List data tracking settings">
+  <div class="container-xxl grow">
+    <SseDataTracking client:only="react" />
+  </div>
+</BaseLayout>

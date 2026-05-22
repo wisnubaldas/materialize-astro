@@ -1,15 +1,13 @@
 # app/api/sse_route.py
-import asyncio
 import json
 import logging
 
 import redis.asyncio as redis
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.services.angkasapura_service import UPLOAD_INVOICE_AP2_CHANNEL, INVAp2Service
 from app.services.crypto_service import decrypt_key
-from app.services.sse_service import SSEUTIL
 
 REDIS_URL = "redis://localhost:6379/0"
 router = APIRouter(prefix="/sse", tags=["Routing untuk SSE server-sent event"])
@@ -71,40 +69,9 @@ async def angkasapura_upload_invoice(key: str):
     return StreamingResponse(_upload_invoice_excel_event_stream(), media_type="text/event-stream")
 
 
-LOG_PATH = "logs/app.log"
-
-
-async def __log_event_stream():
-    last_sent = None
-    try:
-        while True:
-            logs = SSEUTIL.read_last_json_lines(LOG_PATH, 100)
-            # hanya kirim jika berubah (tidak broadcast spam)
-            if logs != last_sent:
-                last_sent = logs
-                data = json.dumps(logs)
-                yield f"data: {data}\n\n"
-
-            await asyncio.sleep(5)  # interval cek log
-    except asyncio.CancelledError:
-        logger.info("SSE client disconnected")
-        raise
-
-
-@router.get("/log-app", summary="menampilkan log dari semua log aplikasi")
-async def log_app(_request: Request, key: str):
-    try:
-        decrypt_key(key)
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e)) from e
-    return StreamingResponse(__log_event_stream(), media_type="text/event-stream")
-
 # @router.get("/arithmetic")
 # async def stream_arithmetic(key: str):
 #     payload = decrypt_key(key)
-#     print(f"📡 SSE Arithmetic Connected by {payload['user']}")
-#     return StreamingResponse(redis_to_sse("arithmetic_channel"), media_type="text/event-stream")
-
 
 # @router.get("/geometric")
 # async def stream_geometric(key: str):

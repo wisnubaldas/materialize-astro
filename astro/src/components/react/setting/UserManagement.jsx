@@ -5,6 +5,7 @@ import settingClient from '@lib/api/setting';
 import { showToast } from '@utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
+import CardPages from '../ui/CardPages.jsx';
 import { escapeHtml, normalizeCollection, resolveErrorMessage } from './shared';
 
 const emptyCreateForm = {
@@ -91,10 +92,11 @@ export default function UserManagement() {
     }
   };
 
-  const openEditModal = useCallback(async (user) => {
-    const result = await Swal.fire({
-      title: 'Edit User',
-      html: `
+  const openEditModal = useCallback(
+    async (user) => {
+      const result = await Swal.fire({
+        title: 'Edit User',
+        html: `
         <div class="text-start">
           <div class="form-floating form-floating-outline mb-3">
             <input
@@ -118,47 +120,49 @@ export default function UserManagement() {
           </div>
         </div>
       `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Update',
-      cancelButtonText: 'Batal',
-      showLoaderOnConfirm: true,
-      preConfirm: async () => {
-        const popup = Swal.getPopup();
-        const username = popup?.querySelector('#swal-username')?.value?.trim() ?? '';
-        const email = popup?.querySelector('#swal-email')?.value?.trim() ?? '';
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+          const popup = Swal.getPopup();
+          const username = popup?.querySelector('#swal-username')?.value?.trim() ?? '';
+          const email = popup?.querySelector('#swal-email')?.value?.trim() ?? '';
 
-        if (!username) {
-          Swal.showValidationMessage('Username wajib diisi');
-          return undefined;
-        }
-        if (!email) {
-          Swal.showValidationMessage('Email wajib diisi');
-          return undefined;
-        }
+          if (!username) {
+            Swal.showValidationMessage('Username wajib diisi');
+            return undefined;
+          }
+          if (!email) {
+            Swal.showValidationMessage('Email wajib diisi');
+            return undefined;
+          }
 
-        try {
-          await settingClient.updateUser(user.id, { username, email });
-          return { username, email };
-        } catch (err) {
-          Swal.showValidationMessage(resolveErrorMessage(err, 'Gagal memperbarui user.'));
-          return undefined;
-        }
-      },
-      allowOutsideClick: () => !Swal.isLoading(),
-      didOpen: () => {
-        const input = Swal.getPopup()?.querySelector('#swal-username');
-        if (input) {
-          input.focus();
-        }
-      },
-    });
+          try {
+            await settingClient.updateUser(user.id, { username, email });
+            return { username, email };
+          } catch (err) {
+            Swal.showValidationMessage(resolveErrorMessage(err, 'Gagal memperbarui user.'));
+            return undefined;
+          }
+        },
+        allowOutsideClick: () => !Swal.isLoading(),
+        didOpen: () => {
+          const input = Swal.getPopup()?.querySelector('#swal-username');
+          if (input) {
+            input.focus();
+          }
+        },
+      });
 
-    if (result.isConfirmed) {
-      showToast({ type: 'success', title: 'User', message: 'User berhasil diperbarui.' });
-      reloadTable(false);
-    }
-  }, [reloadTable]);
+      if (result.isConfirmed) {
+        showToast({ type: 'success', title: 'User', message: 'User berhasil diperbarui.' });
+        reloadTable(false);
+      }
+    },
+    [reloadTable]
+  );
 
   const openPasswordModal = useCallback(async (user) => {
     const result = await Swal.fire({
@@ -201,8 +205,7 @@ export default function UserManagement() {
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         const popup = Swal.getPopup();
-        const currentPassword =
-          popup?.querySelector('#swal-current-password')?.value?.trim() ?? '';
+        const currentPassword = popup?.querySelector('#swal-current-password')?.value?.trim() ?? '';
         const newPassword = popup?.querySelector('#swal-new-password')?.value ?? '';
         const confirmPassword = popup?.querySelector('#swal-confirm-password')?.value ?? '';
 
@@ -255,22 +258,23 @@ export default function UserManagement() {
   }, [roles]);
 
   // RBAC: atur relasi user <-> role di backend (tabel user_roles).
-  const openRoleModal = useCallback(async (user) => {
-    try {
-      const [rolesData, userRoles] = await Promise.all([
-        ensureRolesLoaded(),
-        settingClient.listUserRoles(user.id),
-      ]);
+  const openRoleModal = useCallback(
+    async (user) => {
+      try {
+        const [rolesData, userRoles] = await Promise.all([
+          ensureRolesLoaded(),
+          settingClient.listUserRoles(user.id),
+        ]);
 
-      const selectedIds = new Set(
-        Array.isArray(userRoles) ? userRoles.map((role) => role.id) : []
-      );
+        const selectedIds = new Set(
+          Array.isArray(userRoles) ? userRoles.map((role) => role.id) : []
+        );
 
-      const rolesHtml =
-        rolesData.length > 0
-          ? rolesData
-              .map(
-                (role) => `
+        const rolesHtml =
+          rolesData.length > 0
+            ? rolesData
+                .map(
+                  (role) => `
               <div class="form-check mb-2">
                 <input
                   class="form-check-input"
@@ -285,70 +289,75 @@ export default function UserManagement() {
                 </label>
               </div>
             `
-              )
-              .join('')
-          : '<div class="text-muted">Belum ada role. Buat role terlebih dahulu.</div>';
+                )
+                .join('')
+            : '<div class="text-muted">Belum ada role. Buat role terlebih dahulu.</div>';
 
-      const result = await Swal.fire({
-        title: `Atur Role`,
-        html: `<div class="text-start">${rolesHtml}</div>`,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Simpan',
-        cancelButtonText: 'Batal',
-        showLoaderOnConfirm: true,
-        preConfirm: async () => {
-          const popup = Swal.getPopup();
-          const checked = Array.from(
-            popup?.querySelectorAll('input[name="role_ids"]:checked') ?? []
-          ).map((input) => Number(input.value));
+        const result = await Swal.fire({
+          title: `Atur Role`,
+          html: `<div class="text-start">${rolesHtml}</div>`,
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: 'Simpan',
+          cancelButtonText: 'Batal',
+          showLoaderOnConfirm: true,
+          preConfirm: async () => {
+            const popup = Swal.getPopup();
+            const checked = Array.from(
+              popup?.querySelectorAll('input[name="role_ids"]:checked') ?? []
+            ).map((input) => Number(input.value));
 
-          try {
-            await settingClient.updateUserRoles(user.id, { role_ids: checked });
-            return true;
-          } catch (err) {
-            Swal.showValidationMessage(resolveErrorMessage(err, 'Gagal memperbarui role user.'));
-            return undefined;
-          }
-        },
-        allowOutsideClick: () => !Swal.isLoading(),
-      });
+            try {
+              await settingClient.updateUserRoles(user.id, { role_ids: checked });
+              return true;
+            } catch (err) {
+              Swal.showValidationMessage(resolveErrorMessage(err, 'Gagal memperbarui role user.'));
+              return undefined;
+            }
+          },
+          allowOutsideClick: () => !Swal.isLoading(),
+        });
 
-      if (result.isConfirmed) {
-        showToast({ type: 'success', title: 'User', message: 'Role user diperbarui.' });
+        if (result.isConfirmed) {
+          showToast({ type: 'success', title: 'User', message: 'Role user diperbarui.' });
+        }
+      } catch (err) {
+        showToast({
+          type: 'danger',
+          title: 'User',
+          message: resolveErrorMessage(err, 'Gagal memuat data role.'),
+        });
       }
-    } catch (err) {
-      showToast({
-        type: 'danger',
-        title: 'User',
-        message: resolveErrorMessage(err, 'Gagal memuat data role.'),
-      });
-    }
-  }, [ensureRolesLoaded]);
+    },
+    [ensureRolesLoaded]
+  );
 
-  const handleDelete = useCallback(async (user) => {
-    const result = await Swal.fire({
-      title: 'Hapus user?',
-      text: `User ${user.username} akan dihapus permanen.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Ya, hapus',
-      cancelButtonText: 'Batal',
-    });
-    if (!result.isConfirmed) return;
-
-    try {
-      await settingClient.deleteUser(user.id);
-      showToast({ type: 'success', title: 'User', message: 'User berhasil dihapus.' });
-      reloadTable(false);
-    } catch (err) {
-      showToast({
-        type: 'danger',
-        title: 'User',
-        message: resolveErrorMessage(err, 'Gagal menghapus user.'),
+  const handleDelete = useCallback(
+    async (user) => {
+      const result = await Swal.fire({
+        title: 'Hapus user?',
+        text: `User ${user.username} akan dihapus permanen.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal',
       });
-    }
-  }, [reloadTable]);
+      if (!result.isConfirmed) return;
+
+      try {
+        await settingClient.deleteUser(user.id);
+        showToast({ type: 'success', title: 'User', message: 'User berhasil dihapus.' });
+        reloadTable(false);
+      } catch (err) {
+        showToast({
+          type: 'danger',
+          title: 'User',
+          message: resolveErrorMessage(err, 'Gagal menghapus user.'),
+        });
+      }
+    },
+    [reloadTable]
+  );
 
   const columns = useMemo(
     () => [
@@ -448,88 +457,101 @@ export default function UserManagement() {
   }, [handleDelete, openEditModal, openPasswordModal, openRoleModal]);
 
   return (
-    <div className="row g-6">
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Tambah User</h5>
-            <div className="row g-4">
-              <div className="col-md-6">
-                <InputField
-                  label="Username"
-                  name="username"
-                  placeholder="username"
-                  value={createForm.username}
-                  onChange={handleCreateChange}
-                  error={createErrors.username}
-                />
-              </div>
-              <div className="col-md-6">
-                <InputField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="user@mail.com"
-                  value={createForm.email}
-                  onChange={handleCreateChange}
-                  error={createErrors.email}
-                />
-              </div>
-              <div className="col-md-6">
-                <InputField
-                  label="Password"
-                  name="password"
-                  type="password"
-                  placeholder="******"
-                  value={createForm.password}
-                  onChange={handleCreateChange}
-                  error={createErrors.password}
-                />
-              </div>
-              <div className="col-md-6">
-                <InputField
-                  label="Konfirmasi Password"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="******"
-                  value={createForm.confirmPassword}
-                  onChange={handleCreateChange}
-                  error={createErrors.confirmPassword}
-                />
-              </div>
+    <div className="card shadow-sm border-0 overflow-hidden">
+      <CardPages
+        title="User Management"
+        description="Kelola data user, password, dan role user secara realtime"
+        icon="ri ri-user-settings-line"
+      />
+      <div className="card-body bg-light-50 border-bottom p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateSubmit();
+          }}
+        >
+          <div className="row g-3">
+            <div className="col-12 col-sm-6 col-md-3">
+              <InputField
+                label="Username"
+                name="username"
+                placeholder="username"
+                value={createForm.username}
+                onChange={handleCreateChange}
+                error={createErrors.username}
+              />
             </div>
+            <div className="col-12 col-sm-6 col-md-3">
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                placeholder="user@mail.com"
+                value={createForm.email}
+                onChange={handleCreateChange}
+                error={createErrors.email}
+              />
+            </div>
+            <div className="col-12 col-sm-6 col-md-3">
+              <InputField
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="******"
+                value={createForm.password}
+                onChange={handleCreateChange}
+                error={createErrors.password}
+              />
+            </div>
+            <div className="col-12 col-sm-6 col-md-3">
+              <InputField
+                label="Konfirmasi Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="******"
+                value={createForm.confirmPassword}
+                onChange={handleCreateChange}
+                error={createErrors.confirmPassword}
+              />
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 mt-4">
             <button
-              className="btn btn-primary mt-2"
               type="button"
-              onClick={handleCreateSubmit}
+              className="btn btn-outline-secondary d-flex align-items-center gap-1"
+              onClick={() => {
+                setCreateForm(emptyCreateForm);
+                setCreateErrors({});
+              }}
+            >
+              <i className="ri ri-refresh-line"></i> Reset
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary d-flex align-items-center gap-1 shadow-sm"
               disabled={createLoading}
             >
-              {createLoading ? 'Menyimpan...' : 'Simpan User'}
+              <i className="ri ri-save-line"></i> {createLoading ? 'Menyimpan...' : 'Simpan User'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      <div className="col-12">
-        <div className="card shadow-none border border-secondary">
-          <div className="card-body">
-            <h5 className="card-title text-secondary">Daftar User</h5>
-            {loading ? <Spinner /> : null}
-            {error ? <div className="alert alert-danger mb-3">{error}</div> : null}
-            <GridData
-              ref={tableRef}
-              columns={columns}
-              ajaxEndpoint={USERS_DATATABLE_ENDPOINT}
-              filters={{}}
-              options={tableOptions}
-              className="table-bordered table-striped align-middle"
-            />
-          </div>
+      <div className="card-body p-4">
+        {loading ? <Spinner /> : null}
+        {error ? <div className="alert alert-danger mb-3">{error}</div> : null}
+        <div className="table-responsive">
+          <GridData
+            ref={tableRef}
+            columns={columns}
+            ajaxEndpoint={USERS_DATATABLE_ENDPOINT}
+            filters={{}}
+            options={tableOptions}
+            className="table-bordered table-striped align-middle"
+          />
         </div>
       </div>
     </div>
   );
 }
-
-
-

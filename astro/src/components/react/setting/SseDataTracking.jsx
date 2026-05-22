@@ -1,7 +1,10 @@
 import SSE_REQUEST from '@lib/api/sse';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
-import { isBrowser, resolveErrorMessage } from './shared';
+import { resolveErrorMessage } from './shared';
+import CardPages from '../ui/CardPages.jsx';
+
+const isBrowser = () => typeof window !== 'undefined';
 
 export default function SseDataTracking() {
   const [logStreamError, setLogStreamError] = useState('');
@@ -115,7 +118,6 @@ export default function SseDataTracking() {
     };
   }, []);
 
-  //   const entriesToRender = logAppEntries.filter((entry) => entry?.['log.logger'] === 'hubnet');
   const entriesToRender = logAppEntries;
   const orderedLogEntries =
     entriesToRender.length > 0 ? [...entriesToRender].reverse() : [...logAppEntries].reverse();
@@ -184,16 +186,23 @@ export default function SseDataTracking() {
   };
 
   return (
-    <div className="col-12 mb-3">
-      <div
-        className="alert alert-secondary py-2 px-3 mb-0"
-        style={{
-          fontFamily: 'Ubuntu Mono, Consolas, Menlo, Monaco, "Courier New", monospace',
-          backgroundColor: 'oklch(20.8% 0.042 265.755)',
-          color: '#e0e0e0',
-        }}
-      >
-        <div style={{ maxHeight: 400, overflowY: 'auto' }}>{renderLogLines()}</div>
+    <div className="card shadow-sm border-0 overflow-hidden">
+      <CardPages
+        title="Logging & Tracking"
+        description="Pantau log aktivitas backend server secara realtime"
+        icon="ri ri-terminal-window-line"
+      />
+      <div className="card-body p-4">
+        <div
+          className="alert alert-secondary py-3 px-3 mb-0"
+          style={{
+            fontFamily: 'Ubuntu Mono, Consolas, Menlo, Monaco, "Courier New", monospace',
+            backgroundColor: 'oklch(20.8% 0.042 265.755)',
+            color: '#e0e0e0',
+          }}
+        >
+          <div style={{ maxHeight: 500, overflowY: 'auto' }}>{renderLogLines()}</div>
+        </div>
       </div>
     </div>
   );

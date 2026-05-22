@@ -119,6 +119,7 @@ Aturan tambahan:
 - Gunakan JSDoc jika butuh dokumentasi shape object.
 - Pastikan import path sesuai alias project yang tersedia di `astro.config.mjs` dan/atau `jsconfig.json` existing.
 - Alias `@js`, `@libs`, `@scss`, dan `@vendor` wajib mengarah ke `src/assets/js`, `src/assets/libs`, `src/assets/scss`, dan `src/assets/vendor`; jangan kembalikan ke path legacy.
+- **Hindari Konflik Nama Deklarasi**: Dilarang keras mengimpor komponen, kelas, atau fungsi dengan nama yang sama dengan deklarasi lokal di file tersebut (misalnya, mengimpor `UserManagement` di dalam file yang juga mendefinisikan fungsi/variabel `UserManagement`). Hal ini penting untuk mencegah error linter `Import declaration conflicts with local declaration`.
 - Jangan menambahkan dependency TypeScript tanpa instruksi eksplisit.
 - Jika harus mengubah `astro/src/middleware.js`, jaga perubahan minimal dan pastikan tetap kompatibel dengan SSR flow Astro.
 - Jangan menambahkan komentar berlebihan untuk variabel satu baris yang maknanya sudah jelas dari nama variabelnya.
@@ -284,6 +285,7 @@ Update UI State
 ## Testing and Verification Rules
 
 - Jalankan lint/build sesuai script project jika tersedia.
+- **Pembersihan Kode (Code Cleanup)**: Pastikan tidak ada Dead Code, Unreachable Code, Legacy/Deprecated Code yang tidak terpakai, dan sisa debug/komentar sampah (Code Cruft).
 - Untuk perubahan Cargo-IMP pada modul EDI, lampirkan hasil validasi parse2 (`message type`, ringkasan hasil valid/error, dan titik error jika ada).
 - Pastikan route protected tidak bisa diakses tanpa auth.
 - Pastikan `401/403` tertangani.
