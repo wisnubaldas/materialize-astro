@@ -1,10 +1,10 @@
 import re
-from io import BytesIO
 from pathlib import Path
 
 from fastapi import HTTPException
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from xhtml2pdf import pisa
+from weasyprint import HTML
+from weasyprint.text.fonts import FontConfiguration
 
 from app.repositories.build_up_check_repository import BuildUpCheckRepository
 from app.schemas.build_up_check_schema import (
@@ -244,18 +244,9 @@ class BuildUpCheckService:
                 is_checklist=is_checklist,
             )
             
-            pdf_buffer = BytesIO()
-            pdf_result = pisa.CreatePDF(
-                src=html_content,
-                dest=pdf_buffer,
-                encoding="utf-8",
-                link_callback=None,
-            )
-            
-            if pdf_result.err:
-                raise ValueError("Gagal mengompilasi HTML ke PDF menggunakan xhtml2pdf.")
-                
-            return pdf_buffer.getvalue()
+            font_config = FontConfiguration()
+            pdf_bytes = HTML(string=html_content, base_url=str(templates_dir)).write_pdf(font_config=font_config)
+            return pdf_bytes
         except Exception as exc:
             raise HTTPException(
                 status_code=500,

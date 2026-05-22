@@ -68,9 +68,6 @@ app = FastAPI(
     redoc_url="/redoc" if ENV.APP_DEBUG else None,
     openapi_url="/openapi.json" if ENV.APP_DEBUG else None,
 )
-# public path
-app.mount("/pdf", StaticFiles(directory=PDF_DIR), name="pdf")
-app.mount("/assets", StaticFiles(directory=EMAIL_TEMPLATE_DIR), name="assets")
 # Setup Skema OpenAPI dengan JWT Auth
 bearer_scheme = HTTPBearer()
 
@@ -162,6 +159,10 @@ async def security_headers(request, call_next):
 
 # routes
 app.include_router(routes.router)
+
+# public path
+app.mount("/pdf", StaticFiles(directory=PDF_DIR), name="pdf")
+app.mount("/assets", StaticFiles(directory=EMAIL_TEMPLATE_DIR), name="assets")
 
 
 @app.get("/")
