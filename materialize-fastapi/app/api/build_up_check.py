@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
+from app.api.middleware.auth_middleware import decode_token
 from app.dependencies.auth_deps import require_authenticated_user
 from app.dependencies.build_up_check_deps import get_build_up_check_service
 from app.schemas.build_up_check_schema import (
@@ -11,6 +12,7 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckRincianCreate,
     BuildUpMasterAwbSummaryOut,
 )
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.services.build_up_check_service import BuildUpCheckService
 
 router = APIRouter(
@@ -156,3 +158,85 @@ def create_build_up_check_rincian(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-headers/datatables",
+    summary="Daftar Build Up Header untuk server-side Datatables",
+    response_model=DataTablesResponse[BuildUpCheckHeaderOut],
+)
+def get_build_up_headers_datatables(
+    payload: DataTablesParams,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Return a server-side paginated list of Build Up headers."""
+    return service.build_up_headers_datatable(payload)
+
+
+pdf_router = APIRouter(
+    prefix="/pdf/warehouse",
+    tags=["PDF Print"],
+)
+
+
+@pdf_router.get(
+    "/build-up-headers/{header_id}/pdf-manifest",
+    summary="Cetak manifest PDF Build Up",
+)
+def print_build_up_manifest(
+    header_id: int,
+    token: str,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Generate and return Build Up manifest PDF."""
+    try:
+        decode_token(token)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token tidak valid atau kedaluwarsa: {exc!s}",
+        ) from exc
+
+    try:
+        pdf_bytes = service.generate_build_up_pdf(header_id=header_id, is_checklist=False)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename=manifest_buildup_{header_id}.pdf"
+            },
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@pdf_router.get(
+    "/build-up-headers/{header_id}/pdf-checklist",
+    summary="Cetak checklist PDF Build Up",
+)
+def print_build_up_checklist(
+    header_id: int,
+    token: str,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Generate and return Build Up checklist PDF."""
+    try:
+        decode_token(token)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token tidak valid atau kedaluwarsa: {exc!s}",
+        ) from exc
+
+    try:
+        pdf_bytes = service.generate_build_up_pdf(header_id=header_id, is_checklist=True)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename=checklist_buildup_{header_id}.pdf"
+            },
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+

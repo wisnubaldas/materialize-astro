@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 
-export const EDI_EXPORT_BUILDUP_ENDPOINT = '/edi/export-buildup';
+
 export const EDI_EXPORT_CWP_ENDPOINT = '/edi/export-cwp';
 export const EDI_EXPORT_AWB_MAWB = '/edi/export-awb-mawb';
 export const EDI_IMPORT_MASTERWAYBILL_ENDPOINT = '/edi/import-masterwaybill';
@@ -8,9 +8,10 @@ export const EDI_DISCREPANCY_CODE_DATATABLE_ENDPOINT = '/edi/discrepancy-codes/d
 export const EDI_DISCREPANCY_CODE_ENDPOINT = '/edi/discrepancy-codes';
 export const EDI_FSU_MESSAGE_DATATABLE_ENDPOINT = '/edi/fsu-messages/datatables';
 export const EDI_FSU_MESSAGE_ENDPOINT = '/edi/fsu-messages';
+export const EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT = '/edi/ffm-build-up';
 
 const ediClient = {
-  exportBuildUp: (params) => apiClient.post(EDI_EXPORT_BUILDUP_ENDPOINT, params),
+
   exportCWP: (params) => apiClient.post(EDI_EXPORT_CWP_ENDPOINT, params),
   parseFhl: (awb) => apiClient.get(`/edi/parse-fhl/${awb}`),
   getFhlMessage: (mawb) => apiClient.get(`/edi/fhl-message/${encodeURIComponent(mawb)}`),
@@ -19,9 +20,13 @@ const ediClient = {
   previewFwb: (payload) => apiClient.post('/edi/fwb-preview', payload),
   getFwbMessage: (mawb) => apiClient.get(`/edi/fwb-message/${encodeURIComponent(mawb)}`),
   exportAwbMawb: (params) => apiClient.post(EDI_EXPORT_AWB_MAWB, params),
+  ffmBuildUpDatatable: (params) => apiClient.post(EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT, params),
+  ffmBuildUpDetail: (headerId) =>
+    apiClient.get(`${EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT}/${headerId}/details`),
+  ffmBuildUpPreview: (headerId) =>
+    apiClient.get(`${EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT}/${headerId}/preview`),
   parseAwbMawb: (mawb) => apiClient.get(`/edi/parse-awb-mawb/${mawb}`),
-  parseBuildupMawb: (buildupNumber) =>
-    apiClient.get(`/edi/export-buildup-mawb/${buildupNumber}`),
+
   getImportMasterwaybill: (mawb) => apiClient.get(`${EDI_IMPORT_MASTERWAYBILL_ENDPOINT}/${mawb}`),
   getFwbByMawb: (mawb) => apiClient.get(`/edi/fwb/${mawb}`),
   sendEmailEdi: (param) => apiClient.post('/edi/send-email-edi', param),

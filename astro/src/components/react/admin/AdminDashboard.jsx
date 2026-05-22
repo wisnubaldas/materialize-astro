@@ -11,12 +11,6 @@ const ADMIN_SECTIONS = [
     href: '/edi/fsu-message',
     cta: 'Buka FSU Message',
   },
-  {
-    title: 'Warehouse Operation',
-    description: 'Akses proses buildup dan monitoring data operasional gudang.',
-    href: '/warehouse/buildup',
-    cta: 'Buka Buildup',
-  },
 ];
 
 export default function AdminDashboard() {

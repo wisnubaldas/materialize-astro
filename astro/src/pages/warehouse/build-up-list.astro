@@ -1,0 +1,13 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import BuildUpListDatatables from '@components/warehouse/BuildUpListDatatables.jsx';
+---
+
+<BaseLayout
+  title="Build Up Checklist & Manifest - Warehouse"
+  description="Daftar checklist dan manifest build up kargo"
+>
+  <div class="container-xxl grow container-p-y">
+    <BuildUpListDatatables client:only="react" />
+  </div>
+</BaseLayout>

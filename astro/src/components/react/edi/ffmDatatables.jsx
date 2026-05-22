@@ -1,5 +1,5 @@
 import GridData from '@components/GridData';
-import warehouseClient, { WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT } from '@lib/api/warehouse';
+import ediClient, { EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT } from '@lib/api/edi';
 import { showToast } from '@utils';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -125,7 +125,7 @@ export default function FfmDatatables() {
 
     detailLoadingRef.current.add(headerId);
     try {
-      const details = await warehouseClient.manifestFlightDetail(headerId);
+      const details = await ediClient.ffmBuildUpDetail(headerId);
       const rows = Array.isArray(details) ? details : [];
       const preview = {
         mawb: formatSummary(rows.map((item) => item?.mawb)),
@@ -257,7 +257,7 @@ export default function FfmDatatables() {
       });
 
       try {
-        const response = await warehouseClient.manifestFlightFfmPreview(headerId);
+        const response = await ediClient.ffmBuildUpPreview(headerId);
         ffmPreviewCacheRef.current = {
           ...ffmPreviewCacheRef.current,
           [headerId]: response,
@@ -543,7 +543,7 @@ export default function FfmDatatables() {
             </p>
           </div>
           <div className="text-muted small">
-            Endpoint: {WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
+            Endpoint: {EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT}
           </div>
         </div>
 
@@ -631,7 +631,7 @@ export default function FfmDatatables() {
         <GridData
           ref={tableRef}
           columns={columns}
-          ajaxEndpoint={WAREHOUSE_MANIFEST_FLIGHT_DATATABLE_ENDPOINT}
+          ajaxEndpoint={EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT}
           filters={activeFilters}
           options={tableOptions}
           className="table-bordered table-striped align-middle"

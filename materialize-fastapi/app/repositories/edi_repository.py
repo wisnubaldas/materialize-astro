@@ -2,13 +2,12 @@ import re
 
 import pycountry
 from sqlalchemy import and_, bindparam, func, or_, text
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, joinedload
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from app.models.BaseDB1.build_up_detail import BuildUpDetail
+from app.models.BaseDB1.build_up_check_detail import BuildUpCheckDetail
+from app.models.BaseDB1.build_up_check_header import BuildUpCheckHeader
 from app.models.BaseDB1.fwb import Fwb
-from app.models.BaseDB2.eks_buildupdetail_model import EksBuildUpDetail
-from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
 from app.models.BaseDB2.eks_hostawb import EksHostAWB
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
 from app.models.BaseDB2.imp_breakdowndetail import ImpBreakdownDetail
@@ -18,10 +17,7 @@ from app.models.BaseDB2.mst_customer import MstCustomer
 from app.models.BaseDB2.weighing_detail_model import EksWeighingDetail
 from app.models.BaseDB2.weighing_header_model import EksWeighingHeader
 from app.schemas.awb_mawb_schema import AwbMawbResponse
-from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
-from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_hostawb import EksHostAWBOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
 from app.schemas.imp_hostawb import ImpHostAWBOut
@@ -180,60 +176,10 @@ def _dict_to_customer(data: dict[str, object]) -> MstCustomer | None:
 
 
 class EdiRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, legacy_db: Session | None = None):
         self.db = db
-        self.buildup_header_datatable_service = DataTablesService(
-            model=EksBuildupHeader,
-            schema=EksBuildupHeaderOut,
-            pk_field="noid",
-            search_columns=[
-                "buildup_number",
-                "airlines_code",
-                "flight_number",
-                "destination_code",
-                "employee_number",
-                "operator_name",
-            ],
-            custom_filters=[
-                "buildup_number",
-                "airlines_code",
-                "flight_number",
-                "destination_code",
-                "date_of_flight",
-                "employee_number",
-                "date_entry",
-            ],
-        )
-        self.buildup_detail_datatable_service = DataTablesService(
-            model=EksBuildUpDetail,
-            schema=EksBuildUpDetailOut,
-            pk_field="noid",
-            search_columns=[
-                "BuildUpNumber",
-                "MasterAWB",
-                "UldCardNumber",
-                "KindOfGood",
-                "EmployeeNumber",
-                "AgenCode",
-                "condition",
-                "Remarks",
-            ],
-            custom_filters=[
-                "BuildUpNumber",
-                "MasterAWB",
-                "TransitCode",
-                "UldCardNumber",
-                "AgenCode",
-                "DateEntry",
-                "TimeEntry",
-            ],
-        )
-        self.manifest_mawb_datatable_service = DataTablesService(
-            model=BuildUpDetail,
-            schema=BuildUpDetailOut,
-            search_columns=["mawb", "uld_number", "uld_type", "nature_of_goods", "remark"],
-            custom_filters=["header_id", "mawb", "uld_number", "uld_type", "nature_of_goods"],
-        )
+        self.legacy_db = legacy_db or db
+
         self.weighing_datatable_service = DataTablesService(
             model=EksWeighingHeader,
             schema=WeighingHeaderOut,
@@ -302,13 +248,7 @@ class EdiRepository:
             ],
         )
 
-    def datatable(self, params: DataTablesParams) -> DataTablesResponse[EksBuildupHeaderOut]:
-        return self.buildup_header_datatable_service.get_datatable(db=self.db, params=params)
 
-    def buildup_detail_datatable(
-        self, params: DataTablesParams
-    ) -> DataTablesResponse[EksBuildUpDetailOut]:
-        return self.buildup_detail_datatable_service.get_datatable(db=self.db, params=params)
 
     def weighing_datatable(self, params: DataTablesParams) -> DataTablesResponse[WeighingHeaderOut]:
         params = self.weighing_datatable_service.apply_custom_filters(params)
@@ -633,66 +573,7 @@ class EdiRepository:
                     item.DLV = True
         return [ImpHostAWBOut.model_validate(item) for item in host_awbs]
 
-    def get_buildup_mawb(self, buildup_number: str):
-        """
-        Ambil data buildup berikut detail, master AWB, dan host AWB.
-        Semua relasi wajib ada; jika ada yang hilang kembalikan error.
-        """
-        if not buildup_number:
-            raise ValueError("data buildup atau awb, mawb tidak lengkap")
 
-        rows_query = (
-            self.db.query(EksBuildupHeader, EksBuildUpDetail, EksMasterWaybill, EksHostAWB)
-            .join(
-                EksBuildUpDetail, EksBuildupHeader.buildup_number == EksBuildUpDetail.BuildUpNumber
-            )
-            .join(EksMasterWaybill, EksBuildUpDetail.MasterAWB == EksMasterWaybill.MasterAWB)
-            .join(EksHostAWB, EksBuildUpDetail.MasterAWB == EksHostAWB.MasterAWB)
-            .filter(EksBuildupHeader.buildup_number == buildup_number)
-        )
-        rows = rows_query.all()
-
-        if not rows:
-            missing = [
-                "eks_buildupheader",
-                "eks_buildupdetail",
-                "eks_masterwaybill",
-                "eks_hostawb",
-            ]
-            raise ValueError(
-                f"data buildup atau awb, mawb tidak lengkap pada relasi: {', '.join(missing)}"
-            )
-
-        header = rows[0][0]
-        master = rows[0][2]
-        details = [row[1] for row in rows if row[1] is not None]
-        host_awbs = [row[3] for row in rows if row[3] is not None]
-
-        missing_relations = []
-        if not header:
-            missing_relations.append("eks_buildupheader")
-        if not details:
-            missing_relations.append("eks_buildupdetail")
-        if not master:
-            missing_relations.append("eks_masterwaybill")
-        if not host_awbs:
-            missing_relations.append("eks_hostawb")
-
-        if missing_relations:
-            raise ValueError(
-                f"data buildup atau awb, mawb tidak lengkap pada relasi: {', '.join(missing_relations)}"
-            )
-
-        return {
-            "buildup": EksBuildupHeaderOut.model_validate(header),
-            "details": [EksBuildUpDetailOut.model_validate(item) for item in details],
-            "master": EksMasterWaybillOut.model_validate(master),
-            "host_awbs": [EksHostAWBOut.model_validate(item) for item in host_awbs],
-        }
-
-    def manifest_mawb_datatable(self, params: DataTablesParams):
-        """Datatable wrapper for build_up_detail (DB1)."""
-        return self.manifest_mawb_datatable_service.get_datatable(db=self.db, params=params)
 
     def get_fwb_by_mawb(self, mawb: str) -> Fwb | None:
         """Fetch persisted FWB data for a MAWB from DB1."""
@@ -714,3 +595,142 @@ class EdiRepository:
             raise
         self.db.refresh(record)
         return record
+
+    def list_ffm_build_up_headers(
+        self,
+        params: DataTablesParams,
+    ) -> tuple[int, int, list[BuildUpCheckHeader]]:
+        """Return Build Up Check headers for FFM DataTables."""
+        query = self.db.query(BuildUpCheckHeader)
+        total_records = self.db.query(func.count(BuildUpCheckHeader.id)).scalar() or 0
+
+        joined_detail = False
+        if params.filters:
+            filters = params.filters
+            number_value = getattr(filters, "number", None) or getattr(
+                filters,
+                "number_build_up",
+                None,
+            )
+            if number_value:
+                needle = f"%{number_value}%"
+                query = query.filter(
+                    or_(
+                        BuildUpCheckHeader.uld.like(needle),
+                        BuildUpCheckHeader.flight_no.like(needle),
+                    )
+                )
+
+            mawb_value = getattr(filters, "mawb", None)
+            if mawb_value:
+                query = query.join(BuildUpCheckDetail)
+                joined_detail = True
+                query = query.filter(BuildUpCheckDetail.mawb.like(f"%{mawb_value}%"))
+
+            airlines_value = getattr(filters, "airlines_code", None) or getattr(
+                filters,
+                "airlines",
+                None,
+            )
+            if airlines_value:
+                query = query.filter(BuildUpCheckHeader.airlines.like(f"%{airlines_value}%"))
+
+            flight_date_value = getattr(filters, "flight_date", None)
+            if flight_date_value:
+                query = query.filter(BuildUpCheckHeader.flight_date == flight_date_value)
+
+            dest_value = getattr(filters, "dest", None)
+            if dest_value:
+                query = query.filter(BuildUpCheckHeader.dest.like(f"%{dest_value}%"))
+
+        if params.search.value:
+            if not joined_detail:
+                query = query.outerjoin(BuildUpCheckDetail)
+                joined_detail = True
+            search_value = f"%{params.search.value}%"
+            query = query.filter(
+                or_(
+                    BuildUpCheckHeader.uld.like(search_value),
+                    BuildUpCheckHeader.airlines.like(search_value),
+                    BuildUpCheckHeader.flight_no.like(search_value),
+                    BuildUpCheckHeader.dest.like(search_value),
+                    BuildUpCheckDetail.mawb.like(search_value),
+                )
+            )
+
+        filtered_records = (
+            query.with_entities(func.count(func.distinct(BuildUpCheckHeader.id))).scalar() or 0
+        )
+
+        rows = (
+            query.options(
+                joinedload(BuildUpCheckHeader.details).joinedload(BuildUpCheckDetail.rincian)
+            )
+            .order_by(BuildUpCheckHeader.flight_date.desc(), BuildUpCheckHeader.id.desc())
+            .distinct()
+            .offset(params.start)
+            .limit(params.length)
+            .all()
+        )
+        return int(total_records), int(filtered_records), rows
+
+    def get_ffm_build_up_header_by_id(self, header_id: int) -> BuildUpCheckHeader | None:
+        """Return one Build Up Check header with MAWB and rincian rows."""
+        return (
+            self.db.query(BuildUpCheckHeader)
+            .options(
+                joinedload(BuildUpCheckHeader.details).joinedload(BuildUpCheckDetail.rincian)
+            )
+            .filter(BuildUpCheckHeader.id == header_id)
+            .first()
+        )
+
+    def get_legacy_weighing_header(
+        self,
+        mawb: str,
+        flight_no: str | None = None,
+        flight_date: object | None = None,
+    ) -> EksWeighingHeader | None:
+        """Return latest legacy weighing header for fallback FFM attributes."""
+        if not mawb:
+            return None
+
+        query = self.legacy_db.query(EksWeighingHeader).filter(EksWeighingHeader.MasterAWB == mawb)
+        if flight_no:
+            query = query.filter(EksWeighingHeader.FlightNumber.like(f"%{flight_no}%"))
+        if flight_date:
+            date_text = str(flight_date)[:10]
+            query = query.filter(EksWeighingHeader.DateOfFlight.like(f"%{date_text}%"))
+
+        result = query.order_by(EksWeighingHeader.noid.desc()).first()
+        if result or not flight_no:
+            return result
+
+        return (
+            self.legacy_db.query(EksWeighingHeader)
+            .filter(EksWeighingHeader.MasterAWB == mawb)
+            .order_by(EksWeighingHeader.noid.desc())
+            .first()
+        )
+
+    def list_legacy_weighing_details(self, mawb: str) -> list[EksWeighingDetail]:
+        """Return legacy weighing detail rows for one MAWB."""
+        if not mawb:
+            return []
+        return (
+            self.legacy_db.query(EksWeighingDetail)
+            .filter(EksWeighingDetail.MasterAWB == mawb)
+            .order_by(EksWeighingDetail.noid.asc())
+            .all()
+        )
+
+    def list_legacy_host_awbs(self, mawb: str) -> list[EksHostAWB]:
+        """Return legacy host AWB rows for one MAWB."""
+        if not mawb:
+            return []
+        return (
+            self.legacy_db.query(EksHostAWB)
+            .filter(EksHostAWB.MasterAWB == mawb)
+            .order_by(EksHostAWB.noid.asc())
+            .all()
+        )

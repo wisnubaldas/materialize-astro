@@ -6,16 +6,9 @@ from app.repositories.edi_repository import EdiRepository
 from app.services.edi_service import EdiService
 
 
-def _build_repo(db: Session) -> EdiRepository:
-    return EdiRepository(db)
+def _build_repo(db: Session, legacy_db: Session | None = None) -> EdiRepository:
+    return EdiRepository(db=db, legacy_db=legacy_db)
 
-
-def get_buildup_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
-    return _build_repo(db)
-
-
-def get_buildup_service(repo: EdiRepository = Depends(get_buildup_repo)) -> EdiService:
-    return EdiService(repo)
 
 
 def get_weighing_header_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
@@ -36,13 +29,6 @@ def get_masterwaybill_service(repo: EdiRepository = Depends(get_masterwaybill_re
     return EdiService(repo)
 
 
-def get_buildup_mawb_repo(db: Session = Depends(get_db2_r)) -> EdiRepository:
-    return _build_repo(db)
-
-
-def get_buildup_mawb_service(repo: EdiRepository = Depends(get_buildup_mawb_repo)) -> EdiService:
-    return EdiService(repo)
-
 
 def get_fwb_repo_r(db: Session = Depends(get_db1_r)) -> EdiRepository:
     return _build_repo(db)
@@ -60,12 +46,16 @@ def get_fwb_service_w(repo: EdiRepository = Depends(get_fwb_repo_w)) -> EdiServi
     return EdiService(repo)
 
 
-def get_manifest_mawb_repo(db: Session = Depends(get_db1_r)) -> EdiRepository:
-    return _build_repo(db)
+def get_ffm_build_up_repo(
+    db: Session = Depends(get_db1_r),
+    legacy_db: Session = Depends(get_db2_r),
+) -> EdiRepository:
+    """Create repository for FFM data from mobile Build Up Check + legacy fallback."""
+    return _build_repo(db=db, legacy_db=legacy_db)
 
 
-def get_manifest_mawb_service(
-    repo: EdiRepository = Depends(get_manifest_mawb_repo),
+def get_ffm_build_up_service(
+    repo: EdiRepository = Depends(get_ffm_build_up_repo),
 ) -> EdiService:
     return EdiService(repo)
 

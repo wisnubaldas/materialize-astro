@@ -7,20 +7,18 @@ from app.dependencies.discrepancy_code_deps import (
     get_discrepancy_code_service_w,
 )
 from app.dependencies.edi_deps import (
-    get_buildup_mawb_service,
-    get_buildup_service,
+    get_ffm_build_up_service,
     get_fwb_service_r,
     get_fwb_service_w,
-    get_manifest_mawb_service,
     get_masterwaybill_service,
     get_weighing_header_service,
 )
 from app.dependencies.fsu_message_deps import get_fsu_message_service_r, get_fsu_message_service_w
 from app.schemas.awb_mawb_schema import AwbMawbResponse
-from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.ffm_build_up_schema import FfmBuildUpDetailOut, FfmBuildUpOut
+from app.schemas.ffm_preview_schema import FfmPreviewOut
 from app.schemas.fhl_message_schema import FhlMessageOut
 from app.schemas.fhl_request_body import FhlRequestBody
 from app.schemas.fhl_schema import FhlResponse
@@ -50,13 +48,6 @@ from app.services.fsu_message_service import FsuMessageService
 router = APIRouter(prefix="/edi", tags=["Send Electronic data interchange (EDI)"])
 logger = logging.getLogger("edi")
 
-@router.post(
-    "/export-buildup",
-    summary="grid data buildup export",
-    response_model=DataTablesResponse[EksBuildupHeaderOut],
-)
-def export_buildup(params: DataTablesParams, service: EdiService = Depends(get_buildup_service)):
-    return service.datatable(params)
 
 
 @router.post(
@@ -82,15 +73,48 @@ def export_awb_mawb(
 
 
 @router.post(
-    "/manifest-mawb",
-    summary="MAWB manifest data grid table",
-    response_model=DataTablesResponse[BuildUpDetailOut],
+    "/ffm-build-up",
+    summary="Data Build Up Check untuk FFM",
+    response_model=DataTablesResponse[FfmBuildUpOut],
 )
-def manifest_mawb_datatables(
-    params: DataTablesParams, service: EdiService = Depends(get_manifest_mawb_service)
+def ffm_build_up_datatables(
+    params: DataTablesParams,
+    service: EdiService = Depends(get_ffm_build_up_service),
 ):
-    """Datatable for build_up_detail using DB1 repository."""
-    return service.manifest_mawb_datatables(params)
+    """Datatable FFM berbasis tabel Build Up Check mobile."""
+    return service.ffm_build_up_datatable(params)
+
+
+@router.get(
+    "/ffm-build-up/{header_id}/details",
+    summary="Detail Build Up Check untuk FFM",
+    response_model=list[FfmBuildUpDetailOut],
+)
+def ffm_build_up_details(
+    header_id: int,
+    service: EdiService = Depends(get_ffm_build_up_service),
+):
+    """Detail FFM dengan fallback atribut dari legacy weighing/host AWB."""
+    try:
+        return service.ffm_build_up_details(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get(
+    "/ffm-build-up/{header_id}/preview",
+    summary="Preview FFM Cargo-IMP/XML dari Build Up Check",
+    response_model=FfmPreviewOut,
+)
+def ffm_build_up_preview(
+    header_id: int,
+    service: EdiService = Depends(get_ffm_build_up_service),
+):
+    """Generate preview FFM dari Build Up Check + fallback legacy."""
+    try:
+        return service.generate_ffm_build_up_preview(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 ############### bikin format data IATA ######################
@@ -187,17 +211,7 @@ def get_fhl_message(mawb: str, service: EdiService = Depends(get_masterwaybill_s
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-@router.get(
-    "/export-buildup-mawb/{buildup_number}",
-    summary="Retrieve relationship Buildup data into `export_mawb` for FFM system",
-)
-def export_buildup_mawb(
-    buildup_number: str, service: EdiService = Depends(get_buildup_mawb_service)
-):
-    try:
-        return service.fetch_data_buildup_mawb(buildup_number)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
 
 
 @router.post(

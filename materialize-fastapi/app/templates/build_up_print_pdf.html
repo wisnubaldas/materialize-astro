@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    {% if is_checklist %}
+    <title>ULD Build Up Checklist</title>
+    {% else %}
+    <title>Air Cargo Manifest</title>
+    {% endif %}
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+            @bottom-right {
+                content: 'Page ' counter(page) ' of ' counter(pages);
+                font-size: 8pt;
+                color: #333333;
+            }
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            color: #000;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title-main {
+            font-size: 13pt;
+            font-weight: bold;
+        }
+
+        .title-sub {
+            font-size: 8pt;
+        }
+
+        .meta-row {
+            margin-bottom: 3px;
+        }
+
+        .uld-line {
+            font-weight: bold;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .manifest-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .manifest-table--mb {
+            margin-bottom: 8px;
+        }
+
+        .manifest-table--mt {
+            margin-top: 8px;
+        }
+
+        .manifest-table--fixed {
+            table-layout: fixed;
+        }
+
+        .manifest-cell-top {
+            vertical-align: top;
+        }
+
+        .manifest-cell-44 {
+            width: 44%;
+        }
+
+        .manifest-cell-no-padding {
+            padding: 0;
+        }
+
+        .manifest-cell-meta {
+            padding: 4px 6px;
+        }
+
+        .manifest-grid-cell {
+            border: 1px solid #000;
+            padding: 2pt 3pt;
+            vertical-align: top;
+        }
+
+        table.table-uld {
+            table-layout: fixed;
+            width: 100%;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        table.table-uld td {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+        }
+
+        table.table-uld th {
+            white-space: normal;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 1.2;
+            border: 1px solid #000;
+        }
+
+        table.table-uld tbody tr.mawb-row-highlight {
+            background: #d0e4f5;
+        }
+
+        table.table-uld thead {
+            background: #1c6ea4;
+        }
+
+        table.table-uld thead th {
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            vertical-align: middle;
+            border-left: 2px solid #d0e4f5;
+        }
+
+        table.table-uld thead th:first-child {
+            border-left: none;
+        }
+
+        table.table-uld tfoot td {
+            background: #f2f2f2;
+            vertical-align: middle;
+        }
+
+        .col-no {
+            width: 22pt;
+        }
+
+        .col-uld-mawb {
+            width: 78pt;
+        }
+
+        .col-pieces {
+            width: 44pt;
+        }
+
+        .col-nature {
+            width: 140pt;
+        }
+
+        .col-weight {
+            width: 44pt;
+        }
+
+        .col-dest {
+            width: 30pt;
+        }
+
+        .col-official {
+            width: 50pt;
+        }
+
+        .col-remark {
+            width: 120pt;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .manifest-meta-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            border: none;
+        }
+
+        .manifest-meta-table td {
+            padding: 2pt 6pt;
+            vertical-align: middle;
+            border: none;
+        }
+
+        .meta-col-label-left,
+        .meta-col-label-right {
+            width: 24%;
+        }
+
+        .meta-col-value-left,
+        .meta-col-value-right {
+            width: 26%;
+        }
+
+        .manifest-meta-label {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .manifest-meta-value {
+            white-space: nowrap;
+        }
+
+        .meta-nowrap {
+            white-space: nowrap;
+        }
+
+        .text-middle {
+            vertical-align: middle;
+        }
+
+        .uld-title-cell {
+            padding-top: 3pt;
+            padding-bottom: 3pt;
+        }
+
+        .stacked-line {
+            line-height: 1.35;
+            white-space: nowrap;
+        }
+
+        .th-nowrap {
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .uld-total-row td {
+            vertical-align: middle;
+        }
+
+        .signature-table {
+            width: 100%;
+            margin-top: 40px;
+            table-layout: fixed;
+            border-collapse: collapse;
+            border: none;
+        }
+
+        .signature-table td {
+            border: none;
+            text-align: center;
+            vertical-align: bottom;
+            height: 80px;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 50px;
+        }
+
+        .signature-name {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="A4">
+    <section class="sheet padding-10mm">
+        {% if manifest %}
+        <div class="title">
+            {% if is_checklist %}
+            <div class="title-main">ULD BUILD UP CHECKLIST</div>
+            <div class="title-sub">GUDANG CARGO OPERASIONAL LINI 1</div>
+            {% else %}
+            <div class="title-main">AIR CARGO MANIFEST</div>
+            <div class="title-sub">I.C.A.O ANNEX 9, APPENDIX 3</div>
+            {% endif %}
+        </div>
+
+        <table class="manifest-meta-table">
+            <colgroup>
+                <col class="meta-col-label-left" />
+                <col class="meta-col-value-left" />
+                <col class="meta-col-label-right" />
+                <col class="meta-col-value-right" />
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td class="manifest-meta-label">OWNER OF OPERATOR</td>
+                    <td class="manifest-meta-value">: {{ "FEDEX" if manifest.airline_code == "FX" else (manifest.airline_code or "-") }}</td>
+                    <td class="manifest-meta-label">FLIGHT NR/DATE</td>
+                    <td class="manifest-meta-value meta-nowrap">: {{ manifest.airline_code }}{{ manifest.flight_number }} / {{ manifest.flight_date }}</td>
+                </tr>
+                <tr>
+                    <td class="manifest-meta-label">MARKS OF NAT AND REGS</td>
+                    <td class="manifest-meta-value">: {{ manifest.aircraft_registration or "-" }}</td>
+                    <td class="manifest-meta-label">POINT OF UNLOADING</td>
+                    <td class="manifest-meta-value">: {{ manifest.point_of_unloading or "-" }}</td>
+                </tr>
+                <tr>
+                    <td class="manifest-meta-label">POINT OF LOADING</td>
+                    <td class="manifest-meta-value">: {{ manifest.point_of_loading or "-" }}</td>
+                    <td class="manifest-meta-label"></td>
+                    <td class="manifest-meta-value"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        {% set grand = namespace(pieces=0, weight=0, has_data=false) %}
+        <table class="table-uld">
+            <thead>
+                <tr>
+                    <th class="manifest-grid-cell col-no text-center">NO</th>
+                    <th class="manifest-grid-cell col-uld-mawb text-center"><span class="th-nowrap">ULD / NUMBER MAWB</span></th>
+                    <th class="manifest-grid-cell col-pieces text-center"><span class="th-nowrap">NUMBER OF PIECES</span></th>
+                    <th class="manifest-grid-cell col-nature text-center">NATURE OF GOODS</th>
+                    <th class="manifest-grid-cell col-weight text-center"><span class="th-nowrap">WEIGHT</span></th>
+                    <th class="manifest-grid-cell col-dest text-center">DEST</th>
+                    <th class="manifest-grid-cell col-official text-center">FOR OFFICIAL USE</th>
+                    <th class="manifest-grid-cell col-remark text-center">REMARK</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if manifest.ulds %}
+                {% for uld in manifest.ulds %}
+                {% set uld_no = loop.index %}
+                {% set totals = namespace(pieces=0, weight=0) %}
+                {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                {% set totals.pieces = totals.pieces + (mawb.pieces or 0) %}
+                {% set totals.weight = totals.weight + (mawb.weight_kg | float) %}
+                {% set grand.pieces = grand.pieces + (mawb.pieces or 0) %}
+                {% set grand.weight = grand.weight + (mawb.weight_kg | float) %}
+                {% set grand.has_data = true %}
+                {% endfor %}
+                {% endif %}
+                <tr>
+                    <td class="manifest-grid-cell col-no text-center text-middle" rowspan="{{ 3 if uld.mawbs else 2 }}">
+                        {{ uld_no }}
+                    </td>
+                    <td class="manifest-grid-cell uld-title-cell" colspan="7">
+                        <span class="uld-line">{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner or "-" }}</span>
+                    </td>
+                </tr>
+                <tr {% if uld.mawbs %}class="mawb-row-highlight" {% endif %}>
+                    <td class="manifest-grid-cell col-uld-mawb">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">-</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-pieces text-center">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ mawb.pieces }}/{{ mawb.total_pieces }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">-</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-nature text-center">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ mawb.nature_of_goods or "-" }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">-</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-weight text-right">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ mawb.weight_kg }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">-</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-dest text-center">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ uld.destination or "-" }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">{{ uld.destination or "-" }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-official text-center">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ mawb.route or "-" }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">-</div>
+                        {% endif %}
+                    </td>
+                    <td class="manifest-grid-cell col-remark text-center">
+                        {% if uld.mawbs %}
+                        {% for mawb in uld.mawbs %}
+                        <div class="stacked-line">{{ uld.remarks or mawb.transit_flag or "-" }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="stacked-line">{{ uld.remarks or "-" }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if uld.mawbs %}
+                <tr class="uld-total-row">
+                    <td class="manifest-grid-cell text-bold">TOTAL</td>
+                    <td class="manifest-grid-cell text-center text-bold">{{ totals.pieces }}</td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-right text-bold">{{ "%.2f"|format(totals.weight) }}</td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="8" class="manifest-grid-cell">Tidak ada data ULD.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" class="manifest-grid-cell text-bold">GRAND TOTAL</td>
+                    <td class="manifest-grid-cell text-center text-bold">{{ grand.pieces }}</td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-right text-bold">{{ "%.2f"|format(grand.weight) }}</td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                    <td class="manifest-grid-cell text-bold"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        {% if is_checklist %}
+        <table class="signature-table">
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="signature-title">Prepared By (Staff Cargo)</div>
+                        <div class="signature-name">{{ manifest.staff or "-" }}</div>
+                    </td>
+                    <td>
+                        <div class="signature-title">Approved By (Supervisor Cargo)</div>
+                        <div class="signature-name">{{ manifest.supervisor or "-" }}</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% endif %}
+    </section>
+</body>
+</html>

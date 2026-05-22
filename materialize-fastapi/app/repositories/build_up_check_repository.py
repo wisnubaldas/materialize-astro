@@ -9,6 +9,7 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckHeaderCreate,
     BuildUpCheckRincianCreate,
 )
+from app.schemas.datatables_schema import DataTablesParams
 
 
 class BuildUpCheckRepository:
@@ -235,3 +236,90 @@ class BuildUpCheckRepository:
             self.db.rollback()
             raise
         return detail
+
+    def datatable(  # noqa: PLR0912
+        self,
+        params: DataTablesParams,
+    ) -> tuple[int, int, list[BuildUpCheckHeader]]:
+        """Return total count, filtered count, and list of BuildUpCheckHeader for Datatables.
+        
+        Args:
+            params: Parameters containing draw, start, length, order, search, and filters.
+            
+        Returns:
+            A tuple of (total_records, filtered_records, list_of_headers).
+        """
+        # 1. Total records (tanpa filter)
+        total_records = self.db.query(func.count(BuildUpCheckHeader.id)).scalar() or 0
+
+        # 2. Base query
+        query = self.db.query(BuildUpCheckHeader)
+
+        # Jika ada filter mawb, kita join ke BuildUpCheckDetail
+        filters = params.filters
+        mawb_filter = getattr(filters, "mawb", None) if filters else None
+        has_detail_join = False
+
+        if mawb_filter:
+            mawb_str = str(mawb_filter).strip().upper()
+            if mawb_str:
+                query = query.join(BuildUpCheckHeader.details)
+                query = query.filter(BuildUpCheckDetail.mawb.like(f"%{mawb_str}%"))
+                has_detail_join = True
+
+        # Tambahkan filter lain pada BuildUpCheckHeader
+        if filters:
+            uld_val = getattr(filters, "uld", None)
+            if uld_val:
+                query = query.filter(BuildUpCheckHeader.uld.like(f"%{str(uld_val).strip().upper()}%"))
+            
+            airlines_val = getattr(filters, "airlines", None)
+            if airlines_val:
+                query = query.filter(BuildUpCheckHeader.airlines.like(f"%{str(airlines_val).strip().upper()}%"))
+            
+            flight_no_val = getattr(filters, "flight_no", None)
+            if flight_no_val:
+                query = query.filter(BuildUpCheckHeader.flight_no.like(f"%{str(flight_no_val).strip().upper()}%"))
+
+            flight_date_val = getattr(filters, "flight_date", None)
+            if flight_date_val:
+                # filter tanggal bisa exact match karena tipenya Date
+                query = query.filter(BuildUpCheckHeader.flight_date == flight_date_val)
+
+            dest_val = getattr(filters, "dest", None)
+            if dest_val:
+                query = query.filter(BuildUpCheckHeader.dest.like(f"%{str(dest_val).strip().upper()}%"))
+
+        # Jika join detail terjadi, gunakan distinct untuk menghindari duplikasi header
+        if has_detail_join:
+            query = query.distinct()
+
+        # 3. Filtered records count
+        if has_detail_join:
+            filtered_records = self.db.query(func.count(func.distinct(BuildUpCheckHeader.id))).select_from(query.subquery()).scalar() or 0
+        else:
+            filtered_records = query.count()
+
+        # 4. Sorting
+        for order in params.order:
+            col_idx = order.column
+            col_name = params.columns[col_idx].data
+            direction = order.dir
+
+            if hasattr(BuildUpCheckHeader, col_name):
+                col = getattr(BuildUpCheckHeader, col_name)
+                if direction == "desc":
+                    query = query.order_by(col.desc())
+                else:
+                    query = query.order_by(col.asc())
+            else:
+                query = query.order_by(BuildUpCheckHeader.id.desc())
+        
+        if not params.order:
+            query = query.order_by(BuildUpCheckHeader.id.desc())
+
+        # 5. Pagination
+        results = query.offset(params.start).limit(params.length).all()
+
+        return total_records, filtered_records, results
+

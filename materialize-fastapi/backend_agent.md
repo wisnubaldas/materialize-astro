@@ -24,6 +24,11 @@ Backend adalah pusat business logic, validasi final, otorisasi final, database a
 - Architecture: Simple Clean Architecture dengan Repository Pattern dan Service Layer.
 - Dependency Injection wajib konsisten untuk session, repository, service, config, dan current user.
 - Performa kode Python wajib dijaga dengan acuan linting dan rule `ruff.toml` project, termasuk pencegahan pola kode lambat/tidak efisien.
+- **Komentar & Dokumentasi Kode (Wajib):** Setiap *class*, *function* (terutama di service, repository, dependency, dan helper), serta *module* penting wajib memiliki *docstring* (triple quotes `""" ... """`) yang menjelaskan:
+  - Deskripsi/tujuan dari class atau function tersebut.
+  - Parameter input (`Args:`) beserta tipe data (*type hints*) dan penjelasannya.
+  - Nilai kembalian (`Returns:`) beserta tipe data dan penjelasannya jika ada.
+  - Nama variabel lokal wajib deskriptif (*self-documenting*). Jangan menambahkan komentar berlebihan untuk variabel satu baris yang sudah jelas.
 
 ---
 

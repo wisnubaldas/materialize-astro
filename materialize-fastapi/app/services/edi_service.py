@@ -1,5 +1,6 @@
 import logging
-from datetime import date, datetime
+import re
+from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from types import SimpleNamespace
 from typing import Any
@@ -8,11 +9,10 @@ from app.libs.fhl_message_builder import build_fhl_messages
 from app.libs.fwb_message_builder import build_fwb_cargo_imp, build_fwb_cargo_xml
 from app.repositories.edi_repository import EdiRepository
 from app.schemas.awb_mawb_schema import AwbMawbResponse
-from app.schemas.build_up_detail_schema import BuildUpDetailOut
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
-from app.schemas.eks_buildupdetail_schema import EksBuildUpDetailOut
-from app.schemas.eks_buildupheader_schema import EksBuildupHeaderOut
 from app.schemas.eks_masterwaybill import EksMasterWaybillOut
+from app.schemas.ffm_build_up_schema import FfmBuildUpDetailOut, FfmBuildUpOut
+from app.schemas.ffm_preview_schema import FfmPreviewOut
 from app.schemas.fhl_message_schema import FhlMessageOut
 from app.schemas.fhl_schema import FhlResponse
 from app.schemas.fwb_message_schema import FwbMessageOut
@@ -99,6 +99,123 @@ def _parse_decimal(value: Any) -> Decimal | None:
         return Decimal(str(value))
     except (InvalidOperation, TypeError, ValueError):
         return None
+
+
+def _sum_rincian_pieces(items: list) -> int | None:
+    total = 0
+    has_value = False
+    for item in items:
+        value = _parse_int(getattr(item, "pieces", None))
+        if value is None:
+            continue
+        total += value
+        has_value = True
+    return total if has_value else None
+
+
+def _sum_rincian_weight(items: list) -> float | None:
+    total = Decimal("0")
+    has_value = False
+    for item in items:
+        value = _parse_decimal(getattr(item, "weight", None))
+        if value is None:
+            continue
+        total += value
+        has_value = True
+    return float(total) if has_value else None
+
+
+def _first_text(*values: Any) -> str | None:
+    for value in values:
+        cleaned = _clean_text(value)
+        if cleaned:
+            return cleaned
+    return None
+
+
+def _first_int(*values: Any) -> int | None:
+    for value in values:
+        parsed = _parse_int(value)
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _first_float(*values: Any) -> float | None:
+    for value in values:
+        parsed = _parse_decimal(value)
+        if parsed is not None:
+            return float(parsed)
+    return None
+
+
+def _parse_uld(value: Any) -> dict[str, str | None]:
+    text = re.sub(r"[^A-Za-z0-9]", "", _clean_text(value) or "").upper()
+    if not text:
+        return {"uld_type": None, "uld_number": None, "uld_owner": None}
+
+    uld_type = text[:3] if len(text) >= 3 else text
+    remainder = text[3:]
+    owner_match = re.search(r"([A-Z]{2,3})$", remainder)
+    uld_owner = owner_match.group(1)[:2] if owner_match else None
+    number_part = remainder[: -len(owner_match.group(1))] if owner_match else remainder
+    serial_match = re.search(r"\d{4,5}", number_part)
+    uld_number = serial_match.group(0) if serial_match else number_part or None
+    return {
+        "uld_type": uld_type or None,
+        "uld_number": uld_number,
+        "uld_owner": uld_owner,
+    }
+
+
+def _format_mawb_for_ffm(value: Any) -> str:
+    text = re.sub(r"[^A-Za-z0-9]", "", _clean_text(value) or "").upper()
+    if len(text) <= 3:
+        return text
+    return f"{text[:3]}-{text[3:]}"
+
+
+def _format_ffm_number(value: Any, fraction_digits: int = 1) -> str:
+    parsed = _parse_decimal(value)
+    if parsed is None or parsed <= 0:
+        return ""
+    rendered = f"{float(parsed):.{fraction_digits}f}"
+    return rendered.rstrip("0").rstrip(".")
+
+
+def _format_ffm_date(value: Any) -> str:
+    parsed = _parse_date(value)
+    if parsed:
+        return parsed.strftime("%d%b").upper()
+
+    text = _clean_text(value)
+    if not text:
+        return ""
+    for candidate in (text, text[:10], text[:8]):
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%d-%m-%Y", "%Y%m%d"):
+            try:
+                return (
+                    datetime.strptime(candidate, fmt)
+                    .replace(tzinfo=timezone.utc)
+                    .strftime("%d%b")
+                    .upper()
+                )
+            except ValueError:
+                continue
+    return ""
+
+
+def _format_uld_identifier(uld_info: dict[str, str | None], carrier: str | None) -> str:
+    uld_type = re.sub(r"[^A-Z0-9]", "", (uld_info.get("uld_type") or "").upper())[:3]
+    uld_number = re.sub(r"[^A-Z0-9]", "", (uld_info.get("uld_number") or "").upper())
+    owner = re.sub(r"[^A-Z]", "", (uld_info.get("uld_owner") or "").upper())[:2]
+    if not owner:
+        owner = re.sub(r"[^A-Z]", "", (carrier or "XX").upper())[:2] or "XX"
+    serial_match = re.search(r"\d{4,5}", uld_number)
+    if len(uld_type) != 3 or not serial_match:
+        return ""
+    serial = serial_match.group(0)
+    return f"{uld_type}{serial}{owner}"
 
 
 def _extract_mawb(payload: Any) -> str | None:
@@ -214,18 +331,9 @@ def _build_fwb_values(payload: dict[str, Any], raw_message: str | None) -> tuple
 
 
 class EdiService:
-    data_table_response = DataTablesResponse[EksBuildupHeaderOut]
-
     def __init__(self, repo: EdiRepository):
         self.repository = repo
 
-    def datatable(self, params: DataTablesParams) -> DataTablesResponse[EksBuildupHeaderOut]:
-        return self.repository.datatable(params)
-
-    def buildup_detail_datatable(
-        self, params: DataTablesParams
-    ) -> DataTablesResponse[EksBuildUpDetailOut]:
-        return self.repository.buildup_detail_datatable(params)
 
     def weighing_datatables(
         self, params: DataTablesParams
@@ -237,11 +345,313 @@ class EdiService:
     ) -> DataTablesResponse[EksMasterWaybillOut]:
         return self.repository.masterwaybill_datatable(params)
 
-    def manifest_mawb_datatables(
-        self, params: DataTablesParams
-    ) -> DataTablesResponse[BuildUpDetailOut]:
-        """Datatable accessor for build_up_detail (DB1)."""
-        return self.repository.manifest_mawb_datatable(params)
+    def ffm_build_up_datatable(
+        self,
+        params: DataTablesParams,
+    ) -> DataTablesResponse[FfmBuildUpOut]:
+        """Return FFM rows from mobile Build Up Check tables."""
+        total_records, filtered_records, rows = self.repository.list_ffm_build_up_headers(params)
+        return DataTablesResponse(
+            draw=params.draw,
+            records_total=total_records,
+            records_filtered=filtered_records,
+            data=[self._map_ffm_header(row) for row in rows],
+        )
+
+    def ffm_build_up_details(self, header_id: int) -> list[FfmBuildUpDetailOut]:
+        """Return FFM detail rows from Build Up Check with legacy fallback attributes."""
+        header = self.repository.get_ffm_build_up_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+        return [self._map_ffm_detail(header, detail) for detail in list(header.details or [])]
+
+    def generate_ffm_build_up_preview(self, header_id: int) -> FfmPreviewOut:  # noqa: PLR0912, PLR0915
+        """Generate FFM Cargo-IMP/XML from Build Up Check + legacy fallback tables."""
+        header = self.repository.get_ffm_build_up_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        details = [self._map_ffm_detail(header, detail) for detail in list(header.details or [])]
+        missing_fields: list[str] = []
+        warnings: list[str] = []
+
+        first_legacy_header = None
+        first_host = None
+        for detail in list(header.details or []):
+            if not detail.mawb:
+                continue
+            first_legacy_header = self.repository.get_legacy_weighing_header(
+                mawb=detail.mawb,
+                flight_no=header.flight_no,
+                flight_date=header.flight_date,
+            )
+            hosts = self.repository.list_legacy_host_awbs(detail.mawb)
+            first_host = hosts[0] if hosts else None
+            if first_legacy_header or first_host:
+                break
+
+        carrier = (_first_text(
+            header.airlines,
+            getattr(first_legacy_header, "AirlinesCode", None),
+            getattr(first_host, "airlinescode", None),
+        ) or "").upper()
+        flight_number = (_first_text(
+            header.flight_no,
+            getattr(first_legacy_header, "FlightNumber", None),
+            getattr(first_host, "FlightNo", None),
+        ) or "").upper()
+        if carrier and flight_number.startswith(carrier):
+            flight_number = flight_number[len(carrier):]
+        flight_date = _format_ffm_date(
+            _first_text(
+                header.flight_date,
+                getattr(first_legacy_header, "DateOfFlight", None),
+                getattr(first_host, "DateOfFlight", None),
+            )
+        )
+        origin = (_first_text(getattr(first_legacy_header, "Origin", None)) or "").upper()
+        destination = (_first_text(
+            header.dest,
+            getattr(first_legacy_header, "Destination", None),
+        ) or "").upper()
+
+        if not carrier:
+            missing_fields.append("header.airlines / legacy.AirlinesCode")
+        if not flight_number:
+            missing_fields.append("header.flight_no / legacy.FlightNumber")
+        if not flight_date:
+            missing_fields.append("header.flight_date / legacy.DateOfFlight")
+        if not origin:
+            missing_fields.append("legacy.eks_weighingheader.Origin")
+        if not destination:
+            missing_fields.append("header.dest / legacy.Destination")
+        if not details:
+            missing_fields.append("details (build_up_check_detail)")
+
+        uld_info = _parse_uld(header.uld)
+        uld_identifier = _format_uld_identifier(uld_info, carrier)
+        if not uld_identifier:
+            missing_fields.append("header.uld (format ULD tidak valid untuk FFM)")
+
+        detail_lines: list[str] = []
+        if uld_identifier:
+            detail_lines.append(f"ULD/{uld_identifier}")
+
+        valid_detail_count = 0
+        for index, detail in enumerate(details, start=1):
+            mawb = _format_mawb_for_ffm(detail.mawb)
+            pieces = _format_ffm_number(detail.pieces, 0)
+            weight = _format_ffm_number(detail.weight, 1)
+            volume = _format_ffm_number(detail.volume, 2)
+            goods = (_first_text(detail.nature_of_goods, "GENERAL CARGO") or "GENERAL CARGO").upper()
+            row_missing = []
+            if not mawb:
+                row_missing.append(f"details[{index}].mawb")
+            if not pieces:
+                row_missing.append(f"details[{index}].pieces")
+            if not weight:
+                row_missing.append(f"details[{index}].weight")
+            if not volume:
+                row_missing.append(f"details[{index}].volume")
+            if row_missing:
+                missing_fields.extend(row_missing)
+                warnings.append(f"Detail #{index} dilewati karena data belum lengkap.")
+                continue
+            detail_lines.append(f"{mawb}{origin}{destination}/T{pieces}K{weight}MC{volume}/{goods}")
+            valid_detail_count += 1
+
+        generated = bool(
+            carrier
+            and flight_number
+            and flight_date
+            and origin
+            and destination
+            and uld_identifier
+            and valid_detail_count > 0
+        )
+        buildup_number = self._build_ffm_number_label(header)
+        if not generated:
+            return FfmPreviewOut(
+                header_id=header_id,
+                buildup_number=buildup_number,
+                generated=False,
+                cargo_imp=None,
+                cargo_xml=None,
+                missing_fields=missing_fields,
+                warnings=warnings,
+            )
+
+        cargo_imp_lines = [
+            "FFM/8",
+            f"1/{carrier}{flight_number}/{flight_date}/{origin}",
+            destination,
+            *detail_lines,
+            "LAST",
+        ]
+        cargo_imp = "\n".join(cargo_imp_lines)
+        cargo_xml = self._build_ffm_build_up_xml(
+            header_id=header_id,
+            buildup_number=buildup_number,
+            carrier=carrier,
+            flight_number=flight_number,
+            flight_date=flight_date,
+            origin=origin,
+            destination=destination,
+            uld_identifier=uld_identifier,
+            details=details,
+            cargo_imp=cargo_imp,
+        )
+        return FfmPreviewOut(
+            header_id=header_id,
+            buildup_number=buildup_number,
+            generated=True,
+            cargo_imp=cargo_imp,
+            cargo_xml=cargo_xml,
+            missing_fields=missing_fields,
+            warnings=warnings,
+        )
+
+    @staticmethod
+    def _build_ffm_number_label(header) -> str:
+        flight_no = _first_text(header.flight_no, "FLIGHT") or "FLIGHT"
+        flight_date = str(header.flight_date or "").replace("-", "")
+        return f"BUC-{header.id}-{flight_no}-{flight_date}".strip("-")
+
+    @classmethod
+    def _map_ffm_header(cls, header) -> FfmBuildUpOut:
+        details = list(header.details or [])
+        mawb_values = [_clean_text(detail.mawb) for detail in details if _clean_text(detail.mawb)]
+        mawb_summary = ", ".join(dict.fromkeys(mawb_values))
+        total_pieces = 0
+        total_weight = Decimal("0")
+        has_weight = False
+        for detail in details:
+            pieces = _sum_rincian_pieces(list(detail.rincian or []))
+            if pieces is None:
+                pieces = _first_int(detail.total_pieces, detail.master_total_pieces) or 0
+            total_pieces += pieces
+
+            weight = _sum_rincian_weight(list(detail.rincian or []))
+            if weight is not None:
+                total_weight += Decimal(str(weight))
+                has_weight = True
+
+        uld_info = _parse_uld(header.uld)
+        return FfmBuildUpOut(
+            id=header.id,
+            number_build_up=cls._build_ffm_number_label(header),
+            mawb=mawb_summary or None,
+            airlines_code=header.airlines,
+            origin=None,
+            dest=header.dest,
+            flight_date=header.flight_date,
+            uld_type=uld_info.get("uld_type"),
+            uld_number=uld_info.get("uld_number"),
+            uld_owner=uld_info.get("uld_owner"),
+            total_pieces=total_pieces or None,
+            total_weight=float(total_weight) if has_weight else None,
+            create_at=header.created_at,
+        )
+
+    def _map_ffm_detail(self, header, detail) -> FfmBuildUpDetailOut:
+        mawb = _clean_text(detail.mawb)
+        legacy_header = self.repository.get_legacy_weighing_header(
+            mawb=mawb or "",
+            flight_no=header.flight_no,
+            flight_date=header.flight_date,
+        )
+        legacy_details = self.repository.list_legacy_weighing_details(mawb or "")
+        legacy_hosts = self.repository.list_legacy_host_awbs(mawb or "")
+        legacy_detail = legacy_details[0] if legacy_details else None
+        legacy_host = legacy_hosts[0] if legacy_hosts else None
+        uld_info = _parse_uld(header.uld)
+
+        pieces = _first_int(
+            _sum_rincian_pieces(list(detail.rincian or [])),
+            detail.total_pieces,
+            detail.master_total_pieces,
+            getattr(legacy_detail, "Pieces", None),
+            getattr(legacy_header, "TotalPieces", None),
+            getattr(legacy_host, "Quantity", None),
+        )
+        weight = _first_float(
+            _sum_rincian_weight(list(detail.rincian or [])),
+            getattr(legacy_detail, "GrossWeight", None),
+            getattr(legacy_detail, "NettoWeight", None),
+            getattr(legacy_header, "TotalNetto", None),
+            getattr(legacy_host, "Weight", None),
+        )
+        volume = _first_float(
+            getattr(legacy_detail, "VolumeCargo", None),
+            getattr(legacy_header, "TotalVolume", None),
+            getattr(legacy_host, "Volume", None),
+        )
+        nature_of_goods = _first_text(
+            getattr(legacy_detail, "KindOfNature", None),
+            getattr(legacy_host, "descriptiongoods", None),
+        )
+
+        return FfmBuildUpDetailOut(
+            id=detail.id,
+            header_id=detail.header_id,
+            mawb=mawb,
+            uld_type=uld_info.get("uld_type"),
+            uld_number=uld_info.get("uld_number"),
+            uld_owner=uld_info.get("uld_owner"),
+            pieces=pieces,
+            weight=weight,
+            volume=volume,
+            nature_of_goods=nature_of_goods,
+            remark=detail.remark,
+            create_at=detail.created_at,
+        )
+
+    @staticmethod
+    def _build_ffm_build_up_xml(  # noqa: PLR0913
+        *,
+        header_id: int,
+        buildup_number: str,
+        carrier: str,
+        flight_number: str,
+        flight_date: str,
+        origin: str,
+        destination: str,
+        uld_identifier: str,
+        details: list[FfmBuildUpDetailOut],
+        cargo_imp: str,
+    ) -> str:
+        lines = ['<XFFM version="1">']
+        lines.append(
+            "  <Manifest "
+            + f'headerId="{header_id}" '
+            + f'buildupNumber="{buildup_number}" '
+            + f'carrier="{carrier}" '
+            + f'flightNumber="{flight_number}" '
+            + f'flightDate="{flight_date}" '
+            + f'origin="{origin}" '
+            + f'destination="{destination}" '
+            + f'uld="{uld_identifier}"'
+            + " />"
+        )
+        lines.append("  <Details>")
+        for item in details:
+            lines.append(
+                "    <Shipment "
+                + f'mawb="{item.mawb or ""}" '
+                + f'pieces="{item.pieces or ""}" '
+                + f'weight="{item.weight or ""}" '
+                + f'volume="{item.volume or ""}"'
+                + ">"
+            )
+            lines.append(f"      <NatureOfGoods>{item.nature_of_goods or ''}</NatureOfGoods>")
+            lines.append(f"      <Remark>{item.remark or ''}</Remark>")
+            lines.append("    </Shipment>")
+        lines.append("  </Details>")
+        lines.append("  <CargoIMP><![CDATA[")
+        lines.append(cargo_imp)
+        lines.append("]]></CargoIMP>")
+        lines.append("</XFFM>")
+        return "\n".join(lines)
 
     def parse_fhl(self, awb: str) -> FhlResponse:
         header, details = self.repository.get_weighing_by_awb(awb)
@@ -274,8 +684,6 @@ class EdiService:
     def get_imp_hostawb(self, mawb: str) -> list[ImpHostAWBOut]:
         return self.repository.get_imp_hostawb(mawb)
 
-    def fetch_data_buildup_mawb(self, buildup_number: str):
-        return self.repository.get_buildup_mawb(buildup_number)
 
     def get_saved_fwb(self, mawb: str) -> FwbTableOut | None:
         """Retrieve stored FWB data by MAWB."""

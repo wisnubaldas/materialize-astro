@@ -112,11 +112,16 @@ Aturan tambahan:
 
 - Jangan membuat file TypeScript baru.
 - Jangan membuat type declaration manual kecuali sudah ada kebutuhan project yang jelas dan disetujui.
+- **Komentar & Dokumentasi Kode (Wajib):** Setiap *function* (terutama API client, helper, custom hooks) dan *reusable component* (React/Astro) wajib memiliki dokumentasi JSDoc (`/** ... */`) yang menjelaskan:
+  - Kegunaan/fungsi tersebut.
+  - Parameter yang diterima (`@param`) beserta tipe data dan deskripsinya.
+  - Nilai kembalian (`@returns`) beserta tipe data dan deskripsinya jika ada.
 - Gunakan JSDoc jika butuh dokumentasi shape object.
 - Pastikan import path sesuai alias project yang tersedia di `astro.config.mjs` dan/atau `jsconfig.json` existing.
 - Alias `@js`, `@libs`, `@scss`, dan `@vendor` wajib mengarah ke `src/assets/js`, `src/assets/libs`, `src/assets/scss`, dan `src/assets/vendor`; jangan kembalikan ke path legacy.
 - Jangan menambahkan dependency TypeScript tanpa instruksi eksplisit.
 - Jika harus mengubah `astro/src/middleware.js`, jaga perubahan minimal dan pastikan tetap kompatibel dengan SSR flow Astro.
+- Jangan menambahkan komentar berlebihan untuk variabel satu baris yang maknanya sudah jelas dari nama variabelnya.
 
 ---
 

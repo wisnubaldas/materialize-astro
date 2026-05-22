@@ -396,6 +396,12 @@ Web frontend `astro/`, mobile frontend `mobile-app/`, dan desktop frontend `desk
 - Request/response harus terdokumentasi melalui schema backend dan DTO/helper client di frontend/mobile/desktop.
 - Error response harus konsisten agar mudah ditangani oleh web, mobile, dan desktop.
 
+### Standar Cetak PDF & Halaman Print
+
+- **Penerbitan PDF Wajib di Backend**: Semua cetakan dokumen resmi yang membutuhkan format PDF (seperti Manifest Cargo dan Buildup Checklist) wajib di-generate secara server-side oleh backend FastAPI (misal menggunakan library `xhtml2pdf` atau `weasyprint`). Frontend dilarang me-render PDF secara langsung di sisi client.
+- **Layout Berbasis Paper CSS**: Semua dokumen PDF/cetakan wajib menggunakan struktur layout Paper CSS berbasis A4 (menggunakan `<body class="A4">` dan `<section class="sheet padding-10mm">`) seperti contoh pada `materialize-fastapi/app/templates/paper-css/examples/a4.html` untuk memastikan konsistensi hasil cetak pada printer fisik maupun digital.
+- **Autentikasi Token Query Parameter**: Halaman cetak dibuka secara native di tab baru browser (`window.open` atau link `<a>`). Karena link navigasi langsung tidak mendukung custom header HTTP `Authorization: Bearer`, token JWT wajib dikirimkan sebagai query parameter `?token=...` dan divalidasi secara manual di backend FastAPI. Path URL ini wajib dilewatkan dari JWT middleware otomatis dengan menggunakan prefix `/pdf/`.
+
 ---
 
 ## Progress Report File Wajib

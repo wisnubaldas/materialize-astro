@@ -1,3 +1,11 @@
+import re
+from io import BytesIO
+from pathlib import Path
+
+from fastapi import HTTPException
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from xhtml2pdf import pisa
+
 from app.repositories.build_up_check_repository import BuildUpCheckRepository
 from app.schemas.build_up_check_schema import (
     BuildUpCheckDetailCreate,
@@ -9,6 +17,7 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckRincianOut,
     BuildUpMasterAwbSummaryOut,
 )
+from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 
 
 def _clean_text(value: object) -> str:
@@ -36,6 +45,23 @@ def _build_split_group_key(mawb: str | None, flight_no: str | None, flight_date:
     if not mawb or not flight_no or not flight_date:
         return None
     return f"{_upper(flight_no)}|{flight_date}|{_upper(mawb)}"
+
+
+def _parse_uld(uld_str: str) -> tuple[str, str, str]:
+    """Parse ULD string (e.g. AKE12345FX) into (uld_type, uld_number, uld_owner)."""
+    if not uld_str:
+        return "", "", ""
+    uld_str = uld_str.strip().upper()
+    match = re.match(r"^([A-Z]{3})(\d{4,5})([A-Z0-9]{2})$", uld_str)
+    if match:
+        return match.group(1), match.group(2), match.group(3)
+    
+    match_partial = re.match(r"^([A-Z]{3})(\d+)(.*)$", uld_str)
+    if match_partial:
+        return match_partial.group(1), match_partial.group(2), match_partial.group(3)
+        
+    return uld_str, "", ""
+
 
 
 class BuildUpCheckService:
@@ -121,6 +147,121 @@ class BuildUpCheckService:
         if unfinished_only:
             return [row for row in mapped_rows if not row.is_completed]
         return mapped_rows
+
+    def build_up_headers_datatable(
+        self,
+        params: DataTablesParams,
+    ) -> DataTablesResponse[BuildUpCheckHeaderOut]:
+        """Return a DataTables response with mapped BuildUpCheckHeaderOut objects.
+        
+        Args:
+            params: The DataTables parameters containing filters and pagination.
+            
+        Returns:
+            A DataTables response object containing the header data.
+        """
+        total_records, filtered_records, results = self.repository.datatable(params)
+        mapped_data = [self._map_header(row) for row in results]
+        return DataTablesResponse[BuildUpCheckHeaderOut](
+            draw=params.draw,
+            records_total=total_records,
+            records_filtered=filtered_records,
+            data=mapped_data,
+        )
+
+    def generate_build_up_pdf(self, header_id: int, is_checklist: bool) -> bytes:
+        """Generate PDF for Build Up checklist or manifest.
+        
+        Args:
+            header_id: ID of the Build Up check header.
+            is_checklist: If True, renders a checklist PDF. If False, renders a manifest PDF.
+            
+        Returns:
+            The generated PDF content in bytes.
+        """
+        header = self.repository.get_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        uld_type, uld_number, uld_owner = _parse_uld(header.uld)
+
+        mawbs_data = []
+        for detail in header.details:
+            completed_pieces = sum(int(r.pieces or 0) for r in detail.rincian)
+            completed_weight = sum(float(r.weight or 0.0) for r in detail.rincian)
+
+            mawb_str = str(detail.mawb or "").strip()
+            mawb_prefix = ""
+            mawb_number = mawb_str
+            if "-" in mawb_str:
+                parts = mawb_str.split("-", 1)
+                mawb_prefix = parts[0]
+                mawb_number = parts[1]
+            elif len(mawb_str) > 3:
+                mawb_prefix = mawb_str[:3]
+                mawb_number = mawb_str[3:]
+
+            mawbs_data.append({
+                "mawb_prefix": mawb_prefix,
+                "mawb_number": mawb_number,
+                "pieces": completed_pieces,
+                "total_pieces": detail.total_pieces or detail.master_total_pieces or 0,
+                "nature_of_goods": "GENERAL CARGO",
+                "weight_kg": completed_weight,
+                "route": "",
+                "transit_flag": ""
+            })
+
+        manifest_dict = {
+            "airline_code": header.airlines or "",
+            "flight_number": header.flight_no or "",
+            "flight_date": header.flight_date.strftime("%d-%b-%Y").upper() if header.flight_date else "",
+            "aircraft_registration": "-",
+            "point_of_unloading": header.dest or "",
+            "point_of_loading": "CGK",
+            "staff": header.staff or "",
+            "supervisor": header.supervisor or "",
+            "ulds": [{
+                "uld_type": uld_type,
+                "uld_number": uld_number,
+                "uld_owner": uld_owner,
+                "destination": header.dest or "",
+                "remarks": "",
+                "mawbs": mawbs_data
+            }]
+        }
+
+        templates_dir = Path(__file__).resolve().parent.parent / "templates"
+        env = Environment(
+            loader=FileSystemLoader(str(templates_dir)),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
+
+        try:
+            template = env.get_template("build_up_print_pdf.html")
+            html_content = template.render(
+                manifest=manifest_dict,
+                is_checklist=is_checklist,
+            )
+            
+            pdf_buffer = BytesIO()
+            pdf_result = pisa.CreatePDF(
+                src=html_content,
+                dest=pdf_buffer,
+                encoding="utf-8",
+                link_callback=None,
+            )
+            
+            if pdf_result.err:
+                raise ValueError("Gagal mengompilasi HTML ke PDF menggunakan xhtml2pdf.")
+                
+            return pdf_buffer.getvalue()
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Gagal memproses pembuatan PDF Build Up: {exc!s}"
+            ) from exc
+
 
     def get_master_awb_summary(self) -> BuildUpMasterAwbSummaryOut:
         """Return all-time Master AWB completion summary for dashboard cards."""

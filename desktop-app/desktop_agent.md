@@ -169,3 +169,13 @@ Sebelum selesai task desktop:
 - Dilarang membuat pola seperti `ServiceA -> ServiceB -> ServiceA` atau rantai tidak langsung yang kembali ke asal.
 - Untuk state lintas service (misalnya session/auth/token), gunakan state holder terpisah (contoh: `AuthSessionState`) agar service API client tidak bergantung balik ke service bisnis.
 - Saat menambah service baru, wajib cek dependency chain sebelum commit dengan memastikan startup/resolution DI tidak deadlock/hang.
+
+---
+
+## Code Documentation Rules (Wajib)
+
+- Setiap *class*, *interface*, *method/function* (terutama di ViewModel, Service, Device, dan API Client) wajib memiliki komentar XML documentation (`/// <summary> ... </summary>`) atau komentar standar yang menerangkan:
+  - Kegunaan/fungsi tersebut.
+  - Parameter yang diterima (`<param name="...">`) beserta deskripsinya.
+  - Nilai kembalian (`<returns>`) beserta deskripsinya jika ada.
+- Nama variabel lokal wajib deskriptif. Jangan menambahkan komentar berlebihan untuk variabel satu baris yang sudah jelas dari nama variabelnya.
