@@ -1,3 +1,5 @@
+import './CardPages.css';
+
 /**
  * A map of premium gradient/solid styles for card page headers.
  * Each configuration contains styling details matching standard Bootstrap/Materialize color variants.
@@ -131,9 +133,21 @@ export default function CardPages({
     avatarClass += ` ${isLight ? 'bg-light text-dark' : `bg-label-${activeVariant} text-${activeVariant}`}`;
   }
 
+  const isLightTheme = activeVariant === 'light' || activeType === 'outline' || activeType === 'label';
+
   return (
     <div className={headerClass} style={headerStyle}>
-      <div className="d-flex align-items-center gap-3">
+      {/* Background animated boxes */}
+      <div className={`card-page-bg-animation${isLightTheme ? ' light-theme' : ''}`}>
+        <div className="bg-box bg-box-1"></div>
+        <div className="bg-box bg-box-2"></div>
+        <div className="bg-box bg-box-3"></div>
+        <div className="bg-box bg-box-4"></div>
+        <div className="bg-box bg-box-5"></div>
+      </div>
+
+      {/* Content wrapper with position-relative and z-index 2 */}
+      <div className="d-flex align-items-center gap-3 position-relative" style={{ zIndex: 2 }}>
         <div className={avatarClass} style={{ width: '48px', height: '48px', flexShrink: 0 }}>
           <i className={`${icon || defaultIcon} icon-24px`}></i>
         </div>
@@ -149,3 +163,4 @@ export default function CardPages({
     </div>
   );
 }
+

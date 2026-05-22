@@ -1,0 +1,147 @@
+/* CardPages background animation styles */
+
+.card-page-bg-animation {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 70%; /* Limit to the right side */
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.bg-box {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.607); /* Low opacity white for dark/gradient themes */
+  border-radius: 15%;
+  bottom: -160px; /* Start below the container */
+  transition: background 0.3s ease;
+}
+
+/* For light themes, use a low opacity version of the primary color to maintain visibility */
+.card-page-bg-animation.light-theme .bg-box {
+  background: rgba(114, 103, 240, 0.849);
+}
+
+/* Individual box configurations with custom animations for robust cross-browser support */
+.bg-box-1 {
+  width: 50px;
+  height: 50px;
+  right: 12%;
+  animation: float-box-1 16s infinite linear;
+}
+
+.bg-box-2 {
+  width: 30px;
+  height: 30px;
+  right: 28%;
+  animation: float-box-2 22s infinite linear 3s;
+}
+
+.bg-box-3 {
+  width: 70px;
+  height: 70px;
+  right: 45%;
+  animation: float-box-3 12s infinite linear 1.5s;
+}
+
+.bg-box-4 {
+  width: 100px;
+  height: 100px;
+  right: 5%;
+  animation: float-box-4 18s infinite linear 6s;
+}
+
+.bg-box-5 {
+  width: 60px;
+  height: 60px;
+  right: 35%;
+  animation: float-box-5 10s infinite linear 4.5s;
+}
+
+/* GPU Accelerated float keyframes for each box */
+@keyframes float-box-1 {
+  0% {
+    transform: translateY(0) rotate(45deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-280px) rotate(405deg) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes float-box-2 {
+  0% {
+    transform: translateY(0) rotate(15deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-280px) rotate(-345deg) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes float-box-3 {
+  0% {
+    transform: translateY(0) rotate(60deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-280px) rotate(420deg) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes float-box-4 {
+  0% {
+    transform: translateY(0) rotate(-30deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-280px) rotate(330deg) scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes float-box-5 {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-280px) rotate(360deg) scale(1.6);
+    opacity: 0;
+  }
+}

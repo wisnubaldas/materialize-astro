@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Air Cargo Manifest</title>
+    <link rel="stylesheet" href="normalize.min.css">
+    <link rel="stylesheet" href="paper.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm 10mm 10mm 10mm;
+
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Ubuntu', Arial, sans-serif;
+                font-size: 8pt;
+                color: #333333;
+            }
+        }
+
+        body {
+            font-family: 'Ubuntu', Arial, sans-serif;
+            font-size: 9pt;
+            color: #000;
+            width: 100% !important;
+        }
+
+        .title {
+            font-size: large;
+            margin-bottom: 10mm;
+            text-align: center;
+            width: 100%;
+        }
+
+
+
+        .sheet {
+            height: auto !important;
+            width: 100% !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            position: relative;
+        }
+
+        /* General Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Metadata Table (First Table) styling */
+        table:first-of-type {
+            margin-bottom: none;
+        }
+
+        table:first-of-type td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+
+        table:first-of-type td:nth-child(odd) {
+            font-weight: bold;
+            width: 25%;
+        }
+
+        table:first-of-type td:nth-child(even) {
+            width: 25%;
+        }
+
+        /* Grid Table (Second Table) styling */
+        table:nth-of-type(2) {
+            margin-bottom: 10mm;
+        }
+
+        table:nth-of-type(2) th,
+        table:nth-of-type(2) td {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            vertical-align: middle;
+            font-size: 8pt;
+        }
+
+        table:nth-of-type(2) th {
+            font-weight: bold;
+            background-color: #5c5cfc;
+            text-align: center;
+            color: azure;
+        }
+
+        /* Alignments for Grid Table columns (taking rowspan/colspan into account) */
+        table:nth-of-type(2) td:nth-child(1) {
+            text-align: center;
+        }
+
+        /* NO (rowspan cell) or label */
+
+        /* ULD/MAWB (1st td in MAWB/TOTAL rows when NO rowspan is active on that tr) */
+        table:nth-of-type(2) tbody tr td:nth-child(1):not([rowspan]) {
+            text-align: left;
+        }
+
+        /* NUMBER OF PIECES (2nd td in MAWB/TOTAL rows, 2nd td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(2):not([colspan]) {
+            text-align: right;
+        }
+
+        /* NATURE OF GOODS (3rd td in MAWB/TOTAL rows, 3rd td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(3):not([colspan]) {
+            text-align: center;
+        }
+
+        /* WEIGHT (4th td in MAWB/TOTAL rows, 4th td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(4):not([colspan]) {
+            text-align: right;
+        }
+
+        /* DEST (5th td in MAWB/TOTAL rows, 5th td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(5):not([colspan]) {
+            text-align: center;
+        }
+
+        /* OFFICIAL USE (6th td in MAWB/TOTAL rows, 6th td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(6):not([colspan]) {
+            text-align: center;
+        }
+
+        /* REMARK (7th td in MAWB/TOTAL rows, 7th td in GRAND TOTAL) */
+        table:nth-of-type(2) tbody tr td:nth-child(7):not([colspan]) {
+            text-align: center;
+        }
+
+        /* ULD Title row cells and total/grand total rows bold formatting */
+        table:nth-of-type(2) tr td[colspan="7"] {
+            font-weight: bold;
+            background-color: #e6ebe9;
+            text-align: left;
+        }
+
+        table:nth-of-type(2) tbody tr:last-child td {
+            font-weight: bold;
+        }
+
+        /* Signature Table (Third Table) styling */
+        table:nth-of-type(3) {
+            margin-top: 15mm;
+        }
+
+        table:nth-of-type(3) td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+            padding: 10px;
+        }
+
+        table:nth-of-type(3) div:first-child {
+            font-weight: bold;
+            margin-bottom: 15mm;
+        }
+    </style>
+</head>
+
+<body class="A4">
+    <section class="sheet padding-10mm">
+{% if manifest %}
+            <div class="title text-center">
+                <div>AIR CARGO MANIFEST</div>
+                <div>I.C.A.O ANNEX 9, APPENDIX 3</div>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <td>OWNER OF OPERATOR</td>
+                        <td>:
+                            {{ "FEDEX" if manifest.airline_code == "FX" else (manifest.airline_code or "-") }}
+                        </td>
+                        <td>FLIGHT NR/DATE</td>
+                        <td>: {{ manifest.airline_code }}{{ manifest.flight_number}}
+                            / {{ manifest.flight_date }}</td>
+                    </tr>
+                    <tr>
+                        <td>MARKS OF NAT AND REGS</td>
+                        <td>: {{ manifest.aircraft_registration or "-" }}</td>
+                        <td>POINT OF UNLOADING</td>
+                        <td>: {{ manifest.point_of_unloading or "-" }}</td>
+                    </tr>
+                    <tr>
+                        <td>POINT OF LOADING</td>
+                        <td>: {{ manifest.point_of_loading or "-" }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+    {% set grand = namespace(pieces=0, weight=0, has_data=false) %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th><span>ULD / NUMBER MAWB</span></th>
+                        <th><span>NUMBER OF PIECES</span></th>
+                        <th>NATURE OF GOODS</th>
+                        <th><span>WEIGHT</span></th>
+                        <th>DEST</th>
+                        <th>FOR OFFICIAL USE</th>
+                        <th>REMARK</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% if manifest.ulds %}
+        {% for uld in manifest.ulds %}
+            {% set uld_no = loop.index %}
+            {% set totals = namespace(pieces=0, weight=0) %}
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                    {% set totals.pieces = totals.pieces + (mawb.pieces or 0) %}
+                    {% set totals.weight = totals.weight + (mawb.weight_kg | float) %}
+                    {% set grand.pieces = grand.pieces + (mawb.pieces or 0) %}
+                    {% set grand.weight = grand.weight + (mawb.weight_kg | float) %}
+                    {% set grand.has_data = true %}
+                {% endfor %}
+            {% endif %}
+                            <tr>
+                                <td rowspan="{{ 3 if uld.mawbs else 2 }}">
+                                    {{ uld_no }}
+                                </td>
+                                <td colspan="7">
+                                    <span>{{ uld.uld_type }} {{ uld.uld_number }} {{ uld.uld_owner or "-" }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>-</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ mawb.pieces }}/{{ mawb.total_pieces }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>-</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ mawb.nature_of_goods or "-" }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>-</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ mawb.weight_kg }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>-</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ uld.destination or "-" }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>{{ uld.destination or "-" }}</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ mawb.route or "-" }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>-</div>
+            {% endif %}
+                                </td>
+                                <td>
+            {% if uld.mawbs %}
+                {% for mawb in uld.mawbs %}
+                                            <div>{{ uld.remarks or mawb.transit_flag or "-" }}</div>
+                {% endfor %}
+            {% else %}
+                                        <div>{{ uld.remarks or "-" }}</div>
+            {% endif %}
+                                </td>
+                            </tr>
+            {% if uld.mawbs %}
+                                <tr>
+                                    <td>TOTAL</td>
+                                    <td>{{ totals.pieces }}</td>
+                                    <td></td>
+                                    <td>{{ "%.2f"|format(totals.weight) }}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+                        <tr>
+                            <td colspan="8">Tidak ada data ULD.</td>
+                        </tr>
+    {% endif %}
+                    <tr>
+                        <td colspan="2">GRAND TOTAL</td>
+                        <td>{{ grand.pieces }}</td>
+                        <td></td>
+                        <td>{{ "%.2f"|format(grand.weight) }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+{% endif %}
+    </section>
+</body>
+
+</html>

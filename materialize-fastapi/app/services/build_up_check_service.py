@@ -40,7 +40,9 @@ def _sum_rincian_pieces(items: list) -> int:
     return total
 
 
-def _build_split_group_key(mawb: str | None, flight_no: str | None, flight_date: object) -> str | None:
+def _build_split_group_key(
+    mawb: str | None, flight_no: str | None, flight_date: object
+) -> str | None:
     """Build a stable key for MAWB split checks within the same flight."""
     if not mawb or not flight_no or not flight_date:
         return None
@@ -55,13 +57,12 @@ def _parse_uld(uld_str: str) -> tuple[str, str, str]:
     match = re.match(r"^([A-Z]{3})(\d{4,5})([A-Z0-9]{2})$", uld_str)
     if match:
         return match.group(1), match.group(2), match.group(3)
-    
+
     match_partial = re.match(r"^([A-Z]{3})(\d+)(.*)$", uld_str)
     if match_partial:
         return match_partial.group(1), match_partial.group(2), match_partial.group(3)
-        
-    return uld_str, "", ""
 
+    return uld_str, "", ""
 
 
 class BuildUpCheckService:
@@ -82,9 +83,11 @@ class BuildUpCheckService:
             else completed_pieces
         )
         master_remaining_pieces = max(master_total_pieces - resolved_master_completed_pieces, 0)
-        is_completed = bool(row.is_allocation_final) or (
-            allocation_limit > 0 and remaining_pieces == 0
-        ) or (master_total_pieces > 0 and master_remaining_pieces == 0)
+        is_completed = (
+            bool(row.is_allocation_final)
+            or (allocation_limit > 0 and remaining_pieces == 0)
+            or (master_total_pieces > 0 and master_remaining_pieces == 0)
+        )
         return BuildUpCheckDetailOut(
             id=row.id,
             header_id=row.header_id,
@@ -116,7 +119,9 @@ class BuildUpCheckService:
         mapped_details = [cls._map_detail(detail) for detail in details]
         total_pieces = sum(int(detail.total_pieces or 0) for detail in mapped_details)
         completed_pieces = sum(detail.completed_pieces for detail in mapped_details)
-        is_completed = bool(mapped_details) and all(detail.is_completed for detail in mapped_details)
+        is_completed = bool(mapped_details) and all(
+            detail.is_completed for detail in mapped_details
+        )
         return BuildUpCheckHeaderOut(
             id=row.id,
             uld=row.uld,
@@ -153,10 +158,10 @@ class BuildUpCheckService:
         params: DataTablesParams,
     ) -> DataTablesResponse[BuildUpCheckHeaderOut]:
         """Return a DataTables response with mapped BuildUpCheckHeaderOut objects.
-        
+
         Args:
             params: The DataTables parameters containing filters and pagination.
-            
+
         Returns:
             A DataTables response object containing the header data.
         """
@@ -171,11 +176,11 @@ class BuildUpCheckService:
 
     def generate_build_up_pdf(self, header_id: int, is_checklist: bool) -> bytes:
         """Generate PDF for Build Up checklist or manifest.
-        
+
         Args:
             header_id: ID of the Build Up check header.
             is_checklist: If True, renders a checklist PDF. If False, renders a manifest PDF.
-            
+
         Returns:
             The generated PDF content in bytes.
         """
@@ -201,34 +206,40 @@ class BuildUpCheckService:
                 mawb_prefix = mawb_str[:3]
                 mawb_number = mawb_str[3:]
 
-            mawbs_data.append({
-                "mawb_prefix": mawb_prefix,
-                "mawb_number": mawb_number,
-                "pieces": completed_pieces,
-                "total_pieces": detail.total_pieces or detail.master_total_pieces or 0,
-                "nature_of_goods": "GENERAL CARGO",
-                "weight_kg": completed_weight,
-                "route": "",
-                "transit_flag": ""
-            })
+            mawbs_data.append(
+                {
+                    "mawb_prefix": mawb_prefix,
+                    "mawb_number": mawb_number,
+                    "pieces": completed_pieces,
+                    "total_pieces": detail.total_pieces or detail.master_total_pieces or 0,
+                    "nature_of_goods": "GENERAL CARGO",
+                    "weight_kg": completed_weight,
+                    "route": "",
+                    "transit_flag": "",
+                }
+            )
 
         manifest_dict = {
             "airline_code": header.airlines or "",
             "flight_number": header.flight_no or "",
-            "flight_date": header.flight_date.strftime("%d-%b-%Y").upper() if header.flight_date else "",
+            "flight_date": header.flight_date.strftime("%d-%b-%Y").upper()
+            if header.flight_date
+            else "",
             "aircraft_registration": "-",
             "point_of_unloading": header.dest or "",
             "point_of_loading": "CGK",
             "staff": header.staff or "",
             "supervisor": header.supervisor or "",
-            "ulds": [{
-                "uld_type": uld_type,
-                "uld_number": uld_number,
-                "uld_owner": uld_owner,
-                "destination": header.dest or "",
-                "remarks": "",
-                "mawbs": mawbs_data
-            }]
+            "ulds": [
+                {
+                    "uld_type": uld_type,
+                    "uld_number": uld_number,
+                    "uld_owner": uld_owner,
+                    "destination": header.dest or "",
+                    "remarks": "",
+                    "mawbs": mawbs_data,
+                }
+            ],
         }
 
         templates_dir = Path(__file__).resolve().parent.parent / "templates"
@@ -238,21 +249,30 @@ class BuildUpCheckService:
         )
 
         try:
-            template = env.get_template("build_up_print_pdf.html")
+            # Passing template buat pdf di sini, karena ada logic khusus untuk checklist vs manifest yang cukup berbeda di template-nya.
+            # Kalau dipaksain satu template, malah jadi banyak kondisi if di dalam template-nya yang bikin susah maintain.
+            # Jadi biar lebih clean, dipisah aja template-nya.
+            # Untuk sekarang memang cuma beda sedikit, tapi ke depannya bisa jadi lebih kompleks perbedaannya.
+            # Jadi biar fleksibel aja dengan dua template terpisah.
+            if is_checklist:
+                template = env.get_template("build_up_checklist_pdf.html")
+            else:
+                template = env.get_template("build_up_manifest_pdf.html")
+
             html_content = template.render(
                 manifest=manifest_dict,
                 is_checklist=is_checklist,
             )
-            
+
             font_config = FontConfiguration()
-            pdf_bytes = HTML(string=html_content, base_url=str(templates_dir)).write_pdf(font_config=font_config)
+            pdf_bytes = HTML(string=html_content, base_url=str(templates_dir)).write_pdf(
+                font_config=font_config
+            )
             return pdf_bytes
         except Exception as exc:
             raise HTTPException(
-                status_code=500,
-                detail=f"Gagal memproses pembuatan PDF Build Up: {exc!s}"
+                status_code=500, detail=f"Gagal memproses pembuatan PDF Build Up: {exc!s}"
             ) from exc
-
 
     def get_master_awb_summary(self) -> BuildUpMasterAwbSummaryOut:
         """Return all-time Master AWB completion summary for dashboard cards."""
@@ -290,7 +310,9 @@ class BuildUpCheckService:
         )
         expected_total = int(payload.master_total_pieces)
         for related_detail in related_details:
-            existing_total = int(related_detail.master_total_pieces or related_detail.total_pieces or 0)
+            existing_total = int(
+                related_detail.master_total_pieces or related_detail.total_pieces or 0
+            )
             if existing_total > 0 and existing_total != expected_total:
                 raise ValueError(
                     "Total pieces MAWB harus sama di semua ULD untuk MAWB "
@@ -312,8 +334,7 @@ class BuildUpCheckService:
         if len(known_totals) > 1:
             sorted_totals = ", ".join(str(total) for total in sorted(known_totals))
             raise ValueError(
-                "Total pieces MAWB tidak konsisten antar ULD. "
-                f"Total tercatat: {sorted_totals}."
+                "Total pieces MAWB tidak konsisten antar ULD. " f"Total tercatat: {sorted_totals}."
             )
 
     def _sync_split_metadata(self, detail) -> object:
@@ -357,9 +378,7 @@ class BuildUpCheckService:
             )
             if master_completed == 0:
                 master_completed = _sum_rincian_pieces(list(row.rincian or []))
-            mapped_rows.append(
-                self._map_detail(row, master_completed_pieces=master_completed)
-            )
+            mapped_rows.append(self._map_detail(row, master_completed_pieces=master_completed))
         return mapped_rows
 
     def create_detail(
@@ -372,7 +391,9 @@ class BuildUpCheckService:
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
         if self._map_header(header).is_completed:
-            raise ValueError("Build Up sudah selesai. Gunakan menu buka kembali untuk menambah MAWB.")
+            raise ValueError(
+                "Build Up sudah selesai. Gunakan menu buka kembali untuk menambah MAWB."
+            )
         self._validate_master_total_pieces(payload)
         payload = self._ensure_master_total_pieces(payload)
         self._validate_same_master_total(header, payload)
