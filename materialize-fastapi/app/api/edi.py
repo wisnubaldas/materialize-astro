@@ -39,11 +39,21 @@ from app.schemas.mst_discrepancy_code_schema import (
     MstDiscrepancyCodeOut,
     MstDiscrepancyCodeUpdate,
 )
+from app.dependencies.master_airline_deps import (
+    get_master_airline_service_r,
+    get_master_airline_service_w,
+)
+from app.schemas.master_airline_schema import (
+    MasterAirlineCreate,
+    MasterAirlineOut,
+    MasterAirlineUpdate,
+)
 from app.schemas.responseSchema import ResponseSchema
 from app.schemas.weighing_header_schema import WeighingHeaderOut
 from app.services.discrepancy_code_service import DiscrepancyCodeService
 from app.services.edi_service import EdiService
 from app.services.fsu_message_service import FsuMessageService
+from app.services.master_airline_service import MasterAirlineService
 
 router = APIRouter(prefix="/edi", tags=["Send Electronic data interchange (EDI)"])
 logger = logging.getLogger("edi")
@@ -538,3 +548,183 @@ def get_imp_hostawb(mawb: str, service: EdiService = Depends(get_masterwaybill_s
 # | **DLV** | Delivered             |
 # | **AWD** | Awaiting Delivery     |
 # | **CCD** | Customs Cleared       |
+
+
+@router.get(
+    "/email-airlines",
+    summary="List all email airlines",
+    response_model=list[MasterAirlineOut],
+)
+def list_email_airlines(
+    service: MasterAirlineService = Depends(get_master_airline_service_r),
+):
+    """
+    List all airlines for email configuration.
+    """
+    return service.list_all()
+
+
+@router.post(
+    "/email-airlines/datatables",
+    summary="Datatable email airlines",
+    response_model=DataTablesResponse[MasterAirlineOut],
+)
+def datatable_email_airlines(
+    params: DataTablesParams,
+    service: MasterAirlineService = Depends(get_master_airline_service_r),
+):
+    """
+    Server-side pagination/search for email airlines datatable.
+    """
+    return service.datatable(params)
+
+
+@router.get(
+    "/email-airlines/lookup",
+    summary="Lookup airline email by airline/flight code",
+    response_model=ResponseSchema[str | None],
+)
+def lookup_airline_email(
+    code: str,
+    service: MasterAirlineService = Depends(get_master_airline_service_r),
+):
+    """
+    Lookup contact email address for a given airline or flight code.
+    """
+    email = service.lookup_email_by_code(code)
+    return {
+        "status": 200,
+        "message": "Lookup email berhasil",
+        "data": email,
+    }
+
+
+@router.get(
+    "/email-airlines/{airline_id}",
+    summary="Detail email airline",
+    response_model=MasterAirlineOut,
+)
+def get_email_airline(
+    airline_id: int,
+    service: MasterAirlineService = Depends(get_master_airline_service_r),
+):
+    """
+    Get airline details by ID.
+    """
+    record = service.get_by_id(airline_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Email airline tidak ditemukan")
+    return record
+
+
+@router.post(
+    "/email-airlines",
+    summary="Create email airline",
+    response_model=MasterAirlineOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_email_airline(
+    payload: MasterAirlineCreate,
+    service: MasterAirlineService = Depends(get_master_airline_service_w),
+):
+    """
+    Create a new email airline configuration.
+    """
+    airline_name = payload.airline_name.strip()
+    if not airline_name:
+        raise HTTPException(status_code=400, detail="Nama airline wajib diisi")
+
+    # Clean other fields
+    data = payload.model_dump()
+    data["airline_name"] = airline_name
+    if data.get("iata_code"):
+        data["iata_code"] = data["iata_code"].strip().upper()
+        # Prevent duplicate IATA code
+        existing = service.get_by_code(data["iata_code"])
+        if existing:
+            raise HTTPException(status_code=409, detail="Kode IATA airline sudah digunakan")
+    if data.get("icao_code"):
+        data["icao_code"] = data["icao_code"].strip().upper()
+        # Prevent duplicate ICAO code
+        existing = service.get_by_code(data["icao_code"])
+        if existing:
+            raise HTTPException(status_code=409, detail="Kode ICAO airline sudah digunakan")
+    if data.get("awb_prefix"):
+        data["awb_prefix"] = data["awb_prefix"].strip()
+        # Prevent duplicate AWB prefix
+        existing = service.get_by_code(data["awb_prefix"])
+        if existing:
+            raise HTTPException(status_code=409, detail="AWB Prefix airline sudah digunakan")
+
+    return service.create(MasterAirlineCreate(**data))
+
+
+@router.put(
+    "/email-airlines/{airline_id}",
+    summary="Update email airline",
+    response_model=MasterAirlineOut,
+)
+def update_email_airline(
+    airline_id: int,
+    payload: MasterAirlineUpdate,
+    service: MasterAirlineService = Depends(get_master_airline_service_w),
+):
+    """
+    Update an existing email airline configuration.
+    """
+    record = service.get_by_id(airline_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Email airline tidak ditemukan")
+
+    data = payload.model_dump(exclude_unset=True)
+    
+    # Validation checks
+    if "airline_name" in data:
+        data["airline_name"] = data["airline_name"].strip()
+        if not data["airline_name"]:
+            raise HTTPException(status_code=400, detail="Nama airline wajib diisi")
+            
+    if "iata_code" in data and data["iata_code"]:
+        iata = data["iata_code"].strip().upper()
+        if iata != record.iata_code:
+            existing = service.get_by_code(iata)
+            if existing:
+                raise HTTPException(status_code=409, detail="Kode IATA airline sudah digunakan")
+        data["iata_code"] = iata
+
+    if "icao_code" in data and data["icao_code"]:
+        icao = data["icao_code"].strip().upper()
+        if icao != record.icao_code:
+            existing = service.get_by_code(icao)
+            if existing:
+                raise HTTPException(status_code=409, detail="Kode ICAO airline sudah digunakan")
+        data["icao_code"] = icao
+
+    if "awb_prefix" in data and data["awb_prefix"]:
+        awb = data["awb_prefix"].strip()
+        if awb != record.awb_prefix:
+            existing = service.get_by_code(awb)
+            if existing:
+                raise HTTPException(status_code=409, detail="AWB Prefix airline sudah digunakan")
+        data["awb_prefix"] = awb
+
+    return service.update(record, MasterAirlineUpdate(**data))
+
+
+@router.delete(
+    "/email-airlines/{airline_id}",
+    summary="Delete email airline",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_email_airline(
+    airline_id: int,
+    service: MasterAirlineService = Depends(get_master_airline_service_w),
+):
+    """
+    Delete an email airline configuration.
+    """
+    record = service.get_by_id(airline_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Email airline tidak ditemukan")
+    service.delete(record)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

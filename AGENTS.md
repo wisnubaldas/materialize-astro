@@ -408,6 +408,33 @@ Web frontend `astro/`, mobile frontend `mobile-app/`, dan desktop frontend `desk
 - Request/response harus terdokumentasi melalui schema backend dan DTO/helper client di frontend/mobile/desktop.
 - Error response harus konsisten agar mudah ditangani oleh web, mobile, dan desktop.
 
+### Aturan Database SSoT (Single Source of Truth) — WAJIB DIPATUHI
+
+Project ini menggunakan **multi-database** dengan pembagian hak akses yang ketat:
+
+| Database | Koneksi     | Hak Akses         | Keterangan                                                        |
+| -------- | ----------- | ----------------- | ----------------------------------------------------------------- |
+| **DB1**  | `get_db1_r` / `get_db1_w` | **READ + WRITE** | Database aplikasi MAU APP. Boleh INSERT, UPDATE, DELETE.          |
+| **DB2**  | `get_db2_r` | **READ-ONLY**     | SSoT operasional legacy (eks_weighingheader, eks_masterwaybill, dst). |
+| **DB3**  | `get_db3_r` | **READ-ONLY**     | SSoT operasional lain. Hanya dibaca, tidak boleh dimodifikasi.     |
+| **DB4**  | `get_db4_r` | **READ-ONLY**     | SSoT operasional lain. Hanya dibaca, tidak boleh dimodifikasi.     |
+
+**Aturan wajib yang tidak boleh dilanggar:**
+
+- **Dilarang keras** melakukan `INSERT`, `UPDATE`, `DELETE`, atau `COMMIT` pada sesi DB2, DB3, dan DB4.
+- Repository atau service yang membaca DB2/DB3/DB4 **hanya boleh menggunakan session read** (`get_db2_r`, `get_db3_r`, `get_db4_r`).
+- Jika ada kebutuhan menyimpan data dari hasil baca SSoT (misalnya cache, log, atau hasil transform), simpan di **DB1** melalui sesi write (`get_db1_w`).
+- Model SQLAlchemy untuk DB2/DB3/DB4 **tidak boleh didaftarkan** ke session write engine.
+- Dependency injection untuk endpoint yang hanya membaca SSoT wajib menggunakan dependency read-only:
+  ```python
+  # BENAR — baca SSoT
+  db: Session = Depends(get_db2_r)
+
+  # SALAH — jangan gunakan session write untuk SSoT
+  db: Session = Depends(get_db2_w)  # ← DILARANG
+  ```
+- Pada saat review atau implementasi baru: **periksa ulang** apakah ada query ke DB2/DB3/DB4 yang secara tidak sengaja menggunakan session write.
+
 ### Standar Cetak PDF & Halaman Print
 
 - **Penerbitan PDF Wajib di Backend**: Semua cetakan dokumen resmi yang membutuhkan format PDF (seperti Manifest Cargo dan Buildup Checklist) wajib di-generate secara server-side oleh backend FastAPI (misal menggunakan library `xhtml2pdf` atau `weasyprint`). Frontend dilarang me-render PDF secara langsung di sisi client.

@@ -4,3 +4,4 @@ export { default as FHL } from './fhl.jsx';
 export { default as FSU } from './fsu.jsx';
 export { default as FsuMessage } from './fsu-message.jsx';
 export { default as FWB } from './fwb.jsx';
+export { default as EmailAirlines } from './email-airlines.jsx';

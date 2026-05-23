@@ -168,6 +168,35 @@ def _parse_uld(value: Any) -> dict[str, str | None]:
     }
 
 
+def _calc_volume_from_dimensions(
+    long_cm: Any,
+    width_cm: Any,
+    high_cm: Any,
+) -> float | None:
+    """
+    Hitung volume (m³) dari dimensi panjang/lebar/tinggi dalam satuan cm.
+
+    Digunakan sebagai fallback ketika kolom VolumeCargo di eks_weighingdetail kosong.
+    Konversi: (cm x cm x cm) / 1_000_000 = m3
+
+    Args:
+        long_cm: Panjang dalam cm.
+        width_cm: Lebar dalam cm.
+        high_cm: Tinggi dalam cm.
+
+    Returns:
+        Volume dalam m³ sebagai float, atau None jika salah satu dimensi tidak tersedia.
+    """
+    p = _parse_decimal(long_cm)
+    w = _parse_decimal(width_cm)
+    h = _parse_decimal(high_cm)
+    if p is None or w is None or h is None:
+        return None
+    if p <= 0 or w <= 0 or h <= 0:
+        return None
+    return float((p * w * h) / 1_000_000)
+
+
 def _format_mawb_for_ffm(value: Any) -> str:
     text = re.sub(r"[^A-Za-z0-9]", "", _clean_text(value) or "").upper()
     if len(text) <= 3:
@@ -366,7 +395,23 @@ class EdiService:
         return [self._map_ffm_detail(header, detail) for detail in list(header.details or [])]
 
     def generate_ffm_build_up_preview(self, header_id: int) -> FfmPreviewOut:  # noqa: PLR0912, PLR0915
-        """Generate FFM Cargo-IMP/XML from Build Up Check + legacy fallback tables."""
+        """
+        Generate FFM Cargo-IMP dan Cargo-XML dari Build Up Check + fallback legacy DB2 (SSoT).
+
+        Chain fallback untuk setiap field:
+        - carrier    : build_up_check_header.airlines → eks_weighingheader.AirlinesCode → eks_hostawb.airlinescode → eks_invoiceheader.AirlinesCode
+        - flight_no  : build_up_check_header.flight_no → eks_weighingheader.FlightNumber → eks_hostawb.FlightNo
+        - flight_date: build_up_check_header.flight_date → eks_weighingheader.DateOfFlight → eks_hostawb.DateOfFlight
+        - origin     : eks_weighingheader.Origin (3-step fallback ke mawb saja jika flight filter gagal)
+        - destination: build_up_check_header.dest → eks_weighingheader.Destination
+
+        Args:
+            header_id: ID build_up_check_header.
+
+        Returns:
+            FfmPreviewOut dengan cargo_imp/cargo_xml jika semua field tersedia,
+            atau generated=False dengan missing_fields dan warnings.
+        """
         header = self.repository.get_ffm_build_up_header_by_id(header_id)
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
@@ -377,6 +422,7 @@ class EdiService:
 
         first_legacy_header = None
         first_host = None
+        first_invoice = None
         for detail in list(header.details or []):
             if not detail.mawb:
                 continue
@@ -387,13 +433,16 @@ class EdiService:
             )
             hosts = self.repository.list_legacy_host_awbs(detail.mawb)
             first_host = hosts[0] if hosts else None
-            if first_legacy_header or first_host:
+            # Fallback terakhir: eks_invoiceheader via InvoiceNumber (DB2 SSoT)
+            first_invoice = self.repository.get_legacy_invoice_by_mawb(detail.mawb)
+            if first_legacy_header or first_host or first_invoice:
                 break
 
         carrier = (_first_text(
             header.airlines,
             getattr(first_legacy_header, "AirlinesCode", None),
             getattr(first_host, "airlinescode", None),
+            getattr(first_invoice, "AirlinesCode", None),
         ) or "").upper()
         flight_number = (_first_text(
             header.flight_no,
@@ -409,22 +458,26 @@ class EdiService:
                 getattr(first_host, "DateOfFlight", None),
             )
         )
-        origin = (_first_text(getattr(first_legacy_header, "Origin", None)) or "").upper()
+        origin = (_first_text(
+            getattr(first_legacy_header, "Origin", None),
+            getattr(first_invoice, "Origin", None),
+        ) or "").upper()
         destination = (_first_text(
             header.dest,
             getattr(first_legacy_header, "Destination", None),
+            getattr(first_invoice, "Destination", None),
         ) or "").upper()
 
         if not carrier:
-            missing_fields.append("header.airlines / legacy.AirlinesCode")
+            missing_fields.append("header.airlines / legacy.AirlinesCode / invoice.AirlinesCode")
         if not flight_number:
             missing_fields.append("header.flight_no / legacy.FlightNumber")
         if not flight_date:
             missing_fields.append("header.flight_date / legacy.DateOfFlight")
         if not origin:
-            missing_fields.append("legacy.eks_weighingheader.Origin")
+            missing_fields.append("legacy.eks_weighingheader.Origin / invoice.Origin")
         if not destination:
-            missing_fields.append("header.dest / legacy.Destination")
+            missing_fields.append("header.dest / legacy.Destination / invoice.Destination")
         if not details:
             missing_fields.append("details (build_up_check_detail)")
 
@@ -554,6 +607,41 @@ class EdiService:
         )
 
     def _map_ffm_detail(self, header, detail) -> FfmBuildUpDetailOut:
+        """
+        Map satu baris BuildUpCheckDetail ke FfmBuildUpDetailOut dengan chain fallback DB2 (SSoT).
+
+        Chain fallback untuk setiap field (DB2 READ ONLY):
+
+        pieces:
+          build_up_check_rincian (sum)
+          → build_up_check_detail.total_pieces
+          → build_up_check_detail.master_total_pieces
+          → eks_weighingdetail.Pieces (by MasterAWB)
+          → eks_weighingheader.TotalPieces (by MasterAWB)
+          → eks_hostawb.Quantity (by MasterAWB)
+          → eks_invoiceheader.TotalPieces (via InvoiceNumber)
+
+        weight:
+          build_up_check_rincian (sum)
+          → eks_weighingdetail.GrossWeight
+          → eks_weighingdetail.NettoWeight
+          → eks_weighingheader.TotalNetto
+          → eks_hostawb.Weight
+          → eks_invoiceheader.TotalNetto
+
+        volume:
+          eks_weighingdetail.VolumeCargo
+          → eks_weighingheader.TotalVolume
+          → eks_hostawb.Volume
+          -> hitung dari dimensi: LongCargo x WidthCargo x HighCargo (cm3 / 1_000_000 = m3)
+
+        Args:
+            header: BuildUpCheckHeader instance.
+            detail: BuildUpCheckDetail instance.
+
+        Returns:
+            FfmBuildUpDetailOut dengan semua field terisi semaksimal mungkin.
+        """
         mawb = _clean_text(detail.mawb)
         legacy_header = self.repository.get_legacy_weighing_header(
             mawb=mawb or "",
@@ -562,9 +650,22 @@ class EdiService:
         )
         legacy_details = self.repository.list_legacy_weighing_details(mawb or "")
         legacy_hosts = self.repository.list_legacy_host_awbs(mawb or "")
+        legacy_invoice = self.repository.get_legacy_invoice_by_mawb(mawb or "")
         legacy_detail = legacy_details[0] if legacy_details else None
         legacy_host = legacy_hosts[0] if legacy_hosts else None
         uld_info = _parse_uld(header.uld)
+
+        # Volume: jumlahkan dari SEMUA baris eks_weighingheader (SUM TotalVolume)
+        sum_volume_header = self.repository.sum_legacy_weighing_volume_by_mawb(mawb or "")
+        # Volume: jumlahkan dari SEMUA baris eks_weighingdetail (SUM VolumeCargo)
+        sum_volume_detail = self.repository.sum_legacy_weighing_detail_volume_by_mawb(mawb or "")
+
+        # Hitung volume dari dimensi sebagai fallback terakhir
+        volume_from_dimensions = _calc_volume_from_dimensions(
+            getattr(legacy_detail, "LongCargo", None),
+            getattr(legacy_detail, "WidthCargo", None),
+            getattr(legacy_detail, "HighCargo", None),
+        )
 
         pieces = _first_int(
             _sum_rincian_pieces(list(detail.rincian or [])),
@@ -573,6 +674,7 @@ class EdiService:
             getattr(legacy_detail, "Pieces", None),
             getattr(legacy_header, "TotalPieces", None),
             getattr(legacy_host, "Quantity", None),
+            getattr(legacy_invoice, "TotalPieces", None),
         )
         weight = _first_float(
             _sum_rincian_weight(list(detail.rincian or [])),
@@ -580,11 +682,18 @@ class EdiService:
             getattr(legacy_detail, "NettoWeight", None),
             getattr(legacy_header, "TotalNetto", None),
             getattr(legacy_host, "Weight", None),
+            getattr(legacy_invoice, "TotalNetto", None),
         )
+        # Chain fallback volume (berurutan, ambil yang pertama > 0):
+        #   1. SUM(VolumeCargo) dari eks_weighingdetail    — paling granular
+        #   2. SUM(TotalVolume) dari eks_weighingheader    — per proof number, dijumlah
+        #   3. Volume dari eks_hostawb
+        #   4. Hitung dari dimensi LongCargo x WidthCargo x HighCargo / 1_000_000
         volume = _first_float(
-            getattr(legacy_detail, "VolumeCargo", None),
-            getattr(legacy_header, "TotalVolume", None),
+            sum_volume_detail,
+            sum_volume_header,
             getattr(legacy_host, "Volume", None),
+            volume_from_dimensions,
         )
         nature_of_goods = _first_text(
             getattr(legacy_detail, "KindOfNature", None),

@@ -1,0 +1,15 @@
+---
+import { EmailAirlines as EmailAirlinesComposer } from '@components/edi';
+import AdminLayout from '@layouts/BaseLayout.astro';
+---
+
+<AdminLayout
+  title="EDI | Master Email Airlines"
+  description="Master data email airlines untuk pengiriman Cargo EDI"
+>
+  <div class="row">
+    <div class="col-md-12 col-xl-12">
+      <EmailAirlinesComposer client:only="react" />
+    </div>
+  </div>
+</AdminLayout>

@@ -3,6 +3,7 @@ import ediClient, { EDI_FFM_BUILD_UP_DATATABLE_ENDPOINT } from '@lib/api/edi';
 import { showToast } from '@utils';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { promptEmailAddress, resolveErrorMessage } from './shared';
 
 const dateRenderer = (value, type, format = 'DD MMM YYYY') => {
   if (type !== 'display' && type !== 'filter') {
@@ -325,12 +326,85 @@ export default function FfmDatatables() {
       const action = target.getAttribute('data-action');
       if (action !== 'send-email') return;
 
+      const headerId = Number(target.getAttribute('data-header-id'));
       const number = decodeDataValue(target.getAttribute('data-number'));
+      const airlinesCode = decodeDataValue(target.getAttribute('data-airlines-code'));
+
+      if (!headerId) {
+        showToast({
+          type: 'warning',
+          title: 'FFM Email',
+          message: 'Data FFM build up tidak valid (Missing ID).',
+        });
+        return;
+      }
+
       showToast({
         type: 'info',
-        title: 'FFM',
-        message: `Flow Send Email FFM untuk ${number || 'build up ini'} akan disiapkan pada tahap berikutnya.`,
+        title: 'FFM Email',
+        message: 'Memuat data email dan format FFM...',
       });
+
+      Promise.all([
+        ediClient.lookupAirlineEmail(airlinesCode).catch((err) => {
+          console.error('Failed to lookup airline email:', err);
+          return { data: '' };
+        }),
+        ediClient.ffmBuildUpPreview(headerId),
+      ])
+        .then(async ([emailRes, messageRes]) => {
+          const defaultEmail = emailRes?.data || '';
+          const messageText = messageRes?.cargo_imp || '';
+
+          if (!messageText) {
+            showToast({
+              type: 'warning',
+              title: 'FFM Email',
+              message: 'Gagal men-generate format FFM untuk email.',
+            });
+            return;
+          }
+
+          const email = await promptEmailAddress('Email Send FFM', defaultEmail);
+          if (!email) {
+            return;
+          }
+
+          showToast({
+            type: 'info',
+            title: 'FFM Email',
+            message: 'Mengirim email format FFM...',
+          });
+
+          try {
+            await ediClient.sendEmailEdi({
+              email,
+              message: messageText,
+              data: { number },
+              edi: 'FFM',
+            });
+            showToast({
+              type: 'success',
+              title: 'FFM Email',
+              message: 'Email format FFM berhasil dikirim.',
+            });
+          } catch (err) {
+            console.error('Failed to send FFM email:', err);
+            showToast({
+              type: 'danger',
+              title: 'FFM Email',
+              message: resolveErrorMessage(err, 'Gagal mengirim email format FFM.'),
+            });
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to prepare FFM email:', err);
+          showToast({
+            type: 'danger',
+            title: 'FFM Email',
+            message: resolveErrorMessage(err, 'Gagal menyiapkan data email FFM.'),
+          });
+        });
     };
 
     const tryAttach = () => {
@@ -504,7 +578,9 @@ export default function FfmDatatables() {
                 type="button"
                 class="btn btn-sm btn-outline-warning"
                 data-action="send-email"
+                data-header-id="${Number.isFinite(headerId) ? headerId : ''}"
                 data-number="${encodeDataValue(getRowValue(row, ['number', 'number_build_up']))}"
+                data-airlines-code="${encodeDataValue(getRowValue(row, ['airlines_code', 'airline_code', 'airline']))}"
               >
                 Send Email
               </button>

@@ -3,7 +3,7 @@ import { Icon } from '@iconify-icon/react';
 import ediClient, { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { resolveErrorMessage } from './shared';
+import { promptEmailAddress, resolveErrorMessage } from './shared';
 
 const createDefaultFilters = () => ({
   MasterAWB: '',
@@ -100,6 +100,68 @@ export default function FhlDatatables() {
 
       const action = target.getAttribute('data-action');
       if (action === 'send-email') {
+        const encodedMawb = target.getAttribute('data-mawb');
+        const mawb = decodeDataValue(encodedMawb);
+        const airlinesCode = decodeDataValue(target.getAttribute('data-airlines-code'));
+
+        showToast({
+          type: 'info',
+          title: 'FHL Email',
+          message: 'Memuat data email dan format FHL...',
+        });
+
+        Promise.all([
+          ediClient.lookupAirlineEmail(airlinesCode).catch((err) => {
+            console.error('Failed to lookup airline email:', err);
+            return { data: '' };
+          }),
+          ediClient.getFhlMessage(mawb),
+        ])
+          .then(async ([emailRes, messageRes]) => {
+            const defaultEmail = emailRes?.data || '';
+            const messageText = messageRes?.cargo_imp || '';
+
+            if (!messageText) {
+              showToast({
+                type: 'warning',
+                title: 'FHL Email',
+                message: 'Gagal men-generate format FHL untuk email.',
+              });
+              return;
+            }
+
+            const email = await promptEmailAddress('Email Send FHL', defaultEmail);
+            if (!email) {
+              return;
+            }
+
+            showToast({
+              type: 'info',
+              title: 'FHL Email',
+              message: 'Mengirim email...',
+            });
+
+            await ediClient.sendEmailEdi({
+              email,
+              message: messageText,
+              data: { MasterAWB: mawb },
+              edi: 'FHL',
+            });
+
+            showToast({
+              type: 'success',
+              title: 'FHL Email',
+              message: 'Email FHL berhasil dikirim.',
+            });
+          })
+          .catch((err) => {
+            console.error('Failed to send FHL email:', err);
+            showToast({
+              type: 'danger',
+              title: 'FHL Email',
+              message: resolveErrorMessage(err, 'Gagal mengirim email FHL.'),
+            });
+          });
         return;
       }
 
@@ -226,6 +288,8 @@ export default function FhlDatatables() {
                 type="button"
                 class="btn btn-outline-secondary"
                 data-action="send-email"
+                data-mawb="${encodedMawb}"
+                data-airlines-code="${encodeDataValue(row?.AirlinesCode)}"
               >
                 Send Email
               </button>

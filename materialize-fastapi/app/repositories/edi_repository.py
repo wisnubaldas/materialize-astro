@@ -9,6 +9,7 @@ from app.models.BaseDB1.build_up_check_detail import BuildUpCheckDetail
 from app.models.BaseDB1.build_up_check_header import BuildUpCheckHeader
 from app.models.BaseDB1.fwb import Fwb
 from app.models.BaseDB2.eks_hostawb import EksHostAWB
+from app.models.BaseDB2.eks_invoiceheader import EksInvoiceHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
 from app.models.BaseDB2.imp_breakdowndetail import ImpBreakdownDetail
 from app.models.BaseDB2.imp_hostawb import ImpHostAWB
@@ -691,30 +692,101 @@ class EdiRepository:
         flight_no: str | None = None,
         flight_date: object | None = None,
     ) -> EksWeighingHeader | None:
-        """Return latest legacy weighing header for fallback FFM attributes."""
+        """
+        Return latest legacy weighing header for fallback FFM attributes.
+
+        Strategi pencarian (DB2 — READ ONLY / SSoT):
+        1. Cari dengan MasterAWB + FlightNumber LIKE flight_no + DateOfFlight LIKE flight_date.
+        2. Jika tidak ditemukan, cari dengan MasterAWB + DateOfFlight saja (tanpa filter flight_no).
+        3. Jika masih tidak ditemukan, fallback ke MasterAWB saja (ambil record terbaru).
+
+        Args:
+            mawb: Nomor Master AWB.
+            flight_no: Nomor penerbangan (opsional, bisa berbeda format di DB).
+            flight_date: Tanggal penerbangan (opsional).
+
+        Returns:
+            EksWeighingHeader terbaru yang cocok, atau None jika tidak ditemukan.
+        """
         if not mawb:
             return None
 
-        query = self.legacy_db.query(EksWeighingHeader).filter(EksWeighingHeader.MasterAWB == mawb)
-        if flight_no:
-            query = query.filter(EksWeighingHeader.FlightNumber.like(f"%{flight_no}%"))
+        base_query = self.legacy_db.query(EksWeighingHeader).filter(
+            EksWeighingHeader.MasterAWB == mawb
+        )
+
+        # Attempt 1: filter ketat dengan flight_no dan flight_date
+        if flight_no or flight_date:
+            strict_query = base_query
+            if flight_no:
+                strict_query = strict_query.filter(
+                    EksWeighingHeader.FlightNumber.like(f"%{flight_no}%")
+                )
+            if flight_date:
+                date_text = str(flight_date)[:10]
+                strict_query = strict_query.filter(
+                    EksWeighingHeader.DateOfFlight.like(f"%{date_text}%")
+                )
+            result = strict_query.order_by(EksWeighingHeader.noid.desc()).first()
+            if result:
+                return result
+
+        # Attempt 2: filter dengan flight_date saja (jika flight_no tidak cocok formatnya)
         if flight_date:
             date_text = str(flight_date)[:10]
-            query = query.filter(EksWeighingHeader.DateOfFlight.like(f"%{date_text}%"))
+            result = (
+                base_query
+                .filter(EksWeighingHeader.DateOfFlight.like(f"%{date_text}%"))
+                .order_by(EksWeighingHeader.noid.desc())
+                .first()
+            )
+            if result:
+                return result
 
-        result = query.order_by(EksWeighingHeader.noid.desc()).first()
-        if result or not flight_no:
-            return result
+        # Attempt 3: fallback MasterAWB saja — ambil record terbaru
+        return base_query.order_by(EksWeighingHeader.noid.desc()).first()
 
+    def get_legacy_invoice_by_mawb(self, mawb: str) -> EksInvoiceHeader | None:
+        """
+        Ambil invoice header terbaru berdasarkan MasterAWB via relasi:
+        eks_weighingheader.InvoiceNumber = eks_invoiceheader.InvoiceNumber
+
+        Digunakan sebagai fallback terakhir untuk data pieces dan weight
+        pada proses generate FFM Cargo-IMP.
+
+        PENTING: DB2 adalah SSoT — query ini READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+
+        Returns:
+            EksInvoiceHeader terbaru yang terhubung ke MAWB, atau None.
+        """
+        if not mawb:
+            return None
         return (
-            self.legacy_db.query(EksWeighingHeader)
+            self.legacy_db.query(EksInvoiceHeader)
+            .join(
+                EksWeighingHeader,
+                EksWeighingHeader.InvoiceNumber == EksInvoiceHeader.InvoiceNumber,
+            )
             .filter(EksWeighingHeader.MasterAWB == mawb)
             .order_by(EksWeighingHeader.noid.desc())
             .first()
         )
 
     def list_legacy_weighing_details(self, mawb: str) -> list[EksWeighingDetail]:
-        """Return legacy weighing detail rows for one MAWB."""
+        """
+        Return legacy weighing detail rows for one MAWB.
+
+        PENTING: DB2 adalah SSoT — READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+
+        Returns:
+            List EksWeighingDetail diurutkan by noid ascending.
+        """
         if not mawb:
             return []
         return (
@@ -725,7 +797,17 @@ class EdiRepository:
         )
 
     def list_legacy_host_awbs(self, mawb: str) -> list[EksHostAWB]:
-        """Return legacy host AWB rows for one MAWB."""
+        """
+        Return legacy host AWB rows for one MAWB.
+
+        PENTING: DB2 adalah SSoT — READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+
+        Returns:
+            List EksHostAWB diurutkan by noid ascending.
+        """
         if not mawb:
             return []
         return (
@@ -734,3 +816,62 @@ class EdiRepository:
             .order_by(EksHostAWB.noid.asc())
             .all()
         )
+
+    def sum_legacy_weighing_volume_by_mawb(self, mawb: str) -> float | None:
+        """
+        Jumlahkan TotalVolume dari SEMUA baris eks_weighingheader untuk satu MasterAWB.
+
+        Digunakan sebagai fallback utama volume pada FFM Cargo-IMP karena
+        satu MAWB bisa memiliki beberapa baris eks_weighingheader
+        (berbeda ProofNumber). Nilai TotalVolume masing-masing baris dijumlah.
+
+        PENTING: DB2 adalah SSoT — READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+
+        Returns:
+            Total volume (float) dari seluruh baris, atau None jika tidak ada data.
+        """
+        if not mawb:
+            return None
+        result = (
+            self.legacy_db.query(func.sum(EksWeighingHeader.TotalVolume))
+            .filter(
+                EksWeighingHeader.MasterAWB == mawb,
+                EksWeighingHeader.void.is_(False),
+            )
+            .scalar()
+        )
+        if result is not None:
+            val = float(result)
+            return val if val > 0 else None
+        return None
+
+    def sum_legacy_weighing_detail_volume_by_mawb(self, mawb: str) -> float | None:
+        """
+        Jumlahkan VolumeCargo dari SEMUA baris eks_weighingdetail untuk satu MasterAWB.
+
+        Fallback tambahan jika TotalVolume di eks_weighingheader tidak tersedia.
+        Menjumlahkan volume per item/detail sehingga hasilnya lebih granular.
+
+        PENTING: DB2 adalah SSoT — READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+
+        Returns:
+            Total volume (float) dari seluruh baris detail, atau None jika tidak ada data.
+        """
+        if not mawb:
+            return None
+        result = (
+            self.legacy_db.query(func.sum(EksWeighingDetail.VolumeCargo))
+            .filter(EksWeighingDetail.MasterAWB == mawb)
+            .scalar()
+        )
+        if result is not None:
+            val = float(result)
+            return val if val > 0 else None
+        return None
+

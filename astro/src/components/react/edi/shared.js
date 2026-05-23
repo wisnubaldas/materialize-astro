@@ -49,12 +49,19 @@ export const boolBadge = (
   return `<span class="badge rounded-pill ${theme} px-2">${label}</span>`;
 };
 
-export const promptEmailAddress = async (title = 'Email Send') => {
+/**
+ * Prompt the user for an email address using SweetAlert2.
+ * @param {string} [title='Email Send'] - The title of the alert.
+ * @param {string} [defaultValue=''] - The default prefilled email value.
+ * @returns {Promise<string>} The email address entered by the user, or empty string.
+ */
+export const promptEmailAddress = async (title = 'Email Send', defaultValue = '') => {
   const result = await Swal.fire({
     title,
     theme: 'bootstrap-5',
     input: 'email',
     inputPlaceholder: 'Email tujuan',
+    inputValue: defaultValue,
   });
 
   return String(result?.value ?? '').trim();

@@ -5,7 +5,7 @@ import ediClient, { EDI_EXPORT_CWP_ENDPOINT } from '@lib/api/edi';
 import { showToast } from '@utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { resolveErrorMessage } from './shared';
+import { promptEmailAddress, resolveErrorMessage } from './shared';
 
 const createDefaultFilters = () => ({
   MasterAWB: '',
@@ -173,11 +173,66 @@ export default function FwbDatatables() {
       }
 
       if (action === 'send-email') {
+        const airlinesCode = decodeDataValue(target.getAttribute('data-airlines-code'));
+
         showToast({
           type: 'info',
-          title: 'FWB',
-          message: 'Flow Send Email FWB akan disiapkan pada tahap berikutnya.',
+          title: 'FWB Email',
+          message: 'Memuat data email dan format FWB...',
         });
+
+        Promise.all([
+          ediClient.lookupAirlineEmail(airlinesCode).catch((err) => {
+            console.error('Failed to lookup airline email:', err);
+            return { data: '' };
+          }),
+          ediClient.getFwbMessage(mawb),
+        ])
+          .then(async ([emailRes, messageRes]) => {
+            const defaultEmail = emailRes?.data || '';
+            const messageText = messageRes?.cargo_imp || '';
+
+            if (!messageText) {
+              showToast({
+                type: 'warning',
+                title: 'FWB Email',
+                message: 'Gagal men-generate format FWB untuk email.',
+              });
+              return;
+            }
+
+            const email = await promptEmailAddress('Email Send FWB', defaultEmail);
+            if (!email) {
+              return;
+            }
+
+            showToast({
+              type: 'info',
+              title: 'FWB Email',
+              message: 'Mengirim email...',
+            });
+
+            await ediClient.sendEmailEdi({
+              email,
+              message: messageText,
+              data: { MasterAWB: mawb },
+              edi: 'FWB',
+            });
+
+            showToast({
+              type: 'success',
+              title: 'FWB Email',
+              message: 'Email FWB berhasil dikirim.',
+            });
+          })
+          .catch((err) => {
+            console.error('Failed to send FWB email:', err);
+            showToast({
+              type: 'danger',
+              title: 'FWB Email',
+              message: resolveErrorMessage(err, 'Gagal mengirim email FWB.'),
+            });
+          });
         return;
       }
 
@@ -372,6 +427,7 @@ export default function FwbDatatables() {
                 class="btn btn-sm btn-outline-warning"
                 data-action="send-email"
                 data-mawb="${encodedMawb}"
+                data-airlines-code="${encodeDataValue(row?.AirlinesCode)}"
                 ${disabled}
               >
                 Send Email
