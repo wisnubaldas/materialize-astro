@@ -13,7 +13,12 @@
 
 .bg-box {
   position: absolute;
-  background: rgba(255, 255, 255, 0.607); /* Low opacity white for dark/gradient themes */
+  background: rgba(
+    255,
+    255,
+    255,
+    0.607
+  ); /* Low opacity white for dark/gradient themes */
   border-radius: 15%;
   bottom: -160px; /* Start below the container */
   transition: background 0.3s ease;
@@ -37,27 +42,6 @@
   height: 30px;
   right: 28%;
   animation: float-box-2 22s infinite linear 3s;
-}
-
-.bg-box-3 {
-  width: 70px;
-  height: 70px;
-  right: 45%;
-  animation: float-box-3 12s infinite linear 1.5s;
-}
-
-.bg-box-4 {
-  width: 100px;
-  height: 100px;
-  right: 5%;
-  animation: float-box-4 18s infinite linear 6s;
-}
-
-.bg-box-5 {
-  width: 60px;
-  height: 60px;
-  right: 35%;
-  animation: float-box-5 10s infinite linear 4.5s;
 }
 
 /* GPU Accelerated float keyframes for each box */
@@ -93,6 +77,27 @@
     transform: translateY(-280px) rotate(-345deg) scale(1.2);
     opacity: 0;
   }
+}
+
+.bg-box-3 {
+  width: 70px;
+  height: 70px;
+  right: 45%;
+  animation: float-box-3 12s infinite linear 1.5s;
+}
+
+.bg-box-4 {
+  width: 100px;
+  height: 100px;
+  right: 5%;
+  animation: float-box-4 18s infinite linear 6s;
+}
+
+.bg-box-5 {
+  width: 60px;
+  height: 60px;
+  right: 35%;
+  animation: float-box-5 10s infinite linear 4.5s;
 }
 
 @keyframes float-box-3 {
@@ -144,4 +149,339 @@
     transform: translateY(-280px) rotate(360deg) scale(1.6);
     opacity: 0;
   }
+}
+
+/* ========================================================== */
+/* Clean CardPages Styling System                              */
+/* ========================================================== */
+
+/* Main Header Container */
+.card-page-header {
+  padding: 1.5rem !important; /* matches p-4 */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card Header Types & Variants (Using Original Project Colors) */
+
+/* 1. Gradient Type */
+.card-page-type-gradient.card-page-variant-primary {
+  background: linear-gradient(135deg, #7367f0 0%, #9e95f5 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-secondary {
+  background: linear-gradient(135deg, #a8aaae 0%, #c4c5c7 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-success {
+  background: linear-gradient(135deg, #28c76f 0%, #5edc98 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-danger {
+  background: linear-gradient(135deg, #ea5455 0%, #f28b8c 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-warning {
+  background: linear-gradient(135deg, #ff9f43 0%, #ffc085 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-info {
+  background: linear-gradient(135deg, #00bad1 0%, #54def0 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-dark {
+  background: linear-gradient(135deg, #4b4b4b 0%, #7c7c7c 100%) !important;
+}
+.card-page-type-gradient.card-page-variant-light {
+  background: #f8f9fa !important;
+}
+
+/* 2. Solid Type */
+.card-page-type-solid.card-page-variant-primary {
+  background: #7367f0 !important;
+}
+.card-page-type-solid.card-page-variant-secondary {
+  background: #a8aaae !important;
+}
+.card-page-type-solid.card-page-variant-success {
+  background: #28c76f !important;
+}
+.card-page-type-solid.card-page-variant-danger {
+  background: #ea5455 !important;
+}
+.card-page-type-solid.card-page-variant-warning {
+  background: #ff9f43 !important;
+}
+.card-page-type-solid.card-page-variant-info {
+  background: #00bad1 !important;
+}
+.card-page-type-solid.card-page-variant-dark {
+  background: #4b4b4b !important;
+}
+.card-page-type-solid.card-page-variant-light {
+  background: #f8f9fa !important;
+}
+
+/* 3. Label Type (Light background tint of color) */
+.card-page-type-label.card-page-variant-primary {
+  background: rgba(115, 103, 240, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-secondary {
+  background: rgba(168, 170, 174, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-success {
+  background: rgba(40, 199, 111, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-danger {
+  background: rgba(234, 84, 85, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-warning {
+  background: rgba(255, 159, 67, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-info {
+  background: rgba(0, 186, 209, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-dark {
+  background: rgba(75, 75, 75, 0.08) !important;
+}
+.card-page-type-label.card-page-variant-light {
+  background: #f8f9fa !important;
+}
+
+/* 4. Outline Type (Left border, white bg) */
+.card-page-type-outline {
+  background: #ffffff !important;
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+}
+.card-page-type-outline.card-page-variant-primary {
+  border-left-color: #7367f0 !important;
+}
+.card-page-type-outline.card-page-variant-secondary {
+  border-left-color: #a8aaae !important;
+}
+.card-page-type-outline.card-page-variant-success {
+  border-left-color: #28c76f !important;
+}
+.card-page-type-outline.card-page-variant-danger {
+  border-left-color: #ea5455 !important;
+}
+.card-page-type-outline.card-page-variant-warning {
+  border-left-color: #ff9f43 !important;
+}
+.card-page-type-outline.card-page-variant-info {
+  border-left-color: #00bad1 !important;
+}
+.card-page-type-outline.card-page-variant-dark {
+  border-left-color: #4b4b4b !important;
+}
+.card-page-type-outline.card-page-variant-light {
+  border-left-color: #c4c5c7 !important;
+}
+
+/* Typography & Text Colors */
+
+.card-page-title {
+  margin-bottom: 0 !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.card-page-description {
+  margin-bottom: 0 !important;
+  font-size: 0.8125rem !important; /* matches small */
+  opacity: 0.85 !important;
+}
+
+/* Default state: Light/white text on gradient/solid dark headers */
+.card-page-type-gradient .card-page-title,
+.card-page-type-solid .card-page-title {
+  color: #ffffff;
+}
+.card-page-type-gradient .card-page-description,
+.card-page-type-solid .card-page-description {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Light variant overrides for gradient/solid headers */
+.card-page-variant-light .card-page-title {
+  color: #2b2b2b !important;
+}
+.card-page-variant-light .card-page-description {
+  color: #6f6f6f !important;
+}
+
+/* Label Type text colors */
+.card-page-type-label.card-page-variant-primary .card-page-title {
+  color: #7367f0 !important;
+}
+.card-page-type-label.card-page-variant-secondary .card-page-title {
+  color: #a8aaae !important;
+}
+.card-page-type-label.card-page-variant-success .card-page-title {
+  color: #28c76f !important;
+}
+.card-page-type-label.card-page-variant-danger .card-page-title {
+  color: #ea5455 !important;
+}
+.card-page-type-label.card-page-variant-warning .card-page-title {
+  color: #ff9f43 !important;
+}
+.card-page-type-label.card-page-variant-info .card-page-title {
+  color: #00bad1 !important;
+}
+.card-page-type-label.card-page-variant-dark .card-page-title {
+  color: #4b4b4b !important;
+}
+.card-page-type-label.card-page-variant-light .card-page-title {
+  color: #2b2b2b !important;
+}
+
+.card-page-type-label .card-page-description {
+  color: #6f6f6f !important;
+}
+
+/* Outline Type text colors */
+.card-page-type-outline .card-page-title {
+  color: #2b2b2b !important;
+}
+.card-page-type-outline .card-page-description {
+  color: #6f6f6f !important;
+}
+
+/* Original White Text with Black Text Shadow */
+.card-page-text-shadow {
+  color: #ffffff !important;
+  text-shadow:
+    -1px -1px 1px rgba(255, 255, 255, 0.1),
+    1px 1px 1px rgba(0, 0, 0, 0.5),
+    2px 2px 2px rgba(206, 89, 55, 0) !important;
+}
+
+/* ========================================================== */
+/* Embossed/Raised (Timbul) Icon Container                    */
+/* ========================================================== */
+
+.card-page-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 5px !important; /* clean squircle/rounded box */
+
+  /* Pronounced Embossed (Timbul) 3D effects */
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.16),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.45),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.12) !important;
+
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  transition:
+    transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.2s ease !important;
+  position: relative !important;
+}
+
+.card-page-avatar:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Centered Icon sizes and default settings */
+.card-page-avatar i {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2 !important;
+}
+
+/* Variant-based backgrounds & icon colors for the Embossed Avatar */
+
+/* A. For Gradient & Solid card types (Embossed white/light-gray gradient container with high-contrast variant-colored icons) */
+.card-page-type-gradient .card-page-avatar,
+.card-page-type-solid .card-page-avatar {
+  /* Bright white-to-light-gray glossy gradient for clean raised look and maximum readability */
+  background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%) !important;
+}
+
+.card-page-type-gradient.card-page-variant-primary .card-page-avatar i,
+.card-page-type-solid.card-page-variant-primary .card-page-avatar i {
+  color: #5c4ff0 !important; /* Deeper purple for high contrast on white */
+}
+.card-page-type-gradient.card-page-variant-secondary .card-page-avatar i,
+.card-page-type-solid.card-page-variant-secondary .card-page-avatar i {
+  color: #6f7376 !important; /* Deeper gray for contrast */
+}
+.card-page-type-gradient.card-page-variant-success .card-page-avatar i,
+.card-page-type-solid.card-page-variant-success .card-page-avatar i {
+  color: #1e9f55 !important; /* Deeper green for contrast */
+}
+.card-page-type-gradient.card-page-variant-danger .card-page-avatar i,
+.card-page-type-solid.card-page-variant-danger .card-page-avatar i {
+  color: #d93c3c !important; /* Deeper red for contrast */
+}
+.card-page-type-gradient.card-page-variant-warning .card-page-avatar i,
+.card-page-type-solid.card-page-variant-warning .card-page-avatar i {
+  color: #d97818 !important; /* Deeper orange for contrast */
+}
+.card-page-type-gradient.card-page-variant-info .card-page-avatar i,
+.card-page-type-solid.card-page-variant-info .card-page-avatar i {
+  color: #008e9f !important; /* Deeper info-teal for contrast */
+}
+.card-page-type-gradient.card-page-variant-dark .card-page-avatar i,
+.card-page-type-solid.card-page-variant-dark .card-page-avatar i {
+  color: #2b2b2b !important; /* Deep charcoal for contrast */
+}
+.card-page-type-gradient.card-page-variant-light .card-page-avatar i,
+.card-page-type-solid.card-page-variant-light .card-page-avatar i {
+  color: #5c4ff0 !important; /* Deeper primary for contrast */
+}
+
+/* B. For Label & Outline card types (Embossed variant-gradient container with white/dark icons) */
+.card-page-type-label .card-page-avatar i,
+.card-page-type-outline .card-page-avatar i {
+  color: #ffffff !important;
+}
+
+/* Gradient backgrounds for raised icon container on light cards (only applies to label and outline types) */
+.card-page-type-label.card-page-variant-primary .card-page-avatar,
+.card-page-type-outline.card-page-variant-primary .card-page-avatar {
+  background: linear-gradient(180deg, #9e95f5 0%, #7367f0 100%) !important;
+}
+.card-page-type-label.card-page-variant-secondary .card-page-avatar,
+.card-page-type-outline.card-page-variant-secondary .card-page-avatar {
+  background: linear-gradient(180deg, #c4c5c7 0%, #a8aaae 100%) !important;
+}
+.card-page-type-label.card-page-variant-success .card-page-avatar,
+.card-page-type-outline.card-page-variant-success .card-page-avatar {
+  background: linear-gradient(180deg, #5edc98 0%, #28c76f 100%) !important;
+}
+.card-page-type-label.card-page-variant-danger .card-page-avatar,
+.card-page-type-outline.card-page-variant-danger .card-page-avatar {
+  background: linear-gradient(180deg, #f28b8c 0%, #ea5455 100%) !important;
+}
+.card-page-type-label.card-page-variant-warning .card-page-avatar,
+.card-page-type-outline.card-page-variant-warning .card-page-avatar {
+  background: linear-gradient(180deg, #ffc085 0%, #ff9f43 100%) !important;
+}
+.card-page-type-label.card-page-variant-info .card-page-avatar,
+.card-page-type-outline.card-page-variant-info .card-page-avatar {
+  background: linear-gradient(180deg, #54def0 0%, #00bad1 100%) !important;
+}
+.card-page-type-label.card-page-variant-dark .card-page-avatar,
+.card-page-type-outline.card-page-variant-dark .card-page-avatar {
+  background: linear-gradient(180deg, #7c7c7c 0%, #4b4b4b 100%) !important;
+}
+.card-page-type-label.card-page-variant-light .card-page-avatar,
+.card-page-type-outline.card-page-variant-light .card-page-avatar {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%) !important;
+}
+
+/* Override icon color for light variant on light cards to be dark */
+.card-page-type-label.card-page-variant-light .card-page-avatar i,
+.card-page-type-outline.card-page-variant-light .card-page-avatar i {
+  color: #4b4b4b !important;
 }

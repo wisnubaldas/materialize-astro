@@ -64,9 +64,9 @@ Gunakan struktur berikut:
 ```markdown
 Subject: Laporan Progress Mingguan MAU APP / CTOS - [Periode]
 
-Yth. Bapak/Ibu Stakeholder, Manager, dan Supervisor IT,
+Dear Teams,
 
-Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS untuk periode [tanggal awal] sampai [tanggal akhir].
+Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS.
 
 ## Ringkasan Eksekutif
 
@@ -98,3 +98,12 @@ Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS unt
 - Jelaskan perubahan teknis sebagai manfaat operasional, misalnya "validasi data lebih konsisten", "alur input lebih cepat", atau "monitoring lebih mudah".
 - Hindari klaim selesai jika progress report masih menunjukkan gap, risiko, atau verifikasi yang belum dilakukan.
 - Jika ada blocker, tulis dengan jujur dan sertakan dampak serta tindak lanjut.
+
+## Penting
+
+- Gunakan bahasa Indonesia yang sopan dan profesional.
+- Jangan terlalu teknis.
+- Jelaskan manfaat atau dampak terhadap user dan operasional.
+- Hindari klaim selesai jika progress report masih menunjukkan gap, risiko, atau verifikasi yang belum dilakukan.
+- Jika ada blocker, tulis dengan jujur dan sertakan dampak serta tindak lanjut.
+- Korelasikan dengan report minggu lalu dan sebelumnya.
