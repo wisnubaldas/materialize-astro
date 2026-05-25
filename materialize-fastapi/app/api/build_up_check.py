@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.responses import FileResponse
 
 from app.api.middleware.auth_middleware import decode_token
 from app.dependencies.auth_deps import require_authenticated_user
@@ -11,6 +12,7 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckHeaderReopen,
     BuildUpCheckRincianCreate,
     BuildUpMasterAwbSummaryOut,
+    BuildUpPdfPrepareOut,
 )
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 from app.services.build_up_check_service import BuildUpCheckService
@@ -173,6 +175,38 @@ def get_build_up_headers_datatables(
     return service.build_up_headers_datatable(payload)
 
 
+@router.post(
+    "/build-up-check-headers/{header_id}/pdf-manifest/prepare",
+    summary="Generate manifest PDF Build Up di backend",
+    response_model=BuildUpPdfPrepareOut,
+)
+def prepare_build_up_manifest_pdf(
+    header_id: int,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Generate grouped Build Up manifest PDF before opening a browser tab."""
+    try:
+        return service.prepare_build_up_manifest_pdf(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-check-headers/{header_id}/pdf-checklist/prepare",
+    summary="Generate checklist PDF Build Up di backend",
+    response_model=BuildUpPdfPrepareOut,
+)
+def prepare_build_up_checklist_pdf(
+    header_id: int,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Generate one-ULD Build Up checklist PDF before opening a browser tab."""
+    try:
+        return service.prepare_build_up_checklist_pdf(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 pdf_router = APIRouter(
     prefix="/pdf/warehouse",
     tags=["PDF Print"],
@@ -198,7 +232,7 @@ def print_build_up_manifest(
         ) from exc
 
     try:
-        pdf_bytes = service.generate_build_up_pdf(header_id=header_id, is_checklist=False)
+        pdf_bytes = service.generate_build_up_manifest_pdf(header_id=header_id)
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -229,13 +263,43 @@ def print_build_up_checklist(
         ) from exc
 
     try:
-        pdf_bytes = service.generate_build_up_pdf(header_id=header_id, is_checklist=True)
+        pdf_bytes = service.generate_build_up_checklist_pdf(header_id=header_id)
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f"inline; filename=checklist_buildup_{header_id}.pdf"
             },
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@pdf_router.get(
+    "/generated/{filename}",
+    summary="Tampilkan PDF Build Up yang sudah digenerate",
+)
+def view_prepared_build_up_pdf(
+    filename: str,
+    token: str,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Return a generated Build Up PDF file after query-token validation."""
+    try:
+        decode_token(token)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token tidak valid atau kedaluwarsa: {exc!s}",
+        ) from exc
+
+    try:
+        pdf_path = service.get_prepared_pdf_path(filename)
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=filename,
+            headers={"Content-Disposition": f"inline; filename={filename}"},
         )
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -266,5 +330,4 @@ def delete_build_up_check_header(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Gagal menghapus data build up: {exc!s}") from exc
-
 

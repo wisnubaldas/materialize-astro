@@ -1,5 +1,5 @@
 from sqlalchemy import case, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.BaseDB1.build_up_check_detail import BuildUpCheckDetail
 from app.models.BaseDB1.build_up_check_header import BuildUpCheckHeader
@@ -32,6 +32,36 @@ class BuildUpCheckRepository:
             .filter(BuildUpCheckHeader.id == header_id)
             .first()
         )
+
+    def list_headers_for_manifest(
+        self,
+        airlines: str | None,
+        flight_no: str | None,
+        flight_date: object,
+        dest: str | None,
+    ) -> list[BuildUpCheckHeader]:
+        """Return all ULD headers in one flight group for manifest PDF."""
+        if not airlines or not flight_no or not flight_date:
+            return []
+
+        query = (
+            self.db.query(BuildUpCheckHeader)
+            .options(
+                joinedload(BuildUpCheckHeader.details).joinedload(
+                    BuildUpCheckDetail.rincian
+                )
+            )
+            .filter(
+                BuildUpCheckHeader.airlines == str(airlines).strip().upper(),
+                BuildUpCheckHeader.flight_no == str(flight_no).strip().upper(),
+                BuildUpCheckHeader.flight_date == flight_date,
+            )
+        )
+
+        if dest:
+            query = query.filter(BuildUpCheckHeader.dest == str(dest).strip().upper())
+
+        return query.order_by(BuildUpCheckHeader.uld.asc(), BuildUpCheckHeader.id.asc()).all()
 
     def create_header(self, payload: BuildUpCheckHeaderCreate) -> BuildUpCheckHeader:
         """Create a Build Up check header."""
@@ -338,5 +368,4 @@ class BuildUpCheckRepository:
         except Exception:
             self.db.rollback()
             raise
-
 

@@ -63,6 +63,16 @@ const formatSummary = (values) => {
   }
   return unique.join(', ');
 };
+/**
+ * Normalize Cargo-IMP record separators for validators that require CRLF.
+ *
+ * @param {string} value - Raw Cargo-IMP text from backend.
+ * @returns {string} Cargo-IMP text using CRLF and ending with one CRLF.
+ */
+const normalizeCargoImpLineEndings = (value) => {
+  const normalized = String(value ?? '').replace(/\r\n|\r|\n/g, '\r\n').replace(/(\r\n)+$/g, '');
+  return normalized ? `${normalized}\r\n` : '';
+};
 
 export default function FfmDatatables() {
   const tableRef = useRef(null);
@@ -78,6 +88,40 @@ export default function FfmDatatables() {
   const [detailData, setDetailData] = useState(createEmptyDetail);
   const [detailPreviewMap, setDetailPreviewMap] = useState({});
   const [ffmPreview, setFfmPreview] = useState(createInitialFfmPreview);
+
+  const handleCopyFfmPreview = useCallback(async () => {
+    const rawText = ffmPreview.activeTab === 'cargo-xml' ? ffmPreview.cargoXml : ffmPreview.cargoImp;
+    const textToCopy =
+      ffmPreview.activeTab === 'cargo-imp' ? normalizeCargoImpLineEndings(rawText) : rawText;
+
+    if (!textToCopy) {
+      showToast({
+        type: 'warning',
+        title: 'FFM Message',
+        message: 'Tidak ada message untuk disalin.',
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      showToast({
+        type: 'success',
+        title: 'FFM Message',
+        message:
+          ffmPreview.activeTab === 'cargo-imp'
+            ? 'Cargo-IMP disalin dengan line ending CRLF.'
+            : 'Cargo-XML berhasil disalin.',
+      });
+    } catch (error) {
+      console.error('Gagal menyalin FFM message:', error);
+      showToast({
+        type: 'danger',
+        title: 'FFM Message',
+        message: 'Gagal menyalin message ke clipboard.',
+      });
+    }
+  }, [ffmPreview.activeTab, ffmPreview.cargoImp, ffmPreview.cargoXml]);
 
   useEffect(() => {
     const api = tableRef.current;
@@ -854,6 +898,14 @@ export default function FfmDatatables() {
               )}
             </div>
             <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleCopyFfmPreview}
+                disabled={ffmPreview.loading || !ffmPreview.generated}
+              >
+                Copy Message
+              </button>
               <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
                 Tutup
               </button>

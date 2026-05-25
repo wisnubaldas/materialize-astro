@@ -16,6 +16,7 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckRincianCreate,
     BuildUpCheckRincianOut,
     BuildUpMasterAwbSummaryOut,
+    BuildUpPdfPrepareOut,
 )
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
 
@@ -38,6 +39,33 @@ def _sum_rincian_pieces(items: list) -> int:
         except (TypeError, ValueError):
             continue
     return total
+
+
+def _format_rincian_cell(pieces: object, weight: object) -> str:
+    """Format one checklist rincian cell as pieces/weight.
+
+    Args:
+        pieces: Rincian pieces value.
+        weight: Rincian weight value.
+
+    Returns:
+        Compact pieces/weight text for the PDF checklist grid.
+    """
+    try:
+        pieces_value = int(pieces or 0)
+    except (TypeError, ValueError):
+        pieces_value = 0
+
+    try:
+        weight_value = float(weight or 0)
+    except (TypeError, ValueError):
+        weight_value = 0.0
+
+    if weight_value.is_integer():
+        weight_text = str(int(weight_value))
+    else:
+        weight_text = f"{weight_value:.2f}".rstrip("0").rstrip(".")
+    return f"{pieces_value}/{weight_text}"
 
 
 def _build_split_group_key(
@@ -63,6 +91,31 @@ def _parse_uld(uld_str: str) -> tuple[str, str, str]:
         return match_partial.group(1), match_partial.group(2), match_partial.group(3)
 
     return uld_str, "", ""
+
+
+def _display_flight_number(airline_code: object, flight_no: object) -> str:
+    """Return flight number without duplicated airline prefix for printed forms."""
+    airline = _upper(airline_code)
+    flight = _upper(flight_no)
+    if airline and flight.startswith(airline):
+        return flight[len(airline) :]
+    return flight
+
+
+def _split_mawb(mawb: object) -> tuple[str, str]:
+    mawb_str = _clean_text(mawb)
+    if "-" in mawb_str:
+        parts = mawb_str.split("-", 1)
+        return parts[0], parts[1]
+    if len(mawb_str) > 3:
+        return mawb_str[:3], mawb_str[3:]
+    return "", mawb_str
+
+
+def _safe_pdf_filename(value: object) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", _clean_text(value))
+    cleaned = cleaned.strip(".-")
+    return cleaned or "build-up"
 
 
 class BuildUpCheckService:
@@ -174,37 +227,13 @@ class BuildUpCheckService:
             data=mapped_data,
         )
 
-    def generate_build_up_pdf(self, header_id: int, is_checklist: bool) -> bytes:
-        """Generate PDF for Build Up checklist or manifest.
-
-        Args:
-            header_id: ID of the Build Up check header.
-            is_checklist: If True, renders a checklist PDF. If False, renders a manifest PDF.
-
-        Returns:
-            The generated PDF content in bytes.
-        """
-        header = self.repository.get_header_by_id(header_id)
-        if not header:
-            raise LookupError("Header build up check tidak ditemukan")
-
-        uld_type, uld_number, uld_owner = _parse_uld(header.uld)
-
+    @staticmethod
+    def _build_mawbs_data(header) -> list[dict]:
         mawbs_data = []
         for detail in header.details:
             completed_pieces = sum(int(r.pieces or 0) for r in detail.rincian)
             completed_weight = sum(float(r.weight or 0.0) for r in detail.rincian)
-
-            mawb_str = str(detail.mawb or "").strip()
-            mawb_prefix = ""
-            mawb_number = mawb_str
-            if "-" in mawb_str:
-                parts = mawb_str.split("-", 1)
-                mawb_prefix = parts[0]
-                mawb_number = parts[1]
-            elif len(mawb_str) > 3:
-                mawb_prefix = mawb_str[:3]
-                mawb_number = mawb_str[3:]
+            mawb_prefix, mawb_number = _split_mawb(detail.mawb)
 
             mawbs_data.append(
                 {
@@ -218,12 +247,34 @@ class BuildUpCheckService:
                     "transit_flag": "",
                     "agent": detail.agent or "",
                     "remark": detail.remark or "",
+                    "rincian": [
+                        _format_rincian_cell(rincian.pieces, rincian.weight)
+                        for rincian in list(detail.rincian or [])
+                    ],
+                }
+            )
+        return mawbs_data
+
+    @staticmethod
+    def _build_manifest_dict(headers: list) -> dict:
+        header = headers[0]
+        ulds = []
+        for item in headers:
+            uld_type, uld_number, uld_owner = _parse_uld(item.uld)
+            ulds.append(
+                {
+                    "uld_type": uld_type,
+                    "uld_number": uld_number,
+                    "uld_owner": uld_owner,
+                    "destination": item.dest or "",
+                    "remarks": "",
+                    "mawbs": BuildUpCheckService._build_mawbs_data(item),
                 }
             )
 
-        manifest_dict = {
+        return {
             "airline_code": header.airlines or "",
-            "flight_number": header.flight_no or "",
+            "flight_number": _display_flight_number(header.airlines, header.flight_no),
             "flight_date": header.flight_date.strftime("%d-%b-%Y").upper()
             if header.flight_date
             else "",
@@ -232,18 +283,11 @@ class BuildUpCheckService:
             "point_of_loading": "CGK",
             "staff": header.staff or "",
             "supervisor": header.supervisor or "",
-            "ulds": [
-                {
-                    "uld_type": uld_type,
-                    "uld_number": uld_number,
-                    "uld_owner": uld_owner,
-                    "destination": header.dest or "",
-                    "remarks": "",
-                    "mawbs": mawbs_data,
-                }
-            ],
+            "ulds": ulds,
         }
 
+    @staticmethod
+    def _render_build_up_pdf(manifest_dict: dict, is_checklist: bool) -> bytes:
         templates_dir = Path(__file__).resolve().parent.parent / "templates"
         env = Environment(
             loader=FileSystemLoader(str(templates_dir)),
@@ -251,11 +295,6 @@ class BuildUpCheckService:
         )
 
         try:
-            # Passing template buat pdf di sini, karena ada logic khusus untuk checklist vs manifest yang cukup berbeda di template-nya.
-            # Kalau dipaksain satu template, malah jadi banyak kondisi if di dalam template-nya yang bikin susah maintain.
-            # Jadi biar lebih clean, dipisah aja template-nya.
-            # Untuk sekarang memang cuma beda sedikit, tapi ke depannya bisa jadi lebih kompleks perbedaannya.
-            # Jadi biar fleksibel aja dengan dua template terpisah.
             if is_checklist:
                 template = env.get_template("build_up_checklist_pdf.html")
             else:
@@ -275,6 +314,98 @@ class BuildUpCheckService:
             raise HTTPException(
                 status_code=500, detail=f"Gagal memproses pembuatan PDF Build Up: {exc!s}"
             ) from exc
+
+    def generate_build_up_checklist_pdf(self, header_id: int) -> bytes:
+        """Generate checklist PDF for one ULD Build Up header."""
+        header = self.repository.get_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+        return self._render_build_up_pdf(
+            self._build_manifest_dict([header]),
+            is_checklist=True,
+        )
+
+    def generate_build_up_manifest_pdf(self, header_id: int) -> bytes:
+        """Generate manifest PDF for all ULDs in the same flight/date/destination."""
+        seed_header = self.repository.get_header_by_id(header_id)
+        if not seed_header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        grouped_headers = self.repository.list_headers_for_manifest(
+            airlines=seed_header.airlines,
+            flight_no=seed_header.flight_no,
+            flight_date=seed_header.flight_date,
+            dest=seed_header.dest,
+        )
+        if not grouped_headers:
+            grouped_headers = [seed_header]
+
+        return self._render_build_up_pdf(
+            self._build_manifest_dict(grouped_headers),
+            is_checklist=False,
+        )
+
+    def generate_build_up_pdf(self, header_id: int, is_checklist: bool) -> bytes:
+        """Generate PDF for Build Up checklist or grouped manifest."""
+        if is_checklist:
+            return self.generate_build_up_checklist_pdf(header_id)
+        return self.generate_build_up_manifest_pdf(header_id)
+
+    @staticmethod
+    def _prepared_pdf_dir() -> Path:
+        return Path(__file__).resolve().parent.parent / "storage" / "generated_pdf" / "build_up"
+
+    def _save_prepared_pdf(self, filename: str, pdf_bytes: bytes) -> Path:
+        output_dir = self._prepared_pdf_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / filename
+        output_path.write_bytes(pdf_bytes)
+        return output_path
+
+    def prepare_build_up_checklist_pdf(self, header_id: int) -> BuildUpPdfPrepareOut:
+        """Generate checklist PDF in backend first and return its view path."""
+        pdf_bytes = self.generate_build_up_checklist_pdf(header_id)
+        filename = f"checklist-buildup-{header_id}.pdf"
+        self._save_prepared_pdf(filename, pdf_bytes)
+        return BuildUpPdfPrepareOut(
+            filename=filename,
+            pdf_path=f"/pdf/warehouse/generated/{filename}",
+            message="PDF checklist siap ditampilkan.",
+        )
+
+    def prepare_build_up_manifest_pdf(self, header_id: int) -> BuildUpPdfPrepareOut:
+        """Generate grouped manifest PDF in backend first and return its view path."""
+        seed_header = self.repository.get_header_by_id(header_id)
+        if not seed_header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        pdf_bytes = self.generate_build_up_manifest_pdf(header_id)
+        flight_date = seed_header.flight_date.isoformat() if seed_header.flight_date else "nodate"
+        identity = "-".join(
+            [
+                "manifest-buildup",
+                seed_header.airlines or "airline",
+                seed_header.flight_no or "flight",
+                flight_date,
+                seed_header.dest or "dest",
+            ]
+        )
+        filename = f"{_safe_pdf_filename(identity)}.pdf"
+        self._save_prepared_pdf(filename, pdf_bytes)
+        return BuildUpPdfPrepareOut(
+            filename=filename,
+            pdf_path=f"/pdf/warehouse/generated/{filename}",
+            message="PDF manifest siap ditampilkan.",
+        )
+
+    def get_prepared_pdf_path(self, filename: str) -> Path:
+        """Resolve a generated PDF filename without allowing path traversal."""
+        if Path(filename).name != filename or not filename.lower().endswith(".pdf"):
+            raise LookupError("File PDF tidak valid")
+        output_path = self._prepared_pdf_dir() / filename
+        if not output_path.exists():
+            raise LookupError("File PDF belum tersedia atau sudah dihapus")
+        return output_path
 
     def get_master_awb_summary(self) -> BuildUpMasterAwbSummaryOut:
         """Return all-time Master AWB completion summary for dashboard cards."""
@@ -544,4 +675,3 @@ class BuildUpCheckService:
 
         self.repository.delete_header(header)
         return True
-

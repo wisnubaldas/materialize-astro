@@ -51,6 +51,14 @@ class BuildUpMasterAwbSummaryOut(BaseModel):
     completed: int = 0
 
 
+class BuildUpPdfPrepareOut(BaseModel):
+    """Response URL untuk PDF Build Up yang sudah digenerate backend."""
+
+    filename: str
+    pdf_path: str
+    message: str
+
+
 class BuildUpCheckDetailCreate(BaseModel):
     """Payload detail MAWB dalam satu header build up check."""
 

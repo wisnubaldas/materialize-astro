@@ -299,7 +299,13 @@
                     <td style="font-size: 7.5pt; font-weight: bold; text-align: center;">{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</td>
                     <td style="font-size: 7.5pt; text-align: center;">{{ mawb.total_pieces }}</td>
                     <!-- 14 rincian columns -->
-                    <td style="font-size: 7pt; text-align: center;">{{ mawb.pieces }}/{{ mawb.total_pieces }}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    {% for i in range(14) %}
+                    <td style="font-size: 7pt; text-align: center;">
+                        {% if mawb.rincian and i < (mawb.rincian | length) %}
+                            {{ mawb.rincian[i] }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
                     <td style="font-size: 6.5pt; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ mawb.agent or '' }}</td>
                     <td style="font-size: 6.5pt; text-align: left; padding-left: 3px;">{{ mawb.remark or '' }}</td>
                 </tr>

@@ -8,6 +8,8 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from app.models.BaseDB1.build_up_check_detail import BuildUpCheckDetail
 from app.models.BaseDB1.build_up_check_header import BuildUpCheckHeader
 from app.models.BaseDB1.fwb import Fwb
+from app.models.BaseDB2.eks_buildupdetail import EksBuildupDetail
+from app.models.BaseDB2.eks_buildupheader import EksBuildupHeader
 from app.models.BaseDB2.eks_hostawb import EksHostAWB
 from app.models.BaseDB2.eks_invoiceheader import EksInvoiceHeader
 from app.models.BaseDB2.eks_masterwaybill import EksMasterWaybill
@@ -775,6 +777,61 @@ class EdiRepository:
             .first()
         )
 
+    def get_legacy_buildup_detail(
+        self,
+        mawb: str,
+        uld: str | None = None,
+    ) -> EksBuildupDetail | None:
+        """
+        Ambil detail buildup legacy DB2 untuk fallback FFM Cargo-IMP.
+
+        PENTING: DB2 adalah SSoT — query ini READ ONLY.
+
+        Args:
+            mawb: Nomor Master AWB.
+            uld: Nomor ULD dari Build Up Check DB1, opsional.
+
+        Returns:
+            EksBuildupDetail terbaru yang cocok, atau None.
+        """
+        if not mawb:
+            return None
+
+        query = self.legacy_db.query(EksBuildupDetail).filter(
+            EksBuildupDetail.master_awb == mawb,
+            EksBuildupDetail.void.is_(False),
+        )
+        if uld:
+            normalized_uld = re.sub(r"[^A-Za-z0-9]", "", uld).upper()
+            query = query.filter(
+                func.upper(func.replace(EksBuildupDetail.uld_card_number, " ", ""))
+                == normalized_uld
+            )
+        return query.order_by(EksBuildupDetail.noid.desc()).first()
+
+    def get_legacy_buildup_header(self, buildup_number: str) -> EksBuildupHeader | None:
+        """
+        Ambil header buildup legacy DB2 untuk fallback route/flight FFM.
+
+        PENTING: DB2 adalah SSoT — query ini READ ONLY.
+
+        Args:
+            buildup_number: Nomor buildup dari eks_buildupdetail.
+
+        Returns:
+            EksBuildupHeader yang cocok, atau None.
+        """
+        if not buildup_number:
+            return None
+        return (
+            self.legacy_db.query(EksBuildupHeader)
+            .filter(
+                EksBuildupHeader.buildup_number == buildup_number,
+                EksBuildupHeader.void.is_(False),
+            )
+            .first()
+        )
+
     def list_legacy_weighing_details(self, mawb: str) -> list[EksWeighingDetail]:
         """
         Return legacy weighing detail rows for one MAWB.
@@ -874,4 +931,3 @@ class EdiRepository:
             val = float(result)
             return val if val > 0 else None
         return None
-

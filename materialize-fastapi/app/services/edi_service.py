@@ -27,6 +27,9 @@ from app.utils.jinja import jinja_env
 from app.utils.mail_config import smtp_email_service
 
 logger = logging.getLogger("edi")
+CARGO_IMP_LINE_SEPARATOR = "\r\n"
+FFM_MAX_CONSIGNMENT_LINE_LENGTH = 69
+FFM_MAX_NATURE_OF_GOODS_LENGTH = 15
 
 
 def _clean_text(value: Any) -> str | None:
@@ -212,6 +215,15 @@ def _format_ffm_number(value: Any, fraction_digits: int = 1) -> str:
     return rendered.rstrip("0").rstrip(".")
 
 
+def _format_ffm_nature_of_goods(value: Any, line_prefix: str) -> str:
+    """Format FFM manifest description of goods within Cargo-IMP limits."""
+    text = re.sub(r"[^A-Z0-9 .-]", " ", (_clean_text(value) or "GENERAL CARGO").upper())
+    text = re.sub(r"\s+", " ", text).strip() or "GENERAL CARGO"
+    max_for_line = FFM_MAX_CONSIGNMENT_LINE_LENGTH - len(line_prefix) - 1
+    max_length = max(0, min(FFM_MAX_NATURE_OF_GOODS_LENGTH, max_for_line))
+    return text[:max_length].rstrip()
+
+
 def _format_ffm_date(value: Any) -> str:
     parsed = _parse_date(value)
     if parsed:
@@ -232,6 +244,22 @@ def _format_ffm_date(value: Any) -> str:
             except ValueError:
                 continue
     return ""
+
+
+def _origin_from_route(value: Any) -> str | None:
+    """Extract origin airport from a legacy route-like value."""
+    text = re.sub(r"[^A-Za-z0-9]", "", _clean_text(value) or "").upper()
+    if len(text) >= 6:
+        return text[:3]
+    return None
+
+
+def _destination_from_route(value: Any) -> str | None:
+    """Extract destination airport from a legacy route-like value."""
+    text = re.sub(r"[^A-Za-z0-9]", "", _clean_text(value) or "").upper()
+    if len(text) >= 6:
+        return text[-3:]
+    return text or None
 
 
 def _format_uld_identifier(uld_info: dict[str, str | None], carrier: str | None) -> str:
@@ -423,6 +451,8 @@ class EdiService:
         first_legacy_header = None
         first_host = None
         first_invoice = None
+        first_buildup_detail = None
+        first_buildup_header = None
         for detail in list(header.details or []):
             if not detail.mawb:
                 continue
@@ -435,7 +465,15 @@ class EdiService:
             first_host = hosts[0] if hosts else None
             # Fallback terakhir: eks_invoiceheader via InvoiceNumber (DB2 SSoT)
             first_invoice = self.repository.get_legacy_invoice_by_mawb(detail.mawb)
-            if first_legacy_header or first_host or first_invoice:
+            first_buildup_detail = self.repository.get_legacy_buildup_detail(
+                mawb=detail.mawb,
+                uld=header.uld,
+            )
+            if first_buildup_detail:
+                first_buildup_header = self.repository.get_legacy_buildup_header(
+                    first_buildup_detail.buildup_number
+                )
+            if first_legacy_header or first_host or first_invoice or first_buildup_header:
                 break
 
         carrier = (_first_text(
@@ -443,11 +481,13 @@ class EdiService:
             getattr(first_legacy_header, "AirlinesCode", None),
             getattr(first_host, "airlinescode", None),
             getattr(first_invoice, "AirlinesCode", None),
+            getattr(first_buildup_header, "airlines_code", None),
         ) or "").upper()
         flight_number = (_first_text(
             header.flight_no,
             getattr(first_legacy_header, "FlightNumber", None),
             getattr(first_host, "FlightNo", None),
+            getattr(first_buildup_header, "flight_number", None),
         ) or "").upper()
         if carrier and flight_number.startswith(carrier):
             flight_number = flight_number[len(carrier):]
@@ -456,16 +496,19 @@ class EdiService:
                 header.flight_date,
                 getattr(first_legacy_header, "DateOfFlight", None),
                 getattr(first_host, "DateOfFlight", None),
+                getattr(first_buildup_header, "date_of_flight", None),
             )
         )
         origin = (_first_text(
             getattr(first_legacy_header, "Origin", None),
             getattr(first_invoice, "Origin", None),
+            _origin_from_route(getattr(first_buildup_header, "destination_code", None)),
         ) or "").upper()
         destination = (_first_text(
             header.dest,
             getattr(first_legacy_header, "Destination", None),
             getattr(first_invoice, "Destination", None),
+            _destination_from_route(getattr(first_buildup_header, "destination_code", None)),
         ) or "").upper()
 
         if not carrier:
@@ -475,7 +518,10 @@ class EdiService:
         if not flight_date:
             missing_fields.append("header.flight_date / legacy.DateOfFlight")
         if not origin:
-            missing_fields.append("legacy.eks_weighingheader.Origin / invoice.Origin")
+            missing_fields.append(
+                "legacy.eks_weighingheader.Origin / invoice.Origin / "
+                "legacy.eks_buildupheader.DestinationCode"
+            )
         if not destination:
             missing_fields.append("header.dest / legacy.Destination / invoice.Destination")
         if not details:
@@ -496,7 +542,7 @@ class EdiService:
             pieces = _format_ffm_number(detail.pieces, 0)
             weight = _format_ffm_number(detail.weight, 1)
             volume = _format_ffm_number(detail.volume, 2)
-            goods = (_first_text(detail.nature_of_goods, "GENERAL CARGO") or "GENERAL CARGO").upper()
+            goods = _first_text(detail.nature_of_goods, "GENERAL CARGO") or "GENERAL CARGO"
             row_missing = []
             if not mawb:
                 row_missing.append(f"details[{index}].mawb")
@@ -510,7 +556,9 @@ class EdiService:
                 missing_fields.extend(row_missing)
                 warnings.append(f"Detail #{index} dilewati karena data belum lengkap.")
                 continue
-            detail_lines.append(f"{mawb}{origin}{destination}/T{pieces}K{weight}MC{volume}/{goods}")
+            line_prefix = f"{mawb}{origin}{destination}/T{pieces}K{weight}MC{volume}"
+            formatted_goods = _format_ffm_nature_of_goods(goods, line_prefix)
+            detail_lines.append(f"{line_prefix}/{formatted_goods}")
             valid_detail_count += 1
 
         generated = bool(
@@ -541,7 +589,7 @@ class EdiService:
             *detail_lines,
             "LAST",
         ]
-        cargo_imp = "\n".join(cargo_imp_lines)
+        cargo_imp = CARGO_IMP_LINE_SEPARATOR.join(cargo_imp_lines) + CARGO_IMP_LINE_SEPARATOR
         cargo_xml = self._build_ffm_build_up_xml(
             header_id=header_id,
             buildup_number=buildup_number,
@@ -651,6 +699,10 @@ class EdiService:
         legacy_details = self.repository.list_legacy_weighing_details(mawb or "")
         legacy_hosts = self.repository.list_legacy_host_awbs(mawb or "")
         legacy_invoice = self.repository.get_legacy_invoice_by_mawb(mawb or "")
+        legacy_buildup_detail = self.repository.get_legacy_buildup_detail(
+            mawb=mawb or "",
+            uld=header.uld,
+        )
         legacy_detail = legacy_details[0] if legacy_details else None
         legacy_host = legacy_hosts[0] if legacy_hosts else None
         uld_info = _parse_uld(header.uld)
@@ -692,12 +744,15 @@ class EdiService:
         volume = _first_float(
             sum_volume_detail,
             sum_volume_header,
+            getattr(legacy_buildup_detail, "volume", None),
             getattr(legacy_host, "Volume", None),
             volume_from_dimensions,
         )
         nature_of_goods = _first_text(
             getattr(legacy_detail, "KindOfNature", None),
+            getattr(legacy_buildup_detail, "kind_of_good", None),
             getattr(legacy_host, "descriptiongoods", None),
+            detail.remark,
         )
 
         return FfmBuildUpDetailOut(

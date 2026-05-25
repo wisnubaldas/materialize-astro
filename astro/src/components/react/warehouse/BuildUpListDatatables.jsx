@@ -26,6 +26,21 @@ const createDefaultFilters = () => ({
   mawb: '',
 });
 
+const setPdfButtonLoading = (button, isLoading, label = 'Menyiapkan') => {
+  if (!button) return;
+  if (isLoading) {
+    button.dataset.originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> ${label}`;
+    return;
+  }
+  button.disabled = false;
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+    delete button.dataset.originalHtml;
+  }
+};
+
 export default function BuildUpListDatatables() {
   const tableRef = useRef(null);
   const mountedRef = useRef(false);
@@ -64,18 +79,46 @@ export default function BuildUpListDatatables() {
     setActiveFilters(reset);
   };
 
-  const handlePrintManifest = useCallback((id) => {
+  const handlePreparePdf = useCallback(async (id, type, button) => {
     if (!id) return;
-    const token = getAccessToken();
-    const url = `${API_BASE_URL}/pdf/warehouse/build-up-headers/${id}/pdf-manifest?token=${encodeURIComponent(token)}`;
-    window.open(url, '_blank');
-  }, []);
 
-  const handlePrintChecklist = useCallback((id) => {
-    if (!id) return;
     const token = getAccessToken();
-    const url = `${API_BASE_URL}/pdf/warehouse/build-up-headers/${id}/pdf-checklist?token=${encodeURIComponent(token)}`;
-    window.open(url, '_blank');
+    if (!token) {
+      showToast({
+        type: 'danger',
+        title: 'Build Up PDF',
+        message: 'Sesi login tidak ditemukan. Silakan login ulang.',
+      });
+      return;
+    }
+
+    const isManifest = type === 'manifest';
+    const endpoint = `/warehouse/build-up-check-headers/${id}/pdf-${type}/prepare`;
+    setPdfButtonLoading(button, true, isManifest ? 'Manifest' : 'Checklist');
+
+    try {
+      const result = await apiClient.post(endpoint, null, { timeoutMs: 60000 });
+      const pdfPath = result?.pdf_path;
+      if (!pdfPath) {
+        throw new Error('Backend tidak mengembalikan URL PDF.');
+      }
+
+      const separator = pdfPath.includes('?') ? '&' : '?';
+      const url = `${API_BASE_URL}${pdfPath}${separator}token=${encodeURIComponent(token)}`;
+      const opened = window.open(url, '_blank', 'noopener');
+      if (!opened) {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error('[build-up][prepare-pdf]', err);
+      showToast({
+        type: 'danger',
+        title: 'Build Up PDF',
+        message: err?.message || 'Gagal menyiapkan PDF Build Up.',
+      });
+    } finally {
+      setPdfButtonLoading(button, false);
+    }
   }, []);
 
   const reloadTable = useCallback((resetPaging = false) => {
@@ -153,9 +196,9 @@ export default function BuildUpListDatatables() {
       const rowData = resolveRowData(row);
 
       if (action === 'print-manifest') {
-        handlePrintManifest(id);
+        handlePreparePdf(id, 'manifest', target);
       } else if (action === 'print-checklist') {
-        handlePrintChecklist(id);
+        handlePreparePdf(id, 'checklist', target);
       } else if (action === 'delete-buildup') {
         handleDelete(id, rowData);
       }
@@ -165,7 +208,7 @@ export default function BuildUpListDatatables() {
     return () => {
       tableNode.removeEventListener('click', handleClick);
     };
-  }, [handlePrintManifest, handlePrintChecklist, handleDelete]);
+  }, [handlePreparePdf, handleDelete]);
 
   const columns = useMemo(
     () => [
