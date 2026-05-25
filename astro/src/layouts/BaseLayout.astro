@@ -1,6 +1,6 @@
 ---
 import Menu from '@components/Menu.jsx';
-import { filterMenuByName, getMenuData } from '@components/MenuData.js';
+import { filterMenuByName,getMenuData } from '@components/MenuData.js';
 import Nav from '@components/Nav.jsx';
 import { ToasterProvider } from '@components/ToasterProvider.jsx';
 import VendorLoader from '@components/VendorLoader.jsx';
@@ -84,7 +84,7 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
 
         <div class="layout-page">
           <Nav client:load username={username} menuData={menuData} currentPath={currentPath} />
-          <div style="min-height: 600px;">
+          <div style="min-height: 600px;" class="pb-10">
             <slot />
           </div>
           <footer class="content-footer footer bg-footer-theme bg-dark text-white">
@@ -99,11 +99,7 @@ const currentPath = currentPathOverride || Astro.url?.pathname || '/';
                   </a>
                 </div>
                 <div class="d-none d-lg-inline-block">
-                  <a
-                    href="https://demos.pixinvent.com/materialize-html-admin-template/documentation/"
-                    target="_blank"
-                    class="footer-link me-4"
-                  >
+                  <a href="#" target="_blank" class="footer-link me-4">
                     Documentation
                   </a>
                 </div>

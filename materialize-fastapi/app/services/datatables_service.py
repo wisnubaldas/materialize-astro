@@ -137,8 +137,8 @@ class DataTablesService:
         # Buat response DataTables
         dt_response = DataTablesResponse(
             draw=params.draw,
-            records_total=total_records,
-            records_filtered=filtered_records,
+            recordsTotal=total_records,
+            recordsFiltered=filtered_records,
             data=[self.schema.model_validate(r) for r in results],
         )
         return dt_response

@@ -323,3 +323,20 @@ class BuildUpCheckRepository:
 
         return total_records, filtered_records, results
 
+    def delete_header(self, header: BuildUpCheckHeader) -> None:
+        """Hapus header build up check beserta detail dan rinciannya secara permanen.
+
+        Args:
+            header: Object BuildUpCheckHeader yang akan dihapus.
+
+        Returns:
+            None
+        """
+        self.db.delete(header)
+        try:
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
+
+

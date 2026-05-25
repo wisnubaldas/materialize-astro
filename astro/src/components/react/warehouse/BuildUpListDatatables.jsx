@@ -1,8 +1,10 @@
 import GridData from '@components/GridData';
-import { API_BASE_URL } from '@lib/api/client.js';
+import { API_BASE_URL, apiClient } from '@lib/api/client.js';
 import { getAccessToken } from '@lib/auth/token.js';
+import { showToast } from '@utils';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 import { boolBadge } from '../edi/shared.js';
 import CardPages from '../ui/CardPages.jsx';
 // Helper to format date
@@ -76,6 +78,46 @@ export default function BuildUpListDatatables() {
     window.open(url, '_blank');
   }, []);
 
+  const reloadTable = useCallback((resetPaging = false) => {
+    tableRef.current?.reload?.(resetPaging);
+  }, []);
+
+  const handleDelete = useCallback(
+    async (id, rowData) => {
+      const uldName = rowData?.uld || '';
+      const result = await Swal.fire({
+        title: 'Hapus data build up?',
+        text: `Data build up kargo${uldName ? ' ULD ' + uldName : ''} akan dihapus secara permanen beserta semua detail MAWB dan rincian koli di dalamnya.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal',
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        await apiClient.delete(`/warehouse/build-up-check-headers/${id}`);
+        showToast({
+          type: 'success',
+          title: 'Build Up',
+          message: 'Data build up berhasil dihapus.',
+        });
+        reloadTable(false);
+      } catch (err) {
+        const errorMsg = err?.message || 'Gagal menghapus data build up.';
+        showToast({
+          type: 'danger',
+          title: 'Build Up',
+          message: errorMsg,
+        });
+      }
+    },
+    [reloadTable]
+  );
+
   useEffect(() => {
     const api = tableRef.current?.dt?.();
     if (!api?.table) {
@@ -86,6 +128,15 @@ export default function BuildUpListDatatables() {
     if (!tableNode) {
       return undefined;
     }
+
+    const resolveRowData = (rowElement) => {
+      if (!rowElement) {
+        return null;
+      }
+      const isChild = rowElement.classList?.contains('child');
+      const parentRow = isChild ? rowElement.previousSibling : rowElement;
+      return parentRow ? api.row(parentRow).data() : null;
+    };
 
     const handleClick = (event) => {
       const target = event.target?.closest?.('button[data-action]');
@@ -98,10 +149,15 @@ export default function BuildUpListDatatables() {
         return;
       }
 
+      const row = target.closest('tr');
+      const rowData = resolveRowData(row);
+
       if (action === 'print-manifest') {
         handlePrintManifest(id);
       } else if (action === 'print-checklist') {
         handlePrintChecklist(id);
+      } else if (action === 'delete-buildup') {
+        handleDelete(id, rowData);
       }
     };
 
@@ -109,7 +165,7 @@ export default function BuildUpListDatatables() {
     return () => {
       tableNode.removeEventListener('click', handleClick);
     };
-  }, [handlePrintManifest, handlePrintChecklist]);
+  }, [handlePrintManifest, handlePrintChecklist, handleDelete]);
 
   const columns = useMemo(
     () => [
@@ -164,6 +220,9 @@ export default function BuildUpListDatatables() {
               </button>
               <button class="btn btn-outline-info d-flex align-items-center gap-1" data-action="print-checklist" data-id="${row?.id}">
                 <i class="ri ri-printer-line"></i> Checklist
+              </button>
+              <button class="btn btn-outline-danger d-flex align-items-center gap-1" data-action="delete-buildup" data-id="${row?.id}">
+                <i class="ri ri-delete-bin-line"></i> Delete
               </button>
             </div>
           `;

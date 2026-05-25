@@ -27,6 +27,7 @@ sqlalchemy = "^2.0.32"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
 pandas = "^2.3.3"
 python-multipart = "^0.0.20"
+openai = "^2.9.0"
 openpyxl = "^3.1.5"
 apscheduler = "^3.11.0"
 pycryptodome = "^3.23.0"
@@ -58,6 +59,7 @@ faker-airtravel = "^0.4"
 dev = "app.__main__:main"
 prod = "scripts.run_prod:main"
 scheduler = "scripts.run_scheduler:main"
+openai-hello = "scripts.openai_hello_test:main"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

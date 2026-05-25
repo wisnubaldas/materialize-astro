@@ -169,8 +169,8 @@ class BuildUpCheckService:
         mapped_data = [self._map_header(row) for row in results]
         return DataTablesResponse[BuildUpCheckHeaderOut](
             draw=params.draw,
-            records_total=total_records,
-            records_filtered=filtered_records,
+            recordsTotal=total_records,
+            recordsFiltered=filtered_records,
             data=mapped_data,
         )
 
@@ -216,6 +216,8 @@ class BuildUpCheckService:
                     "weight_kg": completed_weight,
                     "route": "",
                     "transit_flag": "",
+                    "agent": detail.agent or "",
+                    "remark": detail.remark or "",
                 }
             )
 
@@ -523,3 +525,23 @@ class BuildUpCheckService:
         self._sync_split_metadata(detail)
         reopened = self.repository.get_header_by_id(header_id)
         return self._map_header(reopened)
+
+    def delete_header(self, header_id: int) -> bool:
+        """Hapus header build up check beserta detail dan rinciannya berdasarkan ID.
+
+        Args:
+            header_id: ID dari header build up check yang ingin dihapus.
+
+        Returns:
+            True jika berhasil dihapus.
+
+        Raises:
+            LookupError: Jika header build up check tidak ditemukan.
+        """
+        header = self.repository.get_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        self.repository.delete_header(header)
+        return True
+

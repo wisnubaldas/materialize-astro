@@ -240,3 +240,31 @@ def print_build_up_checklist(
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+
+@router.delete(
+    "/build-up-check-headers/{header_id}",
+    summary="Hapus header Build Up Check",
+    status_code=status.HTTP_200_OK,
+)
+def delete_build_up_check_header(
+    header_id: int,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Hapus header Build Up Check beserta detail dan rincian di dalamnya.
+
+    Args:
+        header_id: ID dari header build up check yang ingin dihapus.
+        service: Instance dari BuildUpCheckService.
+
+    Returns:
+        Dict berisi status sukses dan pesan keberhasilan.
+    """
+    try:
+        service.delete_header(header_id)
+        return {"status": "success", "message": "Data build up berhasil dihapus"}
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Gagal menghapus data build up: {exc!s}") from exc
+
+

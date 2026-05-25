@@ -13,11 +13,13 @@ CEISA OAuth variables (ringkas):
 - CEISA_ORIGIN: Optional header `Origin`.
 """
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 
 class ENV(BaseSettings):
     """Map variabel environment ke settings aplikasi."""
+
     APP_ENV: str
     APP_DEBUG: bool = False
     APP_URL: str
@@ -111,9 +113,17 @@ class ENV(BaseSettings):
     ELMAIL_SERVER: str
     ELMAIL_PORT: int
 
+    OPENAI_API_KEY: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("OPENAI_API_KEY", "OPEN_AI_API_KEY", "open_ai_api_key"),
+    )
+    OPENAI_MODEL: str = "gpt-5.2"
+    OPENAI_TIMEOUT: float = 30.0
+
     class Config:
         env_file = ".env"  # otomatis baca file .env
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 ENV = ENV()  # type: ignore

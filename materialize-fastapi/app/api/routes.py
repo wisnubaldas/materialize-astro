@@ -7,6 +7,7 @@ from app.api import (
     ceisa,
     edi,
     hubnet,
+    openai_example,
     setting,
     sse,
     tpsonline,
@@ -23,3 +24,4 @@ router.include_router(build_up_check.pdf_router)
 router.include_router(tpsonline.router)
 router.include_router(setting.router)
 router.include_router(ceisa.router)
+router.include_router(openai_example.router)

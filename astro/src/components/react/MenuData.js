@@ -19,8 +19,22 @@ const normalizeMenuItems = (items = []) =>
     subItems: Array.isArray(item?.subItems) ? normalizeMenuItems(item.subItems) : [],
   }));
 
-const makeCacheKey = ({ token, roleId }) => `${roleId ?? 'me'}:${token ?? 'anonymous'}`;
+/**
+ * Membuat cache key berdasarkan token dan roleId.
+ *
+ * @param {Object} options - Parameter cache key.
+ * @param {string} [options.token] - Token JWT user.
+ * @param {string|number} [options.roleId] - ID role user.
+ * @returns {string} Cache key terformat.
+ */
+const makeCacheKey = ({ token = undefined, roleId = undefined }) => `${roleId ?? 'me'}:${token ?? 'anonymous'}`;
 
+/**
+ * Membaca data menu dari cache jika belum kedaluwarsa.
+ *
+ * @param {string} cacheKey - Key cache yang dicari.
+ * @returns {Array|null} Data menu dari cache atau null jika tidak ada/kedaluwarsa.
+ */
 const readCache = (cacheKey) => {
   const cached = menuCache.get(cacheKey);
   if (!cached) {
@@ -33,6 +47,9 @@ const readCache = (cacheKey) => {
   return cached.data;
 };
 
+/**
+ * Menghapus entri cache tertua jika melebihi batas kapasitas maksimal.
+ */
 const trimCache = () => {
   while (menuCache.size > MENU_CACHE_MAX_ENTRIES) {
     const oldestKey = menuCache.keys().next().value;
@@ -43,6 +60,12 @@ const trimCache = () => {
   }
 };
 
+/**
+ * Menyimpan data menu ke dalam cache dengan batas waktu kedaluwarsa.
+ *
+ * @param {string} cacheKey - Key cache.
+ * @param {Array} data - Data menu yang akan disimpan.
+ */
 const writeCache = (cacheKey, data) => {
   menuCache.set(cacheKey, {
     expiresAt: Date.now() + MENU_CACHE_TTL_MS,
@@ -51,7 +74,15 @@ const writeCache = (cacheKey, data) => {
   trimCache();
 };
 
-const getMenuData = async ({ token, roleId } = {}) => {
+/**
+ * Mengambil data menu dari backend dengan caching.
+ *
+ * @param {Object} [options={}] - Opsi untuk memuat data menu.
+ * @param {string} [options.token] - Token JWT user untuk autentikasi.
+ * @param {string|number} [options.roleId] - ID role user untuk filtering/preview menu.
+ * @returns {Promise<Array>} List menu item yang sudah dinormalisasi.
+ */
+const getMenuData = async ({ token = undefined, roleId = undefined } = {}) => {
   try {
     // roleId dipakai untuk preview role tertentu (mis. admin/setting).
     // Jika tidak ada roleId, backend memakai user token untuk filter RBAC.
@@ -84,6 +115,13 @@ const getMenuData = async ({ token, roleId } = {}) => {
   }
 };
 
+/**
+ * Menyaring menu berdasarkan kata kunci pencarian pada nama menu.
+ *
+ * @param {Array} items - List menu item.
+ * @param {string} keyword - Kata kunci pencarian.
+ * @returns {Array} List menu item yang sesuai.
+ */
 const filterMenuByName = (items, keyword) => {
   const needle = String(keyword || '').toLowerCase();
   if (!needle) return items;

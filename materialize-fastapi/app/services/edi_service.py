@@ -382,8 +382,8 @@ class EdiService:
         total_records, filtered_records, rows = self.repository.list_ffm_build_up_headers(params)
         return DataTablesResponse(
             draw=params.draw,
-            records_total=total_records,
-            records_filtered=filtered_records,
+            recordsTotal=total_records,
+            recordsFiltered=filtered_records,
             data=[self._map_ffm_header(row) for row in rows],
         )
 
