@@ -79,7 +79,9 @@ export default function BuildUpListDatatables() {
     setActiveFilters(reset);
   };
 
-  const handlePreparePdf = useCallback(async (id, type, button) => {
+  const handlePreparePdf = useCallback(async (id, type, button, event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     if (!id) return;
 
     const token = getAccessToken();
@@ -94,6 +96,16 @@ export default function BuildUpListDatatables() {
 
     const isManifest = type === 'manifest';
     const endpoint = `/warehouse/build-up-check-headers/${id}/pdf-${type}/prepare`;
+    const pdfWindow = window.open('', '_blank');
+    if (pdfWindow) {
+      pdfWindow.document.title = 'Menyiapkan PDF Build Up';
+      pdfWindow.document.body.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 24px;">
+          <strong>Menyiapkan PDF ${isManifest ? 'Manifest' : 'Checklist'}...</strong>
+          <p>Mohon tunggu sebentar.</p>
+        </div>
+      `;
+    }
     setPdfButtonLoading(button, true, isManifest ? 'Manifest' : 'Checklist');
 
     try {
@@ -105,11 +117,17 @@ export default function BuildUpListDatatables() {
 
       const separator = pdfPath.includes('?') ? '&' : '?';
       const url = `${API_BASE_URL}${pdfPath}${separator}token=${encodeURIComponent(token)}`;
-      const opened = window.open(url, '_blank', 'noopener');
-      if (!opened) {
-        window.location.href = url;
+      if (pdfWindow) {
+        pdfWindow.location.replace(url);
+      } else {
+        showToast({
+          type: 'warning',
+          title: 'Build Up PDF',
+          message: 'Browser memblokir tab baru. Izinkan pop-up untuk membuka PDF.',
+        });
       }
     } catch (err) {
+      pdfWindow?.close?.();
       console.error('[build-up][prepare-pdf]', err);
       showToast({
         type: 'danger',
@@ -186,6 +204,8 @@ export default function BuildUpListDatatables() {
       if (!target) {
         return;
       }
+      event.preventDefault();
+      event.stopPropagation();
       const action = target.getAttribute('data-action');
       const id = Number(target.getAttribute('data-id'));
       if (!id) {
@@ -196,9 +216,9 @@ export default function BuildUpListDatatables() {
       const rowData = resolveRowData(row);
 
       if (action === 'print-manifest') {
-        handlePreparePdf(id, 'manifest', target);
+        handlePreparePdf(id, 'manifest', target, event);
       } else if (action === 'print-checklist') {
-        handlePreparePdf(id, 'checklist', target);
+        handlePreparePdf(id, 'checklist', target, event);
       } else if (action === 'delete-buildup') {
         handleDelete(id, rowData);
       }
@@ -258,13 +278,13 @@ export default function BuildUpListDatatables() {
           }
           return `
             <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-outline-primary d-flex align-items-center gap-1" data-action="print-manifest" data-id="${row?.id}">
+              <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-1" data-action="print-manifest" data-id="${row?.id}">
                 <i class="ri ri-file-pdf-line"></i> Manifest
               </button>
-              <button class="btn btn-outline-info d-flex align-items-center gap-1" data-action="print-checklist" data-id="${row?.id}">
+              <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-action="print-checklist" data-id="${row?.id}">
                 <i class="ri ri-printer-line"></i> Checklist
               </button>
-              <button class="btn btn-outline-danger d-flex align-items-center gap-1" data-action="delete-buildup" data-id="${row?.id}">
+              <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-action="delete-buildup" data-id="${row?.id}">
                 <i class="ri ri-delete-bin-line"></i> Delete
               </button>
             </div>

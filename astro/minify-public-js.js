@@ -5,6 +5,8 @@ import { minify } from 'terser';
 
 const JS_DIRECTORIES = ['dist/client/js', 'dist/client/_astro'];
 const CSS_DIRECTORY = 'dist/client/assets';
+const MINIFY_JS = process.env.MINIFY_JS === 'true';
+const MINIFY_CSS = process.env.MINIFY_CSS !== 'false';
 
 const totals = {
   css: { files: 0, before: 0, after: 0 },
@@ -183,10 +185,20 @@ const printSummary = () => {
 };
 
 const main = async () => {
-  processCssDirectory();
-  for (const directory of JS_DIRECTORIES) {
-    await processJsDirectory(directory);
+  if (MINIFY_CSS) {
+    processCssDirectory();
+  } else {
+    console.log('[minify][css] Skip: MINIFY_CSS=false');
   }
+
+  if (MINIFY_JS) {
+    for (const directory of JS_DIRECTORIES) {
+      await processJsDirectory(directory);
+    }
+  } else {
+    console.log('[minify][js] Skip: Astro/Vite already minifies JS. Set MINIFY_JS=true to run post-build JS minify.');
+  }
+
   printSummary();
 };
 
