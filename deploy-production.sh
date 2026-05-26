@@ -172,6 +172,13 @@ if [ -d "$BACKEND_DIR" ]; then
     sudo chmod 775 /var/log/materialize-fastapi || true
     sudo chmod 664 /var/log/materialize-fastapi/access.log /var/log/materialize-fastapi/error.log || true
 
+    echo "🪶 Ensuring backend runtime storage is writable by Supervisor user"
+    sudo mkdir -p \
+      "$BACKEND_DIR/app/storage/generated_pdf/build_up" \
+      "$BACKEND_DIR/app/storage/public/pdf" || true
+    sudo chown -R "$SUPER_USER:$SUPER_GROUP" "$BACKEND_DIR/app/storage" || true
+    sudo chmod -R u+rwX,g+rwX "$BACKEND_DIR/app/storage" || true
+
     sudo supervisorctl reread || true
     sudo supervisorctl update || true
     if ! sudo supervisorctl restart materialize-fastapi; then
