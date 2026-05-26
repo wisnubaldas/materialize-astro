@@ -310,45 +310,19 @@ body {
 }
 
 .logos-container {
-  text-align: right;
-  margin-bottom: 2mm;
+    width: 75%;
+    margin-left: auto;
+    margin-bottom: 2mm;
+    text-align: center;
 }
 
-.footer-mau-logo {
-  height: 20px;
-  vertical-align: middle;
-}
-
-.footer-mau-text {
-  font-size: 5.5pt;
-  font-weight: bold;
-  margin-top: 1px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 5px;
-}
-
-.sgs-badge {
-  display: inline-block;
-  vertical-align: middle;
-  border: 1px solid #000;
-  font-size: 4.5pt;
-  padding: 2px;
-  text-align: center;
-  margin-left: 6px;
-  background: #fff;
-  line-height: 1;
-}
-
-.sgs-title {
-  font-weight: bold;
-  color: #e30613;
-  font-size: 5.5pt;
-}
-
-.sgs-code {
-  font-size: 3.5pt;
-  color: #555;
+.footer-cert-logo {
+    display: block;
+    width: 46mm;
+    height: auto;
+    max-height: 9mm;
+    object-fit: contain;
+    margin: 0 auto;
 }
 
 .doc-control-table {
