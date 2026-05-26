@@ -1,6 +1,16 @@
-# MAU APP - Sistem Manajemen Operasional Gudang Cargo Lini 1
+# 📦 MAU APP - Sistem Manajemen Operasional Gudang Cargo Lini 1
 
 Aplikasi **MAU APP** dikembangkan khusus untuk mengelola operasional gudang cargo lini 1 di Bandara Soekarno-Hatta. Proyek ini mengadopsi arsitektur terdistribusi dengan backend tunggal sebagai *Source of Truth* dan beberapa tipe client frontend resmi (Web, Mobile, Desktop).
+
+## 📋 Daftar Isi
+
+- [Arsitektur & Teknologi](#-arsitektur--teknologi-utama)
+- [Struktur Repositori](#-struktur-repositori)
+- [Setup & Menjalankan Proyek](#-menjalankan-proyek-di-lingkungan-lokal-development)
+- [Deployment Produksi](#-panduan-deployment-ke-produksi)
+- [Kebijakan Keamanan](#-kebijakan-keamanan--prinsip-penting)
+- [Testing](#-pengujian-testing)
+- [Referensi Developer](#-referensi-pengembang--ai-agent)
 
 ---
 

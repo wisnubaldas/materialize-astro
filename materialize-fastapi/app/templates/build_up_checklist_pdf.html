@@ -6,382 +6,188 @@
     <title>Build Up Checklist</title>
     <link rel="stylesheet" href="normalize.min.css">
     <link rel="stylesheet" href="paper.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        @page {
-            size: A4 portrait;
-            margin: 5mm;
-        }
-
-        body {
-            font-family: 'Ubuntu', Arial, sans-serif;
-            font-size: 8pt;
-            color: #000;
-            width: 100% !important;
-            margin: 0;
-            padding: 0;
-        }
-
-        .page-container {
-            border: none;
-            padding: 3mm;
-            box-sizing: border-box;
-            height: 283mm; /* Fit perfectly in A4 */
-            position: relative;
-            width: 100%;
-        }
-
-        /* Header Table */
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1.5px solid #000;
-            margin-bottom: 0px;
-        }
-
-        .header-table td {
-            border: 1.5px solid #000;
-            padding: 4px;
-            vertical-align: middle;
-        }
-
-        .logo-left-cell {
-            width: 25%;
-            text-align: center;
-        }
-
-        .logo-left-container img {
-            height: 32px;
-            vertical-align: middle;
-        }
-
-        .logo-left-text {
-            font-size: 6pt;
-            font-weight: bold;
-            margin-top: 3px;
-        }
-
-        .title-center-cell {
-            width: 50%;
-            text-align: center;
-        }
-
-        .title-center-cell h1 {
-            font-size: 13.5pt;
-            margin: 0;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-
-        .logo-right-cell {
-            width: 25%;
-            text-align: right;
-            padding-right: 6px !important;
-        }
-
-        /* Subheader Table */
-        .subheader-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1.5px solid #000;
-            border-top: none;
-            margin-bottom: 3mm;
-        }
-
-        .subheader-table td {
-            border: 1px solid #000;
-            padding: 4px 6px;
-            font-size: 8pt;
-            vertical-align: middle;
-        }
-
-        /* Grid Table styling */
-        .grid-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1.5px solid #000;
-        }
-
-        .grid-table th,
-        .grid-table td {
-            border: 1px solid #000;
-            padding: 2px;
-            vertical-align: middle;
-            font-size: 8pt;
-            height: 18px;
-        }
-
-        .grid-table th {
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .grid-table tbody td {
-            text-align: center;
-        }
-
-        /* Footer styling */
-        .footer-section {
-            position: absolute;
-            bottom: 3mm;
-            left: 3mm;
-            right: 3mm;
-            height: 38mm;
-        }
-
-        .footer-left {
-            float: left;
-            width: 48%;
-        }
-
-        .footer-right {
-            float: right;
-            width: 48%;
-            text-align: right;
-        }
-
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            margin-bottom: 2mm;
-        }
-
-        .signature-table td {
-            border: 1px solid #000;
-            padding: 4px;
-            font-size: 7pt;
-            height: 14mm;
-            vertical-align: top;
-            text-align: left;
-        }
-
-        .signature-table .sub-label {
-            display: block;
-            text-align: center;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        .controlled-copy-box {
-            border: 1px solid #000;
-            padding: 4px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 8.5pt;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .logos-container {
-            text-align: right;
-            margin-bottom: 2mm;
-        }
-
-        .footer-mau-logo {
-            height: 20px;
-            vertical-align: middle;
-        }
-
-        .footer-mau-text {
-            font-size: 5.5pt;
-            font-weight: bold;
-            margin-top: 1px;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-
-        .doc-control-table {
-            width: 75%;
-            margin-left: auto;
-            border-collapse: collapse;
-            border: 1px solid #000;
-            text-align: left;
-        }
-
-        .doc-control-table td {
-            border: 1px solid #000;
-            padding: 1.5px 4px;
-            font-size: 5.5pt;
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="build_up_checklist_pdf.css">
 </head>
 
 <body class="A4">
     <div class="page-container">
         {% if manifest %}
-        <!-- Header -->
-        <table class="header-table">
-            <tr>
-                <td class="logo-left-cell">
-                    <div class="logo-left-container">
-                        <img src="https://www.mitraadira.com/wp-content/uploads/2021/11/mau-logo.png" alt="MAU">
-                        <div class="logo-left-text">PT MITRA ADIRA UTAMA</div>
-                    </div>
-                </td>
-                <td class="title-center-cell">
-                    <h1>BUILD UP CHECKLIST</h1>
-                </td>
-                <td class="logo-right-cell">
-                    <table style="width: auto; margin-left: auto; border: none; font-size: 5.5pt; text-align: left; border-collapse: collapse;">
-                        <tr style="border: none;">
-                            <td style="border: none; padding: 0; vertical-align: middle;">
-                                <div style="width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid #205c90; margin-right: 4px; display: inline-block; vertical-align: middle;"></div>
+            <!-- Header -->
+            <table class="header-table">
+                <tr>
+                    <td class="logo-left-cell">
+                        <div class="logo-left-container">
+                            <img src="logo/logo-ori-mau.png" alt="MAU">
+                            <div class="logo-left-text">PT MITRA ADIRA UTAMA</div>
+                        </div>
+                    </td>
+                    <td class="title-center-cell">
+                        <h1>BUILD UP CHECKLIST</h1>
+                    </td>
+                    <td class="logo-right-cell">
+                        <table class="partner-brand-table">
+                            <tr>
+                                <td>
+                                    <img src="logo/bgd-jo-4.png" alt="BGD-JO" class="partner-brand-logo">
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Subheader -->
+            <table class="subheader-table">
+                <tr>
+                    <td class="subheader-airline"><strong>Airlines :</strong> {{ manifest.airline_code or '' }}</td>
+                    <td class="subheader-flight"><strong>Flgth No :</strong>
+                        {{ manifest.airline_code or '' }}{{ manifest.flight_number or '' }}
+                    </td>
+                    <td class="subheader-date"><strong>Date :</strong> {{ manifest.flight_date or '' }}</td>
+                    <td class="subheader-destination"><strong>Dest :</strong> {{ manifest.point_of_unloading or '' }}</td>
+                    <td class="subheader-uld"><strong>No ULD :</strong>
+                        {% if manifest.ulds %}
+                            {{ manifest.ulds[0].uld_type or '' }}{{ manifest.ulds[0].uld_number or '' }}{{ manifest.ulds[0].uld_owner or '' }}
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Grid Table -->
+            <table class="grid-table">
+                <colgroup>
+                    <col class="awb-column">
+                    <col class="total-pieces-column">
+                    {% for i in range(14) %}
+                        <col class="rincian-column">
+                    {% endfor %}
+                    <col class="agent-column">
+                    <col class="remarks-column">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>NO AWB</th>
+                        <th>Total Pcs</th>
+                        <th colspan="14">RINCIAN KG</th>
+                        <th>Agent</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total_rows = 28 %}
+                    {% set mawbs_list = [] %}
+                    {% if manifest.ulds and manifest.ulds[0] and manifest.ulds[0].mawbs %}
+                        {% set mawbs_list = manifest.ulds[0].mawbs %}
+                    {% endif %}
+                    {% set mawbs_count = mawbs_list | length %}
+
+                    {% for mawb in mawbs_list %}
+                        <tr>
+                            <td class="mawb-number-cell">{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</td>
+                            <td class="pieces-cell">{{ mawb.total_pieces }}</td>
+                            <!-- 14 rincian columns -->
+                            {% for i in range(14) %}
+                                <td class="rincian-cell">
+                                    {% if mawb.rincian and i < (mawb.rincian | length) %}
+                                        {% set rincian_value = mawb.rincian[i] | string %}
+                                        {% if '/' in rincian_value %}
+                                            {% set rincian_parts = rincian_value.split('/', 1) %}
+                                            {{ rincian_parts[0] }}/<br>{{ rincian_parts[1] }}
+                                        {% else %}
+                                            {{ rincian_value }}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td class="agent-cell">{{ mawb.agent or '' }}</td>
+                            <td class="remark-cell">{{ mawb.remark or '' }}</td>
+                        </tr>
+                    {% endfor %}
+
+                    {% for i in range(total_rows - mawbs_count) %}
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Footer -->
+            <div class="footer-section">
+                <div class="footer-left">
+                    <table class="signature-table">
+                        <tr>
+                            <td class="signature-cell">
+                                Prepared By:<br>
+                                Date: ........................<br><br><br>
+                                (......................................................)<br>
+                                <span class="sub-label">Staff</span>
                             </td>
-                            <td style="border: none; padding: 0; font-weight: bold; line-height: 1.1; vertical-align: middle; color: #1e3f66;">
-                                PT. BANTEN GLOBAL DEVELOPMENT
-                                <div style="font-size: 4.5pt; font-weight: normal; color: #333;">JO. PT. PATRA MITRA BANDARA</div>
-                                <div style="font-size: 4.2pt; font-weight: normal; color: #555;">Warehouse Soekarno - Hatta Int. Airport</div>
-                            </td>
-                            <td style="border: none; padding: 0 0 0 4px; vertical-align: middle;">
-                                <div style="width: 12px; height: 14px; background-color: #557a46; border-radius: 1.5px; color: white; text-align: center; font-weight: bold; font-size: 7pt; line-height: 14px; display: inline-block; vertical-align: middle;">P</div>
+                            <td class="signature-cell">
+                                Checked By:<br>
+                                Date: ........................<br><br><br>
+                                (......................................................)<br>
+                                <span class="sub-label">Supervisor</span>
                             </td>
                         </tr>
                     </table>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Subheader -->
-        <table class="subheader-table">
-            <tr>
-                <td style="width: 18%;"><strong>Airlines :</strong> {{ manifest.airline_code or '' }}</td>
-                <td style="width: 22%;"><strong>Flgth No :</strong> {{ manifest.airline_code or '' }}{{ manifest.flight_number or '' }}</td>
-                <td style="width: 22%;"><strong>Date :</strong> {{ manifest.flight_date or '' }}</td>
-                <td style="width: 16%;"><strong>Dest :</strong> {{ manifest.point_of_unloading or '' }}</td>
-                <td style="width: 22%;"><strong>No ULD :</strong> 
-                    {% if manifest.ulds %}
-                        {{ manifest.ulds[0].uld_type or '' }}{{ manifest.ulds[0].uld_number or '' }}{{ manifest.ulds[0].uld_owner or '' }}
-                    {% endif %}
-                </td>
-            </tr>
-        </table>
-
-        <!-- Grid Table -->
-        <table class="grid-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="width: 16%;">NO AWB</th>
-                    <th rowspan="2" style="width: 8%;">Total Pcs</th>
-                    <th colspan="14" style="width: 52%;">RINCIAN KG</th>
-                    <th rowspan="2" style="width: 10%;">Agent</th>
-                    <th rowspan="2" style="width: 14%;">Remarks</th>
-                </tr>
-                <tr>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                    <th style="width: 3.71%;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% set total_rows = 28 %}
-                {% set mawbs_list = [] %}
-                {% if manifest.ulds and manifest.ulds[0] and manifest.ulds[0].mawbs %}
-                    {% set mawbs_list = manifest.ulds[0].mawbs %}
-                {% endif %}
-                {% set mawbs_count = mawbs_list | length %}
-
-                {% for mawb in mawbs_list %}
-                <tr>
-                    <td style="font-size: 7.5pt; font-weight: bold; text-align: center;">{{ mawb.mawb_prefix }}-{{ mawb.mawb_number }}</td>
-                    <td style="font-size: 7.5pt; text-align: center;">{{ mawb.total_pieces }}</td>
-                    <!-- 14 rincian columns -->
-                    {% for i in range(14) %}
-                    <td style="font-size: 7pt; text-align: center;">
-                        {% if mawb.rincian and i < (mawb.rincian | length) %}
-                            {{ mawb.rincian[i] }}
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                    <td style="font-size: 6.5pt; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ mawb.agent or '' }}</td>
-                    <td style="font-size: 6.5pt; text-align: left; padding-left: 3px;">{{ mawb.remark or '' }}</td>
-                </tr>
-                {% endfor %}
-
-                {% for i in range(total_rows - mawbs_count) %}
-                <tr>
-                    <td>&nbsp;</td>
-                    <td></td>
-                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Footer -->
-        <div class="footer-section">
-            <div class="footer-left">
-                <table class="signature-table">
-                    <tr>
-                        <td style="width: 50%;">
-                            Prepared By:<br>
-                            Date: ........................<br><br><br>
-                            (......................................................)<br>
-                            <span class="sub-label">Staff</span>
-                        </td>
-                        <td style="width: 50%;">
-                            Checked By:<br>
-                            Date: ........................<br><br><br>
-                            (......................................................)<br>
-                            <span class="sub-label">Supervisor</span>
-                        </td>
-                    </tr>
-                </table>
-                <div class="controlled-copy-box">
-                    CONTROLLED COPY
-                </div>
-            </div>
-
-            <div class="footer-right">
-                <div class="logos-container">
-                    <span class="footer-mau-text">PT MITRA ADIRA UTAMA</span>
-                    <img src="https://www.mitraadira.com/wp-content/uploads/2021/11/mau-logo.png" alt="MAU" class="footer-mau-logo">
-                    
-                    <div style="display: inline-block; vertical-align: middle; border: 1px solid #000; font-size: 4.5pt; padding: 2px; text-align: center; margin-left: 6px; background: #fff; line-height: 1;">
-                        <span style="font-weight: bold; color: #e30613; font-size: 5.5pt;">SGS</span><br>
-                        <span style="font-size: 3.5pt; color: #555;">ID15/03276</span>
+                    <div class="controlled-copy-box">
+                        CONTROLLED COPY
                     </div>
                 </div>
 
-                <table class="doc-control-table">
-                    <tr>
-                        <td style="width: 35%; font-weight: bold;">No. Dokumen</td>
-                        <td style="width: 65%;">: F/MAU-OP-06/02/02</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold;">Mulai Berlaku</td>
-                        <td>: 02 Januari 2018</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold;">Revisi</td>
-                        <td>: 02</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold;">Tanggal Revisi</td>
-                        <td>: 01 Maret 2022</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold;">Halaman</td>
-                        <td>: 1 dari 1</td>
-                    </tr>
-                </table>
+                <div class="footer-right">
+                    <div class="logos-container">
+                        <span class="footer-mau-text">PT MITRA ADIRA UTAMA</span>
+                        <img src="logo/logo-ori-mau.png" alt="MAU" class="footer-mau-logo">
+
+                        <div class="sgs-badge">
+                            <span class="sgs-title">SGS</span><br>
+                            <span class="sgs-code">ID15/03276</span>
+                        </div>
+                    </div>
+
+                    <table class="doc-control-table">
+                        <tr>
+                            <td class="doc-control-label">No. Dokumen</td>
+                            <td class="doc-control-value">: F/MAU-OP-06/02/02</td>
+                        </tr>
+                        <tr>
+                            <td class="doc-control-label">Mulai Berlaku</td>
+                            <td>: 02 Januari 2018</td>
+                        </tr>
+                        <tr>
+                            <td class="doc-control-label">Revisi</td>
+                            <td>: 02</td>
+                        </tr>
+                        <tr>
+                            <td class="doc-control-label">Tanggal Revisi</td>
+                            <td>: 01 Maret 2022</td>
+                        </tr>
+                        <tr>
+                            <td class="doc-control-label">Halaman</td>
+                            <td>: 1 dari 1</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-        </div>
         {% endif %}
     </div>
 </body>
