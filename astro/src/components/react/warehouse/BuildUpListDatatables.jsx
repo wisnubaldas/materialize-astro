@@ -44,6 +44,7 @@ const setPdfButtonLoading = (button, isLoading, label = 'Menyiapkan') => {
 export default function BuildUpListDatatables() {
   const tableRef = useRef(null);
   const mountedRef = useRef(false);
+  const preparingPdfRef = useRef(new Set());
 
   const [formFilters, setFormFilters] = useState(createDefaultFilters);
   const [activeFilters, setActiveFilters] = useState(createDefaultFilters);
@@ -95,6 +96,17 @@ export default function BuildUpListDatatables() {
     }
 
     const isManifest = type === 'manifest';
+    const requestKey = `${type}:${id}`;
+    if (preparingPdfRef.current.has(requestKey)) {
+      showToast({
+        type: 'info',
+        title: 'Build Up PDF',
+        message: 'PDF sedang disiapkan. Mohon tunggu proses sebelumnya selesai.',
+      });
+      return;
+    }
+
+    preparingPdfRef.current.add(requestKey);
     const endpoint = `/warehouse/build-up-check-headers/${id}/pdf-${type}/prepare`;
     const pdfWindow = window.open('', '_blank');
     if (pdfWindow) {
@@ -135,6 +147,7 @@ export default function BuildUpListDatatables() {
         message: err?.message || 'Gagal menyiapkan PDF Build Up.',
       });
     } finally {
+      preparingPdfRef.current.delete(requestKey);
       setPdfButtonLoading(button, false);
     }
   }, []);

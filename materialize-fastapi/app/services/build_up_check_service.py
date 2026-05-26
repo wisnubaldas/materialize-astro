@@ -1,4 +1,7 @@
+import logging
 import re
+import time
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -19,6 +22,8 @@ from app.schemas.build_up_check_schema import (
     BuildUpPdfPrepareOut,
 )
 from app.schemas.datatables_schema import DataTablesParams, DataTablesResponse
+
+logger = logging.getLogger(__name__)
 
 
 def _clean_text(value: object) -> str:
@@ -123,6 +128,61 @@ class BuildUpCheckService:
 
     def __init__(self, repository: BuildUpCheckRepository):
         self.repository = repository
+
+    @staticmethod
+    def _iter_pdf_source_rows(headers: list) -> list:
+        """Return all rows that affect Build Up PDF output.
+
+        Args:
+            headers: Build Up headers included in the PDF.
+
+        Returns:
+            Flat list of header, detail, and rincian ORM rows.
+        """
+        rows = []
+        for header in headers:
+            rows.append(header)
+            for detail in list(header.details or []):
+                rows.append(detail)
+                rows.extend(list(detail.rincian or []))
+        return rows
+
+    @classmethod
+    def _latest_pdf_source_updated_at(cls, headers: list) -> datetime | None:
+        """Return the latest update timestamp from rows used by a Build Up PDF.
+
+        Args:
+            headers: Build Up headers included in the PDF.
+
+        Returns:
+            Latest update timestamp, or None when no timestamp is available.
+        """
+        timestamps = []
+        for row in cls._iter_pdf_source_rows(headers):
+            timestamp = getattr(row, "updated_at", None) or getattr(row, "created_at", None)
+            if isinstance(timestamp, datetime):
+                timestamps.append(timestamp)
+        return max(timestamps) if timestamps else None
+
+    @classmethod
+    def _is_prepared_pdf_fresh(cls, output_path: Path, headers: list) -> bool:
+        """Check whether a prepared PDF file is newer than its source data.
+
+        Args:
+            output_path: Existing PDF output path.
+            headers: Build Up headers included in the PDF.
+
+        Returns:
+            True if the PDF can be reused safely.
+        """
+        if not output_path.exists():
+            return False
+
+        latest_updated_at = cls._latest_pdf_source_updated_at(headers)
+        if latest_updated_at is None:
+            return True
+
+        return output_path.stat().st_mtime >= latest_updated_at.timestamp()
 
     @staticmethod
     def _map_detail(row, master_completed_pieces: int | None = None) -> BuildUpCheckDetailOut:
@@ -364,9 +424,27 @@ class BuildUpCheckService:
 
     def prepare_build_up_checklist_pdf(self, header_id: int) -> BuildUpPdfPrepareOut:
         """Generate checklist PDF in backend first and return its view path."""
-        pdf_bytes = self.generate_build_up_checklist_pdf(header_id)
+        started_at = time.perf_counter()
+        header = self.repository.get_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+
         filename = f"checklist-buildup-{header_id}.pdf"
-        self._save_prepared_pdf(filename, pdf_bytes)
+        output_path = self._prepared_pdf_dir() / filename
+        if self._is_prepared_pdf_fresh(output_path, [header]):
+            logger.info("Build Up checklist PDF cache hit header_id=%s file=%s", header_id, filename)
+        else:
+            pdf_bytes = self._render_build_up_pdf(
+                self._build_manifest_dict([header]),
+                is_checklist=True,
+            )
+            self._save_prepared_pdf(filename, pdf_bytes)
+            logger.info(
+                "Build Up checklist PDF rendered header_id=%s file=%s duration_ms=%s",
+                header_id,
+                filename,
+                int((time.perf_counter() - started_at) * 1000),
+            )
         return BuildUpPdfPrepareOut(
             filename=filename,
             pdf_path=f"/pdf/warehouse/generated/{filename}",
@@ -375,11 +453,11 @@ class BuildUpCheckService:
 
     def prepare_build_up_manifest_pdf(self, header_id: int) -> BuildUpPdfPrepareOut:
         """Generate grouped manifest PDF in backend first and return its view path."""
+        started_at = time.perf_counter()
         seed_header = self.repository.get_header_by_id(header_id)
         if not seed_header:
             raise LookupError("Header build up check tidak ditemukan")
 
-        pdf_bytes = self.generate_build_up_manifest_pdf(header_id)
         flight_date = seed_header.flight_date.isoformat() if seed_header.flight_date else "nodate"
         identity = "-".join(
             [
@@ -391,7 +469,30 @@ class BuildUpCheckService:
             ]
         )
         filename = f"{_safe_pdf_filename(identity)}.pdf"
-        self._save_prepared_pdf(filename, pdf_bytes)
+        grouped_headers = self.repository.list_headers_for_manifest(
+            airlines=seed_header.airlines,
+            flight_no=seed_header.flight_no,
+            flight_date=seed_header.flight_date,
+            dest=seed_header.dest,
+        )
+        if not grouped_headers:
+            grouped_headers = [seed_header]
+
+        output_path = self._prepared_pdf_dir() / filename
+        if self._is_prepared_pdf_fresh(output_path, grouped_headers):
+            logger.info("Build Up manifest PDF cache hit header_id=%s file=%s", header_id, filename)
+        else:
+            pdf_bytes = self._render_build_up_pdf(
+                self._build_manifest_dict(grouped_headers),
+                is_checklist=False,
+            )
+            self._save_prepared_pdf(filename, pdf_bytes)
+            logger.info(
+                "Build Up manifest PDF rendered header_id=%s file=%s duration_ms=%s",
+                header_id,
+                filename,
+                int((time.perf_counter() - started_at) * 1000),
+            )
         return BuildUpPdfPrepareOut(
             filename=filename,
             pdf_path=f"/pdf/warehouse/generated/{filename}",
