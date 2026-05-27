@@ -56,7 +56,7 @@ materialize-project/
 | Backend FastAPI, database, API, auth, job, integrasi CEISA/AP2/HUBNET | `materialize-fastapi/`                           | [`materialize-fastapi/backend_agent.md`](materialize-fastapi/backend_agent.md) |
 | Web frontend Astro + React                                            | `astro/`                                         | [`astro/frontend_agent.md`](astro/frontend_agent.md)                           |
 | Desktop frontend C# WPF (.NET)                                        | `desktop-app/`                                   | [`desktop-app/desktop_agent.md`](desktop-app/desktop_agent.md)                 |
-| Mobile frontend React Native + Expo                                   | `mobile-app/`                                    | [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md)                     |
+| Mobile frontend React Native + Expo                                   | `mobile-app/`                                    | [`mobile-app/mobile_agent.md`](mobile-app/mobile_agent.md); tambah [`mobile-app/nativewind_agent.md`](mobile-app/nativewind_agent.md) untuk UI/styling |
 | Dokumentasi project/root                                              | `docs/`, `README.md`, `AGENTS.md`                | `AGENTS.md` + agent terdampak                                                  |
 | Email template                                                        | `email-template/`                                | `AGENTS.md` + `materialize-fastapi/backend_agent.md` jika dipakai backend      |
 | Docker/deployment                                                     | `docker-asset/`, `deploy-*.sh`, `.gitlab-ci.yml` | `AGENTS.md` + agent project yang dideploy                                      |
@@ -72,6 +72,7 @@ Path mengandung astro/                 → baca astro/frontend_agent.md
 Path mengandung materialize-fastapi/   → baca materialize-fastapi/backend_agent.md
 Path mengandung desktop-app/           → baca desktop-app/desktop_agent.md
 Path mengandung mobile-app/            → baca mobile-app/mobile_agent.md
+Path mengandung mobile-app/ dan menyentuh UI/styling → baca juga mobile-app/nativewind_agent.md
 Path lintas project                    → baca semua agent yang terdampak
 ```
 
@@ -98,6 +99,7 @@ Verifikasi lint/build sesuai project
 ```text
 materialize-project/
 ├── .git/
+├── .agent/
 ├── .vscode/
 ├── astro/
 ├── desktop-app/
@@ -110,7 +112,6 @@ materialize-project/
 ├── AGENTS.md
 ├── deploy-development.sh
 ├── deploy-production.sh
-├── package-lock.json
 └── README.md
 ```
 
@@ -307,9 +308,40 @@ Catatan penting mobile:
 - Screen tidak boleh memanggil `fetch()` langsung; API call harus melalui service di `src/services/`, terutama `apiService.js`.
 - Environment API wajib dibaca melalui `src/config/env.js` dan variabel `EXPO_PUBLIC_*`.
 - Auth state mobile dikelola di `src/contexts/AuthContext.js`.
-- Navigation mobile dikelola di `src/navigation/`.
-- Pengembangan UI mobile wajib membaca dan mengikuti `mobile-app/nativewind_agent.md`; gunakan NativeWind sebagai styling utama.
+- Navigation mobile dikelola di `src/navigation/` atau routing table resmi Expo Router jika project mobile sedang memakai Expo Router. Jangan mencampur pola navigasi tanpa keputusan refactor eksplisit.
+- Pengembangan UI/styling mobile wajib membaca dan mengikuti `mobile-app/nativewind_agent.md`; gunakan NativeWind sebagai styling utama. Ini berbeda dari routing Expo Router: `nativewind_agent.md` mengatur styling, bukan struktur navigasi.
 - Semua data, auth final, validasi final, role/permission, audit log, dan integrasi pihak ketiga tetap melalui backend/API resmi, bukan langsung dari mobile app.
+
+---
+
+## Kompatibilitas Codex dan Antigravity
+
+Repository ini boleh dikerjakan memakai **Codex** maupun **Google Antigravity**. Agar hasil kerja antar-agent tetap selaras, gunakan `AGENTS.md` sebagai **single source of truth** untuk instruksi project lintas tool.
+
+Antigravity workspace rule disimpan di:
+
+```text
+.agent/rules/mau-app-core.md
+```
+
+Catatan: Antigravity versi baru default ke `.agents/rules/`, tetapi masih mendukung `.agent/rules/`. Project ini memakai `.agent/rules/` sesuai workflow user.
+
+Aturan kolaborasi lintas agent:
+
+- Codex dan Antigravity wajib membaca `AGENTS.md` root sebelum mengubah file.
+- Antigravity wajib memuat `.agent/rules/mau-app-core.md` sebagai rule ringkas yang mengarah ke `AGENTS.md` dan agent spesifik folder.
+- Jika ada perubahan aturan agent di `AGENTS.md`, update juga `.agent/rules/mau-app-core.md` jika ringkasan Antigravity ikut terdampak.
+- Jika ada perubahan aturan Antigravity di `.agent/rules/mau-app-core.md`, sinkronkan kembali ke `AGENTS.md` agar Codex dan Antigravity tidak berbeda perilaku.
+- Jika Antigravity memakai Rules/Knowledge/Memory lain, isinya tidak boleh bertentangan dengan `AGENTS.md`; gunakan hanya untuk ringkasan konteks, preferensi workflow, atau catatan task sementara.
+- Jangan membuat aturan paralel permanen seperti `GEMINI.md`, `.agents/rules/`, atau file instruksi lain yang menduplikasi isi `AGENTS.md`, kecuali user meminta eksplisit. Jika file khusus tambahan diperlukan, buat sebagai shim pendek yang mengarah ke `AGENTS.md`, bukan salinan penuh.
+- Saat berpindah dari Codex ke Antigravity atau sebaliknya, agent wajib membaca kondisi kerja terbaru dengan `git status`, file terdampak, dan instruksi agent spesifik folder sebelum melanjutkan.
+- Agent dilarang menimpa perubahan yang dibuat agent lain tanpa analisis diff dan alasan teknis yang jelas.
+- Laporan akhir harus menyebut file yang diubah, verifikasi yang dilakukan, gap/risiko, dan rekomendasi next step agar mudah dilanjutkan oleh agent lain.
+
+Rujukan praktik:
+
+- `AGENTS.md` adalah format Markdown umum untuk instruksi coding agent dan cocok dijadikan instruksi lintas tool.
+- Antigravity dapat menggunakan rules atau knowledge tambahan, tetapi untuk project ini aturan teknis tetap dipusatkan di `AGENTS.md` agar tidak terjadi drift antar-agent.
 
 ---
 
@@ -361,7 +393,13 @@ Sebelum melakukan perubahan kode:
 6. Eksekusi perubahan secara kecil, aman, dan mudah direview.
 7. Bersihkan sisa-sisa kode lama (Dead Code, Unreachable Code, Legacy/Deprecated Code, Code Cruft) setelah selesai melakukan perubahan.
 8. Verifikasi dengan lint, type check, build, atau minimal pemeriksaan manual yang relevan.
-9. Simpan laporan progres harian sesuai aturan dokumentasi.
+9. Simpan laporan progres harian sesuai aturan dokumentasi hanya jika perubahan memenuhi kriteria progress report.
+
+Pengecualian progress report:
+
+- Tidak wajib membuat atau memperbarui `docs/report-progress/` untuk perubahan kecil seperti typo, wording dokumentasi ringan, komentar kode kecil, format whitespace, atau review tanpa edit.
+- Wajib membuat atau memperbarui progress report jika ada penambahan file baru, perubahan besar alur aplikasi, perubahan API contract, perubahan database/migration, perubahan auth/permission, perubahan flow integrasi, atau refactor yang memengaruhi lebih dari satu modul.
+- Jika ragu apakah perubahan termasuk besar, buat progress report singkat agar jejak kerja tetap jelas.
 
 ---
 
@@ -445,7 +483,7 @@ Project ini menggunakan **multi-database** dengan pembagian hak akses yang ketat
 
 ## Progress Report File Wajib
 
-Setelah eksekusi perubahan kode:
+Setelah eksekusi perubahan kode yang memenuhi kriteria progress report:
 
 - Buat folder `docs/report-progress/` di root project jika belum ada.
 - Simpan laporan progres harian ke file Markdown di folder `docs/report-progress/` root project.
@@ -484,6 +522,8 @@ materialize-fastapi/docs/      # hanya jika folder dibuat/tersedia
 ```
 
 Namun progress utama tetap di `docs/report-progress/` agar mudah dicari.
+
+Progress report tidak wajib untuk perubahan dokumentasi ringan, typo, whitespace, komentar kecil, atau review tanpa edit. Progress report tetap wajib jika ada penambahan file baru atau perubahan besar alur aplikasi.
 
 ### Report Mingguan Wajib
 
