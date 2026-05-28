@@ -9,7 +9,7 @@ Report mingguan harus merangkum pencapaian project MAU APP/CTOS secara jelas, pr
 Fokus utama report:
 
 - Pencapaian aplikasi selama periode mingguan.
-- Dampak terhadap operasional gudang cargo.
+- Dampak terhadap operasional gudang cargo yang langsung dirasakan user operasional.
 - Status pengerjaan per aplikasi.
 - Risiko, gap, atau blocker yang perlu diketahui management.
 - Rencana kerja minggu berikutnya.
@@ -84,6 +84,10 @@ Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS.
 
 ## Dampak terhadap Operasional
 
+Isi bagian ini hanya dengan dampak langsung terhadap proses operasional gudang cargo, seperti akurasi data, kecepatan alur kerja petugas, stabilitas proses manifest/buildup, integrasi operasional, atau kemudahan penggunaan aplikasi oleh user lapangan.
+
+Jangan memasukkan manfaat internal developer, administrasi proyek, otomasi laporan, tooling AI agent, refactor internal, atau efisiensi kerja tim IT ke bagian ini. Jika periode hanya berisi perubahan internal developer, tulis bahwa belum ada dampak operasional langsung pada periode ini.
+
 ## Risiko / Gap / Blocker
 
 ## Rencana Minggu Berikutnya
@@ -95,11 +99,12 @@ Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS.
 
 - Gunakan bahasa Indonesia yang formal, jelas, dan ringkas.
 - Minimalkan detail implementasi seperti nama function, class, endpoint, migration, atau package, kecuali memang penting untuk konteks.
-- Jelaskan perubahan teknis sebagai manfaat operasional, misalnya "validasi data lebih konsisten", "alur input lebih cepat", atau "monitoring lebih mudah".
+- Jelaskan perubahan teknis sebagai manfaat operasional hanya jika dampaknya langsung ke user operasional, misalnya "validasi data lebih konsisten", "alur input lebih cepat", atau "monitoring operasional lebih mudah".
+- Jangan mengubah manfaat internal developer menjadi klaim dampak operasional.
 - Hindari klaim selesai jika progress report masih menunjukkan gap, risiko, atau verifikasi yang belum dilakukan.
 - Jika ada blocker, tulis dengan jujur dan sertakan dampak serta tindak lanjut.
 
-## On Hold
+## Project On Hold
 
 - PELAKSANAAN PERHITUNGAN DAN PELAPORAN IMPORT CLEARANCE TIME OLEH PENGUSAHA TEMPAT PENIMBUNAN SEMENTARA DI LINGKUNGAN KANTOR PELAYANAN UTAMA BEA DAN CUKAI TIPE C SOEKARNO HATTA
 - [Kirim Foto X-RAY (In Development)](https://ceisa40.gitbook.io/pia-ceisa40/api-services-barang-kiriman/daftar-service-impor-barang-kiriman/kirim-foto-x-ray-in-development)
@@ -108,7 +113,8 @@ Berikut kami sampaikan laporan progress mingguan pengembangan MAU APP / CTOS.
 
 - Gunakan bahasa Indonesia yang sopan dan profesional.
 - Jangan terlalu teknis.
-- Jelaskan manfaat atau dampak terhadap user dan operasional.
+- Jelaskan manfaat atau dampak terhadap user dan operasional hanya untuk perubahan yang memang menyentuh proses operasional.
+- Tooling internal developer, otomasi laporan, cleanup code, dan aturan AI agent tidak boleh dimasukkan ke bagian Dampak terhadap Operasional.
 - Hindari klaim selesai jika progress report masih menunjukkan gap, risiko, atau verifikasi yang belum dilakukan.
 - Jika ada blocker, tulis dengan jujur dan sertakan dampak serta tindak lanjut.
 - Korelasikan dengan report minggu lalu dan sebelumnya.
