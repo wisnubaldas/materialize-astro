@@ -13,6 +13,9 @@ export PATH="$PATH:/home/wisnu/.local/bin:/usr/local/bin:/usr/bin"
 APP_DIR="/home/wisnu/mau-app"
 FRONTEND_DIR="$APP_DIR/astro"
 BACKEND_DIR="$APP_DIR/materialize-fastapi"
+WEEKLY_REPORT_DIR="$APP_DIR/docs/weekly-report-generator"
+DEPLOY_USER="wisnu"
+DEPLOY_GROUP="wisnu"
 BRANCH="master"
 LOG_FILE="$APP_DIR/deploy-logs/development-$(date +'%Y%m%d_%H%M%S').log"
 POETRY_REQUIRED_VERSION="1.8.4"
@@ -21,6 +24,31 @@ mkdir -p "$APP_DIR/deploy-logs"
 
 # Simple failure trap for clear feedback in logs
 trap 'echo "❌ Deployment failed at $(date). See log: $LOG_FILE"' ERR
+
+ensure_weekly_report_cron_permissions() {
+  if [ ! -d "$WEEKLY_REPORT_DIR" ]; then
+    echo "⚠️  Weekly report generator directory not found: $WEEKLY_REPORT_DIR"
+    return 0
+  fi
+
+  echo "🪶 Ensuring weekly report generator cron permissions..."
+  sudo chown -R "$DEPLOY_USER:$DEPLOY_GROUP" "$WEEKLY_REPORT_DIR"
+  sudo find "$WEEKLY_REPORT_DIR" -type d -exec chmod 775 {} \;
+  sudo find "$WEEKLY_REPORT_DIR" -type f -exec chmod 664 {} \;
+
+  if [ -f "$WEEKLY_REPORT_DIR/run_weekly_report.sh" ]; then
+    sudo chmod 775 "$WEEKLY_REPORT_DIR/run_weekly_report.sh"
+  fi
+
+  if [ -f "$WEEKLY_REPORT_DIR/.env" ]; then
+    sudo chmod 600 "$WEEKLY_REPORT_DIR/.env"
+  fi
+
+  sudo touch "$WEEKLY_REPORT_DIR/weekly-report.log"
+  sudo chown "$DEPLOY_USER:$DEPLOY_GROUP" "$WEEKLY_REPORT_DIR/weekly-report.log"
+  sudo chmod 664 "$WEEKLY_REPORT_DIR/weekly-report.log"
+  echo "✅ Weekly report generator is writable/executable for $DEPLOY_USER:$DEPLOY_GROUP."
+}
 
 {
 echo "=============================================="
@@ -39,6 +67,7 @@ git reset --hard origin/$BRANCH
 git clean -fd
 git pull origin $BRANCH
 echo "✅ Git updated successfully."
+ensure_weekly_report_cron_permissions
 
 # --- Build Frontend (Astro) ---
 if [ -d "$FRONTEND_DIR" ]; then
@@ -233,6 +262,7 @@ if [ -d "$FRONTEND_DIR" ]; then
 fi
 
 chmod 775 /home/wisnu/mau-app/materialize-fastapi/run-prod.sh
+ensure_weekly_report_cron_permissions
 
 echo "🎉 Development deployment completed successfully."
 echo "=============================================="

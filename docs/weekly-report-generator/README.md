@@ -127,7 +127,7 @@ python docs\weekly-report-generator\generate_weekly_report.py --send-email --ema
 Untuk server Linux, jadwalkan setiap Senin jam 07:00:
 
 ```cron
-0 7 * * 1 cd /path/to/materialize-project && /usr/bin/python3 docs/weekly-report-generator/generate_weekly_report.py --days 7 --send-email >> docs/weekly-report-generator/weekly-report.log 2>&1
+0 7 * * 1 /home/wisnu/mau-app/docs/weekly-report-generator/run_weekly_report.sh >> /home/wisnu/mau-app/docs/weekly-report-generator/weekly-report.log 2>&1
 ```
 
 Alternatif pakai wrapper:
