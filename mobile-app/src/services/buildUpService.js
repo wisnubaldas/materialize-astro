@@ -59,13 +59,23 @@ export function listCompletedBuildUpCheckHeaders(filters = {}) {
 }
 
 /**
- * Reopens a completed Build Up Check header with a new MAWB detail.
+ * Manually closes one Build Up ULD header.
  * @param {number} headerId - Header id.
- * @param {object} formData - New MAWB values required to reopen the header.
- * @returns {Promise<object|null>} Reopened header.
+ * @returns {Promise<object|null>} Closed header.
  */
-export function reopenBuildUpCheckHeader(headerId, formData) {
-  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/reopen`, formData, {
+export function closeBuildUpCheckHeader(headerId) {
+  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/close`, {}, {
+    authenticated: true,
+  });
+}
+
+/**
+ * Manually opens one closed Build Up ULD header.
+ * @param {number} headerId - Header id.
+ * @returns {Promise<object|null>} Open header.
+ */
+export function openBuildUpCheckHeader(headerId) {
+  return postRequest(`${env.buildUpCheckHeadersPath}/${headerId}/open`, {}, {
     authenticated: true,
   });
 }

@@ -267,6 +267,30 @@ class BuildUpCheckRepository:
             raise
         return detail
 
+    def set_header_closed(
+        self,
+        header: BuildUpCheckHeader,
+        is_closed: bool,
+    ) -> BuildUpCheckHeader:
+        """Set manual open/closed status for one Build Up ULD header.
+
+        Args:
+            header: Build Up header row to update.
+            is_closed: True when the ULD is manually closed, False when reopened.
+
+        Returns:
+            Updated Build Up header row.
+        """
+        header.is_closed = is_closed
+        header.closed_at = func.now() if is_closed else None
+        try:
+            self.db.commit()
+            self.db.refresh(header)
+        except Exception:
+            self.db.rollback()
+            raise
+        return header
+
     def datatable(  # noqa: PLR0912
         self,
         params: DataTablesParams,
@@ -368,4 +392,3 @@ class BuildUpCheckRepository:
         except Exception:
             self.db.rollback()
             raise
-

@@ -27,6 +27,8 @@ function getHeaderFromParams(params) {
     dest: params.dest || '',
     completed_pieces: Number(params.completedPieces || 0),
     total_pieces: Number(params.totalPieces || 0),
+    is_closed: params.isClosed === 'true',
+    closed_at: params.closedAt || '',
   };
 }
 

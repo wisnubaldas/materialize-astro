@@ -15,7 +15,6 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckDetailOut,
     BuildUpCheckHeaderCreate,
     BuildUpCheckHeaderOut,
-    BuildUpCheckHeaderReopen,
     BuildUpCheckRincianCreate,
     BuildUpCheckRincianOut,
     BuildUpMasterAwbSummaryOut,
@@ -232,9 +231,7 @@ class BuildUpCheckService:
         mapped_details = [cls._map_detail(detail) for detail in details]
         total_pieces = sum(int(detail.total_pieces or 0) for detail in mapped_details)
         completed_pieces = sum(detail.completed_pieces for detail in mapped_details)
-        is_completed = bool(mapped_details) and all(
-            detail.is_completed for detail in mapped_details
-        )
+        is_closed = bool(getattr(row, "is_closed", False))
         return BuildUpCheckHeaderOut(
             id=row.id,
             uld=row.uld,
@@ -246,7 +243,9 @@ class BuildUpCheckService:
             supervisor=row.supervisor,
             total_pieces=total_pieces,
             completed_pieces=completed_pieces,
-            is_completed=is_completed,
+            is_completed=is_closed,
+            is_closed=is_closed,
+            closed_at=getattr(row, "closed_at", None),
             created_at=row.created_at,
             updated_at=row.updated_at,
         )
@@ -624,10 +623,8 @@ class BuildUpCheckService:
         header = self.repository.get_header_by_id(header_id)
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
-        if self._map_header(header).is_completed:
-            raise ValueError(
-                "Build Up sudah selesai. Gunakan menu buka kembali untuk menambah MAWB."
-            )
+        if self._map_header(header).is_closed:
+            raise ValueError("Build Up ULD sudah ditutup. Buka ULD secara manual sebelum menambah MAWB.")
         self._validate_master_total_pieces(payload)
         payload = self._ensure_master_total_pieces(payload)
         self._validate_same_master_total(header, payload)
@@ -732,31 +729,46 @@ class BuildUpCheckService:
         closed = self._sync_split_metadata(closed)
         return self._map_detail(closed, master_completed_pieces=master_completed)
 
-    def reopen_header(
-        self,
-        header_id: int,
-        payload: BuildUpCheckHeaderReopen,
-    ) -> BuildUpCheckHeaderOut:
-        """Reopen a completed Build Up check header by adding a new MAWB detail."""
+    def close_header(self, header_id: int) -> BuildUpCheckHeaderOut:
+        """Manually close one Build Up ULD header.
+
+        Args:
+            header_id: Build Up header id representing one ULD.
+
+        Returns:
+            Closed Build Up header response.
+
+        Raises:
+            LookupError: If the header does not exist.
+            ValueError: If no pieces have been entered for the ULD.
+        """
         header = self.repository.get_header_by_id(header_id)
         if not header:
             raise LookupError("Header build up check tidak ditemukan")
 
-        current_header = self._map_header(header)
-        if not current_header.is_completed:
-            raise ValueError("Build Up belum selesai, tidak perlu dibuka kembali.")
+        mapped_header = self._map_header(header)
+        if mapped_header.completed_pieces <= 0:
+            raise ValueError("ULD belum memiliki rincian pieces, tidak bisa ditutup.")
 
-        detail_payload = BuildUpCheckDetailCreate(**payload.model_dump())
-        self._validate_master_total_pieces(detail_payload)
-        detail_payload = self._ensure_master_total_pieces(detail_payload)
-        self._validate_same_master_total(header, detail_payload)
-        detail = self.repository.create_detail(
-            header_id=header_id,
-            payload=detail_payload,
-        )
-        self._sync_split_metadata(detail)
-        reopened = self.repository.get_header_by_id(header_id)
-        return self._map_header(reopened)
+        return self._map_header(self.repository.set_header_closed(header, is_closed=True))
+
+    def open_header(self, header_id: int) -> BuildUpCheckHeaderOut:
+        """Manually reopen one closed Build Up ULD header.
+
+        Args:
+            header_id: Build Up header id representing one ULD.
+
+        Returns:
+            Open Build Up header response.
+
+        Raises:
+            LookupError: If the header does not exist.
+        """
+        header = self.repository.get_header_by_id(header_id)
+        if not header:
+            raise LookupError("Header build up check tidak ditemukan")
+
+        return self._map_header(self.repository.set_header_closed(header, is_closed=False))
 
     def delete_header(self, header_id: int) -> bool:
         """Hapus header build up check beserta detail dan rinciannya berdasarkan ID.

@@ -108,6 +108,8 @@ default_origins = [
     "http://127.0.0.1:8100",
     "http://192.168.1.7:8081",
     "http://192.168.5.224:8081",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
 ]
 debug_origins = get_debug_cors_origins()
 raw_origins = (ENV.CORS_ALLOW_ORIGINS or "").strip()

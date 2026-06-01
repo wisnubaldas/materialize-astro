@@ -42,10 +42,5 @@ export default function BuildUpChecklistRoute() {
     return <Redirect href="/login" />;
   }
 
-  return (
-    <BuildUpChecklistScreen
-      onBack={handleBack}
-      onOpenCompleted={() => router.push('/completed-build-up')}
-    />
-  );
+  return <BuildUpChecklistScreen onBack={handleBack} />;
 }

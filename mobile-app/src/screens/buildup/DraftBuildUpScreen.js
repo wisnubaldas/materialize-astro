@@ -86,7 +86,7 @@ export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
             Draft Build Up
           </Text>
           <Text variant="subtitle" className="mt-2 text-stone-50">
-            Pilih header, lengkapi detail, lalu input rincian sampai total pieces terpenuhi.
+            Pilih nomor ULD, lengkapi detail, lalu buka atau tutup Build Up secara manual.
           </Text>
         </View>
       </PatternedCard>
@@ -119,9 +119,9 @@ export default function DraftBuildUpScreen({ onBack, onOpenMasterAwb }) {
                     {header.flight_no || '-'}
                   </Text>
                   <Text
-                    className={`text-xs font-bold ${header.is_completed ? 'text-lime' : 'text-red-600'}`}
+                    className={`text-xs font-bold ${header.is_closed ? 'text-lime' : 'text-red-600'}`}
                   >
-                    {header.is_completed ? 'SELESAI' : 'BELUM SELESAI'}
+                    {header.is_closed ? 'DITUTUP' : 'TERBUKA'}
                   </Text>
                 </View>
                 <InfoLine label="Flight Date" value={header.flight_date} />

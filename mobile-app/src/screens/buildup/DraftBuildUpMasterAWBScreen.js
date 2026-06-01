@@ -7,8 +7,10 @@ import ScreenHeader from '../../components/layout/ScreenHeader';
 import ScreenLayout from '../../components/layout/ScreenLayout';
 import { Button, Card, CardContent, Input, Separator, Text } from '../../components/ui';
 import {
+  closeBuildUpCheckHeader,
   createBuildUpCheckDetail,
   listBuildUpCheckDetails,
+  openBuildUpCheckHeader,
 } from '../../services/buildUpService';
 import { useThemeColors } from '../../styles/theme';
 import { validateBuildUpCheckDetailForm } from '../../utils/validators';
@@ -57,7 +59,9 @@ function MasterAwbCard({ detail, onPress }) {
         <CardContent className="gap-3 p-4">
           <View className="flex-row items-start justify-between gap-3">
             <Text className="flex-1 text-lg font-extrabold text-foreground">{detail.mawb}</Text>
-            <Text className={`text-xs font-bold ${detail.is_completed ? 'text-lime' : 'text-red-600'}`}>
+            <Text
+              className={`text-xs font-bold ${detail.is_completed ? 'text-lime' : 'text-red-600'}`}
+            >
               {detail.is_completed ? 'SELESAI' : 'BELUM'}
             </Text>
           </View>
@@ -82,10 +86,7 @@ function MasterAwbCard({ detail, onPress }) {
               value={`${detail.master_completed_pieces || 0}/${detail.master_total_pieces || detail.total_pieces || 0}`}
             />
             <InfoLine label="Sisa MAWB" value={detail.master_remaining_pieces} />
-            <InfoLine
-              label="Pieces ULD"
-              value={`${detail.completed_pieces}/${pieceTarget}`}
-            />
+            <InfoLine label="Pieces ULD" value={`${detail.completed_pieces}/${pieceTarget}`} />
             <InfoLine label="Sisa" value={detail.remaining_pieces} />
           </View>
         </CardContent>
@@ -129,11 +130,13 @@ function MasterInput({
  */
 export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRincian }) {
   const colors = useThemeColors();
+  const [activeHeader, setActiveHeader] = useState(header);
   const [details, setDetails] = useState([]);
   const [mode, setMode] = useState(viewModes.list);
   const [form, setForm] = useState(initialMasterForm);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTogglingHeader, setIsTogglingHeader] = useState(false);
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -146,7 +149,7 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
     setErrorMessage('');
 
     try {
-      const rows = await listBuildUpCheckDetails(header.id);
+      const rows = await listBuildUpCheckDetails(activeHeader.id);
       setDetails(rows);
     } catch (error) {
       console.error('[draft-build-up-master-awb] Load details gagal', error);
@@ -156,9 +159,11 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
     }
   }
 
-  useFocusEffect(useCallback(() => {
-    loadDetails();
-  }, [header.id]));
+  useFocusEffect(
+    useCallback(() => {
+      loadDetails();
+    }, [activeHeader.id])
+  );
 
   /**
    * Updates one Master AWB form field.
@@ -175,6 +180,13 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
    * @returns {void}
    */
   function openCreateMode() {
+    if (activeHeader.is_closed) {
+      setErrorMessage(
+        'Build Up ULD sudah ditutup. Buka ULD terlebih dahulu untuk menambah Master AWB.'
+      );
+      return;
+    }
+
     setMode(viewModes.create);
     setMessage('');
     setErrorMessage('');
@@ -207,7 +219,7 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
     setMessage('');
 
     try {
-      await createBuildUpCheckDetail(header.id, {
+      await createBuildUpCheckDetail(activeHeader.id, {
         mawb: form.mawb,
         total_pieces: form.total_pieces === '' ? null : Number(form.total_pieces),
         master_total_pieces: Number(form.master_total_pieces),
@@ -226,6 +238,35 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
     }
   }
 
+  /**
+   * Opens or closes the selected Build Up ULD header manually.
+   * @returns {Promise<void>} Resolves after the header status is updated.
+   */
+  async function handleToggleHeaderClosed() {
+    setIsTogglingHeader(true);
+    setMessage('');
+    setErrorMessage('');
+
+    try {
+      const updated = activeHeader.is_closed
+        ? await openBuildUpCheckHeader(activeHeader.id)
+        : await closeBuildUpCheckHeader(activeHeader.id);
+      setActiveHeader((current) => ({
+        ...current,
+        ...updated,
+      }));
+      setMode(viewModes.list);
+      setMessage(
+        updated.is_closed ? 'Build Up ULD berhasil ditutup.' : 'Build Up ULD berhasil dibuka.'
+      );
+    } catch (error) {
+      console.error('[draft-build-up-master-awb] Toggle header gagal', error);
+      setErrorMessage(error?.message || 'Gagal mengubah status Build Up ULD.');
+    } finally {
+      setIsTogglingHeader(false);
+    }
+  }
+
   return (
     <ScreenLayout
       keyboardAware
@@ -235,22 +276,49 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
         <CardContent className="gap-4 p-4">
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-lg font-extrabold text-foreground">
-                {header.flight_no || '-'} / {header.uld || '-'}
-              </Text>
               <Text className="mt-1 text-sm text-muted-foreground">
-                {header.flight_date || '-'} - {header.dest || '-'}
+                {activeHeader.flight_date || '-'} - {activeHeader.dest || '-'}
               </Text>
             </View>
-            <Button variant="secondary" size="sm" onPress={openCreateMode}>
-              <MaterialCommunityIcons name="plus" size={18} color={colors.foreground} />
-              <Text className="ml-2">Master</Text>
-            </Button>
+            <View className="gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onPress={openCreateMode}
+                disabled={activeHeader.is_closed}
+              >
+                <MaterialCommunityIcons name="plus" size={18} color={colors.foreground} />
+                <Text className="ml-2">Master</Text>
+              </Button>
+              <Button
+                variant={activeHeader.is_closed ? 'outline' : 'indigo'}
+                size="sm"
+                onPress={handleToggleHeaderClosed}
+                disabled={isTogglingHeader}
+              >
+                <MaterialCommunityIcons
+                  name={activeHeader.is_closed ? 'lock-open-outline' : 'lock-outline'}
+                  size={18}
+                  color={activeHeader.is_closed ? colors.foreground : '#FFFFFF'}
+                />
+                <Text className={`ml-2 ${activeHeader.is_closed ? '' : 'text-white'}`}>
+                  {isTogglingHeader
+                    ? 'Memproses...'
+                    : activeHeader.is_closed
+                      ? 'Buka ULD'
+                      : 'Tutup ULD'}
+                </Text>
+              </Button>
+            </View>
           </View>
           <Separator />
           <InfoLine
             label="Progress Header"
-            value={`${header.completed_pieces || 0}/${header.total_pieces || 0}`}
+            value={`${activeHeader.completed_pieces || 0}/${activeHeader.total_pieces || 0}`}
+          />
+          <InfoLine
+            label="Status Build Up"
+            value={activeHeader.is_closed ? 'Ditutup manual' : 'Terbuka'}
           />
         </CardContent>
       </Card>
@@ -327,7 +395,7 @@ export default function DraftBuildUpMasterAWBScreen({ header, onBack, onOpenRinc
                     key={detail.id}
                     detail={detail}
                     onPress={() => {
-                      if (!detail.is_completed && onOpenRincian) {
+                      if (!activeHeader.is_closed && !detail.is_completed && onOpenRincian) {
                         onOpenRincian(detail);
                       }
                     }}

@@ -11,8 +11,8 @@
     "showInDashboard": false
   },
   {
-    "title": "BU Checklist",
-    "label": "Build Up Checklist",
+    "title": "Build Up",
+    "label": "Build Up",
     "description": "Checklist awal",
     "icon": "clipboard-check-outline",
     "href": "/build-up-checklist",

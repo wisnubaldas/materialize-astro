@@ -199,7 +199,11 @@ def parse_bool_env(name: str, default: bool = False) -> bool:
 
 
 def normalize_model_name(model: str) -> str:
-    return model.removeprefix("models/").strip()
+    model = model.strip()
+    prefix = "models/"
+    if model.startswith(prefix):
+        return model[len(prefix) :].strip()
+    return model
 
 
 def unique_models(primary_model: str, fallback_models: str) -> list[str]:

@@ -45,6 +45,8 @@ export default function DraftBuildUpRoute() {
         dest: header.dest || '',
         completedPieces: String(header.completed_pieces || 0),
         totalPieces: String(header.total_pieces || 0),
+        isClosed: header.is_closed ? 'true' : 'false',
+        closedAt: header.closed_at || '',
       },
     });
   }

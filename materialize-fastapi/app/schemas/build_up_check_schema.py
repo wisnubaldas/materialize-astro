@@ -40,6 +40,8 @@ class BuildUpCheckHeaderOut(BaseModel):
     total_pieces: int = 0
     completed_pieces: int = 0
     is_completed: bool = False
+    is_closed: bool = False
+    closed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -78,37 +80,6 @@ class BuildUpCheckDetailCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_piece_totals(self) -> "BuildUpCheckDetailCreate":
-        """Require MAWB total and keep optional ULD allocation below it."""
-        if self.master_total_pieces is None and self.total_pieces is None:
-            raise ValueError("Total pieces MAWB wajib diisi.")
-        if (
-            self.master_total_pieces is not None
-            and self.total_pieces is not None
-            and self.master_total_pieces < self.total_pieces
-        ):
-            raise ValueError("Total pieces MAWB tidak boleh lebih kecil dari pieces ULD ini.")
-        return self
-
-
-class BuildUpCheckHeaderReopen(BaseModel):
-    """Payload untuk membuka kembali header selesai dengan master AWB baru."""
-
-    mawb: str = Field(min_length=1, max_length=100)
-    total_pieces: int | None = Field(default=None, gt=0)
-    master_total_pieces: int | None = Field(default=None, gt=0)
-    agent: str | None = Field(default=None, max_length=100)
-    remark: str | None = None
-
-    @field_validator("mawb", "agent", "remark", mode="before")
-    @classmethod
-    def normalize_text(cls, value: object) -> str | None:
-        if value is None:
-            return None
-        cleaned = str(value).strip()
-        return cleaned.upper() if cleaned else None
-
-    @model_validator(mode="after")
-    def validate_piece_totals(self) -> "BuildUpCheckHeaderReopen":
         """Require MAWB total and keep optional ULD allocation below it."""
         if self.master_total_pieces is None and self.total_pieces is None:
             raise ValueError("Total pieces MAWB wajib diisi.")

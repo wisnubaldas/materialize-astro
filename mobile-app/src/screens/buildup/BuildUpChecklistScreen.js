@@ -115,10 +115,10 @@ function HeaderField({ field, value, onChangeText, onScanPress }) {
 
 /**
  * Renders the Build Up Check header form screen.
- * @param {{ onBack?: Function, onOpenCompleted?: Function }} props - Navigation callbacks.
+ * @param {{ onBack?: Function }} props - Navigation callbacks.
  * @returns {React.ReactElement} Header form screen.
  */
-export default function BuildUpChecklistScreen({ onBack, onOpenCompleted }) {
+export default function BuildUpChecklistScreen({ onBack }) {
   const [formData, setFormData] = useState(initialForm);
   const [scannerField, setScannerField] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -209,20 +209,6 @@ export default function BuildUpChecklistScreen({ onBack, onOpenCompleted }) {
         title="Build Up Checklist"
         variant="violet"
         className="web:self-center web:w-full web:max-w-130"
-        action={
-          <Button
-            variant="indigo"
-            size="sm"
-            onPress={onOpenCompleted}
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.18)',
-              borderColor: 'rgba(255,255,255,0.42)',
-            }}
-          >
-            <MaterialCommunityIcons name="check-circle-outline" size={18} />
-            <Text className="ml-2 text-xs font-extrabold">Buka Kembali Buildup Selesai</Text>
-          </Button>
-        }
       />
 
       <Card className="mt-8 rounded-sm bg-card/70">

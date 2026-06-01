@@ -9,7 +9,6 @@ from app.schemas.build_up_check_schema import (
     BuildUpCheckDetailOut,
     BuildUpCheckHeaderCreate,
     BuildUpCheckHeaderOut,
-    BuildUpCheckHeaderReopen,
     BuildUpCheckRincianCreate,
     BuildUpMasterAwbSummaryOut,
     BuildUpPdfPrepareOut,
@@ -70,22 +69,37 @@ def create_build_up_check_header(
 
 
 @router.post(
-    "/build-up-check-headers/{header_id}/reopen",
-    summary="Buka kembali header Build Up Check mobile yang sudah selesai",
+    "/build-up-check-headers/{header_id}/close",
+    summary="Tutup manual Build Up ULD mobile",
     response_model=BuildUpCheckHeaderOut,
 )
-def reopen_build_up_check_header(
+def close_build_up_check_header(
     header_id: int,
-    payload: BuildUpCheckHeaderReopen,
     service: BuildUpCheckService = Depends(get_build_up_check_service),
 ):
-    """Add a new MAWB to an already completed Build Up Check header."""
+    """Close one Build Up ULD header manually."""
     try:
-        return service.reopen_header(header_id, payload)
+        return service.close_header(header_id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post(
+    "/build-up-check-headers/{header_id}/open",
+    summary="Buka manual Build Up ULD mobile",
+    response_model=BuildUpCheckHeaderOut,
+)
+def open_build_up_check_header(
+    header_id: int,
+    service: BuildUpCheckService = Depends(get_build_up_check_service),
+):
+    """Open one closed Build Up ULD header manually."""
+    try:
+        return service.open_header(header_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get(
@@ -330,4 +344,3 @@ def delete_build_up_check_header(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Gagal menghapus data build up: {exc!s}") from exc
-
