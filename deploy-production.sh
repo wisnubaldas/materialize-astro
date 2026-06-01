@@ -14,6 +14,7 @@ APP_DIR="/home/wisnu/mau-app"
 FRONTEND_DIR="$APP_DIR/astro"
 BACKEND_DIR="$APP_DIR/materialize-fastapi"
 WEEKLY_REPORT_DIR="$APP_DIR/docs/weekly-report-generator"
+WEEKLY_REPORT_OUTPUT_DIR="$APP_DIR/docs/report-mingguan"
 DEPLOY_USER="wisnu"
 DEPLOY_GROUP="wisnu"
 BRANCH="production"
@@ -47,7 +48,14 @@ ensure_weekly_report_cron_permissions() {
   sudo touch "$WEEKLY_REPORT_DIR/weekly-report.log"
   sudo chown "$DEPLOY_USER:$DEPLOY_GROUP" "$WEEKLY_REPORT_DIR/weekly-report.log"
   sudo chmod 664 "$WEEKLY_REPORT_DIR/weekly-report.log"
-  echo "✅ Weekly report generator is writable/executable for $DEPLOY_USER:$DEPLOY_GROUP."
+
+  echo "🪶 Ensuring weekly report output permissions..."
+  sudo mkdir -p "$WEEKLY_REPORT_OUTPUT_DIR"
+  sudo chown -R "$DEPLOY_USER:$DEPLOY_GROUP" "$WEEKLY_REPORT_OUTPUT_DIR"
+  sudo find "$WEEKLY_REPORT_OUTPUT_DIR" -type d -exec chmod 775 {} \;
+  sudo find "$WEEKLY_REPORT_OUTPUT_DIR" -type f -exec chmod 664 {} \;
+
+  echo "✅ Weekly report generator and output are writable/executable for $DEPLOY_USER:$DEPLOY_GROUP."
 }
 
 {
