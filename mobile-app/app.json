@@ -3,7 +3,7 @@
     "name": "MAU APP",
     "slug": "mau-mobile-app",
     "scheme": "mauapp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon2.png",
     "userInterfaceStyle": "light",

@@ -11,12 +11,16 @@ build/
 
 # Native build artifacts
 android/.gradle/
+android/.cxx/
+android/build/
 android/app/build/
+android/app/.cxx/
 ios/build/
 
 # Local environment files. Configure production values through EAS secrets/env.
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Signing keys and credentials
