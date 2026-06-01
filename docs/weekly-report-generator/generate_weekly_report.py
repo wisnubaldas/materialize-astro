@@ -371,6 +371,29 @@ def weekly_report_path(start: date, end: date) -> Path:
     return WEEKLY_DIR / filename
 
 
+def ensure_output_writable(output: Path) -> None:
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+    except PermissionError as exc:
+        raise SystemExit(
+            f"Cannot create report directory: {output.parent}. "
+            "Check directory ownership/permission on the server."
+        ) from exc
+
+    if output.exists():
+        writable_path = output
+        permission_target = "file"
+    else:
+        writable_path = output.parent
+        permission_target = "directory"
+
+    if not os.access(writable_path, os.W_OK):
+        raise SystemExit(
+            f"Cannot write weekly report to {output}. "
+            f"Check {permission_target} ownership/permission on the server."
+        )
+
+
 def main() -> int:
     load_env_file()
     args = parse_args()
@@ -381,14 +404,21 @@ def main() -> int:
         raise SystemExit(f"No progress files found from {start} to {end}.")
 
     prompt = build_prompt(start, end, selected_paths)
+    output = weekly_report_path(start, end)
+    ensure_output_writable(output)
+
     if args.dry_run:
         print(prompt)
         return 0
 
     report = generate_report_with_gemini(prompt, args)
-    WEEKLY_DIR.mkdir(parents=True, exist_ok=True)
-    output = weekly_report_path(start, end)
-    output.write_text(report, encoding="utf-8")
+    try:
+        output.write_text(report, encoding="utf-8")
+    except PermissionError as exc:
+        raise SystemExit(
+            f"Cannot write weekly report to {output}. "
+            "Check file ownership/permission on the server."
+        ) from exc
     print(f"Report generated: {output}")
 
     if args.send_email:
