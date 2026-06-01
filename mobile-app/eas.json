@@ -6,6 +6,9 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "https://api.mitraadira.com"
       }
     },
     "production": {
