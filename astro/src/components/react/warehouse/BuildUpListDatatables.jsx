@@ -245,7 +245,14 @@ export default function BuildUpListDatatables() {
 
   const columns = useMemo(
     () => [
-      { data: 'uld', title: 'ULD', className: 'text-uppercase fw-semibold' },
+      {
+        data: 'uld',
+        title: 'ULD',
+        className: 'text-uppercase fw-semibold',
+        render: (value) => {
+          return `<a href="#" class="btn btn-sm btn-text-primary">${value}</a>`;
+        },
+      },
       { data: 'airlines', title: 'Airlines', className: 'text-uppercase' },
       { data: 'flight_no', title: 'Flight No', className: 'text-uppercase' },
       {
@@ -406,17 +413,21 @@ export default function BuildUpListDatatables() {
           </div>
 
           <div className="d-flex justify-content-end gap-2 mt-4">
+            <a
+              href="/warehouse/build-up-headers/create"
+              className="btn btn-label-secondary d-flex align-items-center gap-1"
+            >
+              <i class="icon-base ri ri-android-fill icon-16px me-1"></i>
+              Download MAU APP
+            </a>
             <button
               type="button"
-              className="btn btn-outline-secondary d-flex align-items-center gap-1"
+              className="btn btn-label-warning d-flex align-items-center gap-1"
               onClick={handleReset}
             >
               <i className="ri ri-refresh-line"></i> Reset
             </button>
-            <button
-              type="submit"
-              className="btn btn-primary d-flex align-items-center gap-1 shadow-sm"
-            >
+            <button type="submit" className="btn btn-label-primary d-flex align-items-center gap-1">
               <i className="ri ri-search-line"></i> Cari Data
             </button>
           </div>
