@@ -49,6 +49,13 @@ async function notifyAuthExpired(message) {
  * @returns {string} Fully qualified URL.
  */
 function buildApiUrl(path) {
+  if (!env.apiBaseUrl) {
+    const message =
+      'API base URL belum dikonfigurasi. Set EXPO_PUBLIC_API_BASE_URL untuk profile EAS build yang digunakan.';
+    console.error('[api] Missing API base URL', { path });
+    throw new Error(message);
+  }
+
   const baseUrl = env.apiBaseUrl.replace(/\/$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${baseUrl}${normalizedPath}`;
