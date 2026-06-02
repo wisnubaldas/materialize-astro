@@ -414,7 +414,7 @@ export default function BuildUpListDatatables() {
 
           <div className="d-flex justify-content-end gap-2 mt-4">
             <a
-              href="/warehouse/build-up-headers/create"
+              href="https://expo.dev/artifacts/eas/xkv6zP9T4AzbcTiaFsRjYq.apk"
               className="btn btn-label-secondary d-flex align-items-center gap-1"
             >
               <i class="icon-base ri ri-android-fill icon-16px me-1"></i>
