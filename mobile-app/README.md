@@ -214,6 +214,53 @@ Profile saat ini memakai API production:
 
 Variable yang dibaca aplikasi harus memakai prefix `EXPO_PUBLIC_`. Jangan memakai `API_URL` karena tidak dibaca oleh `src/config/env.js`.
 
+## Mode Native Android Project
+
+Project ini memiliki folder native `android/`, sehingga EAS Build akan menampilkan log seperti ini:
+
+```text
+Skipped running "expo prebuild" because the "android" directory already exists.
+```
+
+Itu normal untuk project ini. Artinya EAS tidak menjalankan `expo prebuild` ulang dan tidak otomatis menyalin semua field native dari `app.json` ke folder Android.
+
+Dampaknya:
+
+- Konfigurasi Android utama harus dijaga langsung di folder `android/`.
+- `android/app/build.gradle` menjadi sumber versi Android untuk `versionName` dan `versionCode`.
+- `android/app/src/main/AndroidManifest.xml` menjadi tempat konfigurasi native seperti permission, deep link scheme, orientation, dan `android:usesCleartextTraffic`.
+- `app.json` tetap dipakai untuk konfigurasi Expo/Metro/EAS yang masih relevan, tetapi jangan taruh field yang tidak valid menurut schema Expo.
+
+Karena keputusan project saat ini adalah mempertahankan folder native `android/`, check `expo.doctor.appConfigFieldsNotSyncedCheck` dinonaktifkan di `package.json`. Ini mengikuti opsi resmi Expo Doctor untuk project yang sengaja mengelola native folder sendiri.
+
+## Versi Aplikasi Android
+
+Project ini sudah memiliki folder native `android/`, sehingga EAS Android build membaca versi dari Gradle:
+
+```text
+android/app/build.gradle
+```
+
+Nilai yang tampil di dashboard Expo berbentuk:
+
+```text
+versionName (versionCode)
+```
+
+Contoh:
+
+```text
+1.0.1 (2)
+```
+
+Saat menaikkan versi Android, sinkronkan file berikut:
+
+- `android/app/build.gradle`: ubah `versionName` dan naikkan `versionCode`.
+- `app.json`: ubah `expo.version` dan `expo.android.versionCode` agar app config tetap selaras.
+- `package.json` dan `package-lock.json`: ubah versi package jika rilis aplikasi ikut naik.
+
+Catatan: `versionCode` wajib naik untuk setiap build Android yang akan diunggah ke Play Store atau dibedakan sebagai build baru.
+
 ## Build APK Preview ke Expo
 
 Gunakan profile `preview` untuk membuat APK yang bisa langsung diinstall ke HP:
